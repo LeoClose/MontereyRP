@@ -270,7 +270,7 @@ static MobitelBrojStavki(playerid)
 {
     if (gMobitelEkran[playerid] == MOBITEL_IZBORNIK) return MOBITEL_REDOVA;
     if (gMobitelEkran[playerid] == MOBITEL_IMENIK) return 2 + gMobitelKontakata[playerid];
-    if (gMobitelEkran[playerid] == MOBITEL_KONTAKT) return sizeof gMobitelOpcije;
+    if (gMobitelEkran[playerid] == MOBITEL_KONTAKT) return gMobitelKontakt[playerid] < 0 ? 1 : sizeof gMobitelOpcije;
     if (gMobitelEkran[playerid] == MOBITEL_PORUKE) return 1 + gMobitelPrimljenih[playerid];
     return 0;
 }
@@ -317,6 +317,7 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_PREIMENUJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Novo ime"));
     else if (ekran == MOBITEL_SMS_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Primatelj"));
     else if (ekran == MOBITEL_SMS_UNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Nova poruka"));
+    else if (ekran == MOBITEL_KONTAKT && gMobitelKontakt[playerid] < 0) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Taksi"));
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
@@ -574,7 +575,8 @@ MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
     {
         MobitelUcitajPoruke(playerid);
         gMobitelEkran[playerid] = MOBITEL_PORUKE;
-        gMobitelOdabir[playerid] = gMobitelPrimljenih[playerid] ? 1 : 0;
+        gMobitelOdabir[playerid] = 0;
+        if (gMobitelPrimljenih[playerid]) MobitelCitaj(playerid, 0);
         gMobitelObavijest[playerid]++;
         MobitelPrikazi(playerid);
     }
@@ -616,7 +618,8 @@ static MobitelOdaberi(playerid)
     else if (ekran == MOBITEL_KONTAKT)
     {
         new k = gMobitelKontakt[playerid];
-        if (odabir == 0) MobitelNazovi(playerid, gMobitelKontaktBroj[playerid][k]);
+        if (k < 0) TaksiPozovi(playerid);
+        else if (odabir == 0) MobitelNazovi(playerid, gMobitelKontaktBroj[playerid][k]);
         else if (odabir == 1)
         {
             strcopy(gMobitelPrimatelj[playerid], gMobitelKontaktBroj[playerid][k]);
@@ -663,8 +666,7 @@ static MobitelOdaberi(playerid)
     }
     else if (ekran == MOBITEL_IMENIK)
     {
-        if (odabir == 1) TaksiPozovi(playerid);
-        else if (odabir > 1)
+        if (odabir >= 1)
         {
             gMobitelKontakt[playerid] = odabir - 2;
             gMobitelEkran[playerid] = MOBITEL_KONTAKT;
