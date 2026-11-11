@@ -332,9 +332,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vozi", "Go", "Ехать", "Vamos", "Git" },
     { "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", "%s says (phone): Hello, I need a taxi. I'm at %s.", "%s говорит (телефон): Здравствуйте, мне нужно такси. Я нахожусь в %s.", "%s dice (telefono): Hola, necesito un taxi. Estoy en %s.", "%s diyor (telefon): Merhaba, taksi lazim. Buradayim %s." },
     { "Dispecer (telefon): U redu, saljemo vozilo. Stize za oko %s min.", "Dispatcher (phone): All right, we're sending a car. It will arrive in about %s min.", "Диспетчер (телефон): Хорошо, отправляем машину. Будет примерно через %s мин.", "Operador (telefono): De acuerdo, enviamos un coche. Llegara en unos %s min.", "Operator (telefon): Tamam, arac gonderiyoruz. Yaklasik %s dk icinde orada." },
-    { "SMS od taksi sluzbe: Vas taksi je stigao. Ugodnu voznju!", "SMS from the taxi service: Your taxi has arrived. Enjoy the ride!", "SMS от службы такси: Ваше такси прибыло. Приятной поездки!", "SMS del servicio de taxis: Tu taxi ha llegado. Buen viaje!", "Taksi servisinden SMS: Taksiniz geldi. Iyi yolculuklar!" },
+    { "Vas taksi je stigao. Ugodnu voznju!", "Your taxi has arrived. Enjoy the ride!", "Ваше такси прибыло. Приятной поездки!", "Tu taxi ha llegado. Buen viaje!", "Taksiniz geldi. Iyi yolculuklar!" },
     { "Pomoc: Pricekajte taksi na mjestu gdje ste ga pozvali.", "Hint: Wait for the taxi where you called it.", "Подсказка: Ждите такси там, где вызвали его.", "Ayuda: Espera el taxi donde lo llamaste.", "Ipucu: Taksiyi cagirdiginiz yerde bekleyin." },
-    { "Pomoc: Taksi je oznacen strelicom. Sjednite straga tipkom G.", "Hint: The taxi is marked with an arrow. Get in the back with G.", "Подсказка: Такси отмечено стрелкой. Садитесь назад клавишей G.", "Ayuda: El taxi esta marcado con una flecha. Sube atras con G.", "Ipucu: Taksi okla isaretli. G tusu ile arkaya binin." },
     { "Pomoc: Ovo je taksi, udite kao putnik tipkom G.", "Hint: This is a taxi, get in as a passenger with G.", "Подсказка: Это такси, садитесь как пассажир клавишей G.", "Ayuda: Esto es un taxi, sube como pasajero con G.", "Ipucu: Bu bir taksi, G tusu ile yolcu olarak binin." },
     { "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) i vratite se u igru.", "Hint: Mark your destination on the map (ESC, Map, right click) and return to the game.", "Подсказка: Отметьте место на карте (ESC, Карта, правый клик) и вернитесь в игру.", "Ayuda: Marca el destino en el mapa (ESC, Mapa, clic derecho) y vuelve al juego.", "Ipucu: Haritada hedefi isaretleyin (ESC, Harita, sag tik) ve oyuna donun." },
     { "Pomoc: Taksi je unisten, voznja je otkazana.", "Hint: The taxi was destroyed, the ride is cancelled.", "Подсказка: Такси уничтожено, поездка отменена.", "Ayuda: El taxi fue destruido, el viaje se cancela.", "Ipucu: Taksi yok edildi, yolculuk iptal edildi." },
@@ -797,7 +796,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Prodavac stoji na vasem mjestu.", "The seller stands where you are.", "Продавец стоит на вашем месте.", "El vendedor esta donde estas tu.", "Satici sizin yerinizde duruyor." },
     { "Prodavac je uklonjen.", "Seller removed.", "Продавец убран.", "Vendedor quitado.", "Satici kaldirildi." },
     { "Prodavac nije postavljen.", "The seller isn't placed.", "Продавец не поставлен.", "El vendedor no esta colocado.", "Satici kurulmamis." },
-    { "SMS od taksi sluzbe: Vozac vas vise nece cekati, voznja je otkazana.", "SMS from the taxi service: The driver will not wait for you any longer, the ride is cancelled.", "SMS от службы такси: Водитель больше не будет вас ждать, поездка отменена.", "SMS del servicio de taxis: El conductor ya no te esperara, el viaje se cancela.", "Taksi servisinden SMS: Sofor sizi artik beklemeyecek, yolculuk iptal edildi." },
+    { "Vozac vas vise nece cekati, voznja je otkazana.", "The driver will not wait for you any longer, the ride is cancelled.", "Водитель больше не будет вас ждать, поездка отменена.", "El conductor ya no te esperara, el viaje se cancela.", "Sofor sizi artik beklemeyecek, yolculuk iptal edildi." },
     { "Lijep auto! Zanima li vas koliko vrijedi?", "Nice car! Want to know what it is worth?", "Красивая машина! Хотите узнать, сколько она стоит?", "Bonito coche! Quieres saber cuanto vale?", "Guzel araba! Ne kadar ettigini merak ediyor musunuz?" },
     { "Dobar dan! Mijenjate auto? Svratite do mene.", "Good day! Changing cars? Stop by.", "Добрый день! Меняете машину? Заезжайте ко мне.", "Buenos dias! Cambias de coche? Pasate por aqui.", "Iyi gunler! Araba mi degistiriyorsunuz? Bana ugrayin." },
     { "Hej, takav bi se kod mene brzo prodao!", "Hey, one like that would sell fast here!", "Эй, такая у меня быстро бы продалась!", "Oye, uno asi se venderia rapido aqui!", "Hey, boylesi bende hemen satilir!" },
@@ -822,7 +821,17 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pomoc: Upisite broj u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the number in chat (T), then press the right arrow (Select).", "Подсказка: Введите номер в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el numero en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Numarayi sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." },
     { "Pomoc: Upisite ime u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the name in chat (T), then press the right arrow (Select).", "Подсказка: Введите имя в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el nombre en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Ismi sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." },
     { "U pozivu", "On call", "Вызов", "En llamada", "Aramada" },
-    { "Pomoc: Poziv prekidate tipkom N ili zatvaranjem mobitela.", "Hint: End the call with N or by closing the phone.", "Подсказка: Завершите вызов клавишей N или закрыв телефон.", "Ayuda: Cuelga con N o cerrando el movil.", "Ipucu: Aramayi N tusuyla veya telefonu kapatarak bitirin." }
+    { "Pozivam...", "Calling...", "Вызываю...", "Llamando...", "Araniyor..." },
+    { "Dolazni poziv", "Incoming call", "Входящий вызов", "Llamada entrante", "Gelen arama" },
+    { "Y: javi se, N: odbij", "Y: answer, N: decline", "Y: ответить, N: отклонить", "Y: contestar, N: rechazar", "Y: cevapla, N: reddet" },
+    { "Y: otvori, N: zatvori", "Y: open, N: close", "Y: открыть, N: закрыть", "Y: abrir, N: cerrar", "Y: ac, N: kapat" },
+    { "N: prekini", "N: hang up", "N: завершить", "N: colgar", "N: kapat" },
+    { "Moj broj: %d", "My number: %d", "Мой номер: %d", "Mi numero: %d", "Numaram: %d" },
+    { "Pretplatnik trenutno nije dostupan.", "The subscriber is currently unavailable.", "Абонент сейчас недоступен.", "El abonado no esta disponible ahora.", "Aranan kisiye su an ulasilamiyor." },
+    { "Poziv je zavrsen.", "The call has ended.", "Вызов завершён.", "La llamada ha terminado.", "Arama sona erdi." },
+    { "%s (telefon): %s", "%s (phone): %s", "%s (телефон): %s", "%s (telefono): %s", "%s (telefon): %s" },
+    { "SMS od %s: %s", "SMS from %s: %s", "SMS от %s: %s", "SMS de %s: %s", "%s adli kisiden SMS: %s" },
+    { "Taksi sluzba", "Taxi service", "Служба такси", "Servicio de taxis", "Taksi servisi" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

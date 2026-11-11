@@ -356,7 +356,7 @@ static TaksiDispecer(p, const tekst[], const a[] = "")
 
 static TaksiSms(p, const tekst[])
 {
-    SendClientMessage(p, COLOR_SMS, T(p, tekst));
+    MobitelSms(p, T(p, "Taksi sluzba"), T(p, tekst));
 }
 
 BlackScreen(playerid, bool:crn)
@@ -552,8 +552,7 @@ static TaksiStigao(s)
     gTaksi[s][tRok] = GetTickCount() + TAKSI_CEKANJE_MS;
     SetVehicleParamsForPlayer(gTaksi[s][tVozilo], p, 1, 0);
     TaksiTrubi(s, 0);
-    TaksiSms(p, "SMS od taksi sluzbe: Vas taksi je stigao. Ugodnu voznju!");
-    SendClientMessage(p, COLOR_POMOC, T(p, "Pomoc: Taksi je oznacen strelicom. Sjednite straga tipkom G."));
+    TaksiSms(p, "Vas taksi je stigao. Ugodnu voznju!");
 }
 
 forward TaksiTrubi(s, korak);
@@ -1032,7 +1031,7 @@ TaksiTick()
             GetPlayerPos(p, x, y, z);
             if (VectorSize(x - gTaksiPoziv[p][0], y - gTaksiPoziv[p][1], 0.0) > TAKSI_ODLAZAK_M)
             {
-                TaksiSms(p, "SMS od taksi sluzbe: Vozac vas vise nece cekati, voznja je otkazana.");
+                TaksiSms(p, "Vozac vas vise nece cekati, voznja je otkazana.");
                 TaksiOtidi(s);
                 continue;
             }

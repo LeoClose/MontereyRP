@@ -120,6 +120,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
+    if (MobitelKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
     AnimKey(playerid, newkeys, oldkeys);
