@@ -111,10 +111,12 @@ public OnGameModeInit()
     InitHq();
     MapaOpstinaUkloni(INVALID_PLAYER_ID);
     MapaIdlewoodUkloni(INVALID_PLAYER_ID);
+    MapaIdlewoodFlatsUkloni(INVALID_PLAYER_ID);
     MapaMarica();
     MapaHitna();
     MapaOpstina();
     MapaIdlewood();
+    MapaIdlewoodFlats();
     MapaDacoradiona();
     InitMarica();
     InitPolicija();
@@ -202,6 +204,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_hitna.inc"
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
+#include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"

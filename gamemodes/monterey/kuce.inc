@@ -14,11 +14,8 @@ static gKucaPonuda[MAX_PLAYERS], gApKuca[MAX_PLAYERS];
 InitKuce()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, model INTEGER NOT NULL DEFAULT 0, price INTEGER NOT NULL, owner INTEGER NOT NULL DEFAULT 0, snap INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM houses");
-    new prazno = DB_GetRowCount(res) && !DB_GetFieldInt(res, 0);
-    DB_FreeResultSet(res);
-    if (prazno) KuceUvezi();
-    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
+    KuceUvezi();
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKuca[k][kuDb] = DB_GetFieldInt(res, 0);
@@ -43,12 +40,28 @@ static KuceUvezi()
     if (res && DB_GetRowCount(res))
     {
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
-        do DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, snap) VALUES (%f, %f, %f, %d, %d, 1)", DB_GetFieldFloat(res, 0), DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2), DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4)));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TEMP TABLE IF NOT EXISTS kuce_ok (id INTEGER PRIMARY KEY)"));
+        do
+        {
+            new Float:x = DB_GetFieldFloat(res, 0), Float:y = DB_GetFieldFloat(res, 1), Float:z = DB_GetFieldFloat(res, 2);
+            new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE x BETWEEN %f AND %f AND y BETWEEN %f AND %f AND z BETWEEN %f AND %f LIMIT 1", x - 2.0, x + 2.0, y - 2.0, y + 2.0, z - 2.5, z + 2.5);
+            new id = DB_GetRowCount(ima) ? DB_GetFieldInt(ima, 0) : 0;
+            DB_FreeResultSet(ima);
+            if (!id)
+            {
+                DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, snap) VALUES (%f, %f, %f, %d, %d, 1)", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4)));
+                id = ZadnjiId();
+            }
+            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO kuce_ok (id) VALUES (%d)", id));
+        }
         while (DB_SelectNextRow(res));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM houses WHERE owner = 0 AND model != 0 AND id NOT IN (SELECT id FROM kuce_ok)"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DROP TABLE kuce_ok"));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "COMMIT"));
     }
     if (res) DB_FreeResultSet(res);
     DB_Close(izvor);
+    fremove("kuce.db");
 }
 
 static KucaTlo(k)
