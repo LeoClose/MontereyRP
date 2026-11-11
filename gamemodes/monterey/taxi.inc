@@ -44,6 +44,7 @@
 #define COLOR_POMOC         0x8AB4F8FF
 #define COLOR_SMS           0xF5C542FF
 #define TAKSI_MOBITEL_MS    4500
+#define TAKSI_IGRAC_MS      20000
 #define TAKSI_ODLAZAK_M     200.0
 #define FADE_SLOJEVA        8
 #define FADE_KORAK_MS       50
@@ -53,7 +54,7 @@ static Float:gTaksiPoziv[MAX_PLAYERS][2];
 enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, tRok, tKlik, tKuca, tSkok, tCeka, tProguraj, tSporo, tDb, tStaje, tRub, tPrikaz, bool:tBrzo, bool:tObilazi, Float:tCiljX, Float:tCiljY }
 static gTaksi[TAKSI_SLOTOVA][E_TAKSI];
 static Float:gTaksiTocke[TAKSI_SLOTOVA][CESTA_MAX_TOCAKA][4];
-static gTaksiOd[MAX_PLAYERS];
+static gTaksiOd[MAX_PLAYERS], gTaksiCeka[MAX_PLAYERS], gTaksiPonuda[MAX_PLAYERS], bool:gTaksiVozac[MAX_PLAYERS];
 static gNpcTaksi[MAX_PLAYERS];
 static Text:gFade[FADE_SLOJEVA];
 
@@ -434,7 +435,7 @@ static TaksiNajbliziSlobodan(Float:x, Float:y)
     new best = -1, Float:bd = 1.0e12, Float:vx, Float:vy, Float:vz;
     for (new s = 0; s < TAKSI_FLOTA; s++)
     {
-        if (gTaksi[s][tStanje] != TX_SLOBODAN) continue;
+        if (gTaksi[s][tStanje] != TX_SLOBODAN && (gTaksi[s][tStanje] != TX_ODLAZI || gTaksi[s][tNpc] == INVALID_PLAYER_ID)) continue;
         GetVehiclePos(gTaksi[s][tVozilo], vx, vy, vz);
         new Float:d = VectorSize(vx - x, vy - y, 0.0);
         if (d < bd) { bd = d; best = s; }
@@ -457,14 +458,87 @@ TaksiPozovi(playerid)
 {
     if (IsRanjen(playerid)) return 1;
     if (!gUlogiran[playerid]) return 1;
-    if (gTaksiOd[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec ste pozvali taksi."));
+    if (gTaksiOd[playerid] || gTaksiCeka[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec ste pozvali taksi."));
     if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Izadite iz vozila da biste pozvali taksi."));
     new Float:x, Float:y, Float:z, Float:d;
     GetPlayerPos(playerid, x, y, z);
-    new cilj = CestaNajbliza(x, y, z, d);
+    CestaNajbliza(x, y, z, d);
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE)
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Taksi sluzba radi samo na ulicama Los Santosa."));
+    if (TaksiPonudiIgracima(playerid, x, y, z))
+    {
+        gTaksiPoziv[playerid][0] = x;
+        gTaksiPoziv[playerid][1] = y;
+        MobitelPoziv(playerid, T(playerid, "Taksi"));
+        SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
+        TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
+        TaksiDispecer(playerid, "Dispecer (telefon): U redu, javljamo vozacima.");
+        return 1;
+    }
+    return TaksiNpcPoziv(playerid, true);
+}
 
+static TaksiPonudiIgracima(playerid, Float:x, Float:y, Float:z)
+{
+    new ima = 0;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (i == playerid || !gUlogiran[i] || !gOrg[i] || GetOrgTip(gOrg[i]) != ORG_TAKSI || !NaDuznosti(i) || IsRanjen(i) || ImaLisice(i)) continue;
+        new body[128];
+        format(body, sizeof body, T(i, "Musterija %d m od vas. Prihvacate li poziv?"), floatround(GetPlayerDistanceFromPoint(i, x, y, z)));
+        gTaksiPonuda[i] = playerid + 1;
+        PrikaziDialog(i, DLG_TAKSI_POZIV, DIALOG_STYLE_MSGBOX, T(i, "Poziv taksiju"), body, T(i, "Prihvati"), T(i, "Odbij"));
+        ima = 1;
+    }
+    if (!ima) return 0;
+    gTaksiCeka[playerid] = GetTickCount() | 1;
+    SetTimerEx("TaksiBezIgraca", TAKSI_IGRAC_MS, false, "ii", playerid, gTaksiCeka[playerid]);
+    return 1;
+}
+
+static TaksiOcistiPonude(playerid)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gTaksiPonuda[i] == playerid + 1) gTaksiPonuda[i] = 0;
+}
+
+forward TaksiBezIgraca(playerid, ceka);
+public TaksiBezIgraca(playerid, ceka)
+{
+    if (gTaksiCeka[playerid] != ceka) return;
+    gTaksiCeka[playerid] = 0;
+    TaksiOcistiPonude(playerid);
+    if (gUlogiran[playerid] && !gTaksiOd[playerid] && !IsRanjen(playerid) && !IsPlayerInAnyVehicle(playerid)) TaksiNpcPoziv(playerid, false);
+}
+
+DLG:taksi_poziv(playerid, response)
+{
+    new c = gTaksiPonuda[playerid] - 1, Float:x, Float:y, Float:z;
+    gTaksiPonuda[playerid] = 0;
+    if (!response) return 1;
+    if (c < 0 || !gTaksiCeka[c]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Netko je vec prihvatio poziv."));
+    gTaksiCeka[c] = 0;
+    TaksiOcistiPonude(c);
+    GetPlayerPos(c, x, y, z);
+    gTaksiVozac[playerid] = true;
+    SetPlayerCheckpoint(playerid, x, y, z, 5.0);
+    SendClientMessage(playerid, COLOR_ORG, T(playerid, "Musterija je oznacena na karti."));
+    SendClientMessage(c, COLOR_CHAT, T(c, "Taksist %s dolazi po vas."), GetRPIme(playerid));
+    return 1;
+}
+
+public OnPlayerEnterCheckpoint(playerid)
+{
+    if (!gTaksiVozac[playerid]) return 1;
+    gTaksiVozac[playerid] = false;
+    DisablePlayerCheckpoint(playerid);
+    return 1;
+}
+
+static TaksiNpcPoziv(playerid, bool:telefon)
+{
+    new Float:x, Float:y, Float:z, Float:d;
+    GetPlayerPos(playerid, x, y, z);
+    new cilj = CestaNajbliza(x, y, z, d);
     new s = -1, sekundi, duljina = -1;
     if (gPremium[playerid] && GetWanted(playerid)) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Premium taksi nije dostupan dok vas policija trazi."));
     if (gPremium[playerid] && !GetWanted(playerid))
@@ -498,9 +572,12 @@ TaksiPozovi(playerid)
     else NPC_Spawn(gTaksi[s][tNpc]);
     gTaksiPoziv[playerid][0] = x;
     gTaksiPoziv[playerid][1] = y;
-    MobitelPoziv(playerid, T(playerid, "Taksi"));
-    SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
-    TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
+    if (telefon)
+    {
+        MobitelPoziv(playerid, T(playerid, "Taksi"));
+        SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
+        TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
+    }
     SetTimerEx("TaksiOdgovor", s >= TAKSI_FLOTA ? 500 : 2000, false, "iii", s, playerid, (sekundi + 59) / 60);
     return 1;
 }
@@ -1007,6 +1084,10 @@ TaksiKey(playerid, KEY:newkeys, KEY:oldkeys)
 TaksiPlayerLeft(playerid)
 {
     if (gTaksiOd[playerid]) TaksiOtidi(gTaksiOd[playerid] - 1);
+    if (gTaksiCeka[playerid]) TaksiOcistiPonude(playerid);
+    gTaksiCeka[playerid] = 0;
+    gTaksiPonuda[playerid] = 0;
+    gTaksiVozac[playerid] = false;
 }
 
 static TaksiBezVozaca(s)

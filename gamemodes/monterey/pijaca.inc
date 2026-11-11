@@ -116,7 +116,7 @@ static bool:PijacaReci(playerid, const recenica[])
 static bool:PijacaSluzbeno(v)
 {
     new tip = gOrgVehOrg[v] ? GetOrgTip(gOrgVehOrg[v]) : -1;
-    return tip == ORG_LSPD || tip == ORG_MEDICINSKA || tip == ORG_VATROGASCI;
+    return tip == ORG_LSPD || tip == ORG_MEDICINSKA || tip == ORG_VATROGASCI || tip == ORG_TAKSI || tip == ORG_MEHANICAR;
 }
 
 // aktor pozdravlja igrace u blizini svakih 10 sekundi

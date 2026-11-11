@@ -91,6 +91,11 @@ static SetWanted(playerid, razina)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET wanted = %d WHERE id = %d", razina, gAccountId[playerid]));
 }
 
+NaDuznosti(playerid)
+{
+    return gOnDuty[playerid] ? 1 : 0;
+}
+
 bool:PolicajacNaDuznosti(playerid)
 {
     return gOnDuty[playerid] && GetOrgTip(gOrg[playerid]) == ORG_LSPD;
@@ -315,8 +320,9 @@ CMD:duty(playerid, params[])
 {
     if (!gUlogiran[playerid]) return 1;
     new tip = gOrg[playerid] ? GetOrgTip(gOrg[playerid]) : -1;
-    if (tip != ORG_LSPD && tip != ORG_MEDICINSKA && tip != ORG_VATROGASCI) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate ovlasti za ovu naredbu."));
-    if (!HqProvjera(playerid)) return 1;
+    if (tip != ORG_LSPD && tip != ORG_MEDICINSKA && tip != ORG_VATROGASCI && tip != ORG_TAKSI && tip != ORG_MEHANICAR) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate ovlasti za ovu naredbu."));
+    if (IsRanjen(playerid) || ImaLisice(playerid)) return 1;
+    if (tip != ORG_TAKSI && tip != ORG_MEHANICAR && !HqProvjera(playerid)) return 1;
     if (tip == ORG_LSPD && !IsPlayerInRangeOfPoint(playerid, HQ_DOMET, DUTY_POS)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod mjesta za duznost."));
     gOnDuty[playerid] = !gOnDuty[playerid];
     if (!gOnDuty[playerid]) VratiOpremu(playerid, true);

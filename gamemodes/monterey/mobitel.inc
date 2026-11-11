@@ -49,7 +49,7 @@ static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLA
 static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
 static PlayerText:gMobitelLijevo[MAX_PLAYERS], PlayerText:gMobitelDesno[MAX_PLAYERS], bool:gMobitelDolje[MAX_PLAYERS];
 static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ];
-static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], gMobitelObavijest[MAX_PLAYERS], gMobitelPoruka[MAX_PLAYERS][MOBITEL_PORUKA_LEN];
+static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], bool:gMobitelZvucnik[MAX_PLAYERS], gMobitelObavijest[MAX_PLAYERS], gMobitelPoruka[MAX_PLAYERS][MOBITEL_PORUKA_LEN];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_PORUKA_LEN], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelPrimatelj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
 static gMobitelKontaktId[MAX_PLAYERS][MOBITEL_KONTAKATA], gMobitelKontakt[MAX_PLAYERS];
@@ -290,7 +290,8 @@ static MobitelPrikazi(playerid)
     MobitelSpusti(playerid, gMobitelPoziv[playerid] || MobitelSkocni(ekran));
     if (gMobitelPoziv[playerid])
     {
-        MobitelEkranPoruke(playerid, gMobitelSpojen[playerid] ? T(playerid, "U pozivu") : T(playerid, "Pozivam..."), gMobitelSugovornik[playerid], T(playerid, "N: prekini"), "_");
+        new bool:razgovor = gMobitelSpojen[playerid] && gMobitelDrugi[playerid] != INVALID_PLAYER_ID;
+        MobitelEkranPoruke(playerid, gMobitelSpojen[playerid] ? T(playerid, "U pozivu") : T(playerid, "Pozivam..."), gMobitelSugovornik[playerid], T(playerid, "N: prekini"), !razgovor ? ("_") : gMobitelZvucnik[playerid] ? T(playerid, "Y: slusalica") : T(playerid, "Y: zvucnik"));
         return;
     }
     if (ekran == MOBITEL_DOLAZNI)
@@ -376,6 +377,7 @@ static MobitelOtvori(playerid)
     gMobitelPoziv[playerid] = false;
     gMobitelDolje[playerid] = false;
     gMobitelSpojen[playerid] = false;
+    gMobitelZvucnik[playerid] = false;
     gMobitelDrugi[playerid] = INVALID_PLAYER_ID;
     gMobitelStaroGore[playerid] = 0;
     gMobitelStaraStrana[playerid] = 0;
@@ -423,6 +425,7 @@ MobitelZatvori(playerid)
     gMobitelOtvoren[playerid] = false;
     gMobitelDrugi[playerid] = INVALID_PLAYER_ID;
     gMobitelSpojen[playerid] = false;
+    gMobitelZvucnik[playerid] = false;
     gMobitelObavijest[playerid]++;
     if (gMobitelPoziv[playerid] && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
     gMobitelPoziv[playerid] = false;
@@ -593,16 +596,42 @@ MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
         gMobitelObavijest[playerid]++;
         MobitelPrikazi(playerid);
     }
+    else if (gMobitelPoziv[playerid] && gMobitelSpojen[playerid] && gMobitelDrugi[playerid] != INVALID_PLAYER_ID && (pritisnuto & KEY_YES))
+    {
+        gMobitelZvucnik[playerid] = !gMobitelZvucnik[playerid];
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, gMobitelZvucnik[playerid] ? ("* %s ukljucuje zvucnik na mobitelu.") : ("* %s iskljucuje zvucnik na mobitelu."), GetRPIme(playerid), "", 1);
+        MobitelPrikazi(playerid);
+    }
     else if ((MobitelSkocni(ekran) || gMobitelPoziv[playerid]) && (pritisnuto & KEY_NO)) MobitelZatvori(playerid);
     else return 0;
     return 1;
 }
 
-MobitelRazgovor(playerid, const text[])
+MobitelURazgovoru(playerid)
+{
+    return gMobitelOtvoren[playerid] && gMobitelPoziv[playerid] && gMobitelSpojen[playerid] ? 1 : 0;
+}
+
+static MobitelCuje(playerid, const poruka[], const a[], const b[] = "")
+{
+    if (gMobitelZvucnik[playerid]) PosaljiBlizu(playerid, CHAT_RANGE, COLOR_SMS, poruka, a, b, 1);
+    else SendClientMessage(playerid, COLOR_SMS, T(playerid, poruka), a, b);
+}
+
+MobitelGovor(playerid, const text[], vrsta)
 {
     new drugi = gMobitelDrugi[playerid];
-    if (!gMobitelSpojen[playerid] || drugi == INVALID_PLAYER_ID) return;
-    SendClientMessage(drugi, COLOR_SMS, T(drugi, "%s (telefon): %s"), gMobitelSugovornik[drugi], text);
+    if (MobitelURazgovoru(playerid) && drugi != INVALID_PLAYER_ID) MobitelCuje(drugi, "%s (telefon): %s", gMobitelSugovornik[drugi], text);
+    if (vrsta != CHAT_VIKANJE) return;
+    new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid);
+    GetPlayerPos(playerid, x, y, z);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (i == playerid || !IsPlayerConnected(i) || !MobitelURazgovoru(i)) continue;
+        new r = gMobitelDrugi[i];
+        if (r == INVALID_PLAYER_ID || r == playerid || GetPlayerVirtualWorld(i) != vw || GetPlayerInterior(i) != interior || GetPlayerDistanceFromPoint(i, x, y, z) > CHAT_RANGE) continue;
+        MobitelCuje(r, "(telefon) Netko u pozadini vice: %s!", text);
+    }
 }
 
 static MobitelUnos(playerid, ekran, const pomoc[])

@@ -14,7 +14,7 @@ enum
     DLG_GORIVO, DLG_TRGOVINA, DLG_APANEL_TRGOVINA, DLG_APANEL_TRGOVINA_MENI,
     DLG_SALON_KUPI, DLG_APANEL_SALON, DLG_APANEL_SALON_MENI, DLG_APANEL_SALON_DODAJ, DLG_APANEL_SALON_UKLONI,
     DLG_OPSTINA, DLG_OPSTINA_KAZNE, DLG_OPSTINA_IME, DLG_OPSTINA_VOZILA, DLG_OPSTINA_PRODAJA, DLG_OPSTINA_PONUDA, DLG_APANEL_OPSTINA, DLG_APANEL_OPSTINA_INT, DLG_APANEL_OPSTINA_UNOS,
-    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR
+    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR, DLG_TAKSI_POZIV, DLG_APANEL_ORUZARNICA, DLG_APANEL_ORUZARNICA_INT, DLG_APANEL_ORUZARNICA_MENI
 }
 
 static gDlg[MAX_PLAYERS];
@@ -125,6 +125,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_PIJACA_KUPI:       return Dlg_pijaca_kupi(playerid, response);
         case DLG_APANEL_PIJACA:     return Dlg_apanel_pijaca(playerid, response, listitem);
         case DLG_MEHANICAR:         return Dlg_mehanicar(playerid, response, listitem);
+        case DLG_TAKSI_POZIV:       return Dlg_taksi_poziv(playerid, response);
+        case DLG_APANEL_ORUZARNICA: return Dlg_apanel_oruzarnica(playerid, response, listitem);
+        case DLG_APANEL_ORUZARNICA_INT: return Dlg_apanel_oruzarnica_int(playerid, response, listitem);
+        case DLG_APANEL_ORUZARNICA_MENI: return Dlg_apanel_oruzarnica_meni(playerid, response, listitem);
     }
     return 1;
 }

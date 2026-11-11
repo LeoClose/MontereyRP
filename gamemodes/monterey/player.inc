@@ -50,6 +50,7 @@ public OnPlayerDisconnect(playerid, reason)
     GepekDisconnect(playerid);
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
+    OruzarnicaDisconnect(playerid);
     MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
     gUlogiran[playerid] = false;
@@ -134,7 +135,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 static Interakcija(playerid)
 {
     if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid)) return;
+    if (KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid)) return;
     DilerKey(playerid);
 }
 

@@ -13,7 +13,7 @@
 #define PERM_COUNT          3
 
 static const gPermName[PERM_COUNT][] = { "Pozivanje i izbacivanje", "Kupovina vozila", "Pristup sefu" };
-new const gOrgTypeName[6][] = { "Banda", "Mafija", "Legalna", "LSPD", "Medicinska sluzba", "Vatrogasci" };
+new const gOrgTypeName[8][] = { "Banda", "Mafija", "Legalna", "LSPD", "Medicinska sluzba", "Vatrogasci", "Taksi sluzba", "Mehanicari" };
 new gOrgNova;
 
 new gOrg[MAX_PLAYERS];
@@ -555,6 +555,8 @@ OrgUkloniVozilo(playerid)
 #define ORG_LSPD            3
 #define ORG_MEDICINSKA      4
 #define ORG_VATROGASCI      5
+#define ORG_TAKSI           6
+#define ORG_MEHANICAR       7
 
 enum E_HQ { hOrg, hPickup, hPickupU, Text3D:hLabel, Text3D:hLabelU, hInt, Float:hX, Float:hY, Float:hZ, Float:hA, Float:hIx, Float:hIy, Float:hIz }
 static gHq[MAX_HQ][E_HQ];
@@ -730,6 +732,7 @@ bool:HqUlazIzlaz(playerid)
         return true;
     }
     if (TrgovinaUlaz(playerid)) return true;
+    if (OruzarnicaUlaz(playerid)) return true;
     if (OpstinaUlaz(playerid)) return true;
     return bool:PrikolicaUlaz(playerid);
 }

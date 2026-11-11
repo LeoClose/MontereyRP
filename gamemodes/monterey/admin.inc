@@ -711,9 +711,9 @@ enum
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -726,7 +726,7 @@ CMD:apanel(playerid, params[])
 
 static const gApKat[][] = { "Igraci", "Vozila", "Organizacije", "Teritoriji", "Administracija" };
 static const gApKatStavke[sizeof gApKat][9] = {
-    { 0, 1, 2, 7, 8, 22, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 20, -1, -1 }
+    { 0, 1, 2, 7, 8, 22, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 24, 20, -1 }
 };
 static gApKatOdabrana[MAX_PLAYERS];
 
@@ -778,7 +778,7 @@ ShowPopisOrg(playerid)
     {
         DB_GetFieldString(res, 1, name);
         format(row, sizeof row, T(playerid, "[%d] %s - %s, %d clanova"), DB_GetFieldInt(res, 0), name,
-            T(playerid, gOrgTypeName[clamp(DB_GetFieldInt(res, 2), 0, 5)]), DB_GetFieldInt(res, 3));
+            T(playerid, gOrgTypeName[clamp(DB_GetFieldInt(res, 2), 0, sizeof gOrgTypeName - 1)]), DB_GetFieldInt(res, 3));
     } while (DodajStupac(list, len, row) && DB_SelectNextRow(res));
     DB_FreeResultSet(res);
     return PrikaziDialog(playerid, DLG_APANEL_ORGOVI, DIALOG_STYLE_LIST, T(playerid, "Admin panel - Organizacije"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
@@ -858,6 +858,7 @@ static OtvoriStavku(playerid, stavka)
         case 20: return ShowOpstinaAdmin(playerid);
         case 21: return ShowPijacaAdmin(playerid);
         case 23: return ShowMehanicare(playerid);
+        case 24: return ShowOruzarnice(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));
@@ -899,7 +900,7 @@ DLG:apanel_orgovi(playerid, response, listitem)
 {
     if (!response) return ShowAdminPanel(playerid);
     if (listitem == 0)
-        return PrikaziDialog(playerid, DLG_APANEL_TIP_ORG, DIALOG_STYLE_LIST, T(playerid, "Tip nove organizacije"), T(playerid, "Banda\nMafija\nLegalna\nLSPD\nVatrogasci i hitna pomoc"), T(playerid, "Dalje"), T(playerid, "Natrag"));
+        return PrikaziDialog(playerid, DLG_APANEL_TIP_ORG, DIALOG_STYLE_LIST, T(playerid, "Tip nove organizacije"), T(playerid, "Banda\nMafija\nLegalna\nLSPD\nVatrogasci i hitna pomoc\nTaksi sluzba\nMehanicari"), T(playerid, "Dalje"), T(playerid, "Natrag"));
     if (listitem == 1)
     {
         OrgUkloniVozilo(playerid);
@@ -914,7 +915,7 @@ DLG:apanel_orgovi(playerid, response, listitem)
 DLG:apanel_tip_org(playerid, response, listitem)
 {
     if (!response) return ShowPopisOrg(playerid);
-    gApOrg[playerid] = listitem == ORG_MEDICINSKA ? ORG_VATROGASCI : listitem;
+    gApOrg[playerid] = listitem >= ORG_MEDICINSKA ? listitem + 1 : listitem;
     return ShowUnos(playerid, AP_ORG_CREATE, T(playerid, "Unesite ime nove organizacije:"));
 }
 

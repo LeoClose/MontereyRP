@@ -15,7 +15,7 @@
 #define KAMION_SKIN         277
 #define KAMION_BOJA         3
 #define KAMION_MAX          24
-#define ORG_MEHANICAR       100
+#define MEHANICAR_IGRAC_DOMET 6.0
 #define MEHANICAR_MODEL     525
 #define MEHANICAR_SKIN      50
 #define MEHANICAR_BOJA      1
@@ -224,7 +224,16 @@ SlucajNaslov(playerid, title[], size)
 
 static bool:JeUSluzbi(playerid, tip)
 {
-    return gUlogiran[playerid] && gOrg[playerid] && (tip == ORG_VATROGASCI || tip == ORG_MEDICINSKA) && GetOrgTip(gOrg[playerid]) == ORG_VATROGASCI;
+    if (!gUlogiran[playerid] || !gOrg[playerid] || !NaDuznosti(playerid)) return false;
+    new org = GetOrgTip(gOrg[playerid]);
+    if (tip == ORG_MEHANICAR) return org == ORG_MEHANICAR;
+    return (tip == ORG_VATROGASCI || tip == ORG_MEDICINSKA) && org == ORG_VATROGASCI;
+}
+
+static bool:SlucajImaIgraca(tip, osim)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (i != osim && JeUSluzbi(i, tip)) return true;
+    return false;
 }
 
 static SlucajOcistiPozive(s)
@@ -365,12 +374,36 @@ static bool:SlucajUsput(s)
     return false;
 }
 
+static SlucajNajbliziPovratak(s, &Float:najblize)
+{
+    new best = -1, Float:x, Float:y, Float:z;
+    najblize = 1.0e12;
+    for (new i = 0; i < SLUCAJ_MAX; i++)
+    {
+        if (i == s || gSlucaj[i][slStanje] != SL_ODLAZI || gSlucaj[i][slTip] != gSlucaj[s][slTip] || !gSlucaj[i][slVozilo] || gSlucaj[i][slSlepa] || gSlucaj[i][slPjeske]) continue;
+        GetVehiclePos(gSlucaj[i][slVozilo], x, y, z);
+        new Float:d = VectorSize(x - gSlucaj[s][slX], y - gSlucaj[s][slY], 0.0);
+        if (d < najblize)
+        {
+            najblize = d;
+            best = i;
+        }
+    }
+    return best;
+}
+
 static SlucajPosaljiKamion(s)
 {
     SlucajOcistiPozive(s);
     for (new i = 0; i < SLUCAJ_MAX; i++) if (gSlucaj[i][slNastavi] == s + 1 && gSlucaj[i][slVozilo]) return;
     if (SlucajGrupa(s)) return;
-    new k = SlucajNajbliziKamion(s);
+    new k = SlucajNajbliziKamion(s), Float:dPovratak, r = SlucajNajbliziPovratak(s, dPovratak);
+    if (r != -1 && (k == -1 || dPovratak < VectorSize(gKamion[k][kX] - gSlucaj[s][slX], gKamion[k][kY] - gSlucaj[s][slY], 0.0)) && SlucajPutDo(s, gSlucaj[r][slVozilo]))
+    {
+        SlucajPredaj(r, s, SL_NEMA);
+        SlucajNaPut(s);
+        return;
+    }
     if (k == -1) return;
     gSlucaj[s][slStanje] = SL_NPC;
     new v = gKamion[k][kVozilo];
@@ -816,6 +849,11 @@ SlucajTick()
             continue;
         }
         if (st == SL_ODLAZI) continue;
+        if (st == SL_IGRAC && gSlucaj[s][slTip] == ORG_MEHANICAR)
+        {
+            MehanicarIgracStigao(s);
+            continue;
+        }
         if (st == SL_NPC && SlucajUsput(s)) continue;
         if (st == SL_POZIV && (--gSlucaj[s][slPoziv] <= 0 || !SlucajImaPoziva(s))) SlucajPosaljiKamion(s);
         new ko = gSlucaj[s][slTip] == ORG_VATROGASCI ? SlucajKoPrska(s) : INVALID_PLAYER_ID;
@@ -859,9 +897,9 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
         new body[128], Float:px, Float:py, Float:pz, d;
         GetPlayerPos(i, px, py, pz);
         d = floatround(VectorSize(px - x, py - y, 0.0));
-        format(body, sizeof body, vatra ? T(i, "Gori vozilo %d m od vas. Prihvacate li poziv?") : T(i, "Ranjena osoba %d m od vas. Prihvacate li poziv?"), d);
+        format(body, sizeof body, vatra ? T(i, "Gori vozilo %d m od vas. Prihvacate li poziv?") : tip == ORG_MEHANICAR ? T(i, "Vozilo u kvaru %d m od vas. Prihvacate li poziv?") : T(i, "Ranjena osoba %d m od vas. Prihvacate li poziv?"), d);
         gSlucajPoziv[i] = s + 1;
-        PrikaziDialog(i, DLG_SLUCAJ, DIALOG_STYLE_MSGBOX, vatra ? T(i, "Poziv vatrogascima") : T(i, "Poziv hitnoj"), body, T(i, "Prihvati"), T(i, "Odbij"));
+        PrikaziDialog(i, DLG_SLUCAJ, DIALOG_STYLE_MSGBOX, vatra ? T(i, "Poziv vatrogascima") : tip == ORG_MEHANICAR ? T(i, "Poziv mehanicaru") : T(i, "Poziv hitnoj"), body, T(i, "Prihvati"), T(i, "Odbij"));
     }
     return s;
 }
@@ -936,7 +974,7 @@ MehanicarPozovi(playerid)
     GetVehiclePos(v, x, y, z);
     CestaNajbliza(x, y, z, d);
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar dolazi samo na ulice Los Santosa."));
-    if (!KamionBroj(ORG_MEHANICAR) || SlucajNovi(ORG_MEHANICAR, x, y, z, playerid) == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi mehanicari su zauzeti, pokusajte kasnije."));
+    if ((!KamionBroj(ORG_MEHANICAR) && !SlucajImaIgraca(ORG_MEHANICAR, playerid)) || SlucajNovi(ORG_MEHANICAR, x, y, z, playerid) == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi mehanicari su zauzeti, pokusajte kasnije."));
     gMehanicarVozilo[playerid] = v;
     MobitelPoziv(playerid, T(playerid, "Mehanicar"));
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
@@ -976,13 +1014,21 @@ DLG:mehanicar(playerid, response, listitem)
         return 1;
     }
     if (listitem < 0 || listitem >= sizeof cijene) return 1;
-    if (!DajNovac(playerid, -cijene[listitem]))
+    new igrac = gSlucaj[s][slIgrac];
+    if (igrac != INVALID_PLAYER_ID ? !TransferNovac(playerid, igrac, cijene[listitem]) : !DajNovac(playerid, -cijene[listitem]))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
         MehanicarPonudi(playerid, s);
         return 1;
     }
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
+    if (listitem == 2 && igrac != INVALID_PLAYER_ID)
+    {
+        SendClientMessage(igrac, COLOR_ORG, T(igrac, "Musterija je platila slepanje. Odslepajte vozilo do radionice."));
+        gMehanicar[playerid] = 0;
+        SlucajKraj(s, true);
+        return 1;
+    }
     if (listitem == 2)
     {
         gSlucaj[s][slSlepa] = playerid + 1;
@@ -1001,8 +1047,30 @@ static MehanicarHauba(v, bool:otvorena)
     SetVehicleParamsEx(v, e, l, a, d, otvorena ? 1 : 0, bt, o);
 }
 
+static MehanicarIgracStigao(s)
+{
+    new i = gSlucaj[s][slIgrac], p = gSlucaj[s][slPacijent], Float:x, Float:y, Float:z;
+    if (i == INVALID_PLAYER_ID || p == INVALID_PLAYER_ID || GetPlayerState(i) != PLAYER_STATE_ONFOOT || !GetVehiclePos(gMehanicarVozilo[p], x, y, z) || !IsPlayerInRangeOfPoint(i, MEHANICAR_IGRAC_DOMET, x, y, z)) return;
+    DisablePlayerCheckpoint(i);
+    gSlucaj[s][slStanje] = SL_PRISTANAK;
+    gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+    MehanicarPonudi(p, s);
+}
+
 static MehanicarRadi(s, v, posao)
 {
+    new igrac = gSlucaj[s][slIgrac];
+    if (igrac != INVALID_PLAYER_ID)
+    {
+        if (posao == 1) MehanicarHauba(v, true);
+        if (posao == 1) ApplyAnimation(igrac, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0, SYNC_ALL);
+        else ApplyAnimation(igrac, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0, SYNC_ALL);
+        gSlucaj[s][slStanje] = SL_RADI;
+        gSlucaj[s][slPosao] = posao;
+        gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+        SetTimerEx("MehanicarGotov", MEHANICAR_RAD_MS, false, "i", s);
+        return;
+    }
     new Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
     GetVehiclePos(v, x, y, z);
     GetVehicleZAngle(v, a);
@@ -1045,7 +1113,8 @@ public MehanicarGotov(s)
 {
     if (gSlucaj[s][slStanje] != SL_RADI) return;
     new p = gSlucaj[s][slPacijent];
-    NPC_ClearAnimations(gSlucaj[s][slNpc]);
+    if (gSlucaj[s][slNpc] != INVALID_PLAYER_ID) NPC_ClearAnimations(gSlucaj[s][slNpc]);
+    else if (gSlucaj[s][slIgrac] != INVALID_PLAYER_ID) ClearAnimations(gSlucaj[s][slIgrac]);
     gSlucaj[s][slStanje] = SL_PRISTANAK;
     gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
     if (p == INVALID_PLAYER_ID) return;
@@ -1082,6 +1151,7 @@ DLG:slucaj(playerid, response)
     gSlucaj[s][slIgrac] = playerid;
     SetPlayerCheckpoint(playerid, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], 5.0);
     if (gSlucaj[s][slTip] == ORG_VATROGASCI) return SendClientMessage(playerid, COLOR_ORG, T(playerid, "Pozar je oznacen na karti. Gasi ga vatrogasnim kamionom ili aparatom (/aparat)."));
+    if (gSlucaj[s][slTip] == ORG_MEHANICAR) return SendClientMessage(playerid, COLOR_ORG, T(playerid, "Vozilo u kvaru je oznaceno na karti. Kad stignete, vlasnik bira uslugu."));
     return SendClientMessage(playerid, COLOR_ORG, T(playerid, "Ranjenik je oznacen na karti. Ozivi ga s /heal %d (treba /duty)."), gSlucaj[s][slPacijent]);
 }
 

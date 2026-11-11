@@ -326,6 +326,7 @@ DLG:salon_kupi(playerid, response)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
+    if (OruzarnicaKlik(playerid, playertextid)) return 1;
     new s = gUSalonu[playerid];
     if (s == -1) return 0;
     if (playertextid == gSalonTd[playerid][STD_LIJEVO] || playertextid == gSalonTd[playerid][STD_DESNO])
@@ -345,6 +346,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
+    if (clickedid == INVALID_TEXT_DRAW) OruzarnicaZatvori(playerid);
     if (clickedid == INVALID_TEXT_DRAW && gUSalonu[playerid] != -1) SalonZatvori(playerid);
     return 0;
 }

@@ -66,7 +66,6 @@ public OnPlayerText(playerid, text[])
     if (!gUlogiran[playerid]) return 0;
     RemoveBoje(text);
     if (MobitelText(playerid, text)) return 0;
-    MobitelRazgovor(playerid, text);
     SendChat(playerid, text, CHAT_GOVOR);
     return 0;
 }
@@ -358,12 +357,14 @@ SendChat(playerid, const text[], vrsta)
 
 ShowChat(playerid, const text[], vrsta)
 {
+    new bool:mobitel = MobitelURazgovoru(playerid) != 0;
     switch (vrsta)
     {
-        case CHAT_SAPTANJE: PosaljiBlizu(playerid, CHAT_RANGE_SAPTANJE, COLOR_CHAT, "%s sapuce: %s", GetRPIme(playerid), text, 1);
-        case CHAT_VIKANJE:  PosaljiBlizu(playerid, CHAT_RANGE_VIKANJE, COLOR_CHAT, "%s vice: %s!", GetRPIme(playerid), text, 1);
-        default:         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze: %s", GetRPIme(playerid), text, 1);
+        case CHAT_SAPTANJE: PosaljiBlizu(playerid, CHAT_RANGE_SAPTANJE, COLOR_CHAT, mobitel ? ("%s sapuce (telefon): %s") : ("%s sapuce: %s"), GetRPIme(playerid), text, 1);
+        case CHAT_VIKANJE:  PosaljiBlizu(playerid, CHAT_RANGE_VIKANJE, COLOR_CHAT, mobitel ? ("%s vice (telefon): %s!") : ("%s vice: %s!"), GetRPIme(playerid), text, 1);
+        default:         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, mobitel ? ("%s kaze (telefon): %s") : ("%s kaze: %s"), GetRPIme(playerid), text, 1);
     }
+    MobitelGovor(playerid, text, vrsta);
 }
 
 forward Prijevod(index, response_code, const data[]);
