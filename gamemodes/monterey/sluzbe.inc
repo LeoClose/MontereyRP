@@ -1029,7 +1029,13 @@ static MehanicarAnim(s)
 {
     new npc = gSlucaj[s][slNpc], p = gSlucaj[s][slPacijent], Float:x, Float:y, Float:z;
     if (p != INVALID_PLAYER_ID && GetVehiclePos(gMehanicarVozilo[p], x, y, z)) NPC_SetAngleToPos(npc, x, y, z);
-    if (gSlucaj[s][slPosao] == 1) NPC_ApplyAnimation(npc, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0);
+    if (gSlucaj[s][slPosao] == 1)
+    {
+        new Float:kut;
+        NPC_GetFacingAngle(npc, kut);
+        NPC_SetFacingAngle(npc, kut + 180.0);
+        NPC_ApplyAnimation(npc, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0);
+    }
     else NPC_ApplyAnimation(npc, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0);
     SetTimerEx("MehanicarGotov", MEHANICAR_RAD_MS, false, "i", s);
 }
