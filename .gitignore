@@ -1,0 +1,33 @@
+# open.mp binaries and runtime files: installed on the server, not tracked.
+omp-server
+omp-server.exe
+*.dll
+components/
+plugins/
+models/
+npcmodes/*
+!npcmodes/recordings/
+npcmodes/recordings/*
+!npcmodes/recordings/heli_*.rec
+!npcmodes/recordings/TRAIN_*.rec
+qawno/*
+!qawno/include/
+
+# Build output (compiled on the server by update.sh)
+*.amx
+*.build.amx
+
+# Runtime data
+log.txt
+crashinfo.txt
+bans.json
+scriptfiles/*
+!scriptfiles/.gitkeep
+!scriptfiles/kolizija.bin
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
