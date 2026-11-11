@@ -804,7 +804,14 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vozila organizacija ne otkupljujem, zao mi je.", "I don't buy organisation vehicles, sorry.", "Машины организаций не выкупаю, извините.", "No compro vehiculos de organizaciones, lo siento.", "Organizasyon araclarini almiyorum, uzgunum." },
     { "Pijaca ne otkupljuje vozila organizacija.", "The market doesn't buy organisation vehicles.", "Рынок не выкупает машины организаций.", "El mercado no compra vehiculos de organizaciones.", "Pazar organizasyon araclarini almiyor." },
     { "Vozilo je vraceno: islo je brze nego sto moze.", "Vehicle reset: it went faster than it can.", "Транспорт возвращён: он ехал быстрее, чем может.", "Vehiculo reiniciado: iba mas rapido de lo que puede.", "Arac sifirlandi: gidebileceginden hizli gidiyordu." },
-    { "[AC] %s vozi %s brzinom %d km/h (najvise %d). Vozilo je vraceno.", "[AC] %s drove a %s at %d km/h (max %d). Vehicle reset.", "[AC] %s ехал на %s со скоростью %d км/ч (макс. %d). Транспорт возвращён.", "[AC] %s conducia un %s a %d km/h (max %d). Vehiculo reiniciado.", "[AC] %s, %s aracini %d km/s hizla surdu (en fazla %d). Arac sifirlandi." }
+    { "[AC] %s vozi %s brzinom %d km/h (najvise %d). Vozilo je vraceno.", "[AC] %s drove a %s at %d km/h (max %d). Vehicle reset.", "[AC] %s ехал на %s со скоростью %d км/ч (макс. %d). Транспорт возвращён.", "[AC] %s conducia un %s a %d km/h (max %d). Vehiculo reiniciado.", "[AC] %s, %s aracini %d km/s hizla surdu (en fazla %d). Arac sifirlandi." },
+    { "IZBORNIK", "MENU", "МЕНЮ", "MENU", "MENU" },
+    { "Imenik", "Contacts", "Контакты", "Contactos", "Rehber" },
+    { "Poruke", "Messages", "Сообщения", "Mensajes", "Mesajlar" },
+    { "Kamera", "Camera", "Камера", "Camara", "Kamera" },
+    { "Organizator", "Organizer", "Органайзер", "Agenda", "Ajanda" },
+    { "Internet", "Internet", "Интернет", "Internet", "Internet" },
+    { "Postavke", "Settings", "Настройки", "Ajustes", "Ayarlar" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
