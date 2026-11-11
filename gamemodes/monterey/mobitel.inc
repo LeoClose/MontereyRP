@@ -39,10 +39,12 @@
 #define MOBITEL_CITAJ       16
 #define MOBITEL_PORUKA_MAX  10
 #define MOBITEL_SMS_ZVUK    1057
+#define MOBITEL_JEZIK       17
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 static const gMobitelOpcije[][] = { "Nazovi", "Posalji poruku", "Preimenuj", "Obrisi" };
+static const gMobitelJezici[BROJ_JEZIKA][] = { "Hrvatski", "English", "Russkiy", "Espanol", "Turkce" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
@@ -280,6 +282,8 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_IMENIK) return 1 + gMobitelKontakata[playerid];
     if (gMobitelEkran[playerid] == MOBITEL_KONTAKT) return sizeof gMobitelOpcije;
     if (gMobitelEkran[playerid] == MOBITEL_PORUKE) return 1 + gMobitelPrimljenih[playerid];
+    if (gMobitelEkran[playerid] == MOBITEL_POSTAVKE) return 1;
+    if (gMobitelEkran[playerid] == MOBITEL_JEZIK) return BROJ_JEZIKA;
     return 0;
 }
 
@@ -327,6 +331,7 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_SMS_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Primatelj"));
     else if (ekran == MOBITEL_SMS_UNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Nova poruka"));
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
+    else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Jezik"));
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
     if (broj) PlayerTextDrawShow(playerid, gMobitelOznaka[playerid]);
@@ -335,7 +340,7 @@ static MobitelPrikazi(playerid)
     {
         new PlayerText:td = gMobitelStavke[playerid][i], s = pocetak + i;
         if (MobitelUnosEkran(ekran) && !i) PlayerTextDrawSetString(playerid, td, gMobitelUnos[playerid][0] ? gMobitelUnos[playerid] : "-");
-        else if (ekran == MOBITEL_POSTAVKE && !i)
+        else if (ekran == MOBITEL_POSTAVKE && i == 1)
         {
             new tekst[48];
             format(tekst, sizeof tekst, T(playerid, "Moj broj: %s"), gMobitelMoj[playerid]);
@@ -348,6 +353,8 @@ static MobitelPrikazi(playerid)
         }
         else if (ekran == MOBITEL_IZBORNIK) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelIzbornik[s]));
         else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelOpcije[s]));
+        else if (ekran == MOBITEL_POSTAVKE) PlayerTextDrawSetString(playerid, td, T(playerid, "Jezik"));
+        else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, td, gMobitelJezici[s]);
         else if (ekran == MOBITEL_PORUKE && s == 0) PlayerTextDrawSetString(playerid, td, T(playerid, "Nova poruka"));
         else if (ekran == MOBITEL_PORUKE)
         {
@@ -700,6 +707,19 @@ static MobitelOdaberi(playerid)
         gMobitelEkran[playerid] = MOBITEL_PORUKE;
         gMobitelOdabir[playerid] = 0;
     }
+    else if (ekran == MOBITEL_POSTAVKE)
+    {
+        gMobitelEkran[playerid] = MOBITEL_JEZIK;
+        gMobitelOdabir[playerid] = gJezik[playerid];
+    }
+    else if (ekran == MOBITEL_JEZIK)
+    {
+        JezikPromijeni(playerid, odabir);
+        MobitelZatvori(playerid);
+        MobitelOtvori(playerid);
+        gMobitelEkran[playerid] = MOBITEL_POSTAVKE;
+        gMobitelOdabir[playerid] = 0;
+    }
     else if (ekran == MOBITEL_CITAJ)
     {
         strcopy(gMobitelPrimatelj[playerid], gMobitelPorukaBroj[playerid][gMobitelCitam[playerid]]);
@@ -743,6 +763,11 @@ static MobitelNatrag(playerid, ekran)
         {
             gMobitelEkran[playerid] = MOBITEL_KONTAKT;
             gMobitelOdabir[playerid] = ekran == MOBITEL_PREIMENUJ ? 2 : 3;
+        }
+        case MOBITEL_JEZIK:
+        {
+            gMobitelEkran[playerid] = MOBITEL_POSTAVKE;
+            gMobitelOdabir[playerid] = 0;
         }
         case MOBITEL_SMS_BROJ, MOBITEL_SMS_UNOS, MOBITEL_CITAJ:
         {

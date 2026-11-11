@@ -123,6 +123,7 @@ public OnGameModeInit()
     InitVozilo();
     InitTrgovina();
     InitOruzarnica();
+    InitOdjeca();
     InitSalon();
     InitPijaca();
     InitGranica();
@@ -189,6 +190,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/vlakovi.inc"
 #include "monterey/trgovina.inc"
 #include "monterey/oruzarnica.inc"
+#include "monterey/odjeca.inc"
 #include "monterey/salon.inc"
 #include "monterey/pijaca.inc"
 #include "monterey/granica.inc"
@@ -299,6 +301,7 @@ ZavrsiLogin(playerid)
     UcitajNovac(playerid);
     LoadInventar(playerid);
     MobitelPrijava(playerid);
+    OdjecaPrijava(playerid);
     PolicijaPrijava(playerid);
     TeritorijPrijava(playerid);
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);

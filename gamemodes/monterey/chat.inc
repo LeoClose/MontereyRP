@@ -252,15 +252,15 @@ DLG:jezik(playerid, response, listitem)
     return ZavrsiLogin(playerid);
 }
 
-DLG:jezik_promjena(playerid, response, listitem)
+JezikPromijeni(playerid, jezik)
 {
-    if (!response || listitem < 0 || listitem >= BROJ_JEZIKA || listitem == gJezik[playerid]) return 1;
-    gNauceniJezici[playerid] = (gNauceniJezici[playerid] & ~(1 << gJezik[playerid])) | (1 << listitem);
-    if (gOdabranJezik[playerid] == gJezik[playerid] || gOdabranJezik[playerid] == listitem) gOdabranJezik[playerid] = LANG_NONE;
-    if (gUciJezik[playerid] == listitem) gUciJezik[playerid] = LANG_NONE;
-    gJezik[playerid] = listitem;
+    if (jezik < 0 || jezik >= BROJ_JEZIKA || jezik == gJezik[playerid]) return;
+    gNauceniJezici[playerid] = (gNauceniJezici[playerid] & ~(1 << gJezik[playerid])) | (1 << jezik);
+    if (gOdabranJezik[playerid] == gJezik[playerid] || gOdabranJezik[playerid] == jezik) gOdabranJezik[playerid] = LANG_NONE;
+    if (gUciJezik[playerid] == jezik) gUciJezik[playerid] = LANG_NONE;
+    gJezik[playerid] = jezik;
     SpremiJezik(playerid);
-    return SendClientMessage(playerid, COLOR_ME, T(playerid, "Jezik je promijenjen: %s."), gJezikName[listitem]);
+    SendClientMessage(playerid, COLOR_ME, T(playerid, "Jezik je promijenjen: %s."), gJezikName[jezik]);
 }
 
 DLG:skola(playerid, response, listitem)
@@ -292,14 +292,6 @@ NtiJezik(playerid, n, bool:known)
         if (n-- == 0) return i;
     }
     return LANG_NONE;
-}
-
-CMD:jezik(playerid, params[])
-{
-    if (!gUlogiran[playerid]) return 1;
-    new list[160], len = 0;
-    for (new i = 0; i < BROJ_JEZIKA; i++) DodajStupac(list, len, gJezikName[i]);
-    return PrikaziDialog(playerid, DLG_JEZIK_PROMJENA, DIALOG_STYLE_LIST, T(playerid, "Vas materinji jezik"), list, T(playerid, "Odaberi"), T(playerid, "Odustani"));
 }
 
 CMD:skola(playerid, params[])

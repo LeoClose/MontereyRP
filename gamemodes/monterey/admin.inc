@@ -711,9 +711,9 @@ enum
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Katalog odjece"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -725,8 +725,8 @@ CMD:apanel(playerid, params[])
 }
 
 static const gApKat[][] = { "Igraci", "Vozila", "Organizacije", "Teritoriji", "Administracija" };
-static const gApKatStavke[sizeof gApKat][9] = {
-    { 0, 1, 2, 7, 8, 22, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 24, 20, -1 }
+static const gApKatStavke[sizeof gApKat][10] = {
+    { 0, 1, 2, 7, 8, 22, -1, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21, -1 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 24, 25, 26, 20 }
 };
 static gApKatOdabrana[MAX_PLAYERS];
 
@@ -859,6 +859,8 @@ static OtvoriStavku(playerid, stavka)
         case 21: return ShowPijacaAdmin(playerid);
         case 23: return ShowMehanicare(playerid);
         case 24: return ShowOruzarnice(playerid);
+        case 25: return ShowOdjece(playerid);
+        case 26: return ShowOdjecaKatalog(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));

@@ -733,6 +733,7 @@ bool:HqUlazIzlaz(playerid)
     }
     if (TrgovinaUlaz(playerid)) return true;
     if (OruzarnicaUlaz(playerid)) return true;
+    if (OdjecaUlaz(playerid)) return true;
     if (OpstinaUlaz(playerid)) return true;
     return bool:PrikolicaUlaz(playerid);
 }

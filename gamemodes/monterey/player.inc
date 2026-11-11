@@ -51,6 +51,7 @@ public OnPlayerDisconnect(playerid, reason)
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
     OruzarnicaDisconnect(playerid);
+    OdjecaDisconnect(playerid);
     MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
     gUlogiran[playerid] = false;
@@ -81,7 +82,7 @@ public OnPlayerSpawn(playerid)
 {
     if (IsPlayerNPC(playerid)) return 1;
     StetaSpawn(playerid);
-    SetPlayerSkin(playerid, gOrgSkin[playerid] >= 0 ? gOrgSkin[playerid] : DEFAULT_SKIN);
+    SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
@@ -91,6 +92,7 @@ public OnPlayerSpawn(playerid)
     PolicijaSpawn(playerid);
     GepekSpawn(playerid);
     RanjenSpawn(playerid);
+    OdjecaSpawn(playerid);
     return 1;
 }
 
@@ -135,7 +137,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 static Interakcija(playerid)
 {
     if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid)) return;
+    if (KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid)) return;
     DilerKey(playerid);
 }
 
@@ -185,7 +187,7 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Teritoriji: Y ili /diler (kod dilera)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, /jezik"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Trgovine: Y za ulaz i kod blagajne"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Salon automobila: Y kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Opstina: Y kod saltera (kazne, promjena imena, prodaja vozila)"));
@@ -217,7 +219,6 @@ CMD:holster(playerid, params[]) return cmd_spremi(playerid, params);
 CMD:dealer(playerid, params[]) return cmd_diler(playerid, params);
 CMD:school(playerid, params[]) return cmd_skola(playerid, params);
 CMD:translate(playerid, params[]) return cmd_prijevod(playerid, params);
-CMD:language(playerid, params[]) return cmd_jezik(playerid, params);
 CMD:admins(playerid, params[]) return cmd_admini(playerid, params);
 CMD:inventory(playerid, params[]) return cmd_inventar(playerid, params);
 
