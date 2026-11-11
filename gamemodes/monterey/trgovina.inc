@@ -103,6 +103,7 @@ TrgovinaUlaz(playerid)
         SetPlayerVirtualWorld(playerid, TRGOVINA_SVIJET + s);
         SetPlayerPos(playerid, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2]);
         SetCameraBehindPlayer(playerid);
+        if (gTrg[s][tgImaAktor]) AktorKaze(playerid, gTrg[s][tgAktor], "Prodavac", "Dobar dan! Ako trebate nesto, tu sam na kasi.");
         return 1;
     }
     return 0;
@@ -121,6 +122,7 @@ TrgovinaKasa(playerid)
         format(row, sizeof row, "%s\t$%d", T(playerid, gItems[gTrgovinaRoba[i][0]][ITEM_NAME]), gTrgovinaRoba[i][1]);
         DodajStupac(list, len, row);
     }
+    AktorKaze(playerid, gTrg[s][tgAktor], "Prodavac", "Izvolite, sto ce biti?");
     PrikaziDialog(playerid, DLG_TRGOVINA, DIALOG_STYLE_TABLIST_HEADERS, T(playerid, "Trgovina"), list, T(playerid, "Kupi"), T(playerid, "Zatvori"));
     return 1;
 }

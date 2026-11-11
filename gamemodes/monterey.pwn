@@ -124,6 +124,7 @@ public OnGameModeInit()
     InitTrgovina();
     InitOruzarnica();
     InitOdjeca();
+    InitKuce();
     InitSalon();
     InitPijaca();
     InitGranica();
@@ -191,6 +192,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/trgovina.inc"
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
+#include "monterey/kuce.inc"
 #include "monterey/salon.inc"
 #include "monterey/pijaca.inc"
 #include "monterey/granica.inc"

@@ -2,7 +2,8 @@
 #define ODJECA_SVIJET           4000
 #define ODJECA_DOMET            2.0
 #define ODJECA_KASA_DOMET       2.5
-#define ODJECA_ARTIKALA         64
+#define ODJECA_ARTIKALA         48
+#define ODJECA_KATALOG          1
 #define ODJECA_TD               16
 #define ODJECA_SLOT_KAPA        8
 #define ODJECA_SLOT_FRIZURA     7
@@ -31,7 +32,7 @@ static const gOdjecaZadano[][3] = {
 };
 
 static gOdj[ODJECA_MAX][E_ODJECA];
-static gOdjecaArtikl[ODJECA_ARTIKALA][3], gOdjecaArtiklDb[ODJECA_ARTIKALA], gOdjecaArtikala;
+static gOdjArtikl[ODJECA_MAX][ODJECA_ARTIKALA][3], gOdjArtiklDb[ODJECA_MAX][ODJECA_ARTIKALA], gOdjArtikala[ODJECA_MAX];
 static gApOdjeca[MAX_PLAYERS];
 static gOdjecaU[MAX_PLAYERS], gOdjecaVrsta[MAX_PLAYERS], gOdjecaIdx[MAX_PLAYERS], gOdjecaStariSkin[MAX_PLAYERS], gOdjecaNosiSkin[MAX_PLAYERS];
 static gOdjecaNosi[MAX_PLAYERS][2][E_PRIVJESAK];
@@ -42,17 +43,11 @@ InitOdjeca()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS clothing_shops (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, \
         Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0, \
         Kabina INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, ka REAL NOT NULL DEFAULT 0)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS clothing_items (id INTEGER PRIMARY KEY AUTOINCREMENT, kind INTEGER NOT NULL, model INTEGER NOT NULL, price INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS store_items (id INTEGER PRIMARY KEY AUTOINCREMENT, store_type INTEGER NOT NULL, store INTEGER NOT NULL, kind INTEGER NOT NULL DEFAULT 0, model INTEGER NOT NULL, amount INTEGER NOT NULL DEFAULT 1, price INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_style (account INTEGER PRIMARY KEY, skin INTEGER NOT NULL DEFAULT -1, \
         kapa INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, krx REAL NOT NULL DEFAULT 0, kry REAL NOT NULL DEFAULT 0, krz REAL NOT NULL DEFAULT 0, \
         frizura INTEGER NOT NULL DEFAULT 0, fx REAL NOT NULL DEFAULT 0, fy REAL NOT NULL DEFAULT 0, fz REAL NOT NULL DEFAULT 0, frx REAL NOT NULL DEFAULT 0, fry REAL NOT NULL DEFAULT 0, frz REAL NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM clothing_items");
-    new prazno = DB_GetRowCount(res) && !DB_GetFieldInt(res, 0);
-    DB_FreeResultSet(res);
-    if (prazno) for (new i = 0; i < sizeof gOdjecaZadano; i++)
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO clothing_items (kind, model, price) VALUES (%d, %d, %d)", gOdjecaZadano[i][0], gOdjecaZadano[i][1], gOdjecaZadano[i][2]));
-    OdjecaUcitajArtikle();
-    res = DB_ExecuteQuery(gDB, "SELECT id, type, x, y, z, a, Aktor, ax, ay, az, aa, Kabina, kx, ky, kz, ka FROM clothing_shops ORDER BY id LIMIT %d", ODJECA_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, type, x, y, z, a, Aktor, ax, ay, az, aa, Kabina, kx, ky, kz, ka FROM clothing_shops ORDER BY id LIMIT %d", ODJECA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
     {
         gOdj[s][odDb] = DB_GetFieldInt(res, 0);
@@ -62,6 +57,7 @@ InitOdjeca()
         gOdj[s][odZ] = DB_GetFieldFloat(res, 4);
         gOdj[s][odA] = DB_GetFieldFloat(res, 5);
         OdjecaStvori(s);
+        OdjecaUcitajArtikle(s);
         if (DB_GetFieldInt(res, 6))
         {
             gOdj[s][odAx] = DB_GetFieldFloat(res, 7);
@@ -80,32 +76,44 @@ InitOdjeca()
     DB_FreeResultSet(res);
 }
 
-static OdjecaUcitajArtikle()
+static bool:OdjecaVrstaUTrgovini(s, vrsta)
 {
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, kind, model, price FROM clothing_items ORDER BY kind, id LIMIT %d", ODJECA_ARTIKALA);
-    gOdjecaArtikala = 0;
-    for (new n = DB_GetRowCount(res); gOdjecaArtikala < n; DB_SelectNextRow(res))
-    {
-        new a = gOdjecaArtikala++;
-        gOdjecaArtiklDb[a] = DB_GetFieldInt(res, 0);
-        gOdjecaArtikl[a][0] = DB_GetFieldInt(res, 1);
-        gOdjecaArtikl[a][1] = DB_GetFieldInt(res, 2);
-        gOdjecaArtikl[a][2] = DB_GetFieldInt(res, 3);
-    }
-    DB_FreeResultSet(res);
+    return gOdj[s][odTip] == ODJ_FRIZER ? vrsta == ODJ_FRIZURA : vrsta != ODJ_FRIZURA;
 }
 
-static OdjecaBrojVrste(vrsta)
+static OdjecaUcitajArtikle(s, bool:zadano = true)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, kind, model, price FROM store_items WHERE store_type = %d AND store = %d ORDER BY kind, id LIMIT %d", ODJECA_KATALOG, gOdj[s][odDb], ODJECA_ARTIKALA);
+    gOdjArtikala[s] = 0;
+    for (new n = DB_GetRowCount(res); gOdjArtikala[s] < n; DB_SelectNextRow(res))
+    {
+        new a = gOdjArtikala[s]++;
+        gOdjArtiklDb[s][a] = DB_GetFieldInt(res, 0);
+        gOdjArtikl[s][a][0] = DB_GetFieldInt(res, 1);
+        gOdjArtikl[s][a][1] = DB_GetFieldInt(res, 2);
+        gOdjArtikl[s][a][2] = DB_GetFieldInt(res, 3);
+    }
+    DB_FreeResultSet(res);
+    if (gOdjArtikala[s] || !zadano) return;
+    for (new i = 0; i < sizeof gOdjecaZadano; i++)
+    {
+        if (!OdjecaVrstaUTrgovini(s, gOdjecaZadano[i][0])) continue;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO store_items (store_type, store, kind, model, price) VALUES (%d, %d, %d, %d, %d)", ODJECA_KATALOG, gOdj[s][odDb], gOdjecaZadano[i][0], gOdjecaZadano[i][1], gOdjecaZadano[i][2]));
+    }
+    OdjecaUcitajArtikle(s, false);
+}
+
+static OdjecaBrojVrste(s, vrsta)
 {
     new n = vrsta == ODJ_SKIN ? 0 : 1;
-    for (new a = 0; a < gOdjecaArtikala; a++) if (gOdjecaArtikl[a][0] == vrsta) n++;
+    for (new a = 0; a < gOdjArtikala[s]; a++) if (gOdjArtikl[s][a][0] == vrsta) n++;
     return n;
 }
 
-static OdjecaArtikl(vrsta, idx)
+static OdjecaArtikl(s, vrsta, idx)
 {
     if (vrsta != ODJ_SKIN && !idx--) return -1;
-    for (new a = 0; a < gOdjecaArtikala; a++) if (gOdjecaArtikl[a][0] == vrsta && !idx--) return a;
+    for (new a = 0; a < gOdjArtikala[s]; a++) if (gOdjArtikl[s][a][0] == vrsta && !idx--) return a;
     return -1;
 }
 
@@ -171,6 +179,9 @@ OdjecaUlaz(playerid)
         SetPlayerVirtualWorld(playerid, ODJECA_SVIJET + s);
         SetPlayerPos(playerid, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2]);
         SetCameraBehindPlayer(playerid);
+        if (!gOdj[s][odImaAktor]) return 1;
+        if (t == ODJ_FRIZER) AktorKaze(playerid, gOdj[s][odAktor], "Frizer", "Dobar dan! Sjednite, odmah cu vas.");
+        else AktorKaze(playerid, gOdj[s][odAktor], "Prodavacica", "Dobar dan! Slobodno pogledajte, kabina je spremna.");
         return 1;
     }
     return 0;
@@ -252,15 +263,15 @@ static OdjecaKamera(playerid)
 
 static OdjecaPrikazi(playerid)
 {
-    new vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(vrsta), info[96];
+    new vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(gOdjecaU[playerid] - 1, vrsta), info[96];
     if (gOdjecaIdx[playerid] >= broj) gOdjecaIdx[playerid] = 0;
-    new a = broj ? OdjecaArtikl(vrsta, gOdjecaIdx[playerid]) : -1;
-    SetPlayerSkin(playerid, vrsta == ODJ_SKIN && a != -1 ? gOdjecaArtikl[a][1] : gOdjecaStariSkin[playerid]);
+    new a = broj ? OdjecaArtikl(gOdjecaU[playerid] - 1, vrsta, gOdjecaIdx[playerid]) : -1;
+    SetPlayerSkin(playerid, vrsta == ODJ_SKIN && a != -1 ? gOdjArtikl[gOdjecaU[playerid] - 1][a][1] : gOdjecaStariSkin[playerid]);
     OdjecaObuci(playerid);
-    if (vrsta != ODJ_SKIN) OdjecaPrivjesak(playerid, vrsta - 1, a == -1 ? 0 : gOdjecaArtikl[a][1], 0.1, 0.0, 0.0, 0.0, 0.0, 0.0);
+    if (vrsta != ODJ_SKIN) OdjecaPrivjesak(playerid, vrsta - 1, a == -1 ? 0 : gOdjArtikl[gOdjecaU[playerid] - 1][a][1], 0.1, 0.0, 0.0, 0.0, 0.0, 0.0);
     if (!broj) format(info, sizeof info, T(playerid, "Nema artikala"));
     else if (a == -1) format(info, sizeof info, "%s~n~~g~$0~n~~w~%d/%d", vrsta == ODJ_KAPA ? T(playerid, "Bez kape") : T(playerid, "Bez frizure"), gOdjecaIdx[playerid] + 1, broj);
-    else format(info, sizeof info, "%s %d~n~~g~$%d~n~~w~%d/%d", T(playerid, gOdjecaVrste[vrsta]), gOdjecaArtikl[a][1], gOdjecaArtikl[a][2], gOdjecaIdx[playerid] + 1, broj);
+    else format(info, sizeof info, "%s %d~n~~g~$%d~n~~w~%d/%d", T(playerid, gOdjecaVrste[vrsta]), gOdjArtikl[gOdjecaU[playerid] - 1][a][1], gOdjArtikl[gOdjecaU[playerid] - 1][a][2], gOdjecaIdx[playerid] + 1, broj);
     PlayerTextDrawSetString(playerid, gOdjecaGumb[playerid][OTD_INFO], info);
     OdjecaKamera(playerid);
 }
@@ -314,9 +325,9 @@ OdjecaZatvori(playerid)
 
 static OdjecaKupi(playerid)
 {
-    new vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(vrsta);
+    new vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(gOdjecaU[playerid] - 1, vrsta);
     if (!broj) return;
-    new a = OdjecaArtikl(vrsta, gOdjecaIdx[playerid]), cijena = a == -1 ? 0 : gOdjecaArtikl[a][2];
+    new a = OdjecaArtikl(gOdjecaU[playerid] - 1, vrsta, gOdjecaIdx[playerid]), cijena = a == -1 ? 0 : gOdjArtikl[gOdjecaU[playerid] - 1][a][2];
     if (!DajNovac(playerid, -cijena))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
@@ -325,14 +336,14 @@ static OdjecaKupi(playerid)
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
     if (vrsta == ODJ_SKIN)
     {
-        gOdjecaNosiSkin[playerid] = gOdjecaArtikl[a][1];
-        if (gOrgSkin[playerid] < 0) gOdjecaStariSkin[playerid] = gOdjecaArtikl[a][1];
+        gOdjecaNosiSkin[playerid] = gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
+        if (gOrgSkin[playerid] < 0) gOdjecaStariSkin[playerid] = gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
         OdjecaSpremi(playerid);
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste novu odjecu ($%d)."), cijena);
         return;
     }
     new i = vrsta - 1;
-    gOdjecaNosi[playerid][i][pkModel] = a == -1 ? 0 : gOdjecaArtikl[a][1];
+    gOdjecaNosi[playerid][i][pkModel] = a == -1 ? 0 : gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
     gOdjecaNosi[playerid][i][pkX] = 0.1;
     gOdjecaNosi[playerid][i][pkY] = 0.0;
     gOdjecaNosi[playerid][i][pkZ] = 0.0;
@@ -349,7 +360,7 @@ static OdjecaKupi(playerid)
 OdjecaKlik(playerid, PlayerText:td)
 {
     if (!gOdjecaU[playerid]) return 0;
-    new broj = OdjecaBrojVrste(gOdjecaVrsta[playerid]);
+    new broj = OdjecaBrojVrste(gOdjecaU[playerid] - 1, gOdjecaVrsta[playerid]);
     if (td == gOdjecaGumb[playerid][OTD_IZLAZ]) OdjecaZatvori(playerid);
     else if (td == gOdjecaGumb[playerid][OTD_KUPI]) OdjecaKupi(playerid);
     else if (td == gOdjecaGumb[playerid][OTD_LIJEVO] && broj)
@@ -381,6 +392,8 @@ OdjecaKasa(playerid)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kabina jos nije postavljena."));
         return 1;
     }
+    if (gOdj[s][odTip] == ODJ_FRIZER) AktorKaze(playerid, gOdj[s][odAktor], "Frizer", "Kako cemo danas?");
+    else AktorKaze(playerid, gOdj[s][odAktor], "Prodavacica", "Izvolite u kabinu, probajte sto vam se svidja.");
     OdjecaOtvori(playerid, s);
     return 1;
 }
@@ -448,6 +461,7 @@ static OdjecaNova(playerid, t)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO clothing_shops (type, x, y, z, a) VALUES (%d, %f, %f, %f, %f)", t, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ], gOdj[s][odA]));
     gOdj[s][odDb] = ZadnjiId();
     OdjecaStvori(s);
+    OdjecaUcitajArtikle(s);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Dodano: %s. Udite i postavite blagajnika i kabinu."), CestaZona(gOdj[s][odX], gOdj[s][odY]));
 }
 
@@ -487,18 +501,20 @@ static OdjecaObrisi(s)
     DestroyDynamic3DTextLabel(gOdj[s][odTekstU]);
     gOdj[s][odIma] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM clothing_shops WHERE id = %d", gOdj[s][odDb]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM store_items WHERE store_type = %d AND store = %d", ODJECA_KATALOG, gOdj[s][odDb]));
 }
 
-ShowOdjecaKatalog(playerid)
+static ShowOdjecaKatalog(playerid)
 {
-    new list[2048], row[64], len = 0;
+    new s = gApOdjeca[playerid], list[2048], row[64], len = 0;
+    if (!gOdj[s][odIma]) return ShowOdjece(playerid);
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Dodaj artikl"));
-    for (new a = 0; a < gOdjecaArtikala; a++)
+    for (new a = 0; a < gOdjArtikala[s]; a++)
     {
-        format(row, sizeof row, "[%s] %d - $%d", T(playerid, gOdjecaVrste[gOdjecaArtikl[a][0]]), gOdjecaArtikl[a][1], gOdjecaArtikl[a][2]);
+        format(row, sizeof row, "[%s] %d - $%d", T(playerid, gOdjecaVrste[gOdjArtikl[s][a][0]]), gOdjArtikl[s][a][1], gOdjArtikl[s][a][2]);
         DodajStupac(list, len, row);
     }
-    return PrikaziDialog(playerid, DLG_APANEL_ODJECA_KATALOG, DIALOG_STYLE_LIST, T(playerid, "Katalog odjece"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
+    return PrikaziDialog(playerid, DLG_APANEL_ODJECA_KATALOG, DIALOG_STYLE_LIST, T(playerid, "Katalog"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 DLG:apanel_odjeca(playerid, response, listitem)
@@ -515,7 +531,7 @@ DLG:apanel_odjeca(playerid, response, listitem)
     {
         if (!gOdj[s][odIma] || --n) continue;
         gApOdjeca[playerid] = s;
-        return PrikaziDialog(playerid, DLG_APANEL_ODJECA_MENI, DIALOG_STYLE_LIST, T(playerid, "Odjeca i frizeri"), T(playerid, "Postavi blagajnika na mojoj poziciji\nPostavi kabinu na mojoj poziciji\nObrisi"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
+        return PrikaziDialog(playerid, DLG_APANEL_ODJECA_MENI, DIALOG_STYLE_LIST, T(playerid, "Odjeca i frizeri"), T(playerid, "Postavi blagajnika na mojoj poziciji\nPostavi kabinu na mojoj poziciji\nKatalog\nObrisi"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
     }
     return ShowOdjece(playerid);
 }
@@ -525,6 +541,7 @@ DLG:apanel_odjeca_meni(playerid, response, listitem)
     new s = gApOdjeca[playerid];
     if (!response || !gOdj[s][odIma]) return ShowOdjece(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    if (listitem == 2) return ShowOdjecaKatalog(playerid);
     if (listitem == 0 || listitem == 1) OdjecaPostavi(playerid, s, listitem == 1);
     else
     {
@@ -536,14 +553,15 @@ DLG:apanel_odjeca_meni(playerid, response, listitem)
 
 DLG:apanel_odjeca_katalog(playerid, response, listitem)
 {
-    if (!response) return ShowKategoriju(playerid);
+    new s = gApOdjeca[playerid];
+    if (!response || !gOdj[s][odIma]) return ShowOdjece(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    if (listitem == 0) return PrikaziDialog(playerid, DLG_APANEL_ODJECA_UNOS, DIALOG_STYLE_INPUT, T(playerid, "Katalog odjece"), T(playerid, "Unesite: [vrsta: 0 = skin, 1 = kapa/naocale, 2 = frizura] [model] [cijena]"), T(playerid, "Dodaj"), T(playerid, "Natrag"));
+    if (listitem == 0) return PrikaziDialog(playerid, DLG_APANEL_ODJECA_UNOS, DIALOG_STYLE_INPUT, T(playerid, "Katalog"), T(playerid, "Unesite: [vrsta: 0 = skin, 1 = kapa/naocale, 2 = frizura] [model] [cijena]"), T(playerid, "Dodaj"), T(playerid, "Natrag"));
     new a = listitem - 1;
-    if (a >= 0 && a < gOdjecaArtikala)
+    if (a >= 0 && a < gOdjArtikala[s])
     {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM clothing_items WHERE id = %d", gOdjecaArtiklDb[a]));
-        OdjecaUcitajArtikle();
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM store_items WHERE id = %d", gOdjArtiklDb[s][a]));
+        OdjecaUcitajArtikle(s, false);
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Obrisano."));
     }
     return ShowOdjecaKatalog(playerid);
@@ -551,7 +569,8 @@ DLG:apanel_odjeca_katalog(playerid, response, listitem)
 
 DLG:apanel_odjeca_unos(playerid, response, const inputtext[])
 {
-    if (!response) return ShowOdjecaKatalog(playerid);
+    new s = gApOdjeca[playerid];
+    if (!response || !gOdj[s][odIma]) return ShowOdjecaKatalog(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
     new idx = 0, p1[12], p2[12], p3[12];
     if (!SljedeciParam(inputtext, idx, p1) || !SljedeciParam(inputtext, idx, p2) || !SljedeciParam(inputtext, idx, p3) || !ProvjeriBroj(p1) || !ProvjeriBroj(p2) || !ProvjeriBroj(p3))
@@ -560,12 +579,12 @@ DLG:apanel_odjeca_unos(playerid, response, const inputtext[])
         return ShowOdjecaKatalog(playerid);
     }
     new vrsta = strval(p1), model = strval(p2), cijena = strval(p3);
-    if (vrsta > ODJ_FRIZURA || (vrsta == ODJ_SKIN ? (model > 311 || model == 74) : model < 300) || cijena > 1000000 || gOdjecaArtikala >= ODJECA_ARTIKALA)
+    if (vrsta > ODJ_FRIZURA || !OdjecaVrstaUTrgovini(s, vrsta) || (vrsta == ODJ_SKIN ? (model > 311 || model == 74) : model < 300) || cijena > 1000000 || gOdjArtikala[s] >= ODJECA_ARTIKALA)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravan artikl."));
     else
     {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO clothing_items (kind, model, price) VALUES (%d, %d, %d)", vrsta, model, cijena));
-        OdjecaUcitajArtikle();
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO store_items (store_type, store, kind, model, price) VALUES (%d, %d, %d, %d, %d)", ODJECA_KATALOG, gOdj[s][odDb], vrsta, model, cijena));
+        OdjecaUcitajArtikle(s, false);
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Artikl dodan."));
     }
     return ShowOdjecaKatalog(playerid);

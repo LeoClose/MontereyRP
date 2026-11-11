@@ -14,7 +14,7 @@ enum
     DLG_GORIVO, DLG_TRGOVINA, DLG_APANEL_TRGOVINA, DLG_APANEL_TRGOVINA_MENI,
     DLG_SALON_KUPI, DLG_APANEL_SALON, DLG_APANEL_SALON_MENI, DLG_APANEL_SALON_DODAJ, DLG_APANEL_SALON_UKLONI,
     DLG_OPSTINA, DLG_OPSTINA_KAZNE, DLG_OPSTINA_IME, DLG_OPSTINA_VOZILA, DLG_OPSTINA_PRODAJA, DLG_OPSTINA_PONUDA, DLG_APANEL_OPSTINA, DLG_APANEL_OPSTINA_INT, DLG_APANEL_OPSTINA_UNOS,
-    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR, DLG_TAKSI_POZIV, DLG_APANEL_ORUZARNICA, DLG_APANEL_ORUZARNICA_INT, DLG_APANEL_ORUZARNICA_MENI, DLG_APANEL_ODJECA, DLG_APANEL_ODJECA_MENI, DLG_APANEL_ODJECA_KATALOG, DLG_APANEL_ODJECA_UNOS
+    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR, DLG_TAKSI_POZIV, DLG_APANEL_ORUZARNICA, DLG_APANEL_ORUZARNICA_INT, DLG_APANEL_ORUZARNICA_MENI, DLG_APANEL_ODJECA, DLG_APANEL_ODJECA_MENI, DLG_APANEL_ODJECA_KATALOG, DLG_APANEL_ODJECA_UNOS, DLG_APANEL_ORUZARNICA_KATALOG, DLG_APANEL_ORUZARNICA_UNOS, DLG_KUCA, DLG_APANEL_KUCA, DLG_APANEL_KUCA_VLASNIK, DLG_APANEL_KUCA_CIJENA, DLG_APANEL_KUCA_BRISI
 }
 
 static gDlg[MAX_PLAYERS];
@@ -132,6 +132,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_APANEL_ODJECA_MENI: return Dlg_apanel_odjeca_meni(playerid, response, listitem);
         case DLG_APANEL_ODJECA_KATALOG: return Dlg_apanel_odjeca_katalog(playerid, response, listitem);
         case DLG_APANEL_ODJECA_UNOS: return Dlg_apanel_odjeca_unos(playerid, response, inputtext);
+        case DLG_APANEL_ORUZARNICA_KATALOG: return Dlg_apanel_oruzarnica_katalog(playerid, response, listitem);
+        case DLG_APANEL_ORUZARNICA_UNOS: return Dlg_apanel_oruzarnica_unos(playerid, response, inputtext);
+        case DLG_KUCA:              return Dlg_kuca(playerid, response);
+        case DLG_APANEL_KUCA:       return Dlg_apanel_kuca(playerid, response, listitem);
+        case DLG_APANEL_KUCA_VLASNIK: return Dlg_apanel_kuca_vlasnik(playerid, response, inputtext);
+        case DLG_APANEL_KUCA_CIJENA: return Dlg_apanel_kuca_cijena(playerid, response, inputtext);
+        case DLG_APANEL_KUCA_BRISI: return Dlg_apanel_kuca_brisi(playerid, response);
     }
     return 1;
 }

@@ -347,6 +347,12 @@ SendChat(playerid, const text[], vrsta)
     ShowChat(playerid, text, vrsta);
 }
 
+AktorKaze(playerid, aktor, const ime[], const tekst[])
+{
+    ApplyActorAnimation(aktor, "PED", "IDLE_chat", 4.1, false, false, false, false, 2500);
+    SendClientMessage(playerid, COLOR_CHAT, T(playerid, "%s kaze: %s"), T(playerid, ime), T(playerid, tekst));
+}
+
 ShowChat(playerid, const text[], vrsta)
 {
     new bool:mobitel = MobitelURazgovoru(playerid) != 0;
