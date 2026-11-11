@@ -498,6 +498,7 @@ TaksiPozovi(playerid)
     else NPC_Spawn(gTaksi[s][tNpc]);
     gTaksiPoziv[playerid][0] = x;
     gTaksiPoziv[playerid][1] = y;
+    MobitelPoziv(playerid, T(playerid, "Taksi"));
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
     TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
@@ -508,6 +509,7 @@ TaksiPozovi(playerid)
 forward TaksiSpustiMobitel(playerid);
 public TaksiSpustiMobitel(playerid)
 {
+    MobitelKrajPoziva(playerid);
     if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
 }
 

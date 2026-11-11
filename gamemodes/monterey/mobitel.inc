@@ -12,6 +12,7 @@
 #define MOBITEL_MODEL       18868
 #define MOBITEL_ULAZ_MS     3000
 #define MOBITEL_ANIM_MS     1000
+#define MOBITEL_POZIV_POMAK 45.0
 
 #define MOBITEL_IZBORNIK    -1
 #define MOBITEL_NAZOVI      0
@@ -24,7 +25,7 @@ static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
-static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS];
+static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_IME], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
 
@@ -85,6 +86,16 @@ static MobitelPrikazi(playerid)
 {
     new ekran = gMobitelEkran[playerid], broj = MobitelBrojStavki(playerid), odabir = gMobitelOdabir[playerid];
     new pocetak = odabir >= MOBITEL_REDOVA ? odabir - MOBITEL_REDOVA + 1 : 0;
+    if (gMobitelPoziv[playerid])
+    {
+        PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "U pozivu"));
+        PlayerTextDrawHide(playerid, gMobitelOznaka[playerid]);
+        PlayerTextDrawSetString(playerid, gMobitelStavke[playerid][0], gMobitelSugovornik[playerid]);
+        PlayerTextDrawColour(playerid, gMobitelStavke[playerid][0], 0x1A1A1AFF);
+        PlayerTextDrawShow(playerid, gMobitelStavke[playerid][0]);
+        for (new i = 1; i < MOBITEL_REDOVA; i++) PlayerTextDrawHide(playerid, gMobitelStavke[playerid][i]);
+        return;
+    }
     if (ekran == MOBITEL_IZBORNIK) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "IZBORNIK"));
     else if (ekran == MOBITEL_NOVI_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Novi broj"));
     else if (ekran == MOBITEL_NOVO_IME) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Ime"));
@@ -121,6 +132,7 @@ static MobitelOtvori(playerid)
     gMobitelOdabir[playerid] = 0;
     gMobitelUlaz[playerid] = GetTickCount() - MOBITEL_ULAZ_MS;
     gMobitelStareTipke[playerid] = KEY:0;
+    gMobitelPoziv[playerid] = false;
     gMobitelStaroGore[playerid] = 0;
     gMobitelStaraStrana[playerid] = 0;
     gMobitelAnim[playerid] = -1;
@@ -159,6 +171,8 @@ MobitelZatvori(playerid)
 {
     if (!gMobitelOtvoren[playerid]) return;
     gMobitelOtvoren[playerid] = false;
+    if (gMobitelPoziv[playerid] && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
+    gMobitelPoziv[playerid] = false;
     for (new i = 0; i < gMobitelBroj[playerid]; i++) PlayerTextDrawDestroy(playerid, gMobitelTd[playerid][i]);
     gMobitelBroj[playerid] = 0;
     if (gMobitelURuci[playerid])
@@ -300,6 +314,11 @@ MobitelUpdate(playerid)
     gMobitelStareTipke[playerid] = tipke;
     gMobitelStaroGore[playerid] = gore;
     gMobitelStaraStrana[playerid] = strana;
+    if (gMobitelPoziv[playerid])
+    {
+        if (pritisnuto & KEY_NO) MobitelZatvori(playerid);
+        return;
+    }
     if (pritisnuto & (KEY_ANALOG_UP | KEY_ANALOG_DOWN | KEY_ANALOG_LEFT | KEY_ANALOG_RIGHT)) MobitelTipka(playerid, pritisnuto);
     if (!gMobitelOtvoren[playerid]) return;
     new bool:ruka = GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && GetPlayerSpecialAction(playerid) != SPECIAL_ACTION_USECELLPHONE && GetTickCount() - gMobitelUlaz[playerid] >= MOBITEL_ULAZ_MS;
@@ -308,6 +327,33 @@ MobitelUpdate(playerid)
     gMobitelURuci[playerid] = ruka;
     if (ruka) SetPlayerAttachedObject(playerid, MOBITEL_SLOT, MOBITEL_MODEL, 6, 0.08, 0.03, -0.02, 180.0, 165.0, -5.0);
     else RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
+}
+
+MobitelPoziv(playerid, const ime[])
+{
+    if (!gMobitelOtvoren[playerid] || gMobitelPoziv[playerid]) return;
+    gMobitelPoziv[playerid] = true;
+    strcopy(gMobitelSugovornik[playerid], ime);
+    if (gMobitelURuci[playerid])
+    {
+        RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
+        ClearAnimations(playerid);
+        gMobitelURuci[playerid] = false;
+    }
+    for (new i = 0; i < gMobitelBroj[playerid]; i++)
+    {
+        new Float:x, Float:y;
+        PlayerTextDrawGetPos(playerid, gMobitelTd[playerid][i], x, y);
+        PlayerTextDrawSetPos(playerid, gMobitelTd[playerid][i], x, y + MOBITEL_POZIV_POMAK);
+        PlayerTextDrawShow(playerid, gMobitelTd[playerid][i]);
+    }
+    MobitelPrikazi(playerid);
+    SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Poziv prekidate tipkom N ili zatvaranjem mobitela."));
+}
+
+MobitelKrajPoziva(playerid)
+{
+    if (gMobitelPoziv[playerid]) MobitelZatvori(playerid);
 }
 
 MobitelEnterVehicle(playerid)
