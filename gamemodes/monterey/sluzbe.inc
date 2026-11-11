@@ -31,6 +31,9 @@
 #define RADIONICA_A         0.0
 #define MEHANICAR_SLEPANJE_S 300
 #define MEHANICAR_ODGOVOR_MS 2000
+#define MEHANICAR_RAD_MS    6000
+#define MEHANICAR_VUCA_MS   100
+#define MEHANICAR_RAZMAK    0.6
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -58,8 +61,8 @@
 #define SLUCAJ_USPUT        40.0
 #define SLUCAJ_PJESKE_DOMET 40.0
 
-enum { SL_NEMA, SL_POZIV, SL_IGRAC, SL_NPC, SL_IZLAZI, SL_PJESKE, SL_PRISTANAK, SL_GASI, SL_ODLAZI, SL_POVRATAK, SL_ULAZI, SL_KRAJ }
-enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ, slSlepa }
+enum { SL_NEMA, SL_POZIV, SL_IGRAC, SL_NPC, SL_IZLAZI, SL_PJESKE, SL_PRISTANAK, SL_RADI, SL_GASI, SL_ODLAZI, SL_POVRATAK, SL_ULAZI, SL_KRAJ }
+enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ, slSlepa, slPosao, slVuci }
 
 static gSlucaj[SLUCAJ_MAX][E_SLUCAJ];
 static Float:gSlucajTocke[SLUCAJ_MAX][CESTA_MAX_TOCAKA][4];
@@ -406,6 +409,11 @@ SlucajNpcStigao(npcid)
     new s = gNpcSlucaj[npcid] - 1;
     if (s < 0) return;
     new st = gSlucaj[s][slStanje], bool:vatra = gSlucaj[s][slTip] == ORG_VATROGASCI;
+    if (st == SL_RADI)
+    {
+        MehanicarAnim(s);
+        return;
+    }
     if (st == SL_PJESKE)
     {
         if (gSlucaj[s][slTip] == ORG_MEHANICAR)
@@ -596,26 +604,52 @@ static SlucajSlepaj(s)
         return;
     }
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
-    AttachTrailerToVehicle(v, kamion);
     PutPlayerInVehicle(p, kamion, 1);
     NPC_SetKeys(gSlucaj[s][slNpc], 0, 0, 0);
     if (SlucajPutOdKamiona(s, kamion, CestaNajbliza(RADIONICA_X, RADIONICA_Y, RADIONICA_Z)) < 0)
     {
-        DetachTrailerFromVehicle(kamion);
         gSlucaj[s][slSlepa] = 0;
         SlucajVratiKamion(s);
         return;
     }
     gSlucaj[s][slStanje] = SL_ODLAZI;
     gSlucaj[s][slRok] = MEHANICAR_SLEPANJE_S;
+    gSlucaj[s][slVuci] = SetTimerEx("SlucajVuci", MEHANICAR_VUCA_MS, true, "i", s);
     SlucajVozi(s);
+}
+
+static SlucajOtkaci(s)
+{
+    if (gSlucaj[s][slVuci]) KillTimer(gSlucaj[s][slVuci]);
+    gSlucaj[s][slVuci] = 0;
+}
+
+forward SlucajVuci(s);
+public SlucajVuci(s)
+{
+    new p = gSlucaj[s][slSlepa] - 1, kamion = gSlucaj[s][slVozilo];
+    if (p < 0 || !kamion || !GetVehicleModel(gMehanicarVozilo[p]))
+    {
+        SlucajOtkaci(s);
+        return;
+    }
+    new v = gMehanicarVozilo[p], Float:x, Float:y, Float:z, Float:a, Float:vx, Float:vy, Float:vz, Float:kx, Float:ky, Float:kz, Float:ox, Float:oy, Float:oz;
+    GetVehiclePos(kamion, x, y, z);
+    GetVehicleZAngle(kamion, a);
+    GetVehicleVelocity(kamion, vx, vy, vz);
+    GetVehicleModelInfo(GetVehicleModel(kamion), VEHICLE_MODEL_INFO_SIZE, kx, ky, kz);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, ox, oy, oz);
+    new Float:razmak = (ky + oy) / 2.0 + MEHANICAR_RAZMAK;
+    SetVehiclePos(v, x + floatsin(a, degrees) * razmak, y - floatcos(a, degrees) * razmak, z);
+    SetVehicleZAngle(v, a);
+    SetVehicleVelocity(v, vx, vy, vz);
 }
 
 static SlucajIstovari(s)
 {
     new p = gSlucaj[s][slSlepa] - 1, kamion = gSlucaj[s][slVozilo];
     gSlucaj[s][slSlepa] = 0;
-    DetachTrailerFromVehicle(kamion);
+    SlucajOtkaci(s);
     if (IsPlayerConnected(p))
     {
         if (IsPlayerInVehicle(p, kamion)) RemovePlayerFromVehicle(p);
@@ -743,7 +777,7 @@ SlucajTick()
         if (st == SL_NEMA) continue;
         if (st == SL_KRAJ)
         {
-            if (gSlucaj[s][slSlepa]) DetachTrailerFromVehicle(gSlucaj[s][slVozilo]);
+            SlucajOtkaci(s);
             gSlucaj[s][slSlepa] = 0;
             SlucajMakniKamion(s);
             gSlucaj[s][slStanje] = SL_NEMA;
@@ -814,6 +848,8 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slNastavi] = 0;
     gSlucaj[s][slNastavak] = false;
     gSlucaj[s][slSlepa] = 0;
+    gSlucaj[s][slPosao] = 0;
+    gSlucaj[s][slVuci] = 0;
     gSlucaj[s][slX] = x;
     gSlucaj[s][slY] = y;
     gSlucaj[s][slZ] = z;
@@ -947,18 +983,77 @@ DLG:mehanicar(playerid, response, listitem)
         return 1;
     }
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
-    if (listitem == 0) VoziloNapuni(v);
-    else if (listitem == 1) RepairVehicle(v);
-    else
+    if (listitem == 2)
     {
         gSlucaj[s][slSlepa] = playerid + 1;
         gMehanicar[playerid] = 0;
         SlucajKraj(s, true);
         return 1;
     }
-    gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
-    MehanicarPonudi(playerid, s);
+    MehanicarRadi(s, v, listitem);
     return 1;
+}
+
+static MehanicarHauba(v, bool:otvorena)
+{
+    new e, l, a, d, bn, bt, o;
+    GetVehicleParamsEx(v, e, l, a, d, bn, bt, o);
+    SetVehicleParamsEx(v, e, l, a, d, otvorena ? 1 : 0, bt, o);
+}
+
+static MehanicarRadi(s, v, posao)
+{
+    new Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:px, Float:py;
+    if (posao == 1)
+    {
+        px = x + fx * (sy / 2.0 + 0.7);
+        py = y + fy * (sy / 2.0 + 0.7);
+        MehanicarHauba(v, true);
+    }
+    else
+    {
+        px = x - fx * (sy / 2.0 - 0.6) + fy * (sx / 2.0 + 0.6);
+        py = y - fy * (sy / 2.0 - 0.6) - fx * (sx / 2.0 + 0.6);
+    }
+    gSlucaj[s][slStanje] = SL_RADI;
+    gSlucaj[s][slPosao] = posao;
+    gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+    NPCHodaj(gSlucaj[s][slNpc], px, py, HodTlo(px, py, z), NPC_MOVE_TYPE_WALK, NPC_MOVE_SPEED_AUTO, 0.3);
+}
+
+static MehanicarAnim(s)
+{
+    new npc = gSlucaj[s][slNpc], p = gSlucaj[s][slPacijent], Float:x, Float:y, Float:z;
+    if (p != INVALID_PLAYER_ID && GetVehiclePos(gMehanicarVozilo[p], x, y, z)) NPC_SetAngleToPos(npc, x, y, z);
+    if (gSlucaj[s][slPosao] == 1) NPC_ApplyAnimation(npc, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0);
+    else NPC_ApplyAnimation(npc, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0);
+    SetTimerEx("MehanicarGotov", MEHANICAR_RAD_MS, false, "i", s);
+}
+
+forward MehanicarGotov(s);
+public MehanicarGotov(s)
+{
+    if (gSlucaj[s][slStanje] != SL_RADI) return;
+    new p = gSlucaj[s][slPacijent];
+    NPC_ClearAnimations(gSlucaj[s][slNpc]);
+    gSlucaj[s][slStanje] = SL_PRISTANAK;
+    gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+    if (p == INVALID_PLAYER_ID) return;
+    new v = gMehanicarVozilo[p];
+    if (GetVehicleModel(v))
+    {
+        if (gSlucaj[s][slPosao] == 1)
+        {
+            RepairVehicle(v);
+            MehanicarHauba(v, false);
+        }
+        else VoziloNapuni(v);
+    }
+    MehanicarPonudi(p, s);
 }
 
 CMD:radionica(playerid, params[])
