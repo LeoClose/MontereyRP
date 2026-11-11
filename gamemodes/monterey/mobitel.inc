@@ -8,6 +8,7 @@
 #define MOBITEL_IME         21
 #define MOBITEL_BROJ        13
 #define MOBITEL_TAKSI_BROJ  "555"
+#define MOBITEL_MEHANICAR_BROJ "556"
 #define MOBITEL_SLOT        9
 #define MOBITEL_MODEL       18868
 #define MOBITEL_ULAZ_MS     3000
@@ -59,6 +60,7 @@ InitMobitel()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_contacts (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, number TEXT NOT NULL, name TEXT NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_numbers (account INTEGER PRIMARY KEY, number TEXT NOT NULL UNIQUE)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_defaults (account INTEGER PRIMARY KEY)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_messages (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, sender TEXT NOT NULL, text TEXT NOT NULL, sent INTEGER NOT NULL, unread INTEGER NOT NULL DEFAULT 1)"));
     for (new i = 0; i < MAX_PLAYERS; i++) gMobitelDrugi[i] = INVALID_PLAYER_ID;
@@ -72,7 +74,7 @@ static bool:MobitelBrojZauzet(const broj[], racun = 0)
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM phone_numbers WHERE number = '%q' AND account != %d", broj, racun);
     new bool:zauzet = DB_GetRowCount(res) > 0;
     DB_FreeResultSet(res);
-    return zauzet || !strcmp(broj, MOBITEL_TAKSI_BROJ);
+    return zauzet || !strcmp(broj, MOBITEL_TAKSI_BROJ) || !strcmp(broj, MOBITEL_MEHANICAR_BROJ);
 }
 
 static MobitelGenerirajBroj(broj[], velicina = sizeof broj)
@@ -94,6 +96,15 @@ MobitelPrijava(playerid)
     {
         MobitelGenerirajBroj(gMobitelMoj[playerid]);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_numbers (account, number) VALUES (%d, '%q')", gAccountId[playerid], gMobitelMoj[playerid]));
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM phone_defaults WHERE account = %d", gAccountId[playerid]);
+    new bool:dodano = DB_GetRowCount(res) > 0;
+    DB_FreeResultSet(res);
+    if (!dodano)
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_contacts (account, number, name) VALUES (%d, '%q', 'Taksi')", gAccountId[playerid], MOBITEL_TAKSI_BROJ));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_contacts (account, number, name) VALUES (%d, '%q', 'Mehanicar')", gAccountId[playerid], MOBITEL_MEHANICAR_BROJ));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_defaults (account) VALUES (%d)", gAccountId[playerid]));
     }
     res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM phone_messages WHERE account = %d AND unread = 1", gAccountId[playerid]);
     new novih = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
@@ -201,18 +212,15 @@ static MobitelImeBroja(playerid, const broj[], ime[], velicina = sizeof ime)
 
 static MobitelImeIzImenika(playerid, const broj[], ime[], velicina)
 {
-    if (!strcmp(broj, MOBITEL_TAKSI_BROJ))
-    {
-        strcopy(ime, T(playerid, "Taksi sluzba"), velicina);
-        return;
-    }
     for (new k = 0; k < gMobitelKontakata[playerid]; k++)
     {
         if (strcmp(gMobitelKontaktBroj[playerid][k], broj)) continue;
         strcopy(ime, gMobitelKontaktIme[playerid][k], velicina);
         return;
     }
-    strcopy(ime, broj, velicina);
+    if (!strcmp(broj, MOBITEL_TAKSI_BROJ)) strcopy(ime, T(playerid, "Taksi sluzba"), velicina);
+    else if (!strcmp(broj, MOBITEL_MEHANICAR_BROJ)) strcopy(ime, T(playerid, "Mehanicar"), velicina);
+    else strcopy(ime, broj, velicina);
 }
 
 static MobitelSpusti(playerid, bool:dolje)
@@ -269,8 +277,8 @@ static MobitelUcitajPoruke(playerid)
 static MobitelBrojStavki(playerid)
 {
     if (gMobitelEkran[playerid] == MOBITEL_IZBORNIK) return MOBITEL_REDOVA;
-    if (gMobitelEkran[playerid] == MOBITEL_IMENIK) return 2 + gMobitelKontakata[playerid];
-    if (gMobitelEkran[playerid] == MOBITEL_KONTAKT) return gMobitelKontakt[playerid] < 0 ? 1 : sizeof gMobitelOpcije;
+    if (gMobitelEkran[playerid] == MOBITEL_IMENIK) return 1 + gMobitelKontakata[playerid];
+    if (gMobitelEkran[playerid] == MOBITEL_KONTAKT) return sizeof gMobitelOpcije;
     if (gMobitelEkran[playerid] == MOBITEL_PORUKE) return 1 + gMobitelPrimljenih[playerid];
     return 0;
 }
@@ -317,7 +325,6 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_PREIMENUJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Novo ime"));
     else if (ekran == MOBITEL_SMS_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Primatelj"));
     else if (ekran == MOBITEL_SMS_UNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Nova poruka"));
-    else if (ekran == MOBITEL_KONTAKT && gMobitelKontakt[playerid] < 0) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Taksi"));
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
@@ -344,12 +351,12 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_PORUKE)
         {
             new red[MOBITEL_IME + 2];
-            format(red, sizeof red, "%s%s", gMobitelPorukaNova[playerid][s - 1] ? ("* ") : (""), gMobitelPorukaIme[playerid][s - 1]);
+            if (gMobitelPorukaNova[playerid][s - 1]) strcat(red, "! ");
+            strcat(red, gMobitelPorukaIme[playerid][s - 1]);
             PlayerTextDrawSetString(playerid, td, red);
         }
         else if (s == 0) PlayerTextDrawSetString(playerid, td, T(playerid, "Dodaj broj"));
-        else if (s == 1) PlayerTextDrawSetString(playerid, td, T(playerid, "Taksi"));
-        else PlayerTextDrawSetString(playerid, td, gMobitelKontaktIme[playerid][s - 2]);
+        else PlayerTextDrawSetString(playerid, td, gMobitelKontaktIme[playerid][s - 1]);
         PlayerTextDrawColour(playerid, td, broj && s == odabir ? 0xFFFFFFFF : 0x1A1A1AFF);
         PlayerTextDrawShow(playerid, td);
     }
@@ -461,6 +468,7 @@ public MobitelZvono(playerid, obavijest)
 static MobitelNazovi(playerid, const broj[])
 {
     if (!strcmp(broj, MOBITEL_TAKSI_BROJ)) return TaksiPozovi(playerid);
+    if (!strcmp(broj, MOBITEL_MEHANICAR_BROJ)) return MehanicarPozovi(playerid);
     new drugi = MobitelIgrac(broj), ime[MOBITEL_IME];
     if (drugi == INVALID_PLAYER_ID || drugi == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Broj nije u upotrebi."));
     MobitelImeBroja(playerid, broj, ime);
@@ -539,8 +547,18 @@ MobitelTaksiSms(playerid, const tekst[])
     if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_TAKSI_BROJ, tekst);
 }
 
+MobitelMehanicarSms(playerid, const tekst[])
+{
+    if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_MEHANICAR_BROJ, tekst);
+}
+
 static bool:MobitelPosaljiPoruku(playerid, const broj[], const tekst[])
 {
+    if (!strcmp(broj, MOBITEL_TAKSI_BROJ) || !strcmp(broj, MOBITEL_MEHANICAR_BROJ))
+    {
+        SendClientMessage(playerid, COLOR_SMS, T(playerid, "Poruka je poslana."));
+        return true;
+    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT account FROM phone_numbers WHERE number = '%q'", broj);
     new racun = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
     DB_FreeResultSet(res);
@@ -618,8 +636,7 @@ static MobitelOdaberi(playerid)
     else if (ekran == MOBITEL_KONTAKT)
     {
         new k = gMobitelKontakt[playerid];
-        if (k < 0) TaksiPozovi(playerid);
-        else if (odabir == 0) MobitelNazovi(playerid, gMobitelKontaktBroj[playerid][k]);
+        if (odabir == 0) MobitelNazovi(playerid, gMobitelKontaktBroj[playerid][k]);
         else if (odabir == 1)
         {
             strcopy(gMobitelPrimatelj[playerid], gMobitelKontaktBroj[playerid][k]);
@@ -668,7 +685,7 @@ static MobitelOdaberi(playerid)
     {
         if (odabir >= 1)
         {
-            gMobitelKontakt[playerid] = odabir - 2;
+            gMobitelKontakt[playerid] = odabir - 1;
             gMobitelEkran[playerid] = MOBITEL_KONTAKT;
             gMobitelOdabir[playerid] = 0;
         }
@@ -685,7 +702,7 @@ static MobitelOdaberi(playerid)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_contacts (account, number, name) VALUES (%d, '%q', '%q')", gAccountId[playerid], gMobitelNoviBroj[playerid], gMobitelUnos[playerid]));
         MobitelUcitaj(playerid);
         gMobitelEkran[playerid] = MOBITEL_IMENIK;
-        gMobitelOdabir[playerid] = 1 + gMobitelKontakata[playerid];
+        gMobitelOdabir[playerid] = gMobitelKontakata[playerid];
     }
 }
 
@@ -696,7 +713,7 @@ static MobitelNatrag(playerid, ekran)
         case MOBITEL_NOVI_BROJ, MOBITEL_NOVO_IME, MOBITEL_KONTAKT:
         {
             gMobitelEkran[playerid] = MOBITEL_IMENIK;
-            gMobitelOdabir[playerid] = ekran == MOBITEL_KONTAKT ? gMobitelKontakt[playerid] + 2 : 0;
+            gMobitelOdabir[playerid] = ekran == MOBITEL_KONTAKT ? gMobitelKontakt[playerid] + 1 : 0;
         }
         case MOBITEL_PREIMENUJ, MOBITEL_BRISI:
         {

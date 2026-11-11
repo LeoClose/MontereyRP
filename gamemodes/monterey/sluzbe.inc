@@ -14,7 +14,21 @@
 #define KAMION_MODEL        407
 #define KAMION_SKIN         277
 #define KAMION_BOJA         3
-#define KAMION_MAX          16
+#define KAMION_MAX          24
+#define ORG_MEHANICAR       100
+#define MEHANICAR_MODEL     525
+#define MEHANICAR_SKIN      50
+#define MEHANICAR_BOJA      1
+#define MEHANICAR_DOMET     3.5
+#define MEHANICAR_STETA     900.0
+#define MEHANICAR_CEKA_S    60
+#define MEHANICAR_GORIVO    50
+#define MEHANICAR_POPRAVAK  150
+#define MEHANICAR_SLEPANJE  250
+#define RADIONICA_X         1207.18
+#define RADIONICA_Y         -981.57
+#define RADIONICA_Z         43.0
+#define RADIONICA_A         0.0
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -47,7 +61,7 @@ enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObje
 
 static gSlucaj[SLUCAJ_MAX][E_SLUCAJ];
 static Float:gSlucajTocke[SLUCAJ_MAX][CESTA_MAX_TOCAKA][4];
-static gSlucajPoziv[MAX_PLAYERS], gNpcSlucaj[MAX_PLAYERS];
+static gSlucajPoziv[MAX_PLAYERS], gNpcSlucaj[MAX_PLAYERS], gMehanicar[MAX_PLAYERS], gMehanicarVozilo[MAX_PLAYERS];
 
 enum E_KAMION { bool:kIma, kTip, kDb, kVozilo, kSlucaj, Float:kX, Float:kY, Float:kZ, Float:kA }
 
@@ -81,14 +95,16 @@ InitSluzbe()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_score WHERE org = -1"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS fire_trucks (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ambulances (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS tow_trucks (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     new k = 0;
     KamionUcitaj(ORG_VATROGASCI, k);
     KamionUcitaj(ORG_MEDICINSKA, k);
+    KamionUcitaj(ORG_MEHANICAR, k);
 }
 
 static KamionUcitaj(tip, &k)
 {
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM %s ORDER BY id LIMIT %d", tip == ORG_VATROGASCI ? ("fire_trucks") : ("ambulances"), KAMION_PO_TIPU);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM %s ORDER BY id LIMIT %d", tip == ORG_VATROGASCI ? ("fire_trucks") : tip == ORG_MEDICINSKA ? ("ambulances") : ("tow_trucks"), KAMION_PO_TIPU);
     for (new i = DB_GetRowCount(res); i > 0; i--)
     {
         gKamion[k][kDb] = DB_GetFieldInt(res, 0);
@@ -100,8 +116,8 @@ static KamionUcitaj(tip, &k)
 
 static KamionStvori(k, tip, Float:x, Float:y, Float:z, Float:a)
 {
-    new boja = tip == ORG_VATROGASCI ? KAMION_BOJA : AMBULANTA_BOJA;
-    new v = CreateVehicle(tip == ORG_VATROGASCI ? KAMION_MODEL : AMBULANTA_MODEL, x, y, z, a, boja, boja, KAMION_RESPAWN);
+    new boja = tip == ORG_VATROGASCI ? KAMION_BOJA : tip == ORG_MEDICINSKA ? AMBULANTA_BOJA : MEHANICAR_BOJA;
+    new v = CreateVehicle(tip == ORG_VATROGASCI ? KAMION_MODEL : tip == ORG_MEDICINSKA ? AMBULANTA_MODEL : MEHANICAR_MODEL, x, y, z, a, boja, boja, KAMION_RESPAWN);
     if (v == INVALID_VEHICLE_ID) return 0;
     gKamion[k][kIma] = true;
     gKamion[k][kTip] = tip;
@@ -132,7 +148,7 @@ ShowKamione(playerid, tip)
         format(row, sizeof row, "[%d] %s", gKamion[k][kDb], CestaZona(gKamion[k][kX], gKamion[k][kY]));
         DodajStupac(list, len, row);
     }
-    format(title, sizeof title, tip == ORG_VATROGASCI ? T(playerid, "Vatrogasni kamioni (%d/%d)") : T(playerid, "Ambulante (%d/%d)"), KamionBroj(tip), KAMION_PO_TIPU);
+    format(title, sizeof title, tip == ORG_VATROGASCI ? T(playerid, "Vatrogasni kamioni (%d/%d)") : tip == ORG_MEDICINSKA ? T(playerid, "Ambulante (%d/%d)") : T(playerid, "Mehanicarska vozila (%d/%d)"), KamionBroj(tip), KAMION_PO_TIPU);
     return PrikaziDialog(playerid, DLG_APANEL_KAMION, DIALOG_STYLE_LIST, title, list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
@@ -145,7 +161,7 @@ static KamionNovi(playerid, tip)
     while (k < KAMION_MAX && gKamion[k][kIma]) k++;
     if (k == KAMION_MAX || KamionBroj(tip) >= KAMION_PO_TIPU || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE || !KamionStvori(k, tip, x, y, z + 0.5, a))
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo se ovdje ne moze stvoriti."));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO %s (x, y, z, a) VALUES (%f, %f, %f, %f)", tip == ORG_VATROGASCI ? ("fire_trucks") : ("ambulances"), x, y, z + 0.5, a));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO %s (x, y, z, a) VALUES (%f, %f, %f, %f)", tip == ORG_VATROGASCI ? ("fire_trucks") : tip == ORG_MEDICINSKA ? ("ambulances") : ("tow_trucks"), x, y, z + 0.5, a));
     gKamion[k][kDb] = ZadnjiId();
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo dodano: %s."), CestaZona(x, y));
 }
@@ -167,7 +183,7 @@ DLG:apanel_kamion(playerid, response, listitem)
         new body[96];
         gApKamionDb[playerid] = gKamion[k][kDb];
         format(body, sizeof body, T(playerid, "Obrisati vozilo: %s?"), CestaZona(gKamion[k][kX], gKamion[k][kY]));
-        return PrikaziDialog(playerid, DLG_APANEL_KAMION_BRISI, DIALOG_STYLE_MSGBOX, tip == ORG_VATROGASCI ? T(playerid, "Vatrogasni kamioni") : T(playerid, "Ambulante"), body, T(playerid, "Obrisi"), T(playerid, "Natrag"));
+        return PrikaziDialog(playerid, DLG_APANEL_KAMION_BRISI, DIALOG_STYLE_MSGBOX, tip == ORG_VATROGASCI ? T(playerid, "Vatrogasni kamioni") : tip == ORG_MEDICINSKA ? T(playerid, "Ambulante") : T(playerid, "Mehanicarska vozila"), body, T(playerid, "Obrisi"), T(playerid, "Natrag"));
     }
     return ShowKamione(playerid, tip);
 }
@@ -187,7 +203,7 @@ DLG:apanel_kamion_brisi(playerid, response)
     }
     DestroyVehicle(gKamion[k][kVozilo]);
     gKamion[k][kIma] = false;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM %s WHERE id = %d", tip == ORG_VATROGASCI ? ("fire_trucks") : ("ambulances"), gApKamionDb[playerid]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM %s WHERE id = %d", tip == ORG_VATROGASCI ? ("fire_trucks") : tip == ORG_MEDICINSKA ? ("ambulances") : ("tow_trucks"), gApKamionDb[playerid]));
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo obrisano."));
     return ShowKamione(playerid, tip);
 }
@@ -355,7 +371,7 @@ static SlucajPosaljiKamion(s)
     new v = gKamion[k][kVozilo];
     if (SlucajPutOdKamiona(s, v, CestaNajbliza(gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ])) < 0) return;
     new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, gSlucaj[s][slTip] == ORG_VATROGASCI ? ("Vatrogasac_%d") : ("Bolnicar_%d"), s);
+    format(name, sizeof name, gSlucaj[s][slTip] == ORG_VATROGASCI ? ("Vatrogasac_%d") : gSlucaj[s][slTip] == ORG_MEDICINSKA ? ("Bolnicar_%d") : ("Mehanicar_%d"), s);
     new npc = NPC_Create(name);
     if (npc == INVALID_PLAYER_ID) return;
     gSlucaj[s][slNpc] = npc;
@@ -371,7 +387,7 @@ SlucajSpawn(npcid)
 {
     new s = gNpcSlucaj[npcid] - 1;
     if (s < 0) return;
-    NPC_SetSkin(npcid, gSlucaj[s][slTip] == ORG_VATROGASCI ? KAMION_SKIN : AMBULANTA_SKIN);
+    NPC_SetSkin(npcid, gSlucaj[s][slTip] == ORG_VATROGASCI ? KAMION_SKIN : gSlucaj[s][slTip] == ORG_MEDICINSKA ? AMBULANTA_SKIN : MEHANICAR_SKIN);
     NPC_SetInvulnerable(npcid, true);
     NPC_PutInVehicle(npcid, gSlucaj[s][slVozilo], 0);
     SetTimerEx("SlucajKreni", 1000, false, "i", s);
@@ -390,6 +406,13 @@ SlucajNpcStigao(npcid)
     new st = gSlucaj[s][slStanje], bool:vatra = gSlucaj[s][slTip] == ORG_VATROGASCI;
     if (st == SL_PJESKE)
     {
+        if (gSlucaj[s][slTip] == ORG_MEHANICAR)
+        {
+            gSlucaj[s][slStanje] = SL_PRISTANAK;
+            gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+            MehanicarPonudi(gSlucaj[s][slPacijent], s);
+            return;
+        }
         if (!vatra)
         {
             gSlucaj[s][slStanje] = SL_PRISTANAK;
@@ -530,7 +553,7 @@ public SlucajPjeske(s)
         NPC_SetWeapon(npc, WEAPON_FIREEXTINGUISHER);
     }
     gSlucaj[s][slStanje] = SL_PJESKE;
-    NPCHodaj(npc, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, vatra ? SLUCAJ_DOMET_NPC : RANJEN_DOMET_NPC);
+    NPCHodaj(npc, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, vatra ? SLUCAJ_DOMET_NPC : gSlucaj[s][slTip] == ORG_MEHANICAR ? MEHANICAR_DOMET : RANJEN_DOMET_NPC);
 }
 
 static SlucajUKamion(s)
@@ -620,6 +643,16 @@ static SlucajZatvori(s)
 static SlucajKraj(s, bool:ok, ko = INVALID_PLAYER_ID)
 {
     new tip = gSlucaj[s][slTip], p = gSlucaj[s][slPacijent];
+    if (tip == ORG_MEHANICAR)
+    {
+        if (p != INVALID_PLAYER_ID)
+        {
+            if (gMehanicar[p] == s + 1) gMehanicar[p] = 0;
+            if (!ok) SendClientMessage(p, COLOR_ERROR, T(p, "Mehanicar je otisao."));
+        }
+        SlucajZatvori(s);
+        return;
+    }
     if (tip == ORG_VATROGASCI) DestroyDynamicObject(gSlucaj[s][slObjekt]);
     else RanjenPrimijeni(p, ok);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM orgs WHERE type = %d", tip);
@@ -719,9 +752,9 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     {
         new st = gSlucaj[i][slStanje];
         if (st == SL_NEMA) s = i;
-        else if (vatra && gSlucaj[i][slTip] == tip && st < SL_ODLAZI && VectorSize(gSlucaj[i][slX] - x, gSlucaj[i][slY] - y, 0.0) < SLUCAJ_RAZMAK) return;
+        else if (vatra && gSlucaj[i][slTip] == tip && st < SL_ODLAZI && VectorSize(gSlucaj[i][slX] - x, gSlucaj[i][slY] - y, 0.0) < SLUCAJ_RAZMAK) return -1;
     }
-    if (s == -1) return;
+    if (s == -1) return -1;
     gSlucaj[s][slStanje] = SL_POZIV;
     gSlucaj[s][slTip] = tip;
     gSlucaj[s][slPacijent] = pacijent;
@@ -749,6 +782,7 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
         gSlucajPoziv[i] = s + 1;
         PrikaziDialog(i, DLG_SLUCAJ, DIALOG_STYLE_MSGBOX, vatra ? T(i, "Poziv vatrogascima") : T(i, "Poziv hitnoj"), body, T(i, "Prihvati"), T(i, "Odbij"));
     }
+    return s;
 }
 
 SlucajEksplozija(v)
@@ -787,11 +821,12 @@ SlucajStateChange(playerid, PLAYER_STATE:newstate)
 SlucajDisconnect(playerid)
 {
     gSlucajPoziv[playerid] = 0;
+    gMehanicar[playerid] = 0;
     gRanjen[playerid] = RN_NE;
     gRanjenPonuda[playerid] = 0;
     for (new s = 0; s < SLUCAJ_MAX; s++)
     {
-        if (gSlucaj[s][slStanje] && gSlucaj[s][slStanje] < SL_ODLAZI && gSlucaj[s][slTip] == ORG_MEDICINSKA && gSlucaj[s][slPacijent] == playerid)
+        if (gSlucaj[s][slStanje] && gSlucaj[s][slStanje] < SL_ODLAZI && (gSlucaj[s][slTip] == ORG_MEDICINSKA || gSlucaj[s][slTip] == ORG_MEHANICAR) && gSlucaj[s][slPacijent] == playerid)
         {
             SlucajZatvori(s);
             continue;
@@ -800,6 +835,88 @@ SlucajDisconnect(playerid)
         gSlucaj[s][slIgrac] = INVALID_PLAYER_ID;
         gSlucaj[s][slStanje] = SL_POZIV;
     }
+}
+
+ShowMehanicare(playerid)
+{
+    return ShowKamione(playerid, ORG_MEHANICAR);
+}
+
+MehanicarPozovi(playerid)
+{
+    if (!gUlogiran[playerid]) return 1;
+    new v = GetPlayerVehicleID(playerid), Float:zdravlje, Float:x, Float:y, Float:z, Float:d;
+    if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u vozilu."));
+    GetVehicleHealth(v, zdravlje);
+    if (VoziloImaGoriva(v) && zdravlje >= MEHANICAR_STETA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vase vozilo ne treba mehanicara."));
+    for (new s = 0; s < SLUCAJ_MAX; s++)
+        if (gSlucaj[s][slStanje] && gSlucaj[s][slStanje] < SL_ODLAZI && gSlucaj[s][slTip] == ORG_MEHANICAR && gSlucaj[s][slPacijent] == playerid)
+            return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar je vec na putu."));
+    GetVehiclePos(v, x, y, z);
+    CestaNajbliza(x, y, z, d);
+    if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar dolazi samo na ulice Los Santosa."));
+    if (!KamionBroj(ORG_MEHANICAR) || SlucajNovi(ORG_MEHANICAR, x, y, z, playerid) == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi mehanicari su zauzeti, pokusajte kasnije."));
+    gMehanicarVozilo[playerid] = v;
+    MobitelPoziv(playerid, T(playerid, "Mehanicar"));
+    SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
+    MobitelMehanicarSms(playerid, T(playerid, "Mehanicar je krenuo prema vama."));
+    return 1;
+}
+
+static MehanicarPonudi(playerid, s)
+{
+    if (playerid == INVALID_PLAYER_ID || !IsPlayerConnected(playerid)) return;
+    new body[256];
+    gMehanicar[playerid] = s + 1;
+    format(body, sizeof body, T(playerid, "Napuni gorivo ($%d)\nPopravi vozilo ($%d)\nSlepaj vozilo u radionicu ($%d)"), MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE);
+    PrikaziDialog(playerid, DLG_MEHANICAR, DIALOG_STYLE_LIST, T(playerid, "Mehanicar"), body, T(playerid, "Odaberi"), T(playerid, "Gotovo"));
+}
+
+DLG:mehanicar(playerid, response, listitem)
+{
+    static const cijene[] = { MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE };
+    new s = gMehanicar[playerid] - 1, v = gMehanicarVozilo[playerid];
+    if (s < 0 || gSlucaj[s][slStanje] != SL_PRISTANAK || gSlucaj[s][slPacijent] != playerid)
+    {
+        gMehanicar[playerid] = 0;
+        return 1;
+    }
+    if (!response || !GetVehicleModel(v))
+    {
+        gMehanicar[playerid] = 0;
+        SlucajKraj(s, true);
+        return 1;
+    }
+    if (listitem < 0 || listitem >= sizeof cijene) return 1;
+    if (!DajNovac(playerid, -cijene[listitem]))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+        MehanicarPonudi(playerid, s);
+        return 1;
+    }
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
+    if (listitem == 0) VoziloNapuni(v);
+    else if (listitem == 1) RepairVehicle(v);
+    else
+    {
+        SetVehiclePos(v, RADIONICA_X, RADIONICA_Y, RADIONICA_Z);
+        SetVehicleZAngle(v, RADIONICA_A);
+        gMehanicar[playerid] = 0;
+        SlucajKraj(s, true);
+        return 1;
+    }
+    gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
+    MehanicarPonudi(playerid, s);
+    return 1;
+}
+
+CMD:radionica(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, RADIONICA_X, RADIONICA_Y, RADIONICA_Z);
+    return 1;
 }
 
 DLG:slucaj(playerid, response)

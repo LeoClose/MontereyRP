@@ -43,6 +43,7 @@ static gTerNpcMunicija[MAX_TER][MAX_TER_NPC];
 
 InitTeritorij()
 {
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS org_colors (org INTEGER PRIMARY KEY, color INTEGER NOT NULL)"));
     for (new t = 0; t < MAX_TER; t++) for (new n = 0; n < MAX_TER_NPC; n++) gTerNpc[t][n] = INVALID_PLAYER_ID;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS territories (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, type INTEGER NOT NULL,\
@@ -95,7 +96,30 @@ InitTeritorij()
 
 GetOrgBoja(org)
 {
-    return org ? (((org * 0x9E3779B1) & 0xFFFFFF00) | 0x80) : 0xFFFFFF40;
+    if (!org) return 0xFFFFFF40;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT color FROM org_colors WHERE org = %d", org);
+    new boja = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : (((org * 0x9E3779B1) & 0xFFFFFF00) | 0x80);
+    DB_FreeResultSet(res);
+    return boja;
+}
+
+OrgPostaviBoju(playerid, org, const unos[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    new pocetak = unos[0] == '#' ? 1 : 0, n = strlen(unos), hex = 0;
+    if (n - pocetak != 6) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Boja mora biti 6 hex znakova (0-9, A-F)."));
+    for (new i = pocetak; i < n; i++)
+    {
+        new c = unos[i], z;
+        if (c >= '0' && c <= '9') z = c - '0';
+        else if (c >= 'a' && c <= 'f') z = c - 'a' + 10;
+        else if (c >= 'A' && c <= 'F') z = c - 'A' + 10;
+        else return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Boja mora biti 6 hex znakova (0-9, A-F)."));
+        hex = (hex << 4) | z;
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO org_colors (org, color) VALUES (%d, %d)", org, (hex << 8) | 0x80));
+    for (new t = 0; t < MAX_TER; t++) if (gTer[t][terDb] && gTer[t][terOrg] == org) ShowZonu(t);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Boja organizacije je promijenjena."));
 }
 
 TeritorijPrijava(playerid)

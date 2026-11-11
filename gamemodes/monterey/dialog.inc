@@ -14,7 +14,7 @@ enum
     DLG_GORIVO, DLG_TRGOVINA, DLG_APANEL_TRGOVINA, DLG_APANEL_TRGOVINA_MENI,
     DLG_SALON_KUPI, DLG_APANEL_SALON, DLG_APANEL_SALON_MENI, DLG_APANEL_SALON_DODAJ, DLG_APANEL_SALON_UKLONI,
     DLG_OPSTINA, DLG_OPSTINA_KAZNE, DLG_OPSTINA_IME, DLG_OPSTINA_VOZILA, DLG_OPSTINA_PRODAJA, DLG_OPSTINA_PONUDA, DLG_APANEL_OPSTINA, DLG_APANEL_OPSTINA_INT, DLG_APANEL_OPSTINA_UNOS,
-    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA
+    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR
 }
 
 static gDlg[MAX_PLAYERS];
@@ -124,6 +124,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_PIJACA_PRODAJ:     return Dlg_pijaca_prodaj(playerid, response);
         case DLG_PIJACA_KUPI:       return Dlg_pijaca_kupi(playerid, response);
         case DLG_APANEL_PIJACA:     return Dlg_apanel_pijaca(playerid, response, listitem);
+        case DLG_MEHANICAR:         return Dlg_mehanicar(playerid, response, listitem);
     }
     return 1;
 }

@@ -1001,6 +1001,18 @@ VoziloZakljucaj(v, bool:zakljucano)
     VoziloSet(v, VP_VRATA, zakljucano ? 1 : 0);
 }
 
+VoziloImaGoriva(v)
+{
+    return gGorivo[v] > 0.0 ? 1 : 0;
+}
+
+VoziloNapuni(v)
+{
+    gGorivo[v] = VOZILO_TANK;
+    gKrivoGorivo[v] = 0.0;
+    gKrivoVoznja[v] = 0;
+}
+
 static VoziloReset(v)
 {
     gGorivo[v] = VOZILO_TANK;

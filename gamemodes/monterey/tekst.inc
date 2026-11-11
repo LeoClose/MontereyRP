@@ -192,7 +192,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pistolj (Colt 45)", "Pistol (Colt 45)", "Пистолет (Colt 45)", "Pistola (Colt 45)", "Tabanca (Colt 45)" },
     { "Plantaza", "Plantation", "Плантация", "Plantacion", "Tarla" },
     { "Postavi admina", "Set admin", "Назначить админа", "Poner admin", "Admin ata" },
-    { "Postavi lidera\nMakni clana\nDodaj skin\nUkloni skin\nParkiraj vozilo ovdje\nObrisi organizaciju\nPostavi HQ ovdje", "Set leader\nRemove member\nAdd skin\nRemove skin\nPark vehicle here\nDelete organisation\nSet HQ here", "Назначить лидера\nИсключить участника\nДобавить скин\nУбрать скин\nПоставить транспорт здесь\nУдалить организацию\nПоставить штаб здесь", "Poner lider\nQuitar miembro\nAnadir skin\nQuitar skin\nAparcar vehiculo aqui\nBorrar organizacion\nPoner HQ aqui", "Lider ata\nUye cikar\nSkin ekle\nSkin kaldir\nAraci buraya park et\nOrganizasyonu sil\nHQ burada kur" },
+    { "Postavi lidera\nMakni clana\nDodaj skin\nUkloni skin\nParkiraj vozilo ovdje\nObrisi organizaciju\nPostavi HQ ovdje\nPromijeni boju", "Set leader\nRemove member\nAdd skin\nRemove skin\nPark vehicle here\nDelete organisation\nSet HQ here\nChange colour", "Назначить лидера\nИсключить участника\nДобавить скин\nУбрать скин\nПоставить транспорт здесь\nУдалить организацию\nПоставить штаб здесь\nИзменить цвет", "Poner lider\nQuitar miembro\nAnadir skin\nQuitar skin\nAparcar vehiculo aqui\nBorrar organizacion\nPoner HQ aqui\nCambiar color", "Lider ata\nUye cikar\nSkin ekle\nSkin kaldir\nAraci buraya park et\nOrganizasyonu sil\nHQ burada kur\nRengi degistir" },
     { "Postavi vlasnika\nDodaj dilera ovdje\nObrisi teritorij", "Set owner\nAdd dealer here\nDelete territory", "Назначить владельца\nДобавить дилера здесь\nУдалить территорию", "Poner dueno\nAnadir dealer aqui\nBorrar territorio", "Sahip ata\nBuraya satici ekle\nBolgeyi sil" },
     { "Postavi", "Set", "Установить", "Poner", "Ayarla" },
     { "Postavljeni ste za lidera organizacije %s. Pogledajte /org.", "You are now the leader of %s. See /org.", "Вы назначены лидером организации %s. Смотрите /org.", "Ahora eres el lider de %s. Mira /org.", "Artik %s lideriniz. /org komutuna bakin." },
@@ -850,7 +850,22 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Poruka je poslana.", "Message sent.", "Сообщение отправлено.", "Mensaje enviado.", "Mesaj gonderildi." },
     { "Imate %d novih poruka. Otvorite mobitel (/phone, Poruke).", "You have %d new messages. Open your phone (/phone, Messages).", "У вас %d новых сообщений. Откройте телефон (/phone, Сообщения).", "Tienes %d mensajes nuevos. Abre el movil (/phone, Mensajes).", "%d yeni mesajiniz var. Telefonu acin (/phone, Mesajlar)." },
     { "Pomoc: Upisite poruku u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the message in chat (T), then press the right arrow (Select).", "Подсказка: Введите сообщение в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el mensaje en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Mesaji sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." },
-    { "Poruka ne smije sadrzavati znak ~.", "The message can't contain the ~ character.", "Сообщение не может содержать символ ~.", "El mensaje no puede contener el caracter ~.", "Mesaj ~ karakterini iceremez." }
+    { "Poruka ne smije sadrzavati znak ~.", "The message can't contain the ~ character.", "Сообщение не может содержать символ ~.", "El mensaje no puede contener el caracter ~.", "Mesaj ~ karakterini iceremez." },
+    { "Mehanicar", "Mechanic", "Механик", "Mecanico", "Tamirci" },
+    { "Morate biti u vozilu.", "You must be in a vehicle.", "Вы должны быть в транспорте.", "Debes estar en un vehiculo.", "Bir aracta olmalisiniz." },
+    { "Vase vozilo ne treba mehanicara.", "Your vehicle doesn't need a mechanic.", "Вашему транспорту не нужен механик.", "Tu vehiculo no necesita un mecanico.", "Aracinizin tamirciye ihtiyaci yok." },
+    { "Mehanicar dolazi samo na ulice Los Santosa.", "The mechanic only comes to the streets of Los Santos.", "Механик приезжает только на улицы Лос-Сантоса.", "El mecanico solo va a las calles de Los Santos.", "Tamirci sadece Los Santos sokaklarina gelir." },
+    { "Mehanicar je vec na putu.", "A mechanic is already on the way.", "Механик уже в пути.", "Un mecanico ya esta en camino.", "Tamirci zaten yolda." },
+    { "Svi mehanicari su zauzeti, pokusajte kasnije.", "All mechanics are busy, try again later.", "Все механики заняты, попробуйте позже.", "Todos los mecanicos estan ocupados, intentalo mas tarde.", "Tum tamirciler mesgul, daha sonra deneyin." },
+    { "Mehanicar je krenuo prema vama.", "The mechanic is on the way to you.", "Механик выехал к вам.", "El mecanico va hacia ti.", "Tamirci size dogru yola cikti." },
+    { "Napuni gorivo ($%d)\nPopravi vozilo ($%d)\nSlepaj vozilo u radionicu ($%d)", "Refuel ($%d)\nRepair the vehicle ($%d)\nTow the vehicle to the workshop ($%d)", "Заправить ($%d)\nПочинить транспорт ($%d)\nОтбуксировать в мастерскую ($%d)", "Repostar ($%d)\nReparar el vehiculo ($%d)\nRemolcar al taller ($%d)", "Yakit doldur ($%d)\nAraci tamir et ($%d)\nAraci atolyeye cek ($%d)" },
+    { "Mehanicar je otisao.", "The mechanic has left.", "Механик уехал.", "El mecanico se ha ido.", "Tamirci gitti." },
+    { "Platili ste $%d.", "You paid $%d.", "Вы заплатили $%d.", "Has pagado $%d.", "$%d odediniz." },
+    { "Mehanicarska vozila", "Mechanic vehicles", "Транспорт механиков", "Vehiculos de mecanico", "Tamirci araclari" },
+    { "Mehanicarska vozila (%d/%d)", "Mechanic vehicles (%d/%d)", "Транспорт механиков (%d/%d)", "Vehiculos de mecanico (%d/%d)", "Tamirci araclari (%d/%d)" },
+    { "Unesite boju u hex obliku, npr. FF0000:", "Enter the colour in hex, e.g. FF0000:", "Введите цвет в hex, напр. FF0000:", "Introduce el color en hex, p. ej. FF0000:", "Rengi hex olarak girin, orn. FF0000:" },
+    { "Boja mora biti 6 hex znakova (0-9, A-F).", "The colour must be 6 hex characters (0-9, A-F).", "Цвет должен состоять из 6 hex-символов (0-9, A-F).", "El color debe tener 6 caracteres hex (0-9, A-F).", "Renk 6 hex karakter olmali (0-9, A-F)." },
+    { "Boja organizacije je promijenjena.", "The organisation colour has been changed.", "Цвет организации изменён.", "El color de la organizacion ha cambiado.", "Organizasyon rengi degistirildi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

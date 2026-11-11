@@ -706,14 +706,14 @@ enum
 {
     AP_KICK, AP_BAN, AP_UNBAN, AP_VEH, AP_SETADMIN, AP_RANKNAME, AP_MONEY, AP_ITEM, AP_PREMIUM, AP_BROJ,
     AP_TER_KREIRAJ, AP_TER_VLASNIK, AP_TER_NPC,
-    AP_ORG_CREATE, AP_ORG_LEADER, AP_ORG_REMOVE, AP_ORG_SKIN_ADD, AP_ORG_SKIN_DEL, AP_ORG_VEH
+    AP_ORG_CREATE, AP_ORG_LEADER, AP_ORG_REMOVE, AP_ORG_SKIN_ADD, AP_ORG_SKIN_DEL, AP_ORG_VEH, AP_ORG_BOJA
 }
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -725,8 +725,8 @@ CMD:apanel(playerid, params[])
 }
 
 static const gApKat[][] = { "Igraci", "Vozila", "Organizacije", "Teritoriji", "Administracija" };
-static const gApKatStavke[sizeof gApKat][8] = {
-    { 0, 1, 2, 7, 8, 22, -1, -1 }, { 3, 4, 13, 15, 16, 17, 19, 21 }, { 6, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 20, -1 }
+static const gApKatStavke[sizeof gApKat][9] = {
+    { 0, 1, 2, 7, 8, 22, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 20, -1, -1 }
 };
 static gApKatOdabrana[MAX_PLAYERS];
 
@@ -790,7 +790,7 @@ ShowIzbornikOrg(playerid)
     if (!GetOrgIme(gApOrg[playerid], name)) return ShowPopisOrg(playerid);
     format(title, sizeof title, T(playerid, "Organizacija: %s"), name);
     return PrikaziDialog(playerid, DLG_APANEL_ORG, DIALOG_STYLE_LIST, title,
-        T(playerid, "Postavi lidera\nMakni clana\nDodaj skin\nUkloni skin\nParkiraj vozilo ovdje\nObrisi organizaciju\nPostavi HQ ovdje"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
+        T(playerid, "Postavi lidera\nMakni clana\nDodaj skin\nUkloni skin\nParkiraj vozilo ovdje\nObrisi organizaciju\nPostavi HQ ovdje\nPromijeni boju"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 ShowUnos(playerid, action, const prompt[])
@@ -823,6 +823,7 @@ static Akcija(playerid, action, const input[])
         case AP_ORG_SKIN_ADD: { format(p, sizeof p, "%d dodaj %s", gApOrg[playerid], input); OrgSkin(playerid, p); }
         case AP_ORG_SKIN_DEL: { format(p, sizeof p, "%d ukloni %s", gApOrg[playerid], input); OrgSkin(playerid, p); }
         case AP_ORG_VEH:      { format(p, sizeof p, "%d %s", gApOrg[playerid], input); OrgVozilo(playerid, p); }
+        case AP_ORG_BOJA:     { format(p, sizeof p, "%s", input); OrgPostaviBoju(playerid, gApOrg[playerid], p); }
     }
 }
 
@@ -856,6 +857,7 @@ static OtvoriStavku(playerid, stavka)
         case 19: return ShowSaloni(playerid);
         case 20: return ShowOpstinaAdmin(playerid);
         case 21: return ShowPijacaAdmin(playerid);
+        case 23: return ShowMehanicare(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));
@@ -927,6 +929,7 @@ DLG:apanel_org(playerid, response, listitem)
         case 3: return ShowUnos(playerid, AP_ORG_SKIN_DEL, T(playerid, "Unesite ID skina (0-311) koji uklanjate:"));
         case 4: return ShowUnos(playerid, AP_ORG_VEH, T(playerid, "Vozilo se parkira na vasem mjestu.\nUnesite: [model 400-611] [boja1] [boja2]"));
         case 6: return ShowHqIzbor(playerid, gApOrg[playerid]);
+        case 7: return ShowUnos(playerid, AP_ORG_BOJA, T(playerid, "Unesite boju u hex obliku, npr. FF0000:"));
         case 5:
         {
             new name[MAX_ORG_NAME], body[160];
