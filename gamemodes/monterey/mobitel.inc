@@ -23,7 +23,7 @@ static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
-static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS];
+static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_IME], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
 
@@ -119,6 +119,7 @@ static MobitelOtvori(playerid)
     gMobitelEkran[playerid] = MOBITEL_IZBORNIK;
     gMobitelOdabir[playerid] = 0;
     gMobitelUlaz[playerid] = GetTickCount() - MOBITEL_ULAZ_MS;
+    gMobitelStareTipke[playerid] = KEY:0;
     gMobitelBroj[playerid] = 0;
     MobitelKutija(playerid, 0.0, 0.0, 120.0, 172.0, 0x101010FF);
     MobitelKutija(playerid, 3.0, 3.0, 114.0, 169.0, 0x2A2A2AFF);
@@ -208,10 +209,9 @@ static MobitelOdaberi(playerid)
     }
 }
 
-MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
+static MobitelTipka(playerid, KEY:pritisnuto)
 {
-    if (!gMobitelOtvoren[playerid]) return;
-    new KEY:pritisnuto = newkeys & ~oldkeys, broj = MobitelBrojStavki(playerid), ekran = gMobitelEkran[playerid];
+    new broj = MobitelBrojStavki(playerid), ekran = gMobitelEkran[playerid];
     if (pritisnuto & KEY_ANALOG_LEFT)
     {
         if (ekran == MOBITEL_IZBORNIK)
@@ -264,6 +264,12 @@ MobitelUpdate(playerid)
         MobitelZatvori(playerid);
         return;
     }
+    new KEY:tipke, gore, strana;
+    GetPlayerKeys(playerid, tipke, gore, strana);
+    new KEY:pritisnuto = tipke & ~gMobitelStareTipke[playerid];
+    gMobitelStareTipke[playerid] = tipke;
+    if (pritisnuto & (KEY_ANALOG_UP | KEY_ANALOG_DOWN | KEY_ANALOG_LEFT | KEY_ANALOG_RIGHT)) MobitelTipka(playerid, pritisnuto);
+    if (!gMobitelOtvoren[playerid]) return;
     new bool:ruka = GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && GetPlayerSpecialAction(playerid) != SPECIAL_ACTION_USECELLPHONE && GetTickCount() - gMobitelUlaz[playerid] >= MOBITEL_ULAZ_MS;
     if (ruka == gMobitelURuci[playerid]) return;
     gMobitelURuci[playerid] = ruka;

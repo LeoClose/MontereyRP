@@ -5,6 +5,9 @@
 #define HOD_KOLJENO         -0.5
 #define HOD_DIONICA         10.0
 #define HOD_MAX_KORAKA      12      // broj detour koraka nakon koji ponovno hoda ravno
+#define HOD_VOZILO_RAZMAK   0.5
+#define HOD_VOZILO_Z        3.0
+#define HOD_VOZILO_DOMET    8.0
 
 enum E_HOD { bool:hdAktivan, Float:hdX, Float:hdY, Float:hdZ, Float:hdKx, Float:hdKy, NPC_MOVE_TYPE:hdNacin, Float:hdBrzina, Float:hdDomet, hdKoraka, hdStrana }
 static gHod[MAX_PLAYERS][E_HOD];
@@ -29,10 +32,54 @@ NPCHodaj(npc, Float:x, Float:y, Float:z, NPC_MOVE_TYPE:nacin = NPC_MOVE_TYPE_WAL
     HodKorak(npc);
 }
 
+static bool:HodPojas(Float:a, Float:b, Float:h, &Float:pocetak, &Float:kraj)
+{
+    new Float:d = b - a;
+    if (floatabs(d) < 0.0001) return floatabs(a) <= h;
+    new Float:t1 = (-h - a) / d, Float:t2 = (h - a) / d;
+    if (t1 > t2)
+    {
+        new Float:t = t1;
+        t1 = t2;
+        t2 = t;
+    }
+    if (t1 > pocetak) pocetak = t1;
+    if (t2 < kraj) kraj = t2;
+    return pocetak <= kraj;
+}
+
+static bool:HodVozilo(Float:x, Float:y, Float:z, Float:px, Float:py, &Float:hx, &Float:hy)
+{
+    new Float:ux = px - x, Float:uy = py - y, Float:duljina = VectorSize(ux, uy, 0.0), Float:najblize = 2.0;
+    for (new i = 0; i < gVozilaCount; i++)
+    {
+        new v = gVozila[i], Float:vx, Float:vy, Float:vz, Float:a, Float:sx, Float:sy, Float:sz;
+        GetVehiclePos(v, vx, vy, vz);
+        if (floatabs(vz - z) > HOD_VOZILO_Z || VectorSize(vx - x, vy - y, 0.0) > duljina + HOD_VOZILO_DOMET) continue;
+        GetVehicleZAngle(v, a);
+        GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+        new Float:c = floatcos(a, degrees), Float:s = floatsin(a, degrees), Float:sirina = sx / 2.0 + HOD_VOZILO_RAZMAK, Float:dugo = sy / 2.0 + HOD_VOZILO_RAZMAK;
+        new Float:ax = (x - vx) * c + (y - vy) * s, Float:ay = (y - vy) * c - (x - vx) * s;
+        new Float:bx = (px - vx) * c + (py - vy) * s, Float:by = (py - vy) * c - (px - vx) * s;
+        if ((floatabs(ax) <= sirina && floatabs(ay) <= dugo) || (floatabs(bx) <= sirina && floatabs(by) <= dugo)) continue;
+        new Float:pocetak = 0.0, Float:kraj = 1.0;
+        if (HodPojas(ax, bx, sirina, pocetak, kraj) && HodPojas(ay, by, dugo, pocetak, kraj) && pocetak < najblize) najblize = pocetak;
+    }
+    if (najblize > 1.0) return false;
+    hx = x + ux * najblize;
+    hy = y + uy * najblize;
+    return true;
+}
+
 static bool:HodZid(Float:x, Float:y, Float:z, Float:px, Float:py, Float:pz, &Float:hx, &Float:hy)
 {
-    new Float:hz;
-    return Kolizija_Zraka(x, y, z + HOD_VISINA, px, py, pz + HOD_VISINA, hx, hy, hz) || Kolizija_Zraka(x, y, z + HOD_KOLJENO, px, py, pz + HOD_KOLJENO, hx, hy, hz);
+    new Float:hz, Float:vx, Float:vy;
+    new bool:zid = Kolizija_Zraka(x, y, z + HOD_VISINA, px, py, pz + HOD_VISINA, hx, hy, hz) || Kolizija_Zraka(x, y, z + HOD_KOLJENO, px, py, pz + HOD_KOLJENO, hx, hy, hz);
+    if (!HodVozilo(x, y, z, px, py, vx, vy)) return zid;
+    if (zid && VectorSize(hx - x, hy - y, 0.0) <= VectorSize(vx - x, vy - y, 0.0)) return true;
+    hx = vx;
+    hy = vy;
+    return true;
 }
 
 static HodKorak(npc)

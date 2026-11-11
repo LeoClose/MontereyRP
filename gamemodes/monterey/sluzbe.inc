@@ -40,6 +40,7 @@
 #define SLUCAJ_CEKA_MS      2500
 #define SLUCAJ_PROGURAJ_MS  8000
 #define SLUCAJ_USPUT        40.0
+#define SLUCAJ_PJESKE_DOMET 40.0
 
 enum { SL_NEMA, SL_POZIV, SL_IGRAC, SL_NPC, SL_IZLAZI, SL_PJESKE, SL_PRISTANAK, SL_GASI, SL_ODLAZI, SL_POVRATAK, SL_ULAZI, SL_KRAJ }
 enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ }
@@ -490,7 +491,7 @@ SlucajPrepreke(sad, bool:snimljeno)
             }
             continue;
         }
-        if (kupac && st == SL_NPC)
+        if (st == SL_NPC && (kupac || VectorSize(gSlucaj[s][slX] - x, gSlucaj[s][slY] - y, 0.0) <= SLUCAJ_PJESKE_DOMET))
         {
             NPC_StopMove(gSlucaj[s][slNpc]);
             gSlucaj[s][slCeka] = 0;
