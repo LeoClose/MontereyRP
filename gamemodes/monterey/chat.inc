@@ -65,6 +65,7 @@ public OnPlayerText(playerid, text[])
 {
     if (!gUlogiran[playerid]) return 0;
     RemoveBoje(text);
+    if (MobitelText(playerid, text)) return 0;
     SendChat(playerid, text, CHAT_GOVOR);
     return 0;
 }

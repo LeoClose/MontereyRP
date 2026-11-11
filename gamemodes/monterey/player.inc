@@ -96,6 +96,7 @@ public OnPlayerSpawn(playerid)
 public OnPlayerDeath(playerid, killerid, WEAPON:reason)
 {
     if (IsPlayerNPC(playerid)) return 1;
+    MobitelZatvori(playerid);
     TaksiPlayerLeft(playerid);
     KurvaDisconnect(playerid);
     MaricaReset(playerid);
@@ -154,6 +155,7 @@ public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hi
 public OnPlayerUpdate(playerid)
 {
     RanjenUpdate(playerid);
+    MobitelUpdate(playerid);
     VoziloUpdate(playerid);
     TrgovinaUpdate(playerid);
     TaksiPovratak(playerid);

@@ -251,6 +251,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bo
 
 public OnPlayerTakeDamage(playerid, issuerid, Float:amount, WEAPON:weaponid, bodypart)
 {
+    MobitelZatvori(playerid);
     new i = _:weaponid;
     if (weaponid == WEAPON_KNIFE && amount == 0.0 && issuerid != INVALID_PLAYER_ID)
     {

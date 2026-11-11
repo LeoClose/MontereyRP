@@ -104,6 +104,7 @@ public OnGameModeInit()
     InitJezik();
     InitOrg();
     InitInventar();
+    InitMobitel();
     InitTeritorij();
     InitTaksi();
     InitKurve();
