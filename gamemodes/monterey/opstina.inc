@@ -265,7 +265,7 @@ static ShowUprava(playerid)
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*), COALESCE(SUM(amount), 0) FROM fines WHERE account = %d AND paid = 0", gAccountId[playerid]);
     new broj = DB_GetFieldInt(res, 0), ukupno = DB_GetFieldInt(res, 1), list[160];
     DB_FreeResultSet(res);
-    format(list, sizeof list, T(playerid, "Plati kazne (%d, ukupno $%d)\nPromjena imena ($%d)"), broj, ukupno, IME_CIJENA);
+    format(list, sizeof list, T(playerid, "Plati kazne (%d, ukupno $%d)\nPromjena imena ($%d)\nProdaja kuce"), broj, ukupno, IME_CIJENA);
     return PrikaziDialog(playerid, DLG_OPSTINA, DIALOG_STYLE_LIST, T(playerid, "Opstina"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -295,6 +295,7 @@ DLG:opstina(playerid, response, listitem)
 {
     if (!response || !SalterBlizu(playerid, SALTER_UPRAVA)) return 1;
     if (listitem == 0) return ShowKazne(playerid);
+    if (listitem == 2) return KucaProdajaPopis(playerid);
     new body[192];
     format(body, sizeof body, T(playerid, "Promjena imena kosta $%d.\nUnesite novo ime u obliku Ime_Prezime:"), IME_CIJENA);
     return PrikaziDialog(playerid, DLG_OPSTINA_IME, DIALOG_STYLE_INPUT, T(playerid, "Promjena imena"), body, T(playerid, "Promijeni"), T(playerid, "Natrag"));

@@ -93,6 +93,7 @@ public OnPlayerSpawn(playerid)
     AnimPreload(playerid);
     PolicijaSpawn(playerid);
     GepekSpawn(playerid);
+    KucaSpawn(playerid);
     RanjenSpawn(playerid);
     OdjecaSpawn(playerid);
     return 1;

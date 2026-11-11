@@ -307,6 +307,7 @@ ZavrsiLogin(playerid)
     LoadInventar(playerid);
     MobitelPrijava(playerid);
     OdjecaPrijava(playerid);
+    KucaPrijava(playerid);
     PolicijaPrijava(playerid);
     TeritorijPrijava(playerid);
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
