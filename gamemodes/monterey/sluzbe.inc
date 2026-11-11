@@ -29,6 +29,8 @@
 #define RADIONICA_Y         -981.57
 #define RADIONICA_Z         43.0
 #define RADIONICA_A         0.0
+#define MEHANICAR_SLEPANJE_S 300
+#define MEHANICAR_ODGOVOR_MS 2000
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -57,7 +59,7 @@
 #define SLUCAJ_PJESKE_DOMET 40.0
 
 enum { SL_NEMA, SL_POZIV, SL_IGRAC, SL_NPC, SL_IZLAZI, SL_PJESKE, SL_PRISTANAK, SL_GASI, SL_ODLAZI, SL_POVRATAK, SL_ULAZI, SL_KRAJ }
-enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ }
+enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ, slSlepa }
 
 static gSlucaj[SLUCAJ_MAX][E_SLUCAJ];
 static Float:gSlucajTocke[SLUCAJ_MAX][CESTA_MAX_TOCAKA][4];
@@ -445,7 +447,8 @@ SlucajNpcStigao(npcid)
     }
     if (st == SL_ODLAZI)
     {
-        gSlucaj[s][slStanje] = SL_KRAJ;
+        if (gSlucaj[s][slSlepa]) SlucajIstovari(s);
+        else gSlucaj[s][slStanje] = SL_KRAJ;
         return;
     }
     new Float:x, Float:y, Float:z;
@@ -583,6 +586,44 @@ static SlucajVratiKamion(s)
     SlucajVozi(s);
 }
 
+static SlucajSlepaj(s)
+{
+    new p = gSlucaj[s][slSlepa] - 1, kamion = gSlucaj[s][slVozilo], v = gMehanicarVozilo[p];
+    if (!IsPlayerConnected(p) || !GetVehicleModel(v))
+    {
+        gSlucaj[s][slSlepa] = 0;
+        SlucajVratiKamion(s);
+        return;
+    }
+    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+    AttachTrailerToVehicle(v, kamion);
+    PutPlayerInVehicle(p, kamion, 1);
+    NPC_SetKeys(gSlucaj[s][slNpc], 0, 0, 0);
+    if (SlucajPutOdKamiona(s, kamion, CestaNajbliza(RADIONICA_X, RADIONICA_Y, RADIONICA_Z)) < 0)
+    {
+        DetachTrailerFromVehicle(kamion);
+        gSlucaj[s][slSlepa] = 0;
+        SlucajVratiKamion(s);
+        return;
+    }
+    gSlucaj[s][slStanje] = SL_ODLAZI;
+    gSlucaj[s][slRok] = MEHANICAR_SLEPANJE_S;
+    SlucajVozi(s);
+}
+
+static SlucajIstovari(s)
+{
+    new p = gSlucaj[s][slSlepa] - 1, kamion = gSlucaj[s][slVozilo];
+    gSlucaj[s][slSlepa] = 0;
+    DetachTrailerFromVehicle(kamion);
+    if (IsPlayerConnected(p))
+    {
+        if (IsPlayerInVehicle(p, kamion)) RemovePlayerFromVehicle(p);
+        SendClientMessage(p, COLOR_INFO, T(p, "Vozilo je odslepano do radionice."));
+    }
+    SlucajVratiKamion(s);
+}
+
 static bool:SlucajSljedeci(s)
 {
     new n = gSlucaj[s][slNastavi] - 1;
@@ -702,6 +743,8 @@ SlucajTick()
         if (st == SL_NEMA) continue;
         if (st == SL_KRAJ)
         {
+            if (gSlucaj[s][slSlepa]) DetachTrailerFromVehicle(gSlucaj[s][slVozilo]);
+            gSlucaj[s][slSlepa] = 0;
             SlucajMakniKamion(s);
             gSlucaj[s][slStanje] = SL_NEMA;
             continue;
@@ -712,7 +755,8 @@ SlucajTick()
             if (NPC_GetVehicle(npc) == v && !NPC_IsEnteringVehicle(npc))
             {
                 gSlucaj[s][slPjeske] = false;
-                if (!gSlucaj[s][slNastavak]) SlucajVratiKamion(s);
+                if (gSlucaj[s][slSlepa]) SlucajSlepaj(s);
+                else if (!gSlucaj[s][slNastavak]) SlucajVratiKamion(s);
                 else
                 {
                     gSlucaj[s][slNastavak] = false;
@@ -769,6 +813,7 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slPjeske] = false;
     gSlucaj[s][slNastavi] = 0;
     gSlucaj[s][slNastavak] = false;
+    gSlucaj[s][slSlepa] = 0;
     gSlucaj[s][slX] = x;
     gSlucaj[s][slY] = y;
     gSlucaj[s][slZ] = z;
@@ -859,8 +904,15 @@ MehanicarPozovi(playerid)
     gMehanicarVozilo[playerid] = v;
     MobitelPoziv(playerid, T(playerid, "Mehanicar"));
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
-    MobitelMehanicarSms(playerid, T(playerid, "Mehanicar je krenuo prema vama."));
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze (telefon): Dobar dan, trebao bih mehanicara. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y), 1);
+    SetTimerEx("MehanicarOdgovor", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
     return 1;
+}
+
+forward MehanicarOdgovor(playerid);
+public MehanicarOdgovor(playerid)
+{
+    if (IsPlayerConnected(playerid)) SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Dispecer (telefon): U redu, mehanicar je na putu."));
 }
 
 static MehanicarPonudi(playerid, s)
@@ -899,8 +951,7 @@ DLG:mehanicar(playerid, response, listitem)
     else if (listitem == 1) RepairVehicle(v);
     else
     {
-        SetVehiclePos(v, RADIONICA_X, RADIONICA_Y, RADIONICA_Z);
-        SetVehicleZAngle(v, RADIONICA_A);
+        gSlucaj[s][slSlepa] = playerid + 1;
         gMehanicar[playerid] = 0;
         SlucajKraj(s, true);
         return 1;

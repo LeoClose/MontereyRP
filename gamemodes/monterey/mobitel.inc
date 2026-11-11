@@ -547,11 +547,6 @@ MobitelTaksiSms(playerid, const tekst[])
     if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_TAKSI_BROJ, tekst);
 }
 
-MobitelMehanicarSms(playerid, const tekst[])
-{
-    if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_MEHANICAR_BROJ, tekst);
-}
-
 static bool:MobitelPosaljiPoruku(playerid, const broj[], const tekst[])
 {
     if (!strcmp(broj, MOBITEL_TAKSI_BROJ) || !strcmp(broj, MOBITEL_MEHANICAR_BROJ))

@@ -857,7 +857,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Mehanicar dolazi samo na ulice Los Santosa.", "The mechanic only comes to the streets of Los Santos.", "Механик приезжает только на улицы Лос-Сантоса.", "El mecanico solo va a las calles de Los Santos.", "Tamirci sadece Los Santos sokaklarina gelir." },
     { "Mehanicar je vec na putu.", "A mechanic is already on the way.", "Механик уже в пути.", "Un mecanico ya esta en camino.", "Tamirci zaten yolda." },
     { "Svi mehanicari su zauzeti, pokusajte kasnije.", "All mechanics are busy, try again later.", "Все механики заняты, попробуйте позже.", "Todos los mecanicos estan ocupados, intentalo mas tarde.", "Tum tamirciler mesgul, daha sonra deneyin." },
-    { "Mehanicar je krenuo prema vama.", "The mechanic is on the way to you.", "Механик выехал к вам.", "El mecanico va hacia ti.", "Tamirci size dogru yola cikti." },
     { "Napuni gorivo ($%d)\nPopravi vozilo ($%d)\nSlepaj vozilo u radionicu ($%d)", "Refuel ($%d)\nRepair the vehicle ($%d)\nTow the vehicle to the workshop ($%d)", "Заправить ($%d)\nПочинить транспорт ($%d)\nОтбуксировать в мастерскую ($%d)", "Repostar ($%d)\nReparar el vehiculo ($%d)\nRemolcar al taller ($%d)", "Yakit doldur ($%d)\nAraci tamir et ($%d)\nAraci atolyeye cek ($%d)" },
     { "Mehanicar je otisao.", "The mechanic has left.", "Механик уехал.", "El mecanico se ha ido.", "Tamirci gitti." },
     { "Platili ste $%d.", "You paid $%d.", "Вы заплатили $%d.", "Has pagado $%d.", "$%d odediniz." },
@@ -865,7 +864,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Mehanicarska vozila (%d/%d)", "Mechanic vehicles (%d/%d)", "Транспорт механиков (%d/%d)", "Vehiculos de mecanico (%d/%d)", "Tamirci araclari (%d/%d)" },
     { "Unesite boju u hex obliku, npr. FF0000:", "Enter the colour in hex, e.g. FF0000:", "Введите цвет в hex, напр. FF0000:", "Introduce el color en hex, p. ej. FF0000:", "Rengi hex olarak girin, orn. FF0000:" },
     { "Boja mora biti 6 hex znakova (0-9, A-F).", "The colour must be 6 hex characters (0-9, A-F).", "Цвет должен состоять из 6 hex-символов (0-9, A-F).", "El color debe tener 6 caracteres hex (0-9, A-F).", "Renk 6 hex karakter olmali (0-9, A-F)." },
-    { "Boja organizacije je promijenjena.", "The organisation colour has been changed.", "Цвет организации изменён.", "El color de la organizacion ha cambiado.", "Organizasyon rengi degistirildi." }
+    { "Boja organizacije je promijenjena.", "The organisation colour has been changed.", "Цвет организации изменён.", "El color de la organizacion ha cambiado.", "Organizasyon rengi degistirildi." },
+    { "%s kaze (telefon): Dobar dan, trebao bih mehanicara. Nalazim se u %s.", "%s says (phone): Hello, I need a mechanic. I'm at %s.", "%s говорит (телефон): Здравствуйте, мне нужен механик. Я нахожусь в %s.", "%s dice (telefono): Hola, necesito un mecanico. Estoy en %s.", "%s diyor (telefon): Merhaba, tamirci lazim. Buradayim %s." },
+    { "Dispecer (telefon): U redu, mehanicar je na putu.", "Dispatcher (phone): All right, a mechanic is on the way.", "Диспетчер (телефон): Хорошо, механик уже в пути.", "Operador (telefono): De acuerdo, un mecanico va en camino.", "Operator (telefon): Tamam, tamirci yolda." },
+    { "Vozilo je odslepano do radionice.", "The vehicle has been towed to the workshop.", "Транспорт отбуксирован в мастерскую.", "El vehiculo ha sido remolcado al taller.", "Arac atolyeye cekildi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
