@@ -50,6 +50,7 @@ public OnPlayerDisconnect(playerid, reason)
     GepekDisconnect(playerid);
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
+    MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
     gUlogiran[playerid] = false;
     AdminDisconnect(playerid);

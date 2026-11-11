@@ -195,6 +195,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/teritorij.inc"
+#include "monterey/mobitel.inc"
 #include "monterey/player.inc"
 
 DLG:registracija(playerid, response, const inputtext[])
