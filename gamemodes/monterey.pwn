@@ -14,6 +14,9 @@
 
 #pragma dynamic 32768
 
+new Text:Ime;
+new Text:datum;
+
 new gVozila[MAX_VEHICLES], gVoziloMjesto[MAX_VEHICLES], gVozilaCount;
 
 CreateVozilo(model, Float:x, Float:y, Float:z, Float:a, c1, c2, respawn, bool:sirena = false)
@@ -118,6 +121,8 @@ public OnGameModeInit()
     MapaIdlewood();
     MapaIdlewoodFlats();
     MapaDacoradiona();
+	MapaChinatownUkloni(INVALID_PLAYER_ID);
+	MapaChinatown();
     InitMarica();
     InitPolicija();
     InitSluzbe();
@@ -134,6 +139,22 @@ public OnGameModeInit()
     InitHeli();
     InitVlakovi();
     SetTimer("Sekunda", 1000, true);
+
+	Ime = TextDrawCreate(578.0, 24.0, "Monterey");
+    TextDrawLetterSize(Ime, 0.4, 1.6);
+    TextDrawTextSize(Ime, 64.0, 64.0);
+    TextDrawAlignment(Ime, TEXT_DRAW_ALIGN_CENTRE);
+    TextDrawColour(Ime, 0x4168DFFF);
+    TextDrawSetShadow(Ime, 0);
+    TextDrawSetOutline(Ime, 1);
+
+    datum = TextDrawCreate(578.0, 40.0, "12/12/2012");
+    TextDrawLetterSize(datum, 0.2, 1.0);
+    TextDrawTextSize(datum, 600.0, 600.0);
+    TextDrawAlignment(datum, TEXT_DRAW_ALIGN_CENTRE);
+    TextDrawColour(datum, 0xFFFFFFFF);
+    TextDrawSetShadow(datum, 0);
+    TextDrawSetOutline(datum, 1);
     return 1;
 }
 
@@ -206,6 +227,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
+#include "monterey/mape/mapa_chinatown.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/player.inc"
@@ -312,6 +334,7 @@ ZavrsiLogin(playerid)
     TeritorijPrijava(playerid);
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     TogglePlayerSpectating(playerid, false);
+	ShowHud();
     return 1;
 }
 
@@ -337,6 +360,18 @@ KickTimer(playerid)
 {
     SetTimerEx("KickajIgraca", 200, false, "i", playerid);
     return 1;
+}
+
+stock ShowHud(playerid)
+{
+    TextDrawShowForPlayer(playerid, Ime);
+    TextDrawShowForPlayer(playerid, datum);
+}
+
+stock HideHud(playerid)
+{
+    TextDrawHideForPlayer(playerid, Ime);
+    TextDrawHideForPlayer(playerid, datum);
 }
 
 forward KickajIgraca(playerid);
