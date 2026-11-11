@@ -5,11 +5,12 @@
 #define MOBITEL_STAVKA_H    9.5
 
 static const gMobitelIzbornik[][] = { "Imenik", "Poruke", "Kamera", "Organizator", "Internet", "Postavke" };
+static const gMobitelKontakti[][] = { "Taksi" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][sizeof gMobitelIzbornik];
-static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelAplikacija[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS];
+static bool:gMobitelOtvoren[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS];
 
 static PlayerText:MobitelKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
@@ -33,18 +34,31 @@ static PlayerText:MobitelTekst(playerid, Float:x, Float:y, const tekst[], boja, 
     return td;
 }
 
+static MobitelBrojStavki(playerid)
+{
+    if (gMobitelEkran[playerid] == -1) return sizeof gMobitelIzbornik;
+    if (gMobitelEkran[playerid] == 0) return sizeof gMobitelKontakti;
+    return 0;
+}
+
 static MobitelPrikazi(playerid)
 {
-    new bool:izbornik = !gMobitelAplikacija[playerid];
-    PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], izbornik ? T(playerid, "IZBORNIK") : T(playerid, gMobitelIzbornik[gMobitelOdabir[playerid]]));
+    new ekran = gMobitelEkran[playerid], broj = MobitelBrojStavki(playerid);
+    PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], ekran == -1 ? T(playerid, "IZBORNIK") : T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(gMobitelOdabir[playerid]) * MOBITEL_STAVKA_H);
-    if (izbornik) PlayerTextDrawShow(playerid, gMobitelOznaka[playerid]);
+    if (broj) PlayerTextDrawShow(playerid, gMobitelOznaka[playerid]);
     else PlayerTextDrawHide(playerid, gMobitelOznaka[playerid]);
     for (new i = 0; i < sizeof gMobitelIzbornik; i++)
     {
+        if (i >= broj)
+        {
+            PlayerTextDrawHide(playerid, gMobitelStavke[playerid][i]);
+            continue;
+        }
+        if (ekran == -1) PlayerTextDrawSetString(playerid, gMobitelStavke[playerid][i], T(playerid, gMobitelIzbornik[i]));
+        else PlayerTextDrawSetString(playerid, gMobitelStavke[playerid][i], T(playerid, gMobitelKontakti[i]));
         PlayerTextDrawColour(playerid, gMobitelStavke[playerid][i], i == gMobitelOdabir[playerid] ? 0xFFFFFFFF : 0x1A1A1AFF);
-        if (izbornik) PlayerTextDrawShow(playerid, gMobitelStavke[playerid][i]);
-        else PlayerTextDrawHide(playerid, gMobitelStavke[playerid][i]);
+        PlayerTextDrawShow(playerid, gMobitelStavke[playerid][i]);
     }
 }
 
@@ -54,7 +68,7 @@ static MobitelOtvori(playerid)
     gettime(sat, minuta);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMobitelOtvoren[playerid] = true;
-    gMobitelAplikacija[playerid] = false;
+    gMobitelEkran[playerid] = -1;
     gMobitelOdabir[playerid] = 0;
     gMobitelBroj[playerid] = 0;
     MobitelKutija(playerid, 0.0, 0.0, 120.0, 172.0, 0x101010FF);
@@ -84,7 +98,6 @@ static MobitelOtvori(playerid)
     assert(gMobitelBroj[playerid] <= MOBITEL_TD);
     for (new i = 0; i < gMobitelBroj[playerid]; i++) PlayerTextDrawShow(playerid, gMobitelTd[playerid][i]);
     MobitelPrikazi(playerid);
-    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
 }
 
 static MobitelZatvori(playerid)
@@ -93,26 +106,36 @@ static MobitelZatvori(playerid)
     gMobitelOtvoren[playerid] = false;
     for (new i = 0; i < gMobitelBroj[playerid]; i++) PlayerTextDrawDestroy(playerid, gMobitelTd[playerid][i]);
     gMobitelBroj[playerid] = 0;
-    if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USECELLPHONE) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_STOPUSECELLPHONE);
 }
 
 MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if (!gMobitelOtvoren[playerid]) return;
-    new KEY:pritisnuto = newkeys & ~oldkeys;
+    new KEY:pritisnuto = newkeys & ~oldkeys, broj = MobitelBrojStavki(playerid);
     if (pritisnuto & KEY_ANALOG_RIGHT)
     {
-        if (!gMobitelAplikacija[playerid])
+        if (gMobitelEkran[playerid] == -1)
         {
             MobitelZatvori(playerid);
             return;
         }
-        gMobitelAplikacija[playerid] = false;
+        gMobitelOdabir[playerid] = gMobitelEkran[playerid];
+        gMobitelEkran[playerid] = -1;
     }
-    else if (gMobitelAplikacija[playerid]) return;
-    else if (pritisnuto & KEY_ANALOG_LEFT) gMobitelAplikacija[playerid] = true;
-    else if (pritisnuto & KEY_ANALOG_UP) gMobitelOdabir[playerid] = (gMobitelOdabir[playerid] + sizeof gMobitelIzbornik - 1) % sizeof gMobitelIzbornik;
-    else if (pritisnuto & KEY_ANALOG_DOWN) gMobitelOdabir[playerid] = (gMobitelOdabir[playerid] + 1) % sizeof gMobitelIzbornik;
+    else if (pritisnuto & KEY_ANALOG_LEFT)
+    {
+        if (gMobitelEkran[playerid] == 0)
+        {
+            TaksiPozovi(playerid);
+            return;
+        }
+        if (gMobitelEkran[playerid] != -1) return;
+        gMobitelEkran[playerid] = gMobitelOdabir[playerid];
+        gMobitelOdabir[playerid] = 0;
+    }
+    else if (!broj) return;
+    else if (pritisnuto & KEY_ANALOG_UP) gMobitelOdabir[playerid] = (gMobitelOdabir[playerid] + broj - 1) % broj;
+    else if (pritisnuto & KEY_ANALOG_DOWN) gMobitelOdabir[playerid] = (gMobitelOdabir[playerid] + 1) % broj;
     else return;
     MobitelPrikazi(playerid);
 }

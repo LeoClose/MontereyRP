@@ -351,7 +351,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "%s kaze: Hvala, dovidenja.", "%s says: Thanks, goodbye.", "%s говорит: Спасибо, до свидания.", "%s dice: Gracias, adios.", "%s diyor: Tesekkurler, hoscakalin." },
     { "Vozac kaze: Zao mi je, ne mogu vise cekati.", "Driver says: Sorry, I can't wait any longer.", "Водитель говорит: Простите, я больше не могу ждать.", "El conductor dice: Lo siento, no puedo esperar mas.", "Sofor diyor: Uzgunum, daha fazla bekleyemem." },
     { "Dispecer (telefon): Vase crno vozilo je odmah kod vas.", "Dispatcher (phone): Your black SUV is right around the corner.", "Диспетчер (телефон): Ваш чёрный внедорожник уже рядом.", "Operador (telefono): Tu SUV negro esta a la vuelta de la esquina.", "Operator (telefon): Siyah SUV'unuz hemen yaninizda." },
-    { "Pomoc: Pozovite taksi naredbom /taxi.", "Hint: Call a taxi with /taxi.", "Подсказка: Вызовите такси командой /taxi.", "Ayuda: Llama a un taxi con /taxi.", "Ipucu: /taxi ile taksi cagirin." },
+    { "Pomoc: Pozovite taksi mobitelom (/mobitel, Imenik).", "Hint: Call a taxi with your phone (/phone, Contacts).", "Подсказка: Вызовите такси по телефону (/phone, Контакты).", "Ayuda: Llama a un taxi con el movil (/phone, Contactos).", "Ipucu: Telefonla taksi cagirin (/phone, Rehber)." },
     { "Premium status", "Premium status", "Премиум-статус", "Estado premium", "Premium durumu" },
     { "Unesite: [id/ime] [1 = daj, 0 = makni]", "Enter: [id/name] [1 = give, 0 = remove]", "Введите: [id/имя] [1 = выдать, 0 = забрать]", "Introduce: [id/nombre] [1 = dar, 0 = quitar]", "Girin: [id/isim] [1 = ver, 0 = kaldir]" },
     { "%s sada ima PREMIUM.", "%s now has PREMIUM.", "%s теперь имеет PREMIUM.", "%s ahora tiene PREMIUM.", "%s artik PREMIUM sahibi." },
@@ -811,7 +811,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Kamera", "Camera", "Камера", "Camara", "Kamera" },
     { "Organizator", "Organizer", "Органайзер", "Agenda", "Ajanda" },
     { "Internet", "Internet", "Интернет", "Internet", "Internet" },
-    { "Postavke", "Settings", "Настройки", "Ajustes", "Ayarlar" }
+    { "Postavke", "Settings", "Настройки", "Ajustes", "Ayarlar" },
+    { "Taksi", "Taxi", "Такси", "Taxi", "Taksi" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

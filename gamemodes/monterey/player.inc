@@ -246,7 +246,7 @@ AnimPreload(playerid)
     gAnimAktivna[playerid] = false;
     ApplyAnimation(playerid, "DEALER", "null", 4.1, false, false, false, false, 0);
     ApplyAnimation(playerid, "BLOWJOBZ", "null", 4.1, false, false, false, false, 0);
-    ApplyAnimation(playerid, "SWEET", "null", 4.1, false, false, false, false, 0);
+    ApplyAnimation(playerid, "CRACK", "null", 4.1, false, false, false, false, 0);
     for (new i = 0; i < sizeof gAnimLib; i++) ApplyAnimation(playerid, gAnimLib[i], "null", 4.1, false, false, false, false, 0);
 }
 

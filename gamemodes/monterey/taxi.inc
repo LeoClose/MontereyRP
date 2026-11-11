@@ -453,7 +453,7 @@ static PremiumPrilaz(s, cilj, &sekundi)
     return duljina;
 }
 
-CMD:taxi(playerid, params[])
+TaksiPozovi(playerid)
 {
     if (IsRanjen(playerid)) return 1;
     if (!gUlogiran[playerid]) return 1;
@@ -738,7 +738,7 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
     ClearAnimations(playerid);
     if (!ispassenger) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Ovo je taksi, udite kao putnik tipkom G."));
     else if (s >= 0) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec ste pozvali taksi."));
-    else SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pozovite taksi naredbom /taxi."));
+    else SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pozovite taksi mobitelom (/mobitel, Imenik)."));
     return 1;
 }
 
@@ -777,7 +777,7 @@ TaksiStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
             }
         }
         RemovePlayerFromVehicle(playerid);
-        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pozovite taksi naredbom /taxi."));
+        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pozovite taksi mobitelom (/mobitel, Imenik)."));
         return;
     }
     if (s < 0) return;

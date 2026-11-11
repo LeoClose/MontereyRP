@@ -901,7 +901,7 @@ forward RanjenAnim(playerid, racun);
 public RanjenAnim(playerid, racun)
 {
     if (gAccountId[playerid] != racun || gRanjen[playerid] != RN_DOLJE) return;
-    ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.1, true, false, false, true, 0);
+    ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
     TogglePlayerControllable(playerid, true);
     gRanjenAnimId[playerid] = -1;
     gRanjenPopravak[playerid] = GetTickCount();
@@ -915,7 +915,7 @@ RanjenUpdate(playerid)
     {
         new lib[32], ime[32];
         GetAnimationName(idx, lib, sizeof lib, ime, sizeof ime);
-        if (!strcmp(ime, "Sweet_injuredloop", true)) gRanjenAnimId[playerid] = idx;
+        if (!strcmp(ime, "crckidle1", true)) gRanjenAnimId[playerid] = idx;
     }
     if (idx == gRanjenAnimId[playerid] && GetPlayerDistanceFromPoint(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]) <= RANJEN_POMAK) return;
     new sad = GetTickCount();
@@ -923,7 +923,7 @@ RanjenUpdate(playerid)
     gRanjenPopravak[playerid] = sad;
     SetPlayerPos(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]);
     SetPlayerFacingAngle(playerid, gRanjenPos[playerid][3]);
-    ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.1, true, false, false, true, 0);
+    ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
 }
 
 static RanjenCijena(playerid)
