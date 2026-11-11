@@ -605,7 +605,7 @@ ShowTerOrg(playerid)
     for (new t = 0; t < MAX_TER; t++)
     {
         if (!gTer[t][terDb] || !gOrg[playerid] || gTer[t][terOrg] != gOrg[playerid]) continue;
-        format(row, sizeof row, T(playerid, "%s (%s)%s"), gTer[t][terIme], T(playerid, gTerTip[gTer[t][terTip]]), gTer[t][terNapadac] ? T(playerid, " {FF6347}- pod napadom") : (""));
+        format(row, sizeof row, T(playerid, "%s (%s)%s"), gTer[t][terIme], T(playerid, gTerTip[gTer[t][terTip]]), T(playerid, gTer[t][terNapadac] ? (" {FF6347}- pod napadom") : ("")));
         if (DodajStupac(list, len, row)) gTerAdminPopis[playerid][count++] = t;
     }
     if (!count)

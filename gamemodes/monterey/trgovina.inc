@@ -174,7 +174,7 @@ ShowTrgovine(playerid)
     for (new s = 0; s < TRGOVINA_MAX; s++)
     {
         if (!gTrg[s][tgIma]) continue;
-        format(row, sizeof row, "[%d] %s%s", gTrg[s][tgDb], CestaZona(gTrg[s][tgX], gTrg[s][tgY]), gTrg[s][tgImaAktor] ? ("") : T(playerid, " - bez blagajnika"));
+        format(row, sizeof row, "[%d] %s%s", gTrg[s][tgDb], CestaZona(gTrg[s][tgX], gTrg[s][tgY]), T(playerid, gTrg[s][tgImaAktor] ? ("") : (" - bez blagajnika")));
         DodajStupac(list, len, row);
     }
     return PrikaziDialog(playerid, DLG_APANEL_TRGOVINA, DIALOG_STYLE_LIST, T(playerid, "Trgovine"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));

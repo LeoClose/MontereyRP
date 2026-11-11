@@ -295,7 +295,7 @@ static MobitelPrikazi(playerid)
     if (gMobitelPoziv[playerid])
     {
         new bool:razgovor = gMobitelSpojen[playerid] && gMobitelDrugi[playerid] != INVALID_PLAYER_ID;
-        MobitelEkranPoruke(playerid, gMobitelSpojen[playerid] ? T(playerid, "U pozivu") : T(playerid, "Pozivam..."), gMobitelSugovornik[playerid], T(playerid, "N: prekini"), !razgovor ? ("_") : gMobitelZvucnik[playerid] ? T(playerid, "Y: slusalica") : T(playerid, "Y: zvucnik"));
+        MobitelEkranPoruke(playerid, gMobitelSpojen[playerid] ? T(playerid, "U pozivu") : T(playerid, "Pozivam..."), gMobitelSugovornik[playerid], T(playerid, "N: prekini"), T(playerid, !razgovor ? ("_") : gMobitelZvucnik[playerid] ? ("Y: slusalica") : ("Y: zvucnik")));
         return;
     }
     if (ekran == MOBITEL_DOLAZNI)
@@ -606,7 +606,7 @@ MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
     else if (gMobitelPoziv[playerid] && gMobitelSpojen[playerid] && gMobitelDrugi[playerid] != INVALID_PLAYER_ID && (pritisnuto & KEY_YES))
     {
         gMobitelZvucnik[playerid] = !gMobitelZvucnik[playerid];
-        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, gMobitelZvucnik[playerid] ? ("* %s ukljucuje zvucnik na mobitelu.") : ("* %s iskljucuje zvucnik na mobitelu."), GetRPIme(playerid), "", 1);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, gMobitelZvucnik[playerid] ? ("Zvucnik je ukljucen.") : ("Zvucnik je iskljucen.")));
         MobitelPrikazi(playerid);
     }
     else if ((MobitelSkocni(ekran) || gMobitelPoziv[playerid]) && (pritisnuto & KEY_NO)) MobitelZatvori(playerid);

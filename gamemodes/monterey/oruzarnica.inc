@@ -254,7 +254,7 @@ ShowOruzarnice(playerid)
     for (new s = 0; s < ORUZARNICA_MAX; s++)
     {
         if (!gOruz[s][orIma]) continue;
-        format(row, sizeof row, "[%d] %s (%s)%s", gOruz[s][orDb], CestaZona(gOruz[s][orX], gOruz[s][orY]), gOruzarnicaInt[gOruz[s][orInt]][oiIme], gOruz[s][orImaAktor] ? ("") : T(playerid, " - bez blagajnika"));
+        format(row, sizeof row, "[%d] %s (%s)%s", gOruz[s][orDb], CestaZona(gOruz[s][orX], gOruz[s][orY]), gOruzarnicaInt[gOruz[s][orInt]][oiIme], T(playerid, gOruz[s][orImaAktor] ? ("") : (" - bez blagajnika")));
         DodajStupac(list, len, row);
     }
     return PrikaziDialog(playerid, DLG_APANEL_ORUZARNICA, DIALOG_STYLE_LIST, T(playerid, "Oruzarnice"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));

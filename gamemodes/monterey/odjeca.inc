@@ -443,7 +443,7 @@ ShowOdjece(playerid)
     {
         if (!gOdj[s][odIma]) continue;
         format(row, sizeof row, "[%d] %s - %s%s%s", gOdj[s][odDb], CestaZona(gOdj[s][odX], gOdj[s][odY]), gOdj[s][odTip] == ODJ_FRIZER ? T(playerid, "Frizer") : T(playerid, "Odjeca"),
-            gOdj[s][odImaAktor] ? ("") : T(playerid, " - bez blagajnika"), gOdj[s][odImaKabina] ? ("") : T(playerid, " - bez kabine"));
+            T(playerid, gOdj[s][odImaAktor] ? ("") : (" - bez blagajnika")), T(playerid, gOdj[s][odImaKabina] ? ("") : (" - bez kabine")));
         DodajStupac(list, len, row);
     }
     return PrikaziDialog(playerid, DLG_APANEL_ODJECA, DIALOG_STYLE_LIST, T(playerid, "Odjeca i frizeri"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
