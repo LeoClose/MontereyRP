@@ -839,7 +839,18 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Unesite: [id/ime] [novi broj, 7 znamenki]", "Enter: [id/name] [new number, 7 digits]", "Введите: [id/имя] [новый номер, 7 цифр]", "Introduce: [id/nombre] [numero nuevo, 7 digitos]", "Girin: [id/isim] [yeni numara, 7 hane]" },
     { "Broj mora imati 7 znamenki.", "The number must have 7 digits.", "Номер должен состоять из 7 цифр.", "El numero debe tener 7 digitos.", "Numara 7 haneli olmali." },
     { "Taj broj vec postoji.", "That number already exists.", "Такой номер уже существует.", "Ese numero ya existe.", "Bu numara zaten var." },
-    { "%s sada ima broj %s.", "%s now has the number %s.", "У %s теперь номер %s.", "%s ahora tiene el numero %s.", "%s artik %s numarasina sahip." }
+    { "%s sada ima broj %s.", "%s now has the number %s.", "У %s теперь номер %s.", "%s ahora tiene el numero %s.", "%s artik %s numarasina sahip." },
+    { "Posalji poruku", "Send message", "Отправить сообщение", "Enviar mensaje", "Mesaj gonder" },
+    { "Preimenuj", "Rename", "Переименовать", "Renombrar", "Yeniden adlandir" },
+    { "Nova poruka", "New message", "Новое сообщение", "Mensaje nuevo", "Yeni mesaj" },
+    { "Novo ime", "New name", "Новое имя", "Nombre nuevo", "Yeni isim" },
+    { "Primatelj", "Recipient", "Получатель", "Destinatario", "Alici" },
+    { "Odgovori", "Reply", "Ответить", "Responder", "Yanitla" },
+    { "Obrisati kontakt?", "Delete contact?", "Удалить контакт?", "Borrar contacto?", "Kisi silinsin mi?" },
+    { "Poruka je poslana.", "Message sent.", "Сообщение отправлено.", "Mensaje enviado.", "Mesaj gonderildi." },
+    { "Imate %d novih poruka. Otvorite mobitel (/phone, Poruke).", "You have %d new messages. Open your phone (/phone, Messages).", "У вас %d новых сообщений. Откройте телефон (/phone, Сообщения).", "Tienes %d mensajes nuevos. Abre el movil (/phone, Mensajes).", "%d yeni mesajiniz var. Telefonu acin (/phone, Mesajlar)." },
+    { "Pomoc: Upisite poruku u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the message in chat (T), then press the right arrow (Select).", "Подсказка: Введите сообщение в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el mensaje en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Mesaji sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." },
+    { "Poruka ne smije sadrzavati znak ~.", "The message can't contain the ~ character.", "Сообщение не может содержать символ ~.", "El mensaje no puede contener el caracter ~.", "Mesaj ~ karakterini iceremez." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

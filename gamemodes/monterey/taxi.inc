@@ -356,7 +356,7 @@ static TaksiDispecer(p, const tekst[], const a[] = "")
 
 static TaksiSms(p, const tekst[])
 {
-    MobitelSms(p, T(p, "Taksi sluzba"), T(p, tekst));
+    MobitelTaksiSms(p, T(p, tekst));
 }
 
 BlackScreen(playerid, bool:crn)
