@@ -499,7 +499,6 @@ TaksiPozovi(playerid)
     gTaksiPoziv[playerid][0] = x;
     gTaksiPoziv[playerid][1] = y;
     MobitelPoziv(playerid, T(playerid, "Taksi"));
-    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
     TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
     SetTimerEx("TaksiOdgovor", s >= TAKSI_FLOTA ? 500 : 2000, false, "iii", s, playerid, (sekundi + 59) / 60);

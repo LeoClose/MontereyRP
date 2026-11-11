@@ -823,15 +823,23 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "U pozivu", "On call", "Вызов", "En llamada", "Aramada" },
     { "Pozivam...", "Calling...", "Вызываю...", "Llamando...", "Araniyor..." },
     { "Dolazni poziv", "Incoming call", "Входящий вызов", "Llamada entrante", "Gelen arama" },
-    { "Y: javi se, N: odbij", "Y: answer, N: decline", "Y: ответить, N: отклонить", "Y: contestar, N: rechazar", "Y: cevapla, N: reddet" },
-    { "Y: otvori, N: zatvori", "Y: open, N: close", "Y: открыть, N: закрыть", "Y: abrir, N: cerrar", "Y: ac, N: kapat" },
     { "N: prekini", "N: hang up", "N: завершить", "N: colgar", "N: kapat" },
-    { "Moj broj: %d", "My number: %d", "Мой номер: %d", "Mi numero: %d", "Numaram: %d" },
+    { "Moj broj: %s", "My number: %s", "Мой номер: %s", "Mi numero: %s", "Numaram: %s" },
     { "Pretplatnik trenutno nije dostupan.", "The subscriber is currently unavailable.", "Абонент сейчас недоступен.", "El abonado no esta disponible ahora.", "Aranan kisiye su an ulasilamiyor." },
     { "Poziv je zavrsen.", "The call has ended.", "Вызов завершён.", "La llamada ha terminado.", "Arama sona erdi." },
     { "%s (telefon): %s", "%s (phone): %s", "%s (телефон): %s", "%s (telefono): %s", "%s (telefon): %s" },
     { "SMS od %s: %s", "SMS from %s: %s", "SMS от %s: %s", "SMS de %s: %s", "%s adli kisiden SMS: %s" },
-    { "Taksi sluzba", "Taxi service", "Служба такси", "Servicio de taxis", "Taksi servisi" }
+    { "Taksi sluzba", "Taxi service", "Служба такси", "Servicio de taxis", "Taksi servisi" },
+    { "N: odbij", "N: decline", "N: отклонить", "N: rechazar", "N: reddet" },
+    { "Y: javi se", "Y: answer", "Y: ответить", "Y: contestar", "Y: cevapla" },
+    { "N: zatvori", "N: close", "N: закрыть", "N: cerrar", "N: kapat" },
+    { "Y: otvori", "Y: open", "Y: открыть", "Y: abrir", "Y: ac" },
+    { "Pretplatnik je zauzet.", "The subscriber is busy.", "Абонент занят.", "El abonado esta ocupado.", "Aranan kisi mesgul." },
+    { "Broj mobitela", "Phone number", "Номер телефона", "Numero de telefono", "Telefon numarasi" },
+    { "Unesite: [id/ime] [novi broj, 7 znamenki]", "Enter: [id/name] [new number, 7 digits]", "Введите: [id/имя] [новый номер, 7 цифр]", "Introduce: [id/nombre] [numero nuevo, 7 digitos]", "Girin: [id/isim] [yeni numara, 7 hane]" },
+    { "Broj mora imati 7 znamenki.", "The number must have 7 digits.", "Номер должен состоять из 7 цифр.", "El numero debe tener 7 digitos.", "Numara 7 haneli olmali." },
+    { "Taj broj vec postoji.", "That number already exists.", "Такой номер уже существует.", "Ese numero ya existe.", "Bu numara zaten var." },
+    { "%s sada ima broj %s.", "%s now has the number %s.", "У %s теперь номер %s.", "%s ahora tiene el numero %s.", "%s artik %s numarasina sahip." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
