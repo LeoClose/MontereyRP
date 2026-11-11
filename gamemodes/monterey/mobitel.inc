@@ -267,6 +267,7 @@ MobitelUpdate(playerid)
     new KEY:tipke, gore, strana;
     GetPlayerKeys(playerid, tipke, gore, strana);
     new KEY:pritisnuto = tipke & ~gMobitelStareTipke[playerid];
+    if (tipke != gMobitelStareTipke[playerid] || gore || strana) SendClientMessage(playerid, -1, "tipke %d gore %d strana %d", _:tipke, gore, strana);
     gMobitelStareTipke[playerid] = tipke;
     if (pritisnuto & (KEY_ANALOG_UP | KEY_ANALOG_DOWN | KEY_ANALOG_LEFT | KEY_ANALOG_RIGHT)) MobitelTipka(playerid, pritisnuto);
     if (!gMobitelOtvoren[playerid]) return;
