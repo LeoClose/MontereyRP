@@ -819,8 +819,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Imenik je pun.", "Your contacts are full.", "Список контактов полон.", "Tus contactos estan llenos.", "Rehber dolu." },
     { "Broj smije sadrzavati samo znamenke.", "The number can only contain digits.", "Номер может содержать только цифры.", "El numero solo puede tener digitos.", "Numara sadece rakam icerebilir." },
     { "Ime ne smije sadrzavati znak ~.", "The name can't contain the ~ character.", "Имя не может содержать символ ~.", "El nombre no puede contener el caracter ~.", "Isim ~ karakterini iceremez." },
-    { "Pomoc: Upisite broj u chat (T), pa pritisnite Num6 (Odaberi).", "Hint: Type the number in chat (T), then press Num6 (Select).", "Подсказка: Введите номер в чат (T), затем нажмите Num6 (Выбрать).", "Ayuda: Escribe el numero en el chat (T) y pulsa Num6 (Elegir).", "Ipucu: Numarayi sohbete (T) yazin, sonra Num6 (Sec) tusuna basin." },
-    { "Pomoc: Upisite ime u chat (T), pa pritisnite Num6 (Odaberi).", "Hint: Type the name in chat (T), then press Num6 (Select).", "Подсказка: Введите имя в чат (T), затем нажмите Num6 (Выбрать).", "Ayuda: Escribe el nombre en el chat (T) y pulsa Num6 (Elegir).", "Ipucu: Ismi sohbete (T) yazin, sonra Num6 (Sec) tusuna basin." }
+    { "Pomoc: Upisite broj u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the number in chat (T), then press the right arrow (Select).", "Подсказка: Введите номер в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el numero en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Numarayi sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." },
+    { "Pomoc: Upisite ime u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Hint: Type the name in chat (T), then press the right arrow (Select).", "Подсказка: Введите имя в чат (T), затем нажмите стрелку вправо (Выбрать).", "Ayuda: Escribe el nombre en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: Ismi sohbete (T) yazin, sonra sag ok (Sec) tusuna basin." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

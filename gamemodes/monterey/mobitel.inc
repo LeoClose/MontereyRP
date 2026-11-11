@@ -11,6 +11,7 @@
 #define MOBITEL_SLOT        9
 #define MOBITEL_MODEL       18868
 #define MOBITEL_ULAZ_MS     3000
+#define MOBITEL_ANIM_MS     1000
 
 #define MOBITEL_IZBORNIK    -1
 #define MOBITEL_NAZOVI      0
@@ -23,7 +24,7 @@ static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
-static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS];
+static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_IME], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
 
@@ -120,6 +121,10 @@ static MobitelOtvori(playerid)
     gMobitelOdabir[playerid] = 0;
     gMobitelUlaz[playerid] = GetTickCount() - MOBITEL_ULAZ_MS;
     gMobitelStareTipke[playerid] = KEY:0;
+    gMobitelStaroGore[playerid] = 0;
+    gMobitelStaraStrana[playerid] = 0;
+    gMobitelAnim[playerid] = -1;
+    gMobitelAnimOd[playerid] = GetTickCount() - MOBITEL_ANIM_MS;
     gMobitelBroj[playerid] = 0;
     MobitelKutija(playerid, 0.0, 0.0, 120.0, 172.0, 0x101010FF);
     MobitelKutija(playerid, 3.0, 3.0, 114.0, 169.0, 0x2A2A2AFF);
@@ -156,7 +161,11 @@ MobitelZatvori(playerid)
     gMobitelOtvoren[playerid] = false;
     for (new i = 0; i < gMobitelBroj[playerid]; i++) PlayerTextDrawDestroy(playerid, gMobitelTd[playerid][i]);
     gMobitelBroj[playerid] = 0;
-    if (gMobitelURuci[playerid]) RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
+    if (gMobitelURuci[playerid])
+    {
+        RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
+        ClearAnimations(playerid);
+    }
     gMobitelURuci[playerid] = false;
 }
 
@@ -179,7 +188,7 @@ static MobitelOdaberi(playerid)
     new ekran = gMobitelEkran[playerid], odabir = gMobitelOdabir[playerid];
     if (ekran == MOBITEL_IZBORNIK)
     {
-        if (odabir == MOBITEL_NAZOVI) MobitelUnos(playerid, MOBITEL_NAZOVI, "Pomoc: Upisite broj u chat (T), pa pritisnite Num6 (Odaberi).");
+        if (odabir == MOBITEL_NAZOVI) MobitelUnos(playerid, MOBITEL_NAZOVI, "Pomoc: Upisite broj u chat (T), pa pritisnite desnu strelicu (Odaberi).");
         else
         {
             if (odabir == MOBITEL_IMENIK) MobitelUcitaj(playerid);
@@ -193,12 +202,12 @@ static MobitelOdaberi(playerid)
         if (odabir == 1) TaksiPozovi(playerid);
         else if (odabir > 1) MobitelNazovi(playerid, gMobitelKontaktBroj[playerid][odabir - 2]);
         else if (gMobitelKontakata[playerid] >= MOBITEL_KONTAKATA) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Imenik je pun."));
-        else MobitelUnos(playerid, MOBITEL_NOVI_BROJ, "Pomoc: Upisite broj u chat (T), pa pritisnite Num6 (Odaberi).");
+        else MobitelUnos(playerid, MOBITEL_NOVI_BROJ, "Pomoc: Upisite broj u chat (T), pa pritisnite desnu strelicu (Odaberi).");
     }
     else if (ekran == MOBITEL_NOVI_BROJ && gMobitelUnos[playerid][0])
     {
         strcopy(gMobitelNoviBroj[playerid], gMobitelUnos[playerid]);
-        MobitelUnos(playerid, MOBITEL_NOVO_IME, "Pomoc: Upisite ime u chat (T), pa pritisnite Num6 (Odaberi).");
+        MobitelUnos(playerid, MOBITEL_NOVO_IME, "Pomoc: Upisite ime u chat (T), pa pritisnite desnu strelicu (Odaberi).");
     }
     else if (ekran == MOBITEL_NOVO_IME && gMobitelUnos[playerid][0])
     {
@@ -256,6 +265,23 @@ MobitelText(playerid, const text[])
     return 1;
 }
 
+static MobitelStoji(playerid)
+{
+    new idx = GetPlayerAnimationIndex(playerid);
+    if (idx == gMobitelAnim[playerid]) return;
+    new lib[32], ime[32];
+    GetAnimationName(idx, lib, sizeof lib, ime, sizeof ime);
+    if (!strcmp(ime, "IDLE_stance", true))
+    {
+        gMobitelAnim[playerid] = idx;
+        return;
+    }
+    new sad = GetTickCount();
+    if (sad - gMobitelAnimOd[playerid] < MOBITEL_ANIM_MS) return;
+    gMobitelAnimOd[playerid] = sad;
+    ApplyAnimation(playerid, "PED", "IDLE_stance", 4.1, true, false, false, false, 0, SYNC_ALL);
+}
+
 MobitelUpdate(playerid)
 {
     if (!gMobitelOtvoren[playerid]) return;
@@ -267,11 +293,17 @@ MobitelUpdate(playerid)
     new KEY:tipke, gore, strana;
     GetPlayerKeys(playerid, tipke, gore, strana);
     new KEY:pritisnuto = tipke & ~gMobitelStareTipke[playerid];
-    if (tipke != gMobitelStareTipke[playerid] || gore || strana) SendClientMessage(playerid, -1, "tipke %d gore %d strana %d", _:tipke, gore, strana);
+    if (gore != gMobitelStaroGore[playerid] && gore == KEY_UP) pritisnuto |= KEY_ANALOG_UP;
+    if (gore != gMobitelStaroGore[playerid] && gore == KEY_DOWN) pritisnuto |= KEY_ANALOG_DOWN;
+    if (strana != gMobitelStaraStrana[playerid] && strana == KEY_LEFT) pritisnuto |= KEY_ANALOG_LEFT;
+    if (strana != gMobitelStaraStrana[playerid] && strana == KEY_RIGHT) pritisnuto |= KEY_ANALOG_RIGHT;
     gMobitelStareTipke[playerid] = tipke;
+    gMobitelStaroGore[playerid] = gore;
+    gMobitelStaraStrana[playerid] = strana;
     if (pritisnuto & (KEY_ANALOG_UP | KEY_ANALOG_DOWN | KEY_ANALOG_LEFT | KEY_ANALOG_RIGHT)) MobitelTipka(playerid, pritisnuto);
     if (!gMobitelOtvoren[playerid]) return;
     new bool:ruka = GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && GetPlayerSpecialAction(playerid) != SPECIAL_ACTION_USECELLPHONE && GetTickCount() - gMobitelUlaz[playerid] >= MOBITEL_ULAZ_MS;
+    if (ruka) MobitelStoji(playerid);
     if (ruka == gMobitelURuci[playerid]) return;
     gMobitelURuci[playerid] = ruka;
     if (ruka) SetPlayerAttachedObject(playerid, MOBITEL_SLOT, MOBITEL_MODEL, 6, 0.08, 0.03, -0.02, 180.0, 165.0, -5.0);
