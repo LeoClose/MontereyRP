@@ -828,7 +828,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pretplatnik trenutno nije dostupan.", "The subscriber is currently unavailable.", "Абонент сейчас недоступен.", "El abonado no esta disponible ahora.", "Aranan kisiye su an ulasilamiyor." },
     { "Poziv je zavrsen.", "The call has ended.", "Вызов завершён.", "La llamada ha terminado.", "Arama sona erdi." },
     { "%s (telefon): %s", "%s (phone): %s", "%s (телефон): %s", "%s (telefono): %s", "%s (telefon): %s" },
-    { "SMS od %s: %s", "SMS from %s: %s", "SMS от %s: %s", "SMS de %s: %s", "%s adli kisiden SMS: %s" },
+    { "Imate novu poruku od %s.", "You have a new message from %s.", "У вас новое сообщение от %s.", "Tienes un mensaje nuevo de %s.", "%s adli kisiden yeni mesajiniz var." },
     { "Taksi sluzba", "Taxi service", "Служба такси", "Servicio de taxis", "Taksi servisi" },
     { "N: odbij", "N: decline", "N: отклонить", "N: rechazar", "N: reddet" },
     { "Y: javi se", "Y: answer", "Y: ответить", "Y: contestar", "Y: cevapla" },
@@ -983,7 +983,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Nemate kucu.", "You do not own a house.", "У вас нет дома.", "No tienes casa.", "Eviniz yok." },
     { "Prodaja kuce", "Sell house", "Продажа дома", "Vender casa", "Ev satisi" },
     { "Prodati kucu [%d] gradu za $%d?", "Sell house [%d] to the city for $%d?", "Продать дом [%d] городу за $%d?", "Vender la casa [%d] a la ciudad por $%d?", "Ev [%d] sehre $%d karsiliginda satilsin mi?" },
-    { "Prodali ste kucu za $%d.", "You sold the house for $%d.", "Вы продали дом за $%d.", "Has vendido la casa por $%d.", "Evi $%d karsiliginda sattiniz." }
+    { "Prodali ste kucu za $%d.", "You sold the house for $%d.", "Вы продали дом за $%d.", "Has vendido la casa por $%d.", "Evi $%d karsiliginda sattiniz." },
+    { "* %s zakljucava kucu.", "* %s locks the house.", "* %s запирает дом.", "* %s cierra la casa con llave.", "* %s evi kilitliyor." },
+    { "* %s otkljucava kucu.", "* %s unlocks the house.", "* %s отпирает дом.", "* %s abre la casa.", "* %s evin kilidini aciyor." },
+    { "Zakljucaj kucu", "Lock house", "Запереть дом", "Cerrar casa", "Evi kilitle" },
+    { "Otkljucaj kucu", "Unlock house", "Отпереть дом", "Abrir casa", "Evin kilidini ac" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

@@ -1270,6 +1270,7 @@ CMD:svjetla(playerid, params[])
 CMD:zakljucaj(playerid, params[])
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid)) return 1;
+    if (!IsPlayerInAnyVehicle(playerid) && KucaZakljucaj(playerid)) return 1;
     new v = GetPlayerVehicleID(playerid);
     if (!v) v = VoziloBlizu(playerid);
     if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod vozila."));

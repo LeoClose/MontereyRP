@@ -7,10 +7,10 @@
 #define KUCA_SVIJET         20000
 #define KUCA_DAN            86400
 #define KUCA_NAJAM_MS       600000
-#define KUCA_OTKUP_POSTO    70
+#define KUCA_OTKUP_POSTO    50
 #define KUCA_MAX_NAJAM      100000
 
-enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuNajam,
+enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuNajam, bool:kuZakljucano,
     STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
 
 enum E_KUCA_INT { kiIme[16], kiInt, Float:kiX, Float:kiY, Float:kiZ, kiCijena }
@@ -37,10 +37,13 @@ InitKuce()
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN interior INTEGER NOT NULL DEFAULT -1"));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN rent INTEGER NOT NULL DEFAULT 0"));
     }
+    res = DB_ExecuteQuery(gDB, "SELECT locked FROM houses LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN locked INTEGER NOT NULL DEFAULT 1"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS house_renters (house INTEGER NOT NULL, account INTEGER NOT NULL, paid INTEGER NOT NULL, PRIMARY KEY (house, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_spawn (account INTEGER PRIMARY KEY, house INTEGER NOT NULL)"));
     KuceUvezi();
-    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
+    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKuca[k][kuDb] = DB_GetFieldInt(res, 0);
@@ -52,6 +55,7 @@ InitKuce()
         DB_GetFieldString(res, 6, gKuca[k][kuVlasnikIme], MAX_PLAYER_NAME + 1);
         gKuca[k][kuInt] = DB_GetFieldInt(res, 8);
         gKuca[k][kuNajam] = DB_GetFieldInt(res, 9);
+        gKuca[k][kuZakljucano] = DB_GetFieldInt(res, 10) != 0;
         if (gKuca[k][kuInt] < 0 || gKuca[k][kuInt] >= sizeof gKucaInt) gKuca[k][kuInt] = KucaZadaniInt(gKuca[k][kuCijena]);
         if (DB_GetFieldInt(res, 7)) KucaTlo(k);
         KucaStvori(k);
@@ -227,6 +231,8 @@ static KucaIsplati(racun, iznos)
 static KucaOslobodi(k)
 {
     KucaIsprazni(k);
+    gKuca[k][kuZakljucano] = true;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET locked = 1 WHERE id = %d", gKuca[k][kuDb]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM house_renters WHERE house = %d", gKuca[k][kuDb]));
     KucaMakniSpawn(gKuca[k][kuDb]);
     gKuca[k][kuNajam] = 0;
@@ -236,11 +242,18 @@ static KucaOslobodi(k)
 
 static KucaIzlazMeni(playerid, k)
 {
+    new list[256];
     gKucaMeni[playerid] = k + 1;
-    if (gKuca[k][kuVlasnik] == gAccountId[playerid]) return PrikaziDialog(playerid, DLG_KUCA_IZLAZ, DIALOG_STYLE_LIST, T(playerid, "Kuca"), T(playerid, "Izadi\nPreuredi kucu\nPostavi kao mjesto spawna\nIznajmljivanje"), T(playerid, "Odaberi"), T(playerid, "Zatvori"));
-    if (KucaStanar(playerid, k)) return PrikaziDialog(playerid, DLG_KUCA_IZLAZ, DIALOG_STYLE_LIST, T(playerid, "Kuca"), T(playerid, "Izadi\nPostavi kao mjesto spawna\nPrestani iznajmljivati"), T(playerid, "Odaberi"), T(playerid, "Zatvori"));
-    KucaVani(playerid, k);
-    return 1;
+    if (gKuca[k][kuVlasnik] == gAccountId[playerid]) strcat(list, T(playerid, "Izadi\nPreuredi kucu\nPostavi kao mjesto spawna\nIznajmljivanje"));
+    else if (KucaStanar(playerid, k)) strcat(list, T(playerid, "Izadi\nPostavi kao mjesto spawna\nPrestani iznajmljivati"));
+    else
+    {
+        KucaVani(playerid, k);
+        return 1;
+    }
+    strcat(list, "\n");
+    strcat(list, T(playerid, gKuca[k][kuZakljucano] ? ("Otkljucaj kucu") : ("Zakljucaj kucu")));
+    return PrikaziDialog(playerid, DLG_KUCA_IZLAZ, DIALOG_STYLE_LIST, T(playerid, "Kuca"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
 KucaKey(playerid)
@@ -259,7 +272,7 @@ KucaKey(playerid)
     k = KucaNajbliza(x, y, z, KUCA_DOMET);
     if (k == -1) return 0;
     new body[128];
-    if (gKuca[k][kuVlasnik] && (gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k)))
+    if (gKuca[k][kuVlasnik] && (!gKuca[k][kuZakljucano] || gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k)))
     {
         KucaUdi(playerid, k);
         return 1;
@@ -409,6 +422,22 @@ DLG:apanel_kuca_brisi(playerid, response)
     return ShowKuceAdmin(playerid);
 }
 
+KucaZakljucaj(playerid)
+{
+    new k = KucaIgraca(playerid);
+    if (k == -1 && !GetPlayerInterior(playerid) && !GetPlayerVirtualWorld(playerid))
+    {
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+        k = KucaNajbliza(x, y, z, KUCA_DOMET);
+    }
+    if (k == -1 || !gKuca[k][kuVlasnik] || (gKuca[k][kuVlasnik] != gAccountId[playerid] && !KucaStanar(playerid, k))) return 0;
+    gKuca[k][kuZakljucano] = !gKuca[k][kuZakljucano];
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET locked = %d WHERE id = %d", gKuca[k][kuZakljucano] ? 1 : 0, gKuca[k][kuDb]));
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, gKuca[k][kuZakljucano] ? ("* %s zakljucava kucu.") : ("* %s otkljucava kucu."), GetRPIme(playerid), "", 1);
+    return 1;
+}
+
 KucaDisconnect(playerid)
 {
     gKucaPonuda[playerid] = 0;
@@ -428,6 +457,11 @@ DLG:kuca_izlaz(playerid, response, listitem)
     {
         KucaVani(playerid, k);
         return 1;
+    }
+    if (listitem == (vlasnik ? 4 : 3))
+    {
+        KucaZakljucaj(playerid);
+        return KucaIzlazMeni(playerid, k);
     }
     if ((vlasnik && listitem == 2) || (!vlasnik && listitem == 1))
     {

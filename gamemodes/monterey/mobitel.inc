@@ -527,7 +527,7 @@ static MobitelSms(playerid, const posiljatelj[], const tekst[])
     PlayerPlaySound(playerid, MOBITEL_SMS_ZVUK, 0.0, 0.0, 0.0);
     if (!MobitelDostupan(playerid) || (gMobitelOtvoren[playerid] && MobitelUnosEkran(gMobitelEkran[playerid])))
     {
-        SendClientMessage(playerid, COLOR_SMS, T(playerid, "SMS od %s: %s"), posiljatelj, tekst);
+        SendClientMessage(playerid, COLOR_SMS, T(playerid, "Imate novu poruku od %s."), posiljatelj);
         return;
     }
     if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid);
