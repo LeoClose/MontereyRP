@@ -22,6 +22,9 @@
 #define TUNING_TRUBA_MS     1000
 #define TUNING_ISKRE_KMH    140.0
 #define TUNING_ISKRE_MS     300
+#define TUNING_ISKRE_SANSA  20
+#define TUNING_ISKRE_PAUZA  1500
+#define TUNING_ISKRE_RAZMAK 4000
 #define TUNING_ISKRE_TRAJE  350
 #define TUNING_ISKRE_OBJEKT 18717
 
@@ -127,11 +130,16 @@ public TuningIskreKraj(objekt)
 
 static TuningIskre(v)
 {
-    new Float:sx, Float:sy, Float:sz;
-    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-    new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    AttachObjectToVehicle(objekt, v, 0.0, -sy / 2.0 + 0.6, -sz / 2.0 + 0.05, 0.0, 0.0, 0.0);
-    SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
+    new model = GetVehicleModel(v), Float:sx, Float:sy, Float:sz, Float:bx, Float:by, Float:bz;
+    GetVehicleModelInfo(model, VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    GetVehicleModelInfo(model, VEHICLE_MODEL_INFO_REAR_BUMPER_Z, bx, by, bz);
+    if (bz == 0.0) bz = -sz / 2.0 + 0.4;
+    for (new i = -1; i <= 1; i += 2)
+    {
+        new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.28, -sy / 2.0 - 0.05, bz - 0.15, 90.0, 0.0, 0.0);
+        SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
+    }
 }
 
 TuningVozac(v, Float:kmh)
@@ -147,10 +155,15 @@ TuningVozac(v, Float:kmh)
         }
         gTunZdravlje[v] = h;
     }
-    if (gTunIskre[v] && kmh >= TUNING_ISKRE_KMH && GetTickCount() - gTunIskreMs[v] >= TUNING_ISKRE_MS)
+    new sad = GetTickCount();
+    if (gTunIskre[v] && kmh >= TUNING_ISKRE_KMH && sad - gTunIskreMs[v] >= 0)
     {
-        gTunIskreMs[v] = GetTickCount();
-        TuningIskre(v);
+        if (random(100) < TUNING_ISKRE_SANSA)
+        {
+            TuningIskre(v);
+            gTunIskreMs[v] = sad + TUNING_ISKRE_PAUZA + random(TUNING_ISKRE_RAZMAK);
+        }
+        else gTunIskreMs[v] = sad + TUNING_ISKRE_MS;
     }
 }
 
