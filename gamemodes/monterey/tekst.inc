@@ -991,7 +991,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Fotoaparat", "Camera", "Камера", "Camara", "Kamera" },
     { "Selfie", "Selfie", "Селфи", "Selfie", "Ozcekim" },
     { "Korisnik nedostupan.", "User unavailable.", "Абонент недоступен.", "Usuario no disponible.", "Kullaniciya ulasilamiyor." },
-    { "Fotoaparat: desnom tipkom misa ciljajte, lijevom slikajte. N za izlaz.", "Camera: aim with the right mouse button, shoot with the left. N to exit.", "Камера: целься правой кнопкой мыши, снимай левой. N для выхода.", "Camara: apunta con el boton derecho, dispara con el izquierdo. N para salir.", "Kamera: sag tikla nisan alin, sol tikla cekin. Cikis icin N." },
+    { "Fotoaparat: strelicama okrecite pogled, lijevom tipkom misa slikajte. N za izlaz.", "Camera: turn the view with the arrow keys, take a photo with the left mouse button. N to exit.", "Камера: поворачивай вид стрелками, снимай левой кнопкой мыши. N для выхода.", "Camara: gira la vista con las flechas, haz la foto con el boton izquierdo. N para salir.", "Kamera: ok tuslariyla gorusu cevirin, sol tikla fotograf cekin. Cikis icin N." },
     { "Selfie: lijevom tipkom misa slikajte. N za izlaz.", "Selfie: take a photo with the left mouse button. N to exit.", "Селфи: снимай левой кнопкой мыши. N для выхода.", "Selfie: haz la foto con el boton izquierdo. N para salir.", "Ozcekim: sol tikla fotograf cekin. Cikis icin N." },
     { "Mobitel", "Phone", "Телефон", "Movil", "Telefon" },
     { "Naocale 1", "Glasses 1", "Очки 1", "Gafas 1", "Gozluk 1" },

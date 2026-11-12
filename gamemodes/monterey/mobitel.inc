@@ -47,6 +47,8 @@
 #define MOBITEL_SELFIE      2
 #define MOBITEL_KAMERA_ZVUK 1132
 #define MOBITEL_BLJESAK_MS  150
+#define MOBITEL_OKRET       1.5
+#define MOBITEL_NAGIB_MAX   60.0
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
@@ -57,7 +59,7 @@ static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS]
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
 static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
 static PlayerText:gMobitelLijevo[MAX_PLAYERS], PlayerText:gMobitelDesno[MAX_PLAYERS], bool:gMobitelDolje[MAX_PLAYERS];
-static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelKamera[MAX_PLAYERS], Text:gMobitelBljesak;
+static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelKamera[MAX_PLAYERS], Text:gMobitelBljesak, Float:gMobitelKut[MAX_PLAYERS], Float:gMobitelNagib[MAX_PLAYERS];
 static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], bool:gMobitelZvucnik[MAX_PLAYERS], gMobitelObavijest[MAX_PLAYERS], gMobitelPoruka[MAX_PLAYERS][MOBITEL_PORUKA_LEN];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_PORUKA_LEN], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelPrimatelj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
@@ -566,22 +568,33 @@ static MobitelKamera(playerid, nacin)
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
     MobitelZatvori(playerid);
     gMobitelKamera[playerid] = nacin;
-    if (nacin == MOBITEL_FOTO)
-    {
-        GivePlayerWeapon(playerid, WEAPON_CAMERA, 50);
-        SetPlayerArmedWeapon(playerid, WEAPON_CAMERA);
-        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Fotoaparat: desnom tipkom misa ciljajte, lijevom slikajte. N za izlaz."));
-        return;
-    }
     new Float:x, Float:y, Float:z, Float:a;
     GetPlayerPos(playerid, x, y, z);
     GetPlayerFacingAngle(playerid, a);
     TogglePlayerControllable(playerid, false);
     SetPlayerAttachedObject(playerid, MOBITEL_SLOT, MOBITEL_MODEL, 6, 0.08, 0.03, -0.02, 180.0, 165.0, -5.0);
     ApplyAnimation(playerid, "PED", "gun_stand", 4.1, true, false, false, true, 0, SYNC_ALL);
+    if (nacin == MOBITEL_FOTO)
+    {
+        gMobitelKut[playerid] = a;
+        gMobitelNagib[playerid] = 0.0;
+        MobitelPogled(playerid);
+        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Fotoaparat: strelicama okrecite pogled, lijevom tipkom misa slikajte. N za izlaz."));
+        return;
+    }
     SetPlayerCameraPos(playerid, x - floatsin(a, degrees) * 1.1, y + floatcos(a, degrees) * 1.1, z + 0.7);
     SetPlayerCameraLookAt(playerid, x, y, z + 0.6);
     SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Selfie: lijevom tipkom misa slikajte. N za izlaz."));
+}
+
+static MobitelPogled(playerid)
+{
+    new Float:x, Float:y, Float:z, Float:a = gMobitelKut[playerid], Float:n = gMobitelNagib[playerid];
+    GetPlayerPos(playerid, x, y, z);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:cx = x + fx * 0.35, Float:cy = y + fy * 0.35, Float:cz = z + 0.65;
+    SetPlayerFacingAngle(playerid, a);
+    SetPlayerCameraPos(playerid, cx, cy, cz);
+    SetPlayerCameraLookAt(playerid, cx + fx * floatcos(n, degrees) * 10.0, cy + fy * floatcos(n, degrees) * 10.0, cz + floatsin(n, degrees) * 10.0);
 }
 
 MobitelKameraKraj(playerid)
@@ -589,11 +602,6 @@ MobitelKameraKraj(playerid)
     new nacin = gMobitelKamera[playerid];
     if (!nacin) return;
     gMobitelKamera[playerid] = 0;
-    if (nacin == MOBITEL_FOTO)
-    {
-        SetPlayerAmmo(playerid, WEAPON_CAMERA, 0);
-        return;
-    }
     RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
     ClearAnimations(playerid);
     TogglePlayerControllable(playerid, true);
@@ -686,7 +694,7 @@ MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
     if (gMobitelKamera[playerid])
     {
         if (pritisnuto & KEY_NO) MobitelKameraKraj(playerid);
-        else if (gMobitelKamera[playerid] == MOBITEL_SELFIE && (pritisnuto & KEY_FIRE))
+        else if (pritisnuto & KEY_FIRE)
         {
             PlayerPlaySound(playerid, MOBITEL_KAMERA_ZVUK, 0.0, 0.0, 0.0);
             TextDrawShowForPlayer(playerid, gMobitelBljesak);
@@ -963,6 +971,18 @@ static MobitelStoji(playerid)
 
 MobitelUpdate(playerid)
 {
+    if (gMobitelKamera[playerid] == MOBITEL_FOTO)
+    {
+        new KEY:k, gore, strana;
+        GetPlayerKeys(playerid, k, gore, strana);
+        if (!gore && !strana) return;
+        if (strana == KEY_LEFT) gMobitelKut[playerid] += MOBITEL_OKRET;
+        else if (strana == KEY_RIGHT) gMobitelKut[playerid] -= MOBITEL_OKRET;
+        if (gore == KEY_UP && gMobitelNagib[playerid] < MOBITEL_NAGIB_MAX) gMobitelNagib[playerid] += MOBITEL_OKRET;
+        else if (gore == KEY_DOWN && gMobitelNagib[playerid] > -MOBITEL_NAGIB_MAX) gMobitelNagib[playerid] -= MOBITEL_OKRET;
+        MobitelPogled(playerid);
+        return;
+    }
     if (!gMobitelOtvoren[playerid]) return;
     if (IsRanjen(playerid) || ImaLisice(playerid))
     {

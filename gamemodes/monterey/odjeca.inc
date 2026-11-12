@@ -248,7 +248,6 @@ OdjecaPredmetModela(model)
 
 static OdjecaNosiKapu(playerid, model)
 {
-    new bool:namjesteno = false;
     gOdjecaNosi[playerid][0][pkModel] = model;
     gOdjecaNosi[playerid][0][pkX] = 0.1;
     gOdjecaNosi[playerid][0][pkY] = 0.0;
@@ -261,7 +260,6 @@ static OdjecaNosiKapu(playerid, model)
         new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, rx, ry, rz FROM headwear_fit WHERE account = %d AND model = %d", gAccountId[playerid], model);
         if (DB_GetRowCount(res))
         {
-            namjesteno = true;
             gOdjecaNosi[playerid][0][pkX] = DB_GetFieldFloat(res, 0);
             gOdjecaNosi[playerid][0][pkY] = DB_GetFieldFloat(res, 1);
             gOdjecaNosi[playerid][0][pkZ] = DB_GetFieldFloat(res, 2);
@@ -273,7 +271,7 @@ static OdjecaNosiKapu(playerid, model)
     }
     OdjecaSpremi(playerid);
     OdjecaObuci(playerid);
-    if (!model || namjesteno) return;
+    if (!model) return;
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Namjestite ga i spremite (ikona diskete)."));
     EditAttachedObject(playerid, ODJECA_SLOT_KAPA);
 }
