@@ -138,7 +138,7 @@ static TuningIskre(v)
     for (new i = -1; i <= 1; i += 2)
     {
         new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.18, -sy / 2.0 + 0.8, bz - 0.1, 90.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.18, -sy / 2.0 + 0.1, bz - 0.1, 0.0, 0.0, 0.0);
         SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
     }
 }
