@@ -28,10 +28,15 @@
 #define TUNING_ISKRE_SANSA  20
 #define TUNING_ISKRE_PAUZA  1500
 #define TUNING_ISKRE_RAZMAK 4000
+#define TUNING_NATPIS       5000
+#define TUNING_NATPIS_DUZ   6
+#define TUNING_NATPIS_OBJEKT 19483
+#define TUNING_NATPIS_FONT  340
+#define TUNING_NATPIS_MAX   150
 #define TUNING_ISKRE_TRAJE  600
 #define TUNING_ISKRE_OBJEKT 18702
 
-enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_DIO }
+enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_POMOC, TTD_RED }
 enum E_TUNING { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_MAP_ICON:tgIkona }
 
@@ -70,7 +75,7 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.448, -3.081, -0.577, 1.0 },
     { 0.422, -2.531, -0.753, 1.0 },
     { -0.374, -2.292, -0.784, 1.0 },
-    { 0.515, -1.646, -0.235, 0.0 },
+    { 0.515, -1.646, -0.235, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
     { 0.570, -2.613, -0.527, 1.0 },
     { 0.596, -3.975, -0.725, 1.0 },
@@ -103,7 +108,7 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.000, 0.000, 0.000, 0.0 },
     { 0.564, -4.098, -0.793, 1.0 },
     { -0.701, -1.075, -0.716, 1.0 },
-    { 0.474, -1.366, -0.281, 0.0 },
+    { 0.474, -1.366, -0.281, 1.0 },
     { 0.525, -2.877, -0.610, 1.0 },
     { 0.640, -2.529, -0.863, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
@@ -117,7 +122,7 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.073, -0.876, 0.169, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
     { -1.256, -2.120, 1.149, 1.0 },
-    { 0.176, -0.756, 0.089, 0.0 },
+    { 0.176, -0.756, 0.089, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
     { 0.352, -2.245, 0.593, 1.0 },
     { 0.588, -2.825, -0.586, 2.0 },
@@ -131,7 +136,7 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.445, -2.600, -0.825, 1.0 },
     { -0.336, -2.824, -0.895, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
-    { 0.261, 1.176, 0.950, 0.0 },
+    { 0.261, 1.176, 0.950, 2.0 },
     { -0.310, -3.027, 2.175, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
     { 0.000, 0.000, 0.000, 0.0 },
@@ -176,8 +181,8 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.474, -2.366, -0.382, 1.0 },
     { -0.627, -2.673, -0.688, 1.0 },
     { -0.428, -2.666, -0.389, 1.0 },
-    { 0.435, -1.120, -0.443, 0.0 },
-    { -0.468, 0.554, 1.139, 0.0 },
+    { 0.435, -1.120, -0.443, 1.0 },
+    { -0.468, 0.554, 1.139, 1.0 },
     { 0.904, 2.350, 2.185, 1.0 },
     { 0.512, -2.433, -0.427, 2.0 },
     { 0.474, -2.922, -0.546, 2.0 },
@@ -214,13 +219,13 @@ static const Float:gTuningAuspuh[212][4] = {
     { -0.488, -2.115, -0.375, 2.0 },
     { 0.565, -2.943, -0.424, 1.0 },
     { 0.504, -2.737, -0.631, 1.0 },
-    { 0.454, -1.722, -0.034, 0.0 },
+    { 0.454, -1.722, -0.034, 1.0 },
     { 0.659, -7.830, -1.904, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
-    { -0.266, -0.778, -0.064, 0.0 },
+    { -0.266, -0.778, -0.064, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
     { -1.143, 1.080, 1.696, 2.0 },
-    { 0.589, -1.161, -0.517, 0.0 },
+    { 0.589, -1.161, -0.517, 1.0 },
     { 0.443, -2.718, -0.360, 1.0 },
     { 0.652, -3.095, -0.433, 1.0 },
     { -2.233, 0.301, 1.384, 1.0 },
@@ -229,10 +234,10 @@ static const Float:gTuningAuspuh[212][4] = {
     { -0.409, -2.770, -0.474, 1.0 },
     { 0.225, -1.012, 0.042, 1.0 },
     { 0.443, -3.389, -0.723, 1.0 },
-    { -0.846, 0.796, 0.083, 0.0 },
+    { -0.846, 0.796, 0.083, 1.0 },
     { 0.000, 0.000, 0.000, 0.0 },
-    { 0.000, 0.000, 0.000, 0.0 },
-    { 0.000, 0.000, 0.000, 0.0 },
+    { -0.484, -3.146, -0.279, 1.0 },
+    { 0.190, -1.268, -0.248, 2.0 },
     { 0.699, -2.781, -0.455, 2.0 },
     { -0.575, -4.021, -0.714, 1.0 },
     { -0.575, -2.344, -0.353, 2.0 },
@@ -260,12 +265,232 @@ static const Float:gTuningAuspuh[212][4] = {
     { 0.000, 0.000, 0.000, 0.0 }
 };
 
+static const Float:gTuningKrov[212][2] = {
+    { -0.784, 0.805 },
+    { -0.712, 0.741 },
+    { -0.354, 0.726 },
+    { 0.000, 2.492 },
+    { -0.602, 0.903 },
+    { -0.716, 0.725 },
+    { 0.000, 1.933 },
+    { 1.641, 1.657 },
+    { 0.000, 2.118 },
+    { -0.690, 0.790 },
+    { -0.495, 0.875 },
+    { -0.419, 0.675 },
+    { 0.192, 0.655 },
+    { -0.783, 1.113 },
+    { 0.000, 2.300 },
+    { -0.769, 0.588 },
+    { 0.000, 1.693 },
+    { -0.000, 4.079 },
+    { -0.382, 0.992 },
+    { -0.386, 0.656 },
+    { -0.412, 1.072 },
+    { -0.284, 0.675 },
+    { -0.046, 0.773 },
+    { 1.553, 2.452 },
+    { 0.000, 0.928 },
+    { -0.000, 2.945 },
+    { -0.289, 0.817 },
+    { -0.869, 1.668 },
+    { 0.000, 1.568 },
+    { -0.224, 0.582 },
+    { 0.000, 0.000 },
+    { 2.152, 2.193 },
+    { 0.000, 1.108 },
+    { 0.000, 1.732 },
+    { 0.000, 0.807 },
+    { 0.000, 2.483 },
+    { -0.667, 0.823 },
+    { -0.206, 2.051 },
+    { 0.024, 0.923 },
+    { 0.133, 0.654 },
+    { -0.642, 1.206 },
+    { -0.718, 0.425 },
+    { -1.382, 0.880 },
+    { 0.000, 1.941 },
+    { 0.127, 1.650 },
+    { -0.603, 0.801 },
+    { 0.000, 0.000 },
+    { -0.000, 1.819 },
+    { -0.688, 0.517 },
+    { 0.185, 1.914 },
+    { 0.000, 1.532 },
+    { -0.649, 0.550 },
+    { 0.000, 2.945 },
+    { 0.000, 0.000 },
+    { 0.000, 0.000 },
+    { 0.000, 1.732 },
+    { 0.000, 2.311 },
+    { -0.063, 1.328 },
+    { -0.906, 0.707 },
+    { -0.803, 1.113 },
+    { -6.220, 1.917 },
+    { 0.466, 0.748 },
+    { 0.403, 0.489 },
+    { 0.436, 0.545 },
+    { 0.107, 0.269 },
+    { -0.400, 0.489 },
+    { -0.186, 0.833 },
+    { 0.116, 0.802 },
+    { 0.285, 0.501 },
+    { -0.000, 1.819 },
+    { 0.000, 1.203 },
+    { 0.195, 0.540 },
+    { 0.000, 0.000 },
+    { 0.000, 0.000 },
+    { -0.327, 0.799 },
+    { -0.296, 0.690 },
+    { -4.839, 1.429 },
+    { -0.400, 0.684 },
+    { 0.310, 0.856 },
+    { -0.694, 0.945 },
+    { -0.509, 0.667 },
+    { -0.187, 0.324 },
+    { -0.650, 0.910 },
+    { 0.508, 0.996 },
+    { 0.000, 0.000 },
+    { -1.106, 1.191 },
+    { -2.920, 2.259 },
+    { -7.949, 2.731 },
+    { -0.672, 2.651 },
+    { -0.449, 1.054 },
+    { -0.307, 1.054 },
+    { -0.594, 0.685 },
+    { -0.560, 0.840 },
+    { 0.000, 0.000 },
+    { -0.551, 0.718 },
+    { -1.855, 1.232 },
+    { -0.521, 0.814 },
+    { -7.946, 2.731 },
+    { -1.700, 2.093 },
+    { 0.000, 1.890 },
+    { 0.401, 0.852 },
+    { -0.400, 0.489 },
+    { -0.443, 0.748 },
+    { -0.150, 0.765 },
+    { 0.000, 0.960 },
+    { -0.449, 1.054 },
+    { -0.542, 0.551 },
+    { -0.416, 0.773 },
+    { 0.000, 1.830 },
+    { -0.791, 0.607 },
+    { -0.188, 0.374 },
+    { -9.628, 2.395 },
+    { 0.000, 1.267 },
+    { -3.789, 0.972 },
+    { 0.000, 2.252 },
+    { 0.000, 2.111 },
+    { 0.112, 0.834 },
+    { -0.568, 0.818 },
+    { 0.061, 0.683 },
+    { -7.559, 2.597 },
+    { -6.260, 2.134 },
+    { -0.208, 0.547 },
+    { -0.172, 0.597 },
+    { -0.904, 1.016 },
+    { -3.740, 1.532 },
+    { -0.484, 1.539 },
+    { -0.264, 0.625 },
+    { 0.050, 0.842 },
+    { -1.055, 1.093 },
+    { -0.856, 0.876 },
+    { -0.005, 1.463 },
+    { 0.564, 1.143 },
+    { -0.313, 2.268 },
+    { 0.318, 0.707 },
+    { -0.288, 0.596 },
+    { 0.228, 0.768 },
+    { 0.410, 0.570 },
+    { -3.873, 2.250 },
+    { -3.901, 2.091 },
+    { -1.153, 1.109 },
+    { -0.568, 0.674 },
+    { 0.101, 0.607 },
+    { -0.219, 0.805 },
+    { 0.262, 0.846 },
+    { 0.000, 1.560 },
+    { -0.524, 0.752 },
+    { -0.640, 0.815 },
+    { -0.472, 0.863 },
+    { -11.837, 2.764 },
+    { 0.060, 0.691 },
+    { -0.181, 0.677 },
+    { -0.507, 0.872 },
+    { 1.460, 1.659 },
+    { -9.419, 3.689 },
+    { 0.192, 1.006 },
+    { 0.286, 0.563 },
+    { 0.298, 1.630 },
+    { -0.365, 1.731 },
+    { -0.459, 0.834 },
+    { -0.108, 0.692 },
+    { -0.655, 0.796 },
+    { -1.264, 0.796 },
+    { -0.376, 0.754 },
+    { -0.011, 2.361 },
+    { 0.148, 0.274 },
+    { -0.694, 0.659 },
+    { -0.538, 0.814 },
+    { 0.675, 0.624 },
+    { -0.258, 0.738 },
+    { -0.015, -0.157 },
+    { -0.037, 1.602 },
+    { 0.140, 0.368 },
+    { -0.155, 0.748 },
+    { 0.000, 1.757 },
+    { 0.454, 1.415 },
+    { 0.699, 0.920 },
+    { 0.346, 0.867 },
+    { -26.640, 17.332 },
+    { 3.386, 1.329 },
+    { -1.082, 1.208 },
+    { -0.191, 1.021 },
+    { -0.518, 0.518 },
+    { -1.374, 1.585 },
+    { -0.333, 1.672 },
+    { 0.000, 1.386 },
+    { -0.096, 0.979 },
+    { 0.452, 0.991 },
+    { -0.327, 0.714 },
+    { 0.686, 3.672 },
+    { -0.645, 1.038 },
+    { 0.000, 2.240 },
+    { 0.000, 2.483 },
+    { -24.180, 9.178 },
+    { -6.128, 1.918 },
+    { 0.022, 0.304 },
+    { -0.053, 4.049 },
+    { -0.384, 1.000 },
+    { -0.384, 1.000 },
+    { -0.340, 1.055 },
+    { 0.000, 2.465 },
+    { -0.069, 0.749 },
+    { -0.433, 1.581 },
+    { -0.494, 0.659 },
+    { -0.737, 0.642 },
+    { -0.186, 0.833 },
+    { 0.262, 0.846 },
+    { -1.404, 1.102 },
+    { 0.000, -0.001 },
+    { 0.000, 0.676 },
+    { -1.700, 2.093 },
+    { -0.087, 0.793 },
+    { -0.113, 1.104 }
+};
+static const gTuningFont[][] = { "Arial", "Impact", "Verdana", "Comic Sans MS", "Courier New", "Georgia", "Tahoma", "Times New Roman" };
+static const gTuningNatpisBoja[][] = { "Bijela", "Crvena", "Plava", "Zelena", "Zuta", "Ruzicasta", "Crna", "Zlatna" };
+static const gTuningNatpisArgb[] = { 0xFFFFFFFF, 0xFFE02020, 0xFF2080FF, 0xFF20D040, 0xFFFFE020, 0xFFFF69B4, 0xFF000000, 0xFFFFC020 };
+
 static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 } };
 
 static gTuning[TUNING_MAX][E_TUNING];
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
 static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS];
+static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], gTunNatpisObj[MAX_VEHICLES];
+static gTunNTekst[MAX_PLAYERS][TUNING_NATPIS_DUZ + 1], gTunNFont[MAX_PLAYERS], gTunNBoja[MAX_PLAYERS], bool:gTunUnos[MAX_PLAYERS];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
 static gTunDijelovi[MAX_PLAYERS][TUNING_DIJELOVA], gTunKategorije[MAX_PLAYERS][TK_DIO + 14], gTunKatBroj[MAX_PLAYERS];
 static PlayerText:gTunTd[MAX_PLAYERS][TUNING_TD], gTunTdBroj[MAX_PLAYERS], PlayerText:gTun[MAX_PLAYERS][TTD_RED + TUNING_REDOVA * 3];
@@ -287,6 +512,14 @@ InitTuning()
     stupac = DB_ExecuteQuery(gDB, "SELECT zatamnjeno FROM vehicle_tuning LIMIT 1");
     if (stupac) DB_FreeResultSet(stupac);
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN zatamnjeno INTEGER NOT NULL DEFAULT 0"));
+    stupac = DB_ExecuteQuery(gDB, "SELECT natpis FROM vehicle_tuning LIMIT 1");
+    if (stupac) DB_FreeResultSet(stupac);
+    else
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis TEXT NOT NULL DEFAULT ''"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis_font INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis_boja INTEGER NOT NULL DEFAULT 0"));
+    }
     SetTimer("TuningImena", 1000, true);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM tuning_garages ORDER BY id LIMIT %d", TUNING_MAX);
     for (new g = 0, n = DB_GetRowCount(res); g < n; g++, DB_SelectNextRow(res))
@@ -419,6 +652,22 @@ static TuningNeon(v, boja)
     }
 }
 
+static bool:TuningNatpisMoze(model)
+{
+    return model >= 400 && model <= 611 && gTuningKrov[model - 400][1] > 0.0 && !BezKrova(model);
+}
+
+static TuningNatpis(v, const tekst[], font, boja)
+{
+    if (gTunNatpisObj[v]) DestroyObject(gTunNatpisObj[v]);
+    gTunNatpisObj[v] = 0;
+    new model = GetVehicleModel(v), duz = strlen(tekst);
+    if (!duz || !TuningNatpisMoze(model)) return;
+    gTunNatpisObj[v] = CreateObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    SetObjectMaterialText(gTunNatpisObj[v], tekst, 0, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), true, gTuningNatpisArgb[boja], 0, OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
+    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] + 0.02, 0.0, -90.0, 0.0);
+}
+
 static TuningVrati(v)
 {
     for (new s = 0; s < 14; s++)
@@ -430,6 +679,7 @@ static TuningVrati(v)
     ChangeVehiclePaintjob(v, gTunPaint[v]);
     ChangeVehicleColours(v, gTunBoja[v][0], gTunBoja[v][1]);
     TuningNeon(v, gTunNeon[v]);
+    TuningNatpis(v, gTunNatpis[v], gTunNatpisFont[v], gTunNatpisBoja[v]);
 }
 
 TuningPrimijeni(v)
@@ -446,7 +696,10 @@ TuningPrimijeni(v)
     gTunIskre[v] = 0;
     gTunZatamnjeno[v] = 0;
     gTunZdravlje[v] = 0.0;
-    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0), IFNULL(t.oklop, 0), IFNULL(t.rezervoar, 0), IFNULL(t.truba, 0), IFNULL(t.plamen, 0), IFNULL(t.zatamnjeno, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
+    gTunNatpis[v][0] = EOS;
+    gTunNatpisFont[v] = 0;
+    gTunNatpisBoja[v] = 0;
+    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0), IFNULL(t.oklop, 0), IFNULL(t.rezervoar, 0), IFNULL(t.truba, 0), IFNULL(t.plamen, 0), IFNULL(t.zatamnjeno, 0), IFNULL(t.natpis, ''), IFNULL(t.natpis_font, 0), IFNULL(t.natpis_boja, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
     if (!DB_GetRowCount(res))
     {
         DB_FreeResultSet(res);
@@ -463,6 +716,9 @@ TuningPrimijeni(v)
     gTunTruba[v] = clamp(DB_GetFieldInt(res, 8), 0, sizeof gTuningTruba - 1);
     gTunIskre[v] = clamp(DB_GetFieldInt(res, 9), 0, 1);
     gTunZatamnjeno[v] = clamp(DB_GetFieldInt(res, 10), 0, 1);
+    DB_GetFieldString(res, 11, gTunNatpis[v], TUNING_NATPIS_DUZ + 1);
+    gTunNatpisFont[v] = clamp(DB_GetFieldInt(res, 12), 0, sizeof gTuningFont - 1);
+    gTunNatpisBoja[v] = clamp(DB_GetFieldInt(res, 13), 0, sizeof gTuningNatpisArgb - 1);
     DB_FreeResultSet(res);
     for (new i = 0, c = 0; ; i++)
     {
@@ -482,6 +738,8 @@ TuningPrimijeni(v)
 TuningMakni(v)
 {
     TuningNeon(v, 0);
+    gTunNatpis[v][0] = EOS;
+    TuningNatpis(v, "", 0, 0);
     gTunMotor[v] = 0;
     gTunOklop[v] = 0;
     gTunRezervoar[v] = 0;
@@ -500,7 +758,7 @@ static TuningSpremi(v)
         format(dio, sizeof dio, "%d ", gTunMod[v][s]);
         strcat(mods, dio);
     }
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor, oklop, rezervoar, truba, plamen, zatamnjeno) VALUES (%d, '%q', %d, %d, %d, %d, %d, %d, %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v], gTunOklop[v], gTunRezervoar[v], gTunTruba[v], gTunIskre[v], gTunZatamnjeno[v]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor, oklop, rezervoar, truba, plamen, zatamnjeno, natpis, natpis_font, natpis_boja) VALUES (%d, '%q', %d, %d, %d, %d, %d, %d, %d, %d, '%q', %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v], gTunOklop[v], gTunRezervoar[v], gTunTruba[v], gTunIskre[v], gTunZatamnjeno[v], gTunNatpis[v], gTunNatpisFont[v], gTunNatpisBoja[v]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET c1 = %d, c2 = %d WHERE id = %d", gTunBoja[v][0], gTunBoja[v][1], VlasnikDb(v)));
 }
 
@@ -568,6 +826,7 @@ static TuningKatIme(playerid, kat, ime[], size = sizeof (ime))
         case TK_TRUBA: format(ime, size, T(playerid, "Truba"));
         case TK_ISKRE: format(ime, size, T(playerid, "Iskre"));
         case TK_ZATAMNJENJE: format(ime, size, T(playerid, "Zatamnjeni prozori"));
+        case TK_NATPIS: format(ime, size, T(playerid, "Natpis na krovu"));
         default: format(ime, size, T(playerid, gTuningDio[kat - TK_DIO]));
     }
 }
@@ -589,6 +848,19 @@ static TuningStavka(playerid, i, &vrijednost, &cijena, ime[], size = sizeof (ime
             vrijednost = i;
             cijena = i == 0 ? TUNING_POPRAVAK : i == 1 ? TUNING_POPRAVAK_MOTOR : TUNING_GUME;
             format(ime, size, T(playerid, i == 0 ? ("Popravi karoseriju") : i == 1 ? ("Popravi motor") : ("Zamijeni gume")));
+        }
+        case TK_NATPIS:
+        {
+            vrijednost = i;
+            cijena = i == 3 ? TUNING_NATPIS : -1;
+            switch (i)
+            {
+                case 0: format(ime, size, T(playerid, "Tekst: %s"), gTunNTekst[playerid][0] ? gTunNTekst[playerid] : ("-"));
+                case 1: format(ime, size, T(playerid, "Font: %s"), gTuningFont[gTunNFont[playerid]]);
+                case 2: format(ime, size, T(playerid, "Boja: %s"), T(playerid, gTuningNatpisBoja[gTunNBoja[playerid]]));
+                case 3: format(ime, size, T(playerid, "Spremi natpis"));
+                default: format(ime, size, T(playerid, "Ukloni natpis"));
+            }
         }
         case TK_BOJA1, TK_BOJA2:
         {
@@ -662,7 +934,7 @@ static bool:TuningUgradeno(playerid, vrijednost)
     new kat = gTunKat[playerid], v = gTunV[playerid];
     switch (kat)
     {
-        case -1, TK_POPRAVAK: return false;
+        case -1, TK_POPRAVAK, TK_NATPIS: return false;
         case TK_BOJA1, TK_BOJA2: return gTunBoja[v][kat - TK_BOJA1] == vrijednost;
         case TK_PAINTJOB: return gTunPaint[v] == vrijednost;
         case TK_MOTOR: return gTunMotor[v] == vrijednost;
@@ -729,6 +1001,7 @@ static TuningPregled(playerid)
         case TK_NEON: TuningNeon(v, vrijednost);
         case TK_TRUBA: if (gTuningTrubaZvuk[vrijednost]) PlayerPlaySound(playerid, gTuningTrubaZvuk[vrijednost], 0.0, 0.0, 0.0);
         case TK_ISKRE: if (vrijednost) TuningIskre(v);
+        case TK_NATPIS: TuningNatpis(v, gTunNTekst[playerid], gTunNFont[playerid], gTunNBoja[playerid]);
         case TK_POPRAVAK, TK_MOTOR, TK_OKLOP, TK_REZERVOAR, TK_ZATAMNJENJE: {}
         default:
         {
@@ -757,6 +1030,13 @@ static TuningOtvoriKat(playerid, kat)
         case TK_REZERVOAR: gTunBroj[playerid] = sizeof gTuningRezervoarCijena;
         case TK_TRUBA: gTunBroj[playerid] = sizeof gTuningTruba;
         case TK_ISKRE, TK_ZATAMNJENJE: gTunBroj[playerid] = 2;
+        case TK_NATPIS:
+        {
+            gTunBroj[playerid] = 5;
+            strcopy(gTunNTekst[playerid], gTunNatpis[v], TUNING_NATPIS_DUZ + 1);
+            gTunNFont[playerid] = gTunNatpisFont[v];
+            gTunNBoja[playerid] = gTunNatpisBoja[v];
+        }
         default:
         {
             new n = 0;
@@ -795,6 +1075,7 @@ static TuningIzbornik(playerid)
     if (!BezMotora(model)) gTunKategorije[playerid][n++] = TK_REZERVOAR;
     gTunKategorije[playerid][n++] = TK_TRUBA;
     if (!BezKrova(model)) gTunKategorije[playerid][n++] = TK_ZATAMNJENJE;
+    if (gPremium[playerid] && TuningNatpisMoze(model)) gTunKategorije[playerid][n++] = TK_NATPIS;
     for (new s = 0; s < 14; s++)
     {
         for (new c = 1000; c <= 1193; c++)
@@ -905,6 +1186,7 @@ TuningMisIskljuci(playerid)
 
 TuningDisconnect(playerid)
 {
+    gTunUnos[playerid] = false;
     TuningZatvori(playerid);
     gTunU[playerid] = -1;
 }
@@ -972,7 +1254,68 @@ static TuningPomakni(playerid, smjer)
 static TuningOdaberi(playerid)
 {
     if (gTunKat[playerid] == -1) TuningOtvoriKat(playerid, gTunKategorije[playerid][gTunIdx[playerid]]);
+    else if (gTunKat[playerid] == TK_NATPIS) TuningNatpisOdaberi(playerid);
     else TuningKupi(playerid);
+}
+
+static TuningNatpisPitaj(playerid, const greska[] = "")
+{
+    new body[192];
+    gTunUnos[playerid] = true;
+    format(body, sizeof body, T(playerid, "%sUnesite natpis (1-%d znakova, slova i brojevi):"), greska, TUNING_NATPIS_DUZ);
+    return PrikaziDialog(playerid, DLG_TUNING_NATPIS, DIALOG_STYLE_INPUT, T(playerid, "Natpis na krovu"), body, T(playerid, "Potvrdi"), T(playerid, "Odustani"));
+}
+
+static TuningNatpisOdaberi(playerid)
+{
+    new v = gTunV[playerid];
+    switch (gTunIdx[playerid])
+    {
+        case 0: return TuningNatpisPitaj(playerid);
+        case 1: gTunNFont[playerid] = (gTunNFont[playerid] + 1) % sizeof gTuningFont;
+        case 2: gTunNBoja[playerid] = (gTunNBoja[playerid] + 1) % sizeof gTuningNatpisArgb;
+        case 3:
+        {
+            if (!gPremium[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo je samo za premium igrace."));
+            if (!gTunNTekst[playerid][0]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prvo upisite tekst."));
+            if (!strcmp(gTunNTekst[playerid], gTunNatpis[v]) && gTunNFont[playerid] == gTunNatpisFont[v] && gTunNBoja[playerid] == gTunNatpisBoja[v]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "To je vec ugradeno."));
+            if (!DajNovac(playerid, -TUNING_NATPIS)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+            strcopy(gTunNatpis[v], gTunNTekst[playerid], TUNING_NATPIS_DUZ + 1);
+            gTunNatpisFont[v] = gTunNFont[playerid];
+            gTunNatpisBoja[v] = gTunNBoja[playerid];
+            TuningSpremi(v);
+            PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
+            SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), gTunNatpis[v], TUNING_NATPIS);
+        }
+        default:
+        {
+            if (!gTunNatpis[v][0]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nema natpisa."));
+            gTunNatpis[v][0] = EOS;
+            gTunNTekst[playerid][0] = EOS;
+            TuningSpremi(v);
+            SendClientMessage(playerid, COLOR_INFO, T(playerid, "Natpis je uklonjen."));
+        }
+    }
+    TuningPregled(playerid);
+    TuningPrikazi(playerid);
+    return 1;
+}
+
+DLG:tuning_natpis(playerid, response, const inputtext[])
+{
+    gTunUnos[playerid] = false;
+    if (gTunU[playerid] == -1 || gTunKat[playerid] != TK_NATPIS || !response) return 1;
+    new duz = strlen(inputtext);
+    if (duz < 1 || duz > TUNING_NATPIS_DUZ) return TuningNatpisPitaj(playerid, T(playerid, "{FF6347}Natpis smije imati 1-6 znakova.\n\n"));
+    for (new i = 0; i < duz; i++)
+    {
+        new c = inputtext[i];
+        if (!(('a' <= c <= 'z') || ('A' <= c <= 'Z') || ('0' <= c <= '9') || c == ' ' || c == '-' || c == '!' || c == '.')) return TuningNatpisPitaj(playerid, T(playerid, "{FF6347}Dozvoljena su samo slova, brojevi, razmak i - ! .\n\n"));
+    }
+    strcopy(gTunNTekst[playerid], inputtext, TUNING_NATPIS_DUZ + 1);
+    TuningPregled(playerid);
+    TuningPrikazi(playerid);
+    return 1;
 }
 
 static TuningNatrag(playerid)
@@ -1034,6 +1377,7 @@ TuningKlik(playerid, PlayerText:td)
 TuningKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if (gTunU[playerid] == -1) return 0;
+    if (gTunUnos[playerid]) return 1;
     if (!TuningProvjera(playerid)) return 1;
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES))
     {
@@ -1051,7 +1395,7 @@ TuningKey(playerid, KEY:newkeys, KEY:oldkeys)
 
 TuningUpdate(playerid)
 {
-    if (gTunU[playerid] == -1) return;
+    if (gTunU[playerid] == -1 || gTunUnos[playerid]) return;
     new KEY:tipke, gore, strana, smjer = 0, sad = GetTickCount();
     GetPlayerKeys(playerid, tipke, gore, strana);
     if (strana != gTunStrana[playerid])
