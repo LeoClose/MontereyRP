@@ -717,26 +717,24 @@ public LocateTick(cop, gen)
     SetTimerEx("LocateTick", ls ? LOCATE_LS_MS : LOCATE_VAN_MS, false, "ii", cop, gen);
 }
 
-CMD:locate(playerid, params[])
+PolicijaLociraj(playerid, target)
 {
-    if (!DutyProvjera(playerid, ORG_LSPD)) return 1;
-    new idx = 0, p1[32];
-    if (!SljedeciParam(params, idx, p1))
-    {
-        if (!gLocate[playerid]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /locate [id/ime], /locate za prekid"));
-        LocateStop(playerid);
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pracenje je prekinuto."));
-    }
-    new target = FindPlayer(p1);
-    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
-    if (target == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to sami sebi."));
     LocateStop(playerid);
     gLocate[playerid] = target + 1;
     gLocateRacun[playerid] = gAccountId[target];
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pratite %s. Polozaj se osvjezava na karti (/locate za prekid)."), GetRPIme(target));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pratite %s. Polozaj se osvjezava na karti (MDT za prekid)."), GetRPIme(target));
     if (!gTragVrijeme[target]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Trenutno nema podataka o lokaciji."));
     LocateTick(playerid, gLocateGen[playerid]);
-    return 1;
 }
 
-CMD:lociraj(playerid, params[]) return cmd_locate(playerid, params);
+PolicijaLocirajPrekini(playerid)
+{
+    if (!gLocate[playerid]) return;
+    LocateStop(playerid);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pracenje je prekinuto."));
+}
+
+PolicijaLocira(playerid)
+{
+    return gLocate[playerid] ? gLocate[playerid] - 1 : INVALID_PLAYER_ID;
+}

@@ -631,6 +631,29 @@ CMD:prikolica(playerid, params[])
     return AdminStvoriVozilo(playerid, PRIKOLICA_MODEL, -1, -1);
 }
 
+CMD:dozvola(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    new idx = 0, p1[32];
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /dozvola [id/ime]"));
+    new target = FindPlayer(p1);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET vozacka = 1 - vozacka WHERE id = %d", gAccountId[target]));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT vozacka FROM accounts WHERE id = %d", gAccountId[target]), bool:ima = DB_GetRowCount(res) && DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    if (ima)
+    {
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s sada ima vozacku dozvolu."), GetRPIme(target));
+        SendClientMessage(target, COLOR_INFO, T(target, "Dobili ste vozacku dozvolu."));
+    }
+    else
+    {
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s vise nema vozacku dozvolu."), GetRPIme(target));
+        SendClientMessage(target, COLOR_INFO, T(target, "Oduzeta vam je vozacka dozvola."));
+    }
+    return 1;
+}
+
 CMD:wound(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;

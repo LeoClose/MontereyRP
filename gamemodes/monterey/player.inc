@@ -216,7 +216,7 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Opstina: Y kod saltera (kazne, promjena imena, prodaja vozila)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Auto pijaca: Y u svom vozilu kod otkupa (1/3 cijene), Y kod vozila na prodaji (kupnja)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /locate [id/ime] (pracenje na karti)"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ostalo: /admini"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Statistika: /stats"));
     if (gAdmin[playerid]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Admin: /ahelp"));
@@ -234,6 +234,7 @@ CMD:ahelp(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
