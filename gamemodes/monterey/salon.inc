@@ -354,7 +354,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
         OruzarnicaZatvori(playerid);
         OdjecaZatvori(playerid);
         MdtZatvori(playerid);
-        TuningZatvori(playerid);
+        TuningMisIskljuci(playerid);
     }
     if (clickedid == INVALID_TEXT_DRAW && gUSalonu[playerid] != -1) SalonZatvori(playerid);
     return 0;

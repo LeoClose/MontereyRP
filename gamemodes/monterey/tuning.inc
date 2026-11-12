@@ -32,7 +32,7 @@ static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
 static gTunDijelovi[MAX_PLAYERS][TUNING_DIJELOVA], gTunKategorije[MAX_PLAYERS][TK_DIO + 14], gTunKatBroj[MAX_PLAYERS];
 static PlayerText:gTunTd[MAX_PLAYERS][TUNING_TD], gTunTdBroj[MAX_PLAYERS], PlayerText:gTun[MAX_PLAYERS][TTD_RED + TUNING_REDOVA * 3];
-static gApTuning[MAX_PLAYERS], gTunSmjer[MAX_PLAYERS], gTunPonovi[MAX_PLAYERS], gTunMotorRadi[MAX_PLAYERS], gTunOd[MAX_PLAYERS], gTunStrana[MAX_PLAYERS];
+static gApTuning[MAX_PLAYERS], gTunSmjer[MAX_PLAYERS], gTunPonovi[MAX_PLAYERS], gTunMotorRadi[MAX_PLAYERS], gTunOd[MAX_PLAYERS], gTunStrana[MAX_PLAYERS], bool:gTunMis[MAX_PLAYERS];
 
 InitTuning()
 {
@@ -434,7 +434,7 @@ static TuningOtvori(playerid, g)
     }
     new Float:dno = TUNING_Y + 40.0 + TUNING_RED_H * float(TUNING_REDOVA + 1) + 4.0;
     TuningKutija(playerid, TUNING_X, dno, TUNING_SIRINA, 46.0, 0x000000D2);
-    TuningTekst(playerid, TUNING_X + TUNING_SIRINA / 2.0, dno + 34.0, T(playerid, "W/S: odabir  Desno: odaberi  Lijevo: natrag"), 0x8AA0B6FF, 0.16, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    TuningTekst(playerid, TUNING_X + TUNING_SIRINA / 2.0, dno + 34.0, T(playerid, "W/S: odabir  Desno: odaberi  Lijevo: natrag  Y: mis"), 0x8AA0B6FF, 0.16, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
     gTun[playerid][TTD_NOVAC] = TuningTekst(playerid, TUNING_X + 5.0, dno + 3.0, "_", 0xFFFFFFFF, 0.2, 1.0);
     gTun[playerid][TTD_KUPI] = TuningTekst(playerid, TUNING_X + 150.0, dno + 18.0, T(playerid, "KUPI"), 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gTun[playerid][TTD_KUPI], true);
@@ -448,8 +448,8 @@ static TuningOtvori(playerid, g)
     PlayerTextDrawSetSelectable(playerid, gTun[playerid][TTD_NATRAG], true);
     for (new i = 0; i < gTunTdBroj[playerid]; i++) PlayerTextDrawShow(playerid, gTunTd[playerid][i]);
     TuningIzbornik(playerid);
+    gTunMis[playerid] = false;
     TuningOtvoriKat(playerid, -1);
-    SelectTextDraw(playerid, 0x5B8DBFFF);
 }
 
 TuningZatvori(playerid, bool:uVozilo = true)
@@ -460,7 +460,8 @@ TuningZatvori(playerid, bool:uVozilo = true)
     new v = gTunV[playerid];
     for (new i = 0; i < gTunTdBroj[playerid]; i++) PlayerTextDrawDestroy(playerid, gTunTd[playerid][i]);
     gTunTdBroj[playerid] = 0;
-    CancelSelectTextDraw(playerid);
+    if (gTunMis[playerid]) CancelSelectTextDraw(playerid);
+    gTunMis[playerid] = false;
     if (!GetVehicleModel(v)) return;
     TuningVrati(v);
     new e, l, a, d, bn, bt, o;
@@ -477,6 +478,11 @@ TuningStateChange(playerid, PLAYER_STATE:oldstate)
 {
     if (gTunU[playerid] == -1 || oldstate != PLAYER_STATE_DRIVER || GetTickCount() - gTunOd[playerid] < TUNING_ULAZ_MS) return;
     TuningZatvori(playerid, false);
+}
+
+TuningMisIskljuci(playerid)
+{
+    gTunMis[playerid] = false;
 }
 
 TuningDisconnect(playerid)
@@ -583,7 +589,12 @@ TuningKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if (gTunU[playerid] == -1) return 0;
     if (!TuningProvjera(playerid)) return 1;
-    if ((newkeys & KEY_ANALOG_RIGHT) && !(oldkeys & KEY_ANALOG_RIGHT)) TuningOdaberi(playerid);
+    if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES))
+    {
+        gTunMis[playerid] = true;
+        SelectTextDraw(playerid, 0x5B8DBFFF);
+    }
+    else if ((newkeys & KEY_ANALOG_RIGHT) && !(oldkeys & KEY_ANALOG_RIGHT)) TuningOdaberi(playerid);
     else if ((newkeys & KEY_ANALOG_LEFT) && !(oldkeys & KEY_ANALOG_LEFT)) TuningNatrag(playerid);
     return 1;
 }

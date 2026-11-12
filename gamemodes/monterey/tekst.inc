@@ -1119,7 +1119,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Tuning garaza dodana: %s.", "Tuning garage added: %s.", "Тюнинг-гараж добавлен: %s.", "Taller de tuning anadido: %s.", "Tuning garaji eklendi: %s." },
     { "Obrisati tuning garazu: %s?", "Delete tuning garage: %s?", "Удалить тюнинг-гараж: %s?", "Borrar taller de tuning: %s?", "Tuning garaji silinsin mi: %s?" },
     { "Tuning garaza obrisana.", "Tuning garage deleted.", "Тюнинг-гараж удалён.", "Taller de tuning borrado.", "Tuning garaji silindi." },
-    { "W/S: odabir  Desno: odaberi  Lijevo: natrag", "W/S: browse  Right: select  Left: back", "W/S: выбор  Вправо: выбрать  Влево: назад", "W/S: navegar  Derecha: elegir  Izquierda: atras", "W/S: gez  Sag: sec  Sol: geri" },
+    { "W/S: odabir  Desno: odaberi  Lijevo: natrag  Y: mis", "W/S: browse  Right: select  Left: back  Y: mouse", "W/S: выбор  Вправо: выбрать  Влево: назад  Y: мышь", "W/S: navegar  Derecha: elegir  Izquierda: atras  Y: raton", "W/S: gez  Sag: sec  Sol: geri  Y: fare" },
     { "Trenutno nema podataka o lokaciji.", "No location data at the moment.", "Сейчас нет данных о местоположении.", "Ahora mismo no hay datos de ubicacion.", "Su an konum bilgisi yok." },
     { "  Statistika: /stats", "  Statistics: /stats", "  Статистика: /stats", "  Estadisticas: /stats", "  Istatistik: /stats" },
     { "Statistika nije ucitana. Ponovno se spojite.", "Statistics could not be loaded. Please reconnect.", "Статистика не загружена. Переподключитесь.", "No se pudieron cargar las estadisticas. Vuelve a conectarte.", "Istatistikler yuklenemedi. Yeniden baglanin." },
