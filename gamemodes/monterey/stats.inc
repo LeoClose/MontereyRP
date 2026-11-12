@@ -150,9 +150,9 @@ CMD:stats(playerid, params[])
     new org[MAX_ORG_NAME], body[512];
     if (!GetOrgIme(gOrg[playerid], org)) strcopy(org, T(playerid, "Civil"), sizeof org);
     format(body, sizeof body,
-        "{FFFFFF}%s\n{FF0000}%s: {FFFFFF}$%d\n{FF0000}%s: {FFFFFF}%d\n\
-        {FF0000}%s: {FFFFFF}[%d/%d]\n{FF0000}%s: {FFFFFF}%d h %d min\n\
-        {FF0000}%s: {FFFFFF}%s\n{FF0000}%s: {FFFFFF}%d",
+        "{FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}$%d\n{8AB4F8}%s: {FFFFFF}%d\n\
+        {8AB4F8}%s: {FFFFFF}[%d/%d]\n{8AB4F8}%s: {FFFFFF}%d h %d min\n\
+        {8AB4F8}%s: {FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%d",
         T(playerid, "Podaci sa servera"), T(playerid, "Novac"), gNovac[playerid],
         T(playerid, "Level"), gStatsLevel[playerid], T(playerid, "Respekti"), gStatsRespekti[playerid],
         StatsPotrebno(gStatsLevel[playerid]), T(playerid, "Sati igre"),
