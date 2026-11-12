@@ -1119,6 +1119,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Tuning garaza dodana: %s.", "Tuning garage added: %s.", "Тюнинг-гараж добавлен: %s.", "Taller de tuning anadido: %s.", "Tuning garaji eklendi: %s." },
     { "Obrisati tuning garazu: %s?", "Delete tuning garage: %s?", "Удалить тюнинг-гараж: %s?", "Borrar taller de tuning: %s?", "Tuning garaji silinsin mi: %s?" },
     { "Tuning garaza obrisana.", "Tuning garage deleted.", "Тюнинг-гараж удалён.", "Taller de tuning borrado.", "Tuning garaji silindi." },
+    { "W/S: odabir  Y/Space: odaberi  N: natrag", "W/S: browse  Y/Space: select  N: back", "W/S: выбор  Y/Space: выбрать  N: назад", "W/S: navegar  Y/Espacio: elegir  N: atras", "W/S: gez  Y/Bosluk: sec  N: geri" },
     { "Trenutno nema podataka o lokaciji.", "No location data at the moment.", "Сейчас нет данных о местоположении.", "Ahora mismo no hay datos de ubicacion.", "Su an konum bilgisi yok." },
     { "  Statistika: /stats", "  Statistics: /stats", "  Статистика: /stats", "  Estadisticas: /stats", "  Istatistik: /stats" },
     { "Statistika nije ucitana. Ponovno se spojite.", "Statistics could not be loaded. Please reconnect.", "Статистика не загружена. Переподключитесь.", "No se pudieron cargar las estadisticas. Vuelve a conectarte.", "Istatistikler yuklenemedi. Yeniden baglanin." },

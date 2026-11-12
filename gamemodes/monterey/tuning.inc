@@ -12,6 +12,8 @@
 #define TUNING_BOJA         300
 #define TUNING_PAINTJOB     2500
 #define TUNING_NEON         2000
+#define TUNING_CEKAJ_MS     350
+#define TUNING_PONOVI_MS    120
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_RED }
@@ -29,7 +31,7 @@ static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
 static gTunDijelovi[MAX_PLAYERS][TUNING_DIJELOVA], gTunKategorije[MAX_PLAYERS][TK_DIO + 14], gTunKatBroj[MAX_PLAYERS];
 static PlayerText:gTunTd[MAX_PLAYERS][TUNING_TD], gTunTdBroj[MAX_PLAYERS], PlayerText:gTun[MAX_PLAYERS][TTD_RED + TUNING_REDOVA * 3];
-static gApTuning[MAX_PLAYERS];
+static gApTuning[MAX_PLAYERS], gTunSmjer[MAX_PLAYERS], gTunPonovi[MAX_PLAYERS];
 
 InitTuning()
 {
@@ -397,6 +399,8 @@ static TuningIzbornik(playerid)
 static TuningOtvori(playerid, g)
 {
     new v = GetPlayerVehicleID(playerid);
+    MobitelZatvori(playerid);
+    gTunSmjer[playerid] = 0;
     gTunU[playerid] = g;
     gTunV[playerid] = v;
     gTunTdBroj[playerid] = 0;
@@ -423,7 +427,8 @@ static TuningOtvori(playerid, g)
         gTun[playerid][TTD_RED + r * 3 + 2] = TuningTekst(playerid, TUNING_X + TUNING_SIRINA - 5.0, y + 2.0, "_", 0xFFFFFFFF, 0.22, 1.05, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
     }
     new Float:dno = TUNING_Y + 40.0 + TUNING_RED_H * float(TUNING_REDOVA + 1) + 4.0;
-    TuningKutija(playerid, TUNING_X, dno, TUNING_SIRINA, 34.0, 0x000000D2);
+    TuningKutija(playerid, TUNING_X, dno, TUNING_SIRINA, 46.0, 0x000000D2);
+    TuningTekst(playerid, TUNING_X + TUNING_SIRINA / 2.0, dno + 34.0, T(playerid, "W/S: odabir  Y/Space: odaberi  N: natrag"), 0x8AA0B6FF, 0.16, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
     gTun[playerid][TTD_NOVAC] = TuningTekst(playerid, TUNING_X + 5.0, dno + 3.0, "_", 0xFFFFFFFF, 0.2, 1.0);
     gTun[playerid][TTD_KUPI] = TuningTekst(playerid, TUNING_X + 50.0, dno + 18.0, T(playerid, "KUPI"), 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gTun[playerid][TTD_KUPI], true);
@@ -488,50 +493,103 @@ static TuningKupi(playerid)
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), ime, cijena);
 }
 
+static TuningPomakni(playerid, smjer)
+{
+    new n = gTunBroj[playerid];
+    if (n < 1) return;
+    gTunIdx[playerid] = (gTunIdx[playerid] + smjer + n) % n;
+    if (gTunIdx[playerid] < gTunPoc[playerid]) gTunPoc[playerid] = gTunIdx[playerid];
+    else if (gTunIdx[playerid] >= gTunPoc[playerid] + TUNING_REDOVA) gTunPoc[playerid] = gTunIdx[playerid] - TUNING_REDOVA + 1;
+    if (gTunKat[playerid] != -1) TuningPregled(playerid);
+    TuningPrikazi(playerid);
+}
+
+static TuningOdaberi(playerid)
+{
+    if (gTunKat[playerid] == -1) TuningOtvoriKat(playerid, gTunKategorije[playerid][gTunIdx[playerid]]);
+    else TuningKupi(playerid);
+}
+
+static TuningNatrag(playerid)
+{
+    if (gTunKat[playerid] == -1)
+    {
+        TuningZatvori(playerid);
+        return;
+    }
+    new kat = gTunKat[playerid];
+    TuningOtvoriKat(playerid, -1);
+    for (new i = 0; i < gTunKatBroj[playerid]; i++) if (gTunKategorije[playerid][i] == kat) gTunIdx[playerid] = i;
+    gTunPoc[playerid] = gTunIdx[playerid] >= TUNING_REDOVA ? gTunIdx[playerid] - TUNING_REDOVA + 1 : 0;
+    TuningPrikazi(playerid);
+}
+
+static bool:TuningProvjera(playerid)
+{
+    if (GetVehicleModel(gTunV[playerid]) && GetPlayerVehicleID(playerid) == gTunV[playerid]) return true;
+    TuningZatvori(playerid);
+    return false;
+}
+
+TuningAktivan(playerid)
+{
+    return gTunU[playerid] != -1;
+}
+
 TuningKlik(playerid, PlayerText:td)
 {
     if (gTunU[playerid] == -1) return 0;
-    if (!GetVehicleModel(gTunV[playerid]) || GetPlayerVehicleID(playerid) != gTunV[playerid])
-    {
-        TuningZatvori(playerid);
-        return 1;
-    }
-    if (td == gTun[playerid][TTD_NATRAG])
-    {
-        if (gTunKat[playerid] == -1) TuningZatvori(playerid);
-        else
-        {
-            new kat = gTunKat[playerid];
-            TuningOtvoriKat(playerid, -1);
-            for (new i = 0; i < gTunKatBroj[playerid]; i++) if (gTunKategorije[playerid][i] == kat) gTunIdx[playerid] = i;
-            gTunPoc[playerid] = gTunIdx[playerid] >= TUNING_REDOVA ? gTunIdx[playerid] - TUNING_REDOVA + 1 : 0;
-            TuningPrikazi(playerid);
-        }
-        return 1;
-    }
-    if (td == gTun[playerid][TTD_KUPI])
+    if (!TuningProvjera(playerid)) return 1;
+    if (td == gTun[playerid][TTD_NATRAG]) TuningNatrag(playerid);
+    else if (td == gTun[playerid][TTD_KUPI])
     {
         if (gTunKat[playerid] != -1) TuningKupi(playerid);
-        return 1;
     }
-    for (new r = 0; r < TUNING_REDOVA; r++)
+    else for (new r = 0; r < TUNING_REDOVA; r++)
     {
         if (td != gTun[playerid][TTD_RED + r * 3 + 1]) continue;
         new i = gTunPoc[playerid] + r;
-        if (i >= gTunBroj[playerid]) return 1;
+        if (i >= gTunBroj[playerid]) break;
+        gTunIdx[playerid] = i;
         if (gTunKat[playerid] == -1)
         {
-            TuningOtvoriKat(playerid, gTunKategorije[playerid][i]);
-            return 1;
+            TuningOdaberi(playerid);
+            break;
         }
-        gTunIdx[playerid] = i;
-        if (r == TUNING_REDOVA - 1 && i + 1 < gTunBroj[playerid]) gTunPoc[playerid] = min(gTunPoc[playerid] + TUNING_REDOVA - 1, gTunBroj[playerid] - TUNING_REDOVA);
-        else if (!r && gTunPoc[playerid]) gTunPoc[playerid] = max(gTunPoc[playerid] - TUNING_REDOVA + 1, 0);
-        TuningPregled(playerid);
+        if (r == TUNING_REDOVA - 1 && i + 1 < gTunBroj[playerid]) gTunPoc[playerid]++;
+        else if (!r && gTunPoc[playerid]) gTunPoc[playerid]--;
+        if (gTunKat[playerid] != -1) TuningPregled(playerid);
         TuningPrikazi(playerid);
-        return 1;
+        break;
     }
     return 1;
+}
+
+TuningKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (gTunU[playerid] == -1) return 0;
+    if (!TuningProvjera(playerid)) return 1;
+    if (((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) || ((newkeys & KEY_HANDBRAKE) && !(oldkeys & KEY_HANDBRAKE))) TuningOdaberi(playerid);
+    else if (((newkeys & KEY_NO) && !(oldkeys & KEY_NO)) || ((newkeys & KEY_SECONDARY_ATTACK) && !(oldkeys & KEY_SECONDARY_ATTACK))) TuningNatrag(playerid);
+    return 1;
+}
+
+TuningUpdate(playerid)
+{
+    if (gTunU[playerid] == -1) return;
+    new KEY:tipke, gore, strana, smjer = 0, sad = GetTickCount();
+    GetPlayerKeys(playerid, tipke, gore, strana);
+    if (gore < 0 || (tipke & KEY_SPRINT)) smjer = -1;
+    else if (gore > 0 || (tipke & KEY_JUMP)) smjer = 1;
+    if (!smjer)
+    {
+        gTunSmjer[playerid] = 0;
+        return;
+    }
+    if (smjer == gTunSmjer[playerid] && sad < gTunPonovi[playerid]) return;
+    gTunPonovi[playerid] = sad + (smjer == gTunSmjer[playerid] ? TUNING_PONOVI_MS : TUNING_CEKAJ_MS);
+    gTunSmjer[playerid] = smjer;
+    TuningPomakni(playerid, smjer);
 }
 
 TuningUlaz(playerid)

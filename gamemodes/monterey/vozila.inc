@@ -834,6 +834,7 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_KRADJA_MS        6000
 #define VOZILO_BRZINA_PUTA      1.3
 #define VOZILO_BRZINA_VISE      20.0
+#define VOZILO_MOTOR_MS         200
 #define VOZILO_DOMET            4.0
 #define BENZIN_CIJENA           3
 #define DIZEL_CIJENA            2
@@ -852,7 +853,7 @@ static gPumpa[PUMPA_MAX][E_PUMPA];
 static gApPumpaDb[MAX_PLAYERS];
 
 static Float:gKrivoGorivo[MAX_VEHICLES], gKrivoVoznja[MAX_VEHICLES];
-static Float:gGorivo[MAX_VEHICLES],Float:gVoziloZadnja[MAX_VEHICLES], gVoziloUkradeno[MAX_VEHICLES], gVoziloKradjac[MAX_VEHICLES];
+static Float:gGorivo[MAX_VEHICLES],Float:gVoziloZadnja[MAX_VEHICLES], gVoziloUkradeno[MAX_VEHICLES], gVoziloKradjac[MAX_VEHICLES], gVoziloMotorMs[MAX_VEHICLES];
 static gPojas[MAX_PLAYERS], gKradja[MAX_PLAYERS], gKradjaKraj[MAX_PLAYERS];
 static gGorivoNacin[MAX_PLAYERS], gGorivoItem[MAX_PLAYERS];
 enum { GORIVO_PUMPA = 1, GORIVO_PUNI, GORIVO_TOCI }
@@ -1092,13 +1093,17 @@ VoziloUpdate(playerid)
     GetVehicleVelocity(v, vx, vy, vz);
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
     new razina = TuningMotor(v), model = GetVehicleModel(v);
-    if (razina && model >= 400 && model <= 611)
+    if (razina && model >= 400 && model <= 611 && GetTickCount() - gVoziloMotorMs[v] >= VOZILO_MOTOR_MS)
     {
-        new KEY:tipke, gore, strana, Float:kmh = VectorSize(vx, vy, 0.0) * 180.0;
+        new KEY:tipke, gore, strana, Float:a, Float:ravno = VectorSize(vx, vy, 0.0), Float:kmh = ravno * 180.0;
         GetPlayerKeys(playerid, tipke, gore, strana);
-        if ((tipke & KEY_SPRINT) && kmh > 10.0 && kmh < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)))
+        GetVehicleZAngle(v, a);
+        new Float:naprijed = -vx * floatsin(a, degrees) + vy * floatcos(a, degrees);
+        if ((tipke & KEY_SPRINT) && !(tipke & (KEY_JUMP | KEY_HANDBRAKE)) && kmh > 15.0 && naprijed > 0.95 * ravno && floatabs(vz) < 0.15
+            && kmh < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)))
         {
-            new Float:pojacanje = 1.0 + 0.0015 * float(razina);
+            gVoziloMotorMs[v] = GetTickCount();
+            new Float:pojacanje = 1.0 + 0.008 * float(razina);
             SetVehicleVelocity(v, vx * pojacanje, vy * pojacanje, vz);
         }
     }

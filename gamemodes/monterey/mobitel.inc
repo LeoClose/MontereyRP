@@ -1147,7 +1147,7 @@ MobitelDisconnect(playerid)
 
 MobitelPrebaci(playerid)
 {
-    if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid)) return 1;
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid) || TuningAktivan(playerid)) return 1;
     if (gMobitelKamera[playerid]) MobitelKameraKraj(playerid);
     else if (gMobitelOtvoren[playerid]) MobitelZatvori(playerid);
     else if (!gInv[playerid][ITEM_MOBITEL]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate mobitel."));

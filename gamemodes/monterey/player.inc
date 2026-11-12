@@ -132,7 +132,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
-    if (MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
+    if (TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
     AnimKey(playerid, newkeys, oldkeys);
@@ -169,6 +169,7 @@ public OnPlayerUpdate(playerid)
     RanjenUpdate(playerid);
     MobitelUpdate(playerid);
     VoziloUpdate(playerid);
+    TuningUpdate(playerid);
     TrgovinaUpdate(playerid);
     TaksiPovratak(playerid);
     new WEAPON:w = GetPlayerWeapon(playerid);
