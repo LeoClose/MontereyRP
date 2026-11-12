@@ -71,7 +71,7 @@ main() {}
 
 public OnGameModeInit()
 {
-    SetGameModeText("M:RP by Leo & Krti");
+    SetGameModeText("©M:RP by Leo and Krti");
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
     DisableInteriorEnterExits();
     EnableStuntBonusForAll(false);
