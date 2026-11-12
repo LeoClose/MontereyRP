@@ -187,6 +187,7 @@ public Sekunda()
 public OnGameModeExit()
 {
     StatsSaveAll();
+    VlasnikStetaSpremiSve();
     DB_Close(gDB);
     return 1;
 }

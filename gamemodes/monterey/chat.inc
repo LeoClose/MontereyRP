@@ -32,7 +32,7 @@ ZatamniBoju(color, step)
     return (r << 24) | (g << 16) | (b << 8) | (color & 0xFF);
 }
 
-PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[] = "", prevedi = 0)
+PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[] = "", prevedi = 0, const treci[] = "", const cetvrti[] = "")
 {
     new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid), tekst[160];
     GetPlayerPos(playerid, x, y, z);
@@ -43,7 +43,7 @@ PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[
         new Float:d = GetPlayerDistanceFromPoint(i, x, y, z);
         if (d > range) continue;
         if (!prevedi) strcopy(tekst, msg);
-        else format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b);
+        else format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b, treci, cetvrti);
         SendLong(i, ZatamniBoju(color, floatround(d / range * CHAT_FADE_STEPS, floatround_floor)), tekst);
     }
 }

@@ -25,6 +25,11 @@
 #define MEHANICAR_GORIVO    50
 #define MEHANICAR_POPRAVAK  150
 #define MEHANICAR_GUME      100
+#define MEHANICAR_ODVOZ     2500
+#define MEHANICAR_ODVOZ_MS  20000
+#define MEHANICAR_ODVOZ_SVIJET 9900
+#define MEHANICAR_PARKING_DOMET 10.0
+#define MEHANICAR_ODVOZ_VOZILA 8
 #define MEHANICAR_SLEPANJE  250
 #define RADIONICA_X         1207.18
 #define RADIONICA_Y         -981.57
@@ -889,11 +894,78 @@ ShowMehanicare(playerid)
     return ShowKamione(playerid, ORG_MEHANICAR);
 }
 
+static gOdvozVozila[MAX_PLAYERS][MEHANICAR_ODVOZ_VOZILA], gOdvozBroj[MAX_PLAYERS], bool:gOdvoz[MAX_VEHICLES];
+
+static MehanicarOdvozIzbor(playerid)
+{
+    gOdvozBroj[playerid] = VlasnistvaIgraca(playerid, gOdvozVozila[playerid]);
+    if (!gOdvozBroj[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate vlastitih vozila."));
+    new list[512], row[96], naslov[64], len = 0, Float:x, Float:y, Float:z;
+    for (new i = 0; i < gOdvozBroj[playerid]; i++)
+    {
+        new v = gOdvozVozila[playerid][i];
+        GetVehiclePos(v, x, y, z);
+        format(row, sizeof row, "%s - %s", gImenaVozila[GetVehicleModel(v) - 400], CestaZona(x, y));
+        DodajStupac(list, len, row);
+    }
+    format(naslov, sizeof naslov, T(playerid, "Odvoz vozila na parking ($%d)"), MEHANICAR_ODVOZ);
+    return PrikaziDialog(playerid, DLG_MEHANICAR_ODVOZ, DIALOG_STYLE_LIST, naslov, list, T(playerid, "Odaberi"), T(playerid, "Odustani"));
+}
+
+DLG:mehanicar_odvoz(playerid, response, listitem)
+{
+    if (!response || listitem < 0 || listitem >= gOdvozBroj[playerid]) return 1;
+    new v = gOdvozVozila[playerid][listitem];
+    if (!GetVehicleModel(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo vise nije vase."));
+    if (gOdvoz[v]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "To vozilo se vec odvozi."));
+    new Float:x, Float:y, Float:z, Float:px, Float:py, Float:pz, Float:pa;
+    GetVehiclePos(v, x, y, z);
+    VlasnikParking(v, px, py, pz, pa);
+    if (!GetVehicleVirtualWorld(v) && VectorSize(x - px, y - py, z - pz) <= MEHANICAR_PARKING_DOMET) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo je vec na parkingu."));
+    if (!DajNovac(playerid, -MEHANICAR_ODVOZ)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    new model[32], odakle[28], dokle[28];
+    strcopy(model, gImenaVozila[GetVehicleModel(v) - 400]);
+    odakle = CestaZona(x, y);
+    dokle = CestaZona(px, py);
+    MobitelPoziv(playerid, T(playerid, "Mehanicar"));
+    SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze (telefon): Dobar dan, odslepajte mi %s iz %s do parkinga u %s.", GetRPIme(playerid), model, 1, odakle, dokle);
+    SetTimerEx("MehanicarOdvozOdgovor", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
+    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+    gOdvoz[v] = true;
+    SetVehicleVirtualWorld(v, MEHANICAR_ODVOZ_SVIJET);
+    SetVehiclePos(v, 1477.0 + float(v % 10) * 6.0, 1350.0 + float((v / 10) % 10) * 8.0, 11.0);
+    SetTimerEx("MehanicarOdvozGotov", MEHANICAR_ODVOZ_MS, false, "ii", v, VlasnikDb(v));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), MEHANICAR_ODVOZ);
+    return 1;
+}
+
+forward MehanicarOdvozOdgovor(playerid);
+public MehanicarOdvozOdgovor(playerid)
+{
+    if (IsPlayerConnected(playerid)) SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Dispecer (telefon): U redu, slep je krenuo, vozilo ce biti na parkingu za par minuta."));
+}
+
+forward MehanicarOdvozGotov(v, db);
+public MehanicarOdvozGotov(v, db)
+{
+    if (!gOdvoz[v]) return;
+    gOdvoz[v] = false;
+    if (!GetVehicleModel(v) || VlasnikDb(v) != db) return;
+    new Float:px, Float:py, Float:pz, Float:pa;
+    VlasnikParking(v, px, py, pz, pa);
+    SetVehiclePos(v, px, py, pz);
+    SetVehicleZAngle(v, pa);
+    SetVehicleVirtualWorld(v, 0);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == VlasnikVozila(v)) SendClientMessage(i, COLOR_SMS, T(i, "SMS od Mehanicara: Vase vozilo %s je dostavljeno na parking."), gImenaVozila[GetVehicleModel(v) - 400]);
+}
+
 MehanicarPozovi(playerid)
 {
     if (!gUlogiran[playerid]) return 1;
     new v = GetPlayerVehicleID(playerid), Float:zdravlje, Float:x, Float:y, Float:z, Float:d;
-    if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u vozilu."));
+    if (!v) return MehanicarOdvozIzbor(playerid);
     GetVehicleHealth(v, zdravlje);
     if (VoziloImaGoriva(v) && zdravlje >= MEHANICAR_STETA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vase vozilo ne treba mehanicara."));
     for (new s = 0; s < SLUCAJ_MAX; s++)

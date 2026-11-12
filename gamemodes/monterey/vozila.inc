@@ -1063,6 +1063,7 @@ public OnVehicleDeath(vehicleid, killerid)
     if (s != -1) TaksiPrekini(s);
     PrikolicaOtkaci(vehicleid);
     SlucajEksplozija(vehicleid);
+    VlasnikUnisten(vehicleid);
     return 1;
 }
 
@@ -1084,6 +1085,7 @@ static bool:VoziloPrebrzo(playerid, v, Float:vx, Float:vy)
     if (model < 400 || model > 611 || Leti(model)) return false;
     new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), najvise = gVoziloBrzina[model - 400] * (100 + 8 * TuningMotor(v)) / 100;
     if (float(kmh) <= float(najvise) * VOZILO_BRZINA_PUTA + VOZILO_BRZINA_VISE) return false;
+    VlasnikStetaSpremi(v);
     SetVehicleToRespawn(v);
     SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo je vraceno: islo je brze nego sto moze."));
     for (new i = 0; i < MAX_PLAYERS; i++)

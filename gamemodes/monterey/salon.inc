@@ -5,6 +5,8 @@
 #define SALON_INT           1
 #define SALON_TD            5
 #define VLASNISTVO_MAX      5
+#define VLASNIK_STETA_MIN   300.0
+#define VLASNIK_OBNOVA_MS   20000
 
 enum { STD_LIJEVO, STD_DESNO, STD_INFO, STD_KUPI, STD_IZLAZ }
 enum E_SALON { bool:slIma, slDb, Float:slX, Float:slY, Float:slZ, Float:slA, Float:slSx, Float:slSy, Float:slSz, Float:slSa,
@@ -14,6 +16,7 @@ static gSalon[SALON_MAX][E_SALON];
 static gApSalon[MAX_PLAYERS];
 static gUSalonu[MAX_PLAYERS] = { -1, ... }, gSalonIdx[MAX_PLAYERS], gSalonVozilo[MAX_PLAYERS] = { INVALID_VEHICLE_ID, ... }, PlayerText:gSalonTd[MAX_PLAYERS][SALON_TD];
 static gVlasnik[MAX_VEHICLES], gVlasnikDb[MAX_VEHICLES], gVlasnikCijena[MAX_VEHICLES], Float:gVlasnikPark[MAX_VEHICLES][4];
+static Float:gVlasnikZdravlje[MAX_VEHICLES], gVlasnikOstecenja[MAX_VEHICLES][4], bool:gVlasnikObnova[MAX_VEHICLES];
 
 static const Float:gSalonAuto[4] = { 617.538, -1.990, 1001.2, 180.0 };
 static const Float:gSalonKamera[3] = { 620.9, -7.6, 1002.4 };
@@ -46,11 +49,25 @@ InitSalon()
     }
     DB_FreeResultSet(res);
 
-    res = DB_ExecuteQuery(gDB, "SELECT id, owner, model, c1, c2, x, y, z, a, price FROM player_vehicles");
+    res = DB_ExecuteQuery(gDB, "SELECT health FROM player_vehicles LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN health REAL NOT NULL DEFAULT 1000"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN panels INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN doors INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN lights INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN tires INTEGER NOT NULL DEFAULT 0"));
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT id, owner, model, c1, c2, x, y, z, a, price, health, panels, doors, lights, tires FROM player_vehicles");
     if (DB_GetRowCount(res)) do
     {
-        VlasnickoStvori(DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 2), DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4),
+        new v = VlasnickoStvori(DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 2), DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4),
             DB_GetFieldFloat(res, 5), DB_GetFieldFloat(res, 6), DB_GetFieldFloat(res, 7), DB_GetFieldFloat(res, 8), DB_GetFieldInt(res, 9));
+        if (v == INVALID_VEHICLE_ID) continue;
+        gVlasnikZdravlje[v] = DB_GetFieldFloat(res, 10);
+        for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = DB_GetFieldInt(res, 11 + i);
+        VlasnikStetaVrati(v);
     } while (DB_SelectNextRow(res));
     DB_FreeResultSet(res);
 }
@@ -87,6 +104,8 @@ static VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Floa
     gVlasnikPark[v][1] = y;
     gVlasnikPark[v][2] = z;
     gVlasnikPark[v][3] = a;
+    gVlasnikZdravlje[v] = 1000.0;
+    for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = 0;
     TuningPrimijeni(v);
     return v;
 }
@@ -108,6 +127,74 @@ VlasnickoSpawn(v)
     SetVehicleZAngle(v, gVlasnikPark[v][3]);
     if (gVlasnik[v] == VLASNIK_PIJACA) VoziloZakljucaj(v, true);
     TuningPrimijeni(v);
+    VlasnikStetaVrati(v);
+}
+
+VlasnikParking(v, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    x = gVlasnikPark[v][0];
+    y = gVlasnikPark[v][1];
+    z = gVlasnikPark[v][2];
+    a = gVlasnikPark[v][3];
+}
+
+static VlasnikStetaVrati(v)
+{
+    SetVehicleHealth(v, gVlasnikZdravlje[v] < VLASNIK_STETA_MIN ? VLASNIK_STETA_MIN : gVlasnikZdravlje[v]);
+    UpdateVehicleDamageStatus(v, VEHICLE_PANEL_STATUS:gVlasnikOstecenja[v][0], VEHICLE_DOOR_STATUS:gVlasnikOstecenja[v][1], VEHICLE_LIGHT_STATUS:gVlasnikOstecenja[v][2], VEHICLE_TIRE_STATUS:gVlasnikOstecenja[v][3]);
+}
+
+VlasnikStetaSpremi(v)
+{
+    new Float:h, VEHICLE_PANEL_STATUS:pan, VEHICLE_DOOR_STATUS:vrata, VEHICLE_LIGHT_STATUS:svj, VEHICLE_TIRE_STATUS:gume;
+    if (!gVlasnik[v] || !GetVehicleHealth(v, h)) return;
+    GetVehicleDamageStatus(v, pan, vrata, svj, gume);
+    if (h == gVlasnikZdravlje[v] && _:pan == gVlasnikOstecenja[v][0] && _:vrata == gVlasnikOstecenja[v][1] && _:svj == gVlasnikOstecenja[v][2] && _:gume == gVlasnikOstecenja[v][3]) return;
+    gVlasnikZdravlje[v] = h;
+    gVlasnikOstecenja[v][0] = _:pan;
+    gVlasnikOstecenja[v][1] = _:vrata;
+    gVlasnikOstecenja[v][2] = _:svj;
+    gVlasnikOstecenja[v][3] = _:gume;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET health = %f, panels = %d, doors = %d, lights = %d, tires = %d WHERE id = %d", h, _:pan, _:vrata, _:svj, _:gume, gVlasnikDb[v]));
+}
+
+VlasnikStetaSpremiSve()
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
+    for (new i = 0; i < gVozilaCount; i++) VlasnikStetaSpremi(gVozila[i]);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "COMMIT"));
+}
+
+static VlasnikSms(v, const tekst[])
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == gVlasnik[v]) SendClientMessage(i, COLOR_SMS, T(i, tekst), gImenaVozila[GetVehicleModel(v) - 400]);
+}
+
+VlasnikUnisten(v)
+{
+    if (!gVlasnik[v] || gVlasnikObnova[v]) return;
+    gVlasnikObnova[v] = true;
+    VlasnikStetaPopravljeno(v);
+    VlasnikSms(v, "SMS od Mehanicara: Vase vozilo %s je unisteno. Popravljamo ga i za 2 minute ga dovozimo na vas parking.");
+    SetTimerEx("VlasnikObnovi", VLASNIK_OBNOVA_MS, false, "ii", v, gVlasnikDb[v]);
+}
+
+forward VlasnikObnovi(v, db);
+public VlasnikObnovi(v, db)
+{
+    gVlasnikObnova[v] = false;
+    if (!GetVehicleModel(v) || !gVlasnik[v] || gVlasnikDb[v] != db) return;
+    SetVehicleToRespawn(v);
+    VlasnikSms(v, "SMS od Mehanicara: Vase vozilo %s je popravljeno i dostavljeno na parking.");
+}
+
+VlasnikStetaPopravljeno(v)
+{
+    if (!gVlasnik[v]) return;
+    gVlasnikZdravlje[v] = 1000.0;
+    for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = 0;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET health = 1000, panels = 0, doors = 0, lights = 0, tires = 0 WHERE id = %d", gVlasnikDb[v]));
 }
 
 static SalonCijenaModela(model)
