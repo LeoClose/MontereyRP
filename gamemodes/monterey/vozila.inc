@@ -1248,7 +1248,7 @@ VoziloVozac(playerid)
 
 static VoziloMotor(playerid)
 {
-    if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || TuningAktivan(playerid)) return 1;
     if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate voziti."));
     new v = GetPlayerVehicleID(playerid), Float:zdravlje;
     if (BezMotora(GetVehicleModel(v))) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema motor."));

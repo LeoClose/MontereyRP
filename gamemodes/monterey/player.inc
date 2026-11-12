@@ -122,6 +122,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     TaksiStateChange(playerid, newstate, oldstate);
     PolicijaStateChange(playerid, newstate);
     MdtStateChange(playerid, oldstate);
+    TuningStateChange(playerid, oldstate);
     MaricaEnter(playerid, newstate);
     SlucajStateChange(playerid, newstate);
     VoziloStateChange(playerid, newstate);
