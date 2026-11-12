@@ -9,6 +9,8 @@
 #define TUNING_SIRINA       200.0
 #define TUNING_RED_H        14.0
 #define TUNING_POPRAVAK     400
+#define TUNING_POPRAVAK_MOTOR 600
+#define TUNING_GUME         200
 #define TUNING_BOJA         300
 #define TUNING_PAINTJOB     2500
 #define TUNING_NEON         2000
@@ -21,12 +23,12 @@
 #define TUNING_TRUBA_DOMET  40.0
 #define TUNING_TRUBA_MS     1000
 #define TUNING_ISKRE_KMH    60.0
-#define TUNING_ISKRE_STUPANJ 2
+#define TUNING_ISKRE_STUPANJ 1
 #define TUNING_ISKRE_MS     300
 #define TUNING_ISKRE_SANSA  20
 #define TUNING_ISKRE_PAUZA  1500
 #define TUNING_ISKRE_RAZMAK 4000
-#define TUNING_ISKRE_TRAJE  350
+#define TUNING_ISKRE_TRAJE  600
 #define TUNING_ISKRE_OBJEKT 18702
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_DIO }
@@ -43,6 +45,221 @@ static const gTuningOklopPosto[] = { 0, 20, 35, 50 };
 static const gTuningRezervoarCijena[] = { 0, 3000, 6000 };
 static const gTuningTruba[][] = { "Tvornicka", "Klasicna", "Zracna", "Duga zracna", "Zvono", "Zvonce" };
 static const gTuningTrubaZvuk[] = { 0, 1147, 3200, 3201, 3401, 6401 };
+static const Float:gTuningAuspuh[212][4] = {
+    { 0.358, -2.349, -0.665, 1.0 },
+    { 0.447, -2.480, -0.466, 1.0 },
+    { 0.491, -2.674, -0.493, 2.0 },
+    { 1.105, 0.974, 2.404, 2.0 },
+    { 0.443, -2.767, -0.432, 1.0 },
+    { 0.481, -2.828, -0.584, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.567, -3.692, -0.904, 1.0 },
+    { -0.902, 1.946, 2.068, 1.0 },
+    { 0.624, -3.785, -0.482, 2.0 },
+    { 0.394, -2.379, -0.444, 1.0 },
+    { 0.311, -2.519, -0.461, 2.0 },
+    { 0.433, -3.348, -0.547, 1.0 },
+    { 0.677, -2.529, -0.863, 1.0 },
+    { 0.520, -3.256, -0.714, 1.0 },
+    { 0.377, -2.409, -0.488, 2.0 },
+    { 0.500, -3.820, -0.796, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.569, -2.636, -0.823, 1.0 },
+    { 0.566, -2.929, -0.538, 1.0 },
+    { 0.576, -2.625, -0.521, 1.0 },
+    { 0.448, -3.081, -0.577, 1.0 },
+    { 0.422, -2.531, -0.753, 1.0 },
+    { -0.374, -2.292, -0.784, 1.0 },
+    { 0.515, -1.646, -0.235, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.570, -2.613, -0.527, 1.0 },
+    { 0.596, -3.975, -0.725, 1.0 },
+    { 0.596, -3.061, -0.860, 1.0 },
+    { 0.505, -2.527, -0.348, 2.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.789, -5.556, -0.797, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.620, -4.098, -1.012, 1.0 },
+    { -0.825, 0.662, -0.046, 2.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.487, -2.533, -0.501, 1.0 },
+    { 0.789, -5.263, -0.852, 1.0 },
+    { 0.481, -2.694, -0.757, 1.0 },
+    { 0.346, -2.559, -0.426, 2.0 },
+    { 0.414, -2.626, -0.954, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.418, -3.267, -0.537, 1.0 },
+    { 1.302, 2.022, -1.101, 1.0 },
+    { -0.752, -1.025, -0.098, 1.0 },
+    { 0.483, -2.708, -0.527, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.127, -0.820, -0.317, 1.0 },
+    { 0.659, -3.947, -1.109, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.001, -2.564, -0.369, 2.0 },
+    { -0.572, -2.536, 1.338, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.564, -4.098, -0.793, 1.0 },
+    { -0.701, -1.075, -0.716, 1.0 },
+    { 0.474, -1.366, -0.281, 0.0 },
+    { 0.525, -2.877, -0.610, 1.0 },
+    { 0.640, -2.529, -0.863, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.253, -1.139, -0.007, 2.0 },
+    { 0.127, -0.820, -0.317, 1.0 },
+    { 0.274, -0.567, -0.294, 2.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.518, -2.896, -0.470, 1.0 },
+    { 0.955, -2.930, -0.479, 1.0 },
+    { 0.073, -0.876, 0.169, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -1.256, -2.120, 1.149, 1.0 },
+    { 0.176, -0.756, 0.089, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.352, -2.245, 0.593, 1.0 },
+    { 0.588, -2.825, -0.586, 2.0 },
+    { 0.485, -2.582, -0.499, 1.0 },
+    { -0.470, 2.505, -0.165, 1.0 },
+    { 0.588, -2.892, -0.444, 1.0 },
+    { 0.417, -2.658, -0.575, 1.0 },
+    { 0.457, -2.833, -0.464, 1.0 },
+    { 0.489, -2.401, -0.544, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.445, -2.600, -0.825, 1.0 },
+    { -0.336, -2.824, -0.895, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.261, 1.176, 0.950, 0.0 },
+    { -0.310, -3.027, 2.175, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.442, -2.713, -0.618, 1.0 },
+    { 0.385, -3.219, -0.623, 1.0 },
+    { 0.580, -2.991, -0.567, 1.0 },
+    { 0.575, -2.608, -0.497, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 1.043, -1.344, -0.746, 2.0 },
+    { 0.588, -2.259, -0.713, 1.0 },
+    { 0.552, -2.150, -0.490, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -0.479, -3.089, -0.738, 1.0 },
+    { 0.515, -3.383, -0.684, 1.0 },
+    { 0.452, -2.011, -0.599, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 1.018, -1.196, -0.745, 2.0 },
+    { 1.029, -1.352, -0.730, 2.0 },
+    { 0.518, -2.896, -0.470, 1.0 },
+    { 0.442, -2.713, -0.618, 1.0 },
+    { 0.552, -2.461, -0.500, 2.0 },
+    { 0.491, -2.961, -0.644, 1.0 },
+    { 0.474, -3.632, -1.071, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -2.998, 0.051, -0.680, 1.0 },
+    { -0.469, 1.925, -0.076, 1.0 },
+    { 0.000, 0.955, -0.860, 1.0 },
+    { 1.176, 0.579, 2.161, 2.0 },
+    { -1.368, -1.024, 1.941, 1.0 },
+    { 0.449, -3.016, -0.520, 1.0 },
+    { 0.500, -2.876, -0.511, 1.0 },
+    { -0.423, -2.848, -0.456, 1.0 },
+    { 1.416, -5.809, 0.393, 1.0 },
+    { 0.764, -2.803, -0.022, 1.0 },
+    { 0.218, -1.223, 0.274, 1.0 },
+    { 0.189, -1.166, 0.134, 2.0 },
+    { -0.210, -1.073, -0.171, 2.0 },
+    { 1.009, 0.811, 1.383, 1.0 },
+    { 0.493, -2.824, -0.471, 1.0 },
+    { 0.484, -2.301, -0.507, 1.0 },
+    { 0.474, -2.366, -0.382, 1.0 },
+    { -0.627, -2.673, -0.688, 1.0 },
+    { -0.428, -2.666, -0.389, 1.0 },
+    { 0.435, -1.120, -0.443, 0.0 },
+    { -0.468, 0.554, 1.139, 0.0 },
+    { 0.904, 2.350, 2.185, 1.0 },
+    { 0.512, -2.433, -0.427, 2.0 },
+    { 0.474, -2.922, -0.546, 2.0 },
+    { 0.349, -2.804, -0.555, 2.0 },
+    { 0.503, -2.969, -0.535, 2.0 },
+    { 0.659, -7.830, -1.904, 1.0 },
+    { 0.000, -0.075, 2.056, 1.0 },
+    { -0.729, -1.609, 0.564, 1.0 },
+    { -0.402, -2.734, -0.640, 1.0 },
+    { 0.628, -2.185, -0.259, 2.0 },
+    { 0.590, -2.917, -0.380, 1.0 },
+    { -0.400, -2.712, -0.476, 1.0 },
+    { 1.148, -0.979, -0.904, 1.0 },
+    { 0.309, -2.265, -0.648, 1.0 },
+    { 0.584, -2.814, -0.395, 1.0 },
+    { 0.630, -2.626, -0.450, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.448, -2.470, -0.418, 1.0 },
+    { -0.627, -2.911, -0.649, 1.0 },
+    { 0.594, -3.235, -0.481, 1.0 },
+    { 0.447, -3.032, -0.311, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.751, -2.741, -0.589, 1.0 },
+    { 0.138, -2.266, -0.380, 2.0 },
+    { 0.751, -2.795, 0.141, 1.0 },
+    { 0.751, -2.741, 0.027, 1.0 },
+    { -0.464, -2.551, -0.399, 2.0 },
+    { 0.633, -2.369, -0.351, 2.0 },
+    { -0.515, -2.391, -0.357, 2.0 },
+    { -0.440, -2.794, -0.556, 2.0 },
+    { -0.475, -2.352, -0.413, 2.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -0.488, -2.115, -0.375, 2.0 },
+    { 0.565, -2.943, -0.424, 1.0 },
+    { 0.504, -2.737, -0.631, 1.0 },
+    { 0.454, -1.722, -0.034, 0.0 },
+    { 0.659, -7.830, -1.904, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -0.266, -0.778, -0.064, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -1.143, 1.080, 1.696, 2.0 },
+    { 0.589, -1.161, -0.517, 0.0 },
+    { 0.443, -2.718, -0.360, 1.0 },
+    { 0.652, -3.095, -0.433, 1.0 },
+    { -2.233, 0.301, 1.384, 1.0 },
+    { 0.502, -4.814, -0.915, 1.0 },
+    { -0.429, -2.850, -0.481, 1.0 },
+    { -0.409, -2.770, -0.474, 1.0 },
+    { 0.225, -1.012, 0.042, 1.0 },
+    { 0.443, -3.389, -0.723, 1.0 },
+    { -0.846, 0.796, 0.083, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.699, -2.781, -0.455, 2.0 },
+    { -0.575, -4.021, -0.714, 1.0 },
+    { -0.575, -2.344, -0.353, 2.0 },
+    { 0.659, -7.830, -1.904, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.593, -2.665, -0.393, 1.0 },
+    { 0.593, -2.665, -0.393, 1.0 },
+    { 0.596, -2.665, -0.383, 1.0 },
+    { 0.441, -2.672, -0.622, 1.0 },
+    { 0.445, -2.744, -0.441, 1.0 },
+    { -0.409, -3.133, 1.426, 1.0 },
+    { 0.553, -2.524, -0.582, 2.0 },
+    { 0.584, -2.651, -0.557, 2.0 },
+    { 0.518, -2.896, -0.470, 1.0 },
+    { -0.400, -2.712, -0.476, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { -0.479, -3.089, -0.738, 1.0 },
+    { 0.000, 0.000, 0.000, 0.0 },
+    { 0.000, 0.000, 0.000, 0.0 }
+};
+
 static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 } };
 
 static gTuning[TUNING_MAX][E_TUNING];
@@ -131,14 +348,13 @@ public TuningIskreKraj(objekt)
 
 static TuningIskre(v)
 {
-    new model = GetVehicleModel(v), Float:sx, Float:sy, Float:sz, Float:bx, Float:by, Float:bz;
-    GetVehicleModelInfo(model, VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-    GetVehicleModelInfo(model, VEHICLE_MODEL_INFO_REAR_BUMPER_Z, bx, by, bz);
-    if (bz == 0.0) bz = -sz / 2.0 + 0.4;
-    for (new i = -1; i <= 1; i += 2)
+    new m = GetVehicleModel(v) - 400;
+    if (m < 0 || m >= sizeof gTuningAuspuh) return;
+    new broj = floatround(gTuningAuspuh[m][3]);
+    for (new i = 0; i < broj; i++)
     {
         new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.18, -sy / 2.0 + 0.1, bz - 0.1, 0.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2], 0.0, 0.0, 0.0);
         SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
     }
 }
@@ -341,7 +557,7 @@ static TuningKatIme(playerid, kat, ime[], size = sizeof (ime))
 {
     switch (kat)
     {
-        case TK_POPRAVAK: format(ime, size, T(playerid, "Popravak karoserije"));
+        case TK_POPRAVAK: format(ime, size, T(playerid, "Popravak"));
         case TK_BOJA1: format(ime, size, T(playerid, "Primarna boja"));
         case TK_BOJA2: format(ime, size, T(playerid, "Sekundarna boja"));
         case TK_PAINTJOB: format(ime, size, T(playerid, "Paintjob"));
@@ -370,9 +586,9 @@ static TuningStavka(playerid, i, &vrijednost, &cijena, ime[], size = sizeof (ime
     {
         case TK_POPRAVAK:
         {
-            vrijednost = 0;
-            cijena = TUNING_POPRAVAK;
-            format(ime, size, T(playerid, "Popravi karoseriju"));
+            vrijednost = i;
+            cijena = i == 0 ? TUNING_POPRAVAK : i == 1 ? TUNING_POPRAVAK_MOTOR : TUNING_GUME;
+            format(ime, size, T(playerid, i == 0 ? ("Popravi karoseriju") : i == 1 ? ("Popravi motor") : ("Zamijeni gume")));
         }
         case TK_BOJA1, TK_BOJA2:
         {
@@ -532,7 +748,7 @@ static TuningOtvoriKat(playerid, kat)
     switch (kat)
     {
         case -1: gTunBroj[playerid] = gTunKatBroj[playerid];
-        case TK_POPRAVAK: gTunBroj[playerid] = 1;
+        case TK_POPRAVAK: gTunBroj[playerid] = 3;
         case TK_BOJA1, TK_BOJA2: gTunBroj[playerid] = 256;
         case TK_PAINTJOB: gTunBroj[playerid] = TuningPaintjoba(model) + 1;
         case TK_MOTOR: gTunBroj[playerid] = sizeof gTuningMotorCijena;
@@ -583,7 +799,7 @@ static TuningIzbornik(playerid)
     {
         for (new c = 1000; c <= 1193; c++)
         {
-            if (_:GetVehicleComponentType(c) != s || !VehicleCanHaveComponent(model, c)) continue;
+            if (s == _:CARMODTYPE_NITRO || _:GetVehicleComponentType(c) != s || !VehicleCanHaveComponent(model, c)) continue;
             gTunKategorije[playerid][n++] = TK_DIO + s;
             break;
         }
@@ -698,10 +914,32 @@ static TuningKupi(playerid)
     new v = gTunV[playerid], kat = gTunKat[playerid], vrijednost, cijena, ime[48];
     TuningStavka(playerid, gTunIdx[playerid], vrijednost, cijena, ime);
     if (TuningUgradeno(playerid, vrijednost)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "To je vec ugradeno."));
+    new VEHICLE_PANEL_STATUS:paneli, VEHICLE_DOOR_STATUS:vrata, VEHICLE_LIGHT_STATUS:svjetla, VEHICLE_TYRE_STATUS:gume, Float:zdravlje;
+    GetVehicleDamageStatus(v, paneli, vrata, svjetla, gume);
+    GetVehicleHealth(v, zdravlje);
+    if (kat == TK_POPRAVAK && ((vrijednost == 0 && !paneli && !vrata && !svjetla) || (vrijednost == 1 && zdravlje >= 1000.0) || (vrijednost == 2 && !gume)))
+        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nema sto popraviti."));
     if (cijena && !DajNovac(playerid, -cijena)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     switch (kat)
     {
-        case TK_POPRAVAK: RepairVehicle(v);
+        case TK_POPRAVAK:
+        {
+            switch (vrijednost)
+            {
+                case 0:
+                {
+                    RepairVehicle(v);
+                    SetVehicleHealth(v, zdravlje);
+                    UpdateVehicleDamageStatus(v, VEHICLE_PANEL_STATUS:0, VEHICLE_DOOR_STATUS:0, VEHICLE_LIGHT_STATUS:0, gume);
+                }
+                case 1:
+                {
+                    SetVehicleHealth(v, 1000.0);
+                    gTunZdravlje[v] = 1000.0;
+                }
+                case 2: UpdateVehicleDamageStatus(v, paneli, vrata, svjetla, VEHICLE_TYRE_STATUS:0);
+            }
+        }
         case TK_BOJA1, TK_BOJA2: gTunBoja[v][kat - TK_BOJA1] = vrijednost;
         case TK_PAINTJOB: gTunPaint[v] = vrijednost;
         case TK_MOTOR: gTunMotor[v] = vrijednost;
