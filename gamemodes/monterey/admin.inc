@@ -634,14 +634,26 @@ CMD:prikolica(playerid, params[])
 CMD:dozvola(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
-    new idx = 0, p1[32];
-    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /dozvola [id/ime]"));
+    new idx = 0, p1[32], p2[16];
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /dozvola [id/ime] [vozacka/oruzje]"));
+    new bool:oruzje = SljedeciParam(params, idx, p2) && !strcmp(p2, "oruzje", true);
     new target = FindPlayer(p1);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET vozacka = 1 - vozacka WHERE id = %d", gAccountId[target]));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT vozacka FROM accounts WHERE id = %d", gAccountId[target]), bool:ima = DB_GetRowCount(res) && DB_GetFieldInt(res, 0);
+    if (oruzje) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET oruzje_dozvola = 1 - oruzje_dozvola WHERE id = %d", gAccountId[target]));
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET vozacka = 1 - vozacka WHERE id = %d", gAccountId[target]));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT vozacka, oruzje_dozvola FROM accounts WHERE id = %d", gAccountId[target]), bool:ima = DB_GetRowCount(res) && DB_GetFieldInt(res, oruzje ? 1 : 0);
     DB_FreeResultSet(res);
-    if (ima)
+    if (oruzje && ima)
+    {
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s sada ima dozvolu za oruzje."), GetRPIme(target));
+        SendClientMessage(target, COLOR_INFO, T(target, "Dobili ste dozvolu za oruzje."));
+    }
+    else if (oruzje)
+    {
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s vise nema dozvolu za oruzje."), GetRPIme(target));
+        SendClientMessage(target, COLOR_INFO, T(target, "Oduzeta vam je dozvola za oruzje."));
+    }
+    else if (ima)
     {
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s sada ima vozacku dozvolu."), GetRPIme(target));
         SendClientMessage(target, COLOR_INFO, T(target, "Dobili ste vozacku dozvolu."));

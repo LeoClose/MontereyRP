@@ -25,6 +25,7 @@
 #define MEHANICAR_GORIVO    50
 #define MEHANICAR_POPRAVAK  150
 #define MEHANICAR_GUME      100
+#define BOLNICA_SPAWN_CIJENA 500
 #define MEHANICAR_ODVOZ     2500
 #define MEHANICAR_ODVOZ_MS  20000
 #define MEHANICAR_ODVOZ_SVIJET 9900
@@ -80,6 +81,8 @@ static gApKamionDb[MAX_PLAYERS], gApKamionTip[MAX_PLAYERS];
 
 enum { RN_NE, RN_CEKA, RN_DOLJE }
 
+static const Float:gBolnice[][4] = { { 1172.08, -1323.35, 15.40, 270.0 }, { 2034.20, -1401.67, 17.30, 180.0 } };
+static bool:gRanjenBolnica[MAX_PLAYERS];
 static gRanjenPonuda[MAX_PLAYERS], gRanjen[MAX_PLAYERS], gRanjenOd[MAX_PLAYERS], gRanjenPogoci[MAX_PLAYERS], gRanjenInt[MAX_PLAYERS], gRanjenSvijet[MAX_PLAYERS], gRanjenAnimId[MAX_PLAYERS], gRanjenPopravak[MAX_PLAYERS], Float:gRanjenPos[MAX_PLAYERS][4];
 
 static PromijeniScore(org, delta)
@@ -1370,9 +1373,48 @@ RanjenPrimijeni(playerid, bool:spasen)
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Spaseni ste. Placate $%d."), cijena);
         return;
     }
-    for (new i = 0; i < BROJ_ITEMA; i++) if (gInv[playerid][i]) GiveItem(playerid, i, -gInv[playerid][i]);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Izgubili ste inventar."));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT oruzje_dozvola FROM accounts WHERE id = %d", gAccountId[playerid]), bool:dozvola = DB_GetRowCount(res) && DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    SpremiSvoOruzje(playerid);
+    for (new i = 0; i < BROJ_ITEMA; i++)
+    {
+        if (!gInv[playerid][i]) continue;
+        new bool:droga = i == ITEM_MARIHUANA || i == ITEM_KOKAIN || i == ITEM_SJEME, bool:oruzje = gItems[i][ITEM_WEAPON] > 0 || (ITEM_MUN_PISTOLJ <= i <= ITEM_MUN_PUSKA);
+        if (droga || (oruzje && !dozvola)) GiveItem(playerid, i, -gInv[playerid][i]);
+    }
+    SendClientMessage(playerid, COLOR_INFO, dozvola ? T(playerid, "Izgubili ste drogu.") : T(playerid, "Izgubili ste drogu i oruzje (nemate dozvolu za oruzje)."));
+    gRanjenBolnica[playerid] = true;
     SpawnPlayer(playerid);
+}
+
+RanjenBolnica(playerid)
+{
+    if (!gRanjenBolnica[playerid]) return;
+    gRanjenBolnica[playerid] = false;
+    new b = VectorSize(gRanjenPos[playerid][0] - gBolnice[0][0], gRanjenPos[playerid][1] - gBolnice[0][1], 0.0) <= VectorSize(gRanjenPos[playerid][0] - gBolnice[1][0], gRanjenPos[playerid][1] - gBolnice[1][1], 0.0) ? 0 : 1;
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, gBolnice[b][0], gBolnice[b][1], gBolnice[b][2]);
+    SetPlayerFacingAngle(playerid, gBolnice[b][3]);
+    SetCameraBehindPlayer(playerid);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Probudili ste se u bolnici."));
+    if (!gPremium[playerid]) return;
+    new body[128];
+    format(body, sizeof body, T(playerid, "Ostani u bolnici\nVrati me na moj spawn ($%d)"), BOLNICA_SPAWN_CIJENA);
+    PrikaziDialog(playerid, DLG_BOLNICA, DIALOG_STYLE_LIST, T(playerid, "Bolnica"), body, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
+}
+
+DLG:bolnica(playerid, response, listitem)
+{
+    if (!response || listitem != 1 || !gPremium[playerid] || IsRanjen(playerid)) return 1;
+    if (!DajNovac(playerid, -BOLNICA_SPAWN_CIJENA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
+    SetPlayerFacingAngle(playerid, SPAWN_A);
+    SetCameraBehindPlayer(playerid);
+    KucaSpawn(playerid);
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BOLNICA_SPAWN_CIJENA);
 }
 
 RanjenZavrsi(playerid, bool:spasen, ko = INVALID_PLAYER_ID)

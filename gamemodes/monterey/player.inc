@@ -101,6 +101,7 @@ public OnPlayerSpawn(playerid)
     KucaSpawn(playerid);
     RanjenSpawn(playerid);
     OdjecaSpawn(playerid);
+    RanjenBolnica(playerid);
     return 1;
 }
 

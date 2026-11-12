@@ -16,6 +16,9 @@ InitMdt()
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT vozacka FROM accounts LIMIT 1");
     if (res) DB_FreeResultSet(res);
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE accounts ADD COLUMN vozacka INTEGER NOT NULL DEFAULT 0"));
+    res = DB_ExecuteQuery(gDB, "SELECT oruzje_dozvola FROM accounts LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE accounts ADD COLUMN oruzje_dozvola INTEGER NOT NULL DEFAULT 0"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS police_records (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, type INTEGER NOT NULL, reason TEXT NOT NULL, officer TEXT NOT NULL, created INTEGER NOT NULL)"));
 }
 
@@ -206,17 +209,17 @@ static MdtOsoba(playerid, const unos[])
         MdtPostavi(playerid, MTD_VRIJEDNOSTI, "_");
         return MdtPostavi(playerid, MTD_ZAPISI, T(playerid, "Osoba nije pronadena u bazi."));
     }
-    new tekst[MDT_TEKST], red[96], ime[MAX_PLAYER_NAME + 1], broj[16], DBResult:res = DB_ExecuteQuery(gDB, "SELECT replace(a.name, '_', ' '), a.wanted, IFNULL((SELECT number FROM phone_numbers WHERE account = a.id), '-'), a.zatvor, IFNULL((SELECT skin FROM player_style WHERE account = a.id), -1), a.vozacka FROM accounts a WHERE a.id = %d", racun);
+    new tekst[MDT_TEKST], red[96], ime[MAX_PLAYER_NAME + 1], broj[16], DBResult:res = DB_ExecuteQuery(gDB, "SELECT replace(a.name, '_', ' '), a.wanted, IFNULL((SELECT number FROM phone_numbers WHERE account = a.id), '-'), a.zatvor, IFNULL((SELECT skin FROM player_style WHERE account = a.id), -1), a.vozacka, a.oruzje_dozvola FROM accounts a WHERE a.id = %d", racun);
     DB_GetFieldString(res, 0, ime, sizeof ime);
     DB_GetFieldString(res, 2, broj, sizeof broj);
-    new wanted = DB_GetFieldInt(res, 1), zatvor = DB_GetFieldInt(res, 3), skin = DB_GetFieldInt(res, 4), vozacka = DB_GetFieldInt(res, 5);
+    new wanted = DB_GetFieldInt(res, 1), zatvor = DB_GetFieldInt(res, 3), skin = DB_GetFieldInt(res, 4), vozacka = DB_GetFieldInt(res, 5), oruzje = DB_GetFieldInt(res, 6);
     DB_FreeResultSet(res);
     MdtCisti(ime);
     MdtCisti(broj);
     MdtFoto(playerid, target != INVALID_PLAYER_ID ? GetPlayerSkin(target) : skin < 0 ? 0 : skin);
-    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Zadnja lokacija"), T(playerid, "Vozila"), T(playerid, "Kuca"));
+    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Dozvola za oruzje"), T(playerid, "Zadnja lokacija"), T(playerid, "Vozila"), T(playerid, "Kuca"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
-    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~", ime, broj, vozacka ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"));
+    format(tekst, sizeof tekst, "%s~n~%s~n~%s~w~~n~%s~w~~n~", ime, broj, vozacka ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"), oruzje ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"));
     new Float:lx, Float:ly, kada = target != INVALID_PLAYER_ID ? PolicijaTrag(target, lx, ly) : 0;
     if (kada)
     {
