@@ -68,6 +68,7 @@ StatsLoad(playerid)
     if (gStatsLevel[playerid] < 1) gStatsLevel[playerid] = 1;
     if (gStatsRespekti[playerid] < 0) gStatsRespekti[playerid] = 0;
     if (gStatsPlaytime[playerid] < 0) gStatsPlaytime[playerid] = 0;
+    SetPlayerScore(playerid, gStatsLevel[playerid]);
     gStatsLastUpdate[playerid] = gettime();
     return 1;
 }
@@ -98,6 +99,7 @@ StatsUpdate(playerid)
     {
         gStatsRespekti[playerid] -= potrebno;
         gStatsLevel[playerid]++;
+        SetPlayerScore(playerid, gStatsLevel[playerid]);
         potrebno = StatsPotrebno(gStatsLevel[playerid]);
     }
 }
