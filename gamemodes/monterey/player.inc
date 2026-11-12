@@ -56,6 +56,7 @@ public OnPlayerDisconnect(playerid, reason)
     OruzarnicaDisconnect(playerid);
     MdtDisconnect(playerid);
     OdjecaDisconnect(playerid);
+    LoginDisconnect(playerid);
     TuningDisconnect(playerid);
     KucaDisconnect(playerid);
     MobitelDisconnect(playerid);
@@ -88,6 +89,7 @@ public ReturnPlayer(playerid)
 public OnPlayerSpawn(playerid)
 {
     if (IsPlayerNPC(playerid)) return 1;
+    ShowHud(playerid);
     StetaSpawn(playerid);
     SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
     SetPlayerInterior(playerid, 0);

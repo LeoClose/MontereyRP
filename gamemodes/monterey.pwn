@@ -248,6 +248,8 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"
+#include "monterey/login.inc"
+#include "monterey/registracija.inc"
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
 
@@ -315,6 +317,7 @@ DLG:prijava(playerid, response, const inputtext[])
 PrikaziRegistraciju(playerid, const error[])
 {
     new body[160];
+    RegistracijaTd(playerid);
     format(body, sizeof body, T(playerid, "%sOvo ime nije registrirano.\nUnesite lozinku (6-64 znakova):"), error);
     return PrikaziDialog(playerid, DLG_REGISTRACIJA, DIALOG_STYLE_PASSWORD, T(playerid, "Registracija"), body, T(playerid, "Registriraj"), T(playerid, "Izlaz"));
 }
@@ -322,6 +325,7 @@ PrikaziRegistraciju(playerid, const error[])
 PrikaziLogin(playerid, const error[])
 {
     new body[160];
+    LoginTd(playerid);
     format(body, sizeof body, T(playerid, "%sOvo ime je registrirano.\nUnesite svoju lozinku:"), error);
     return PrikaziDialog(playerid, DLG_PRIJAVA, DIALOG_STYLE_PASSWORD, T(playerid, "Prijava"), body, T(playerid, "Prijava"), T(playerid, "Izlaz"));
 }
@@ -342,6 +346,7 @@ ZavrsiLogin(playerid)
 {
     if (!UcitajJezik(playerid)) return PokaziJezike(playerid);
     gUlogiran[playerid] = true;
+    LoginTdSakrij(playerid);
     if (!StatsLoad(playerid)) return 0;
     LoadAdmina(playerid);
     UcitajClana(playerid);
@@ -354,7 +359,6 @@ ZavrsiLogin(playerid)
     TeritorijPrijava(playerid);
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     TogglePlayerSpectating(playerid, false);
-    ShowHud(playerid);
     AdminPrijava(playerid);
     return 1;
 }
