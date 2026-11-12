@@ -46,7 +46,7 @@
         "vehicle_respawn_time": 10000,
         "weather": 10
     },
-    "language": "Hrvatski",
+    "language": "Ex-Yu",
     "logging": {
         "enable": true,
         "file": "log.txt",
