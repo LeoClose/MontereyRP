@@ -151,6 +151,7 @@ public OnGameModeInit()
     InitOpstina();
     InitHeli();
     InitVlakovi();
+    InitHod();
     SetTimer("Sekunda", 1000, true);
 
     Ime = TextDrawCreate(580.0, 20.0, "Monterey");
