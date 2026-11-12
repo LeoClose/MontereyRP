@@ -49,10 +49,25 @@
 #define MOBITEL_BLJESAK_MS  150
 #define MOBITEL_OKRET       1.5
 #define MOBITEL_NAGIB_MAX   60.0
+#define MOBITEL_INTERNET    4
+#define MOBITEL_GRUPE       19
+#define MOBITEL_LOKACIJE    20
+#define MOBITEL_LOKACIJA    24
+#define MOBITEL_GPS_DOMET   6.0
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 static const gMobitelOpcije[][] = { "Nazovi", "Posalji poruku", "Preimenuj", "Obrisi" };
+static const gMobitelInternet[][] = { "Poslovi", "Lokacije" };
+static const gMobitelGrupe[][] = { "Trgovine", "Odjeca", "Frizeri", "Oruzarnice", "Saloni", "Ostalo" };
+static const gMobitelGrupeSql[][] = {
+    "SELECT x, y, z, '' FROM shops ORDER BY id",
+    "SELECT x, y, z, '' FROM clothing_shops WHERE type = 0 ORDER BY id",
+    "SELECT x, y, z, '' FROM clothing_shops WHERE type = 1 ORDER BY id",
+    "SELECT x, y, z, '' FROM gun_shops ORDER BY id",
+    "SELECT x, y, z, '' FROM dealerships ORDER BY id",
+    "SELECT x, y, z, 'Opstina' FROM city_hall WHERE slot = 2 UNION ALL SELECT x, y, z, 'Pijaca' FROM market"
+};
 static const gMobitelJezici[BROJ_JEZIKA][] = { "Hrvatski", "English", "Russkiy", "Espanol", "Turkce" };
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
@@ -64,6 +79,8 @@ static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], bool:gMobit
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_PORUKA_LEN], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelPrimatelj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
 static gMobitelKontaktId[MAX_PLAYERS][MOBITEL_KONTAKATA], gMobitelKontakt[MAX_PLAYERS];
+static gMobitelGrupa[MAX_PLAYERS], gMobitelLokBroj[MAX_PLAYERS], gMobitelLokIme[MAX_PLAYERS][MOBITEL_LOKACIJA][32], Float:gMobitelLok[MAX_PLAYERS][MOBITEL_LOKACIJA][3];
+static bool:gMobitelGps[MAX_PLAYERS], Float:gMobitelGpsPoz[MAX_PLAYERS][3];
 static gMobitelPrimljenih[MAX_PLAYERS], gMobitelCitam[MAX_PLAYERS], gMobitelPorukaId[MAX_PLAYERS][MOBITEL_PORUKA_MAX], gMobitelPorukaBroj[MAX_PLAYERS][MOBITEL_PORUKA_MAX][MOBITEL_BROJ], gMobitelPorukaIme[MAX_PLAYERS][MOBITEL_PORUKA_MAX][MOBITEL_IME], bool:gMobitelPorukaNova[MAX_PLAYERS][MOBITEL_PORUKA_MAX];
 
 InitMobitel()
@@ -308,7 +325,35 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_POSTAVKE) return 1;
     if (gMobitelEkran[playerid] == MOBITEL_JEZIK) return BROJ_JEZIKA;
     if (gMobitelEkran[playerid] == MOBITEL_KAMERA) return 2;
+    if (gMobitelEkran[playerid] == MOBITEL_INTERNET) return sizeof gMobitelInternet;
+    if (gMobitelEkran[playerid] == MOBITEL_GRUPE) return sizeof gMobitelGrupe;
+    if (gMobitelEkran[playerid] == MOBITEL_LOKACIJE) return gMobitelLokBroj[playerid];
     return 0;
+}
+
+static MobitelUcitajLokacije(playerid, grupa)
+{
+    gMobitelGrupa[playerid] = grupa;
+    gMobitelLokBroj[playerid] = 0;
+    new DBResult:res = DB_ExecuteQuery(gDB, gMobitelGrupeSql[grupa]);
+    if (!res) return;
+    for (new n = DB_GetRowCount(res); gMobitelLokBroj[playerid] < n && gMobitelLokBroj[playerid] < MOBITEL_LOKACIJA; DB_SelectNextRow(res))
+    {
+        new k = gMobitelLokBroj[playerid]++;
+        for (new i = 0; i < 3; i++) gMobitelLok[playerid][k][i] = DB_GetFieldFloat(res, i);
+        DB_GetFieldString(res, 3, gMobitelLokIme[playerid][k], 32);
+        if (!gMobitelLokIme[playerid][k][0]) strcopy(gMobitelLokIme[playerid][k], CestaZona(gMobitelLok[playerid][k][0], gMobitelLok[playerid][k][1]), 32);
+    }
+    DB_FreeResultSet(res);
+}
+
+MobitelGpsStigao(playerid)
+{
+    if (!gMobitelGps[playerid] || !IsPlayerInRangeOfPoint(playerid, MOBITEL_GPS_DOMET, gMobitelGpsPoz[playerid][0], gMobitelGpsPoz[playerid][1], gMobitelGpsPoz[playerid][2])) return 0;
+    gMobitelGps[playerid] = false;
+    DisablePlayerCheckpoint(playerid);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stigli ste na odrediste."));
+    return 1;
 }
 
 static MobitelPrikazi(playerid)
@@ -361,6 +406,8 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_SMS_UNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Nova poruka"));
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
     else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Jezik"));
+    else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Lokacije"));
+    else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelGrupe[gMobitelGrupa[playerid]]));
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
     if (broj) PlayerTextDrawShow(playerid, gMobitelOznaka[playerid]);
@@ -385,6 +432,9 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_POSTAVKE) PlayerTextDrawSetString(playerid, td, T(playerid, "Jezik"));
         else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, td, gMobitelJezici[s]);
         else if (ekran == MOBITEL_KAMERA) PlayerTextDrawSetString(playerid, td, T(playerid, s ? ("Selfie") : ("Fotoaparat")));
+        else if (ekran == MOBITEL_INTERNET) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelInternet[s]));
+        else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelGrupe[s]));
+        else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelLokIme[playerid][s]));
         else if (ekran == MOBITEL_PORUKE && s == 0) PlayerTextDrawSetString(playerid, td, T(playerid, "Nova poruka"));
         else if (ekran == MOBITEL_PORUKE)
         {
@@ -820,6 +870,38 @@ static MobitelOdaberi(playerid)
         gMobitelOdabir[playerid] = 0;
     }
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
+    else if (ekran == MOBITEL_INTERNET)
+    {
+        if (odabir == 0) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Poslovi ce uskoro biti dostupni."));
+        else
+        {
+            gMobitelEkran[playerid] = MOBITEL_GRUPE;
+            gMobitelOdabir[playerid] = 0;
+        }
+    }
+    else if (ekran == MOBITEL_GRUPE)
+    {
+        MobitelUcitajLokacije(playerid, odabir);
+        if (!gMobitelLokBroj[playerid])
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovdje jos nema lokacija."));
+            return;
+        }
+        gMobitelEkran[playerid] = MOBITEL_LOKACIJE;
+        gMobitelOdabir[playerid] = 0;
+    }
+    else if (ekran == MOBITEL_LOKACIJE && odabir < gMobitelLokBroj[playerid])
+    {
+        if (TaksiOdrediste(playerid, gMobitelLok[playerid][odabir][0], gMobitelLok[playerid][odabir][1]))
+        {
+            MobitelZatvori(playerid);
+            return;
+        }
+        for (new i = 0; i < 3; i++) gMobitelGpsPoz[playerid][i] = gMobitelLok[playerid][odabir][i];
+        gMobitelGps[playerid] = true;
+        SetPlayerCheckpoint(playerid, gMobitelGpsPoz[playerid][0], gMobitelGpsPoz[playerid][1], gMobitelGpsPoz[playerid][2], 3.0);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Lokacija je oznacena na karti: %s."), T(playerid, gMobitelLokIme[playerid][odabir]));
+    }
     else if (ekran == MOBITEL_POSTAVKE)
     {
         gMobitelEkran[playerid] = MOBITEL_JEZIK;
@@ -876,6 +958,16 @@ static MobitelNatrag(playerid, ekran)
         {
             gMobitelEkran[playerid] = MOBITEL_KONTAKT;
             gMobitelOdabir[playerid] = ekran == MOBITEL_PREIMENUJ ? 2 : 3;
+        }
+        case MOBITEL_GRUPE:
+        {
+            gMobitelEkran[playerid] = MOBITEL_INTERNET;
+            gMobitelOdabir[playerid] = 1;
+        }
+        case MOBITEL_LOKACIJE:
+        {
+            gMobitelEkran[playerid] = MOBITEL_GRUPE;
+            gMobitelOdabir[playerid] = gMobitelGrupa[playerid];
         }
         case MOBITEL_JEZIK:
         {
@@ -1050,6 +1142,7 @@ MobitelDisconnect(playerid)
     gMobitelOtvoren[playerid] = false;
     gMobitelURuci[playerid] = false;
     gMobitelBroj[playerid] = 0;
+    gMobitelGps[playerid] = false;
 }
 
 MobitelPrebaci(playerid)

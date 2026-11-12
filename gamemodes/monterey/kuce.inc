@@ -98,7 +98,6 @@ static KuceUvezi()
             }
             else
             {
-                // owned houses keep their spot and price; everything else follows kuce.db
                 DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET size = %d WHERE id = %d", DB_GetFieldInt(res, 5), id));
                 DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET x = %f, y = %f, z = %f, model = %d, price = %d, snap = 1 WHERE id = %d AND owner = 0", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4), id));
             }
@@ -111,7 +110,6 @@ static KuceUvezi()
     }
     if (res) DB_FreeResultSet(res);
     DB_Close(izvor);
-    // kuce.db ships in git and is re-applied every start; matching keeps house ids stable
 }
 
 static KucaTlo(k)

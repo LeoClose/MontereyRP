@@ -189,7 +189,6 @@ OdjecaUlaz(playerid)
     return 0;
 }
 
-// head bone (2): x runs up the head, y forward, z sideways; keeps hair and headwear on the upper head
 static OdjecaNaGlavi(&Float:x, &Float:y, &Float:z)
 {
     x = x < 0.05 ? 0.05 : x > 0.25 ? 0.25 : x;

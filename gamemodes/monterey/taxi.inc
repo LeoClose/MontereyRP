@@ -528,7 +528,7 @@ DLG:taksi_poziv(playerid, response)
 
 public OnPlayerEnterCheckpoint(playerid)
 {
-    if (!gTaksiVozac[playerid]) return 1;
+    if (!gTaksiVozac[playerid]) return MobitelGpsStigao(playerid);
     gTaksiVozac[playerid] = false;
     DisablePlayerCheckpoint(playerid);
     return 1;
@@ -826,7 +826,7 @@ static TaksiNaKartu(s, playerid)
     gTaksi[s][tKlik] = 0;
     gTaksi[s][tRok] = GetTickCount() + TAKSI_ODREDISTE_MS;
     TaksiVozac(s, playerid, "Vozac kaze: Dobar dan! Kamo cemo?");
-    SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) i vratite se u igru."));
+    SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) ili ga odaberite na mobitelu (Internet, Lokacije)."));
 }
 
 TaksiStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
@@ -881,6 +881,17 @@ public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
     return 1;
 }
 
+TaksiOdrediste(playerid, Float:x, Float:y)
+{
+    new s = gTaksiOd[playerid] - 1;
+    if (s < 0 || gTaksi[s][tStanje] != TX_KARTA) return 0;
+    gTaksi[s][tCiljX] = x;
+    gTaksi[s][tCiljY] = y;
+    gTaksi[s][tKlik] = GetTickCount() - 1000;
+    TaksiPovratak(playerid);
+    return 1;
+}
+
 TaksiPovratak(playerid)
 {
     new s = gTaksiOd[playerid] - 1;
@@ -893,7 +904,7 @@ TaksiPovratak(playerid)
     if (duljina < TAKSI_MIN_VOZNJA)
     {
         TaksiVozac(s, playerid, "Vozac kaze: Onamo ne mogu, zao mi je. Mozete li odabrati drugo mjesto?");
-        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) i vratite se u igru."));
+        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) ili ga odaberite na mobitelu (Internet, Lokacije)."));
         return;
     }
     gTaksi[s][tCijena] = s >= TAKSI_FLOTA ? PREMIUM_START + (duljina * PREMIUM_PO_KM + 500) / 1000 : TAKSI_START + (duljina * TAKSI_PO_KM + 500) / 1000;
