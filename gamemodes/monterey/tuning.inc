@@ -26,7 +26,7 @@
 #define TUNING_ISKRE_OBJEKT 18717
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_DIO }
-enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_RED }
+enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_POMOC, TTD_RED }
 enum E_TUNING { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_MAP_ICON:tgIkona }
 
 static const gTuningDio[][] = { "Spojler", "Hauba", "Krov", "Pragovi", "Svjetla", "Nitro", "Auspuh", "Felge", "Stereo", "Hidraulika", "Prednji branik", "Straznji branik", "Desni ventil", "Lijevi ventil" };
@@ -615,7 +615,9 @@ static TuningOtvori(playerid, g)
     }
     new Float:dno = TUNING_Y + 40.0 + TUNING_RED_H * float(TUNING_REDOVA + 1) + 4.0;
     TuningKutija(playerid, TUNING_X, dno, TUNING_SIRINA, 46.0, 0x000000D2);
-    TuningTekst(playerid, TUNING_X + TUNING_SIRINA / 2.0, dno + 34.0, T(playerid, "W/S: odabir  Desno: odaberi  Lijevo: natrag  Y: mis"), 0x8AA0B6FF, 0.16, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    gTun[playerid][TTD_POMOC] = TuningTekst(playerid, TUNING_X + TUNING_SIRINA / 2.0, dno + 34.0, T(playerid, "W/S: odabir  Lijevo: natrag  Desno: odaberi  Y: mis"), 0x8AA0B6FF, 0.16, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawTextSize(playerid, gTun[playerid][TTD_POMOC], 10.0, TUNING_SIRINA);
+    PlayerTextDrawSetSelectable(playerid, gTun[playerid][TTD_POMOC], true);
     gTun[playerid][TTD_NOVAC] = TuningTekst(playerid, TUNING_X + 5.0, dno + 3.0, "_", 0xFFFFFFFF, 0.2, 1.0);
     gTun[playerid][TTD_KUPI] = TuningTekst(playerid, TUNING_X + 150.0, dno + 18.0, T(playerid, "KUPI"), 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gTun[playerid][TTD_KUPI], true);
@@ -659,6 +661,12 @@ TuningStateChange(playerid, PLAYER_STATE:oldstate)
 {
     if (gTunU[playerid] == -1 || oldstate != PLAYER_STATE_DRIVER || GetTickCount() - gTunOd[playerid] < TUNING_ULAZ_MS) return;
     TuningZatvori(playerid, false);
+}
+
+static TuningTipkovnica(playerid)
+{
+    gTunMis[playerid] = false;
+    CancelSelectTextDraw(playerid);
 }
 
 TuningMisIskljuci(playerid)
@@ -746,7 +754,8 @@ TuningKlik(playerid, PlayerText:td)
 {
     if (gTunU[playerid] == -1) return 0;
     if (!TuningProvjera(playerid)) return 1;
-    if (td == gTun[playerid][TTD_NATRAG]) TuningNatrag(playerid);
+    if (td == gTun[playerid][TTD_POMOC]) TuningTipkovnica(playerid);
+    else if (td == gTun[playerid][TTD_NATRAG]) TuningNatrag(playerid);
     else if (td == gTun[playerid][TTD_KUPI])
     {
         if (gTunKat[playerid] != -1) TuningKupi(playerid);
@@ -777,8 +786,12 @@ TuningKey(playerid, KEY:newkeys, KEY:oldkeys)
     if (!TuningProvjera(playerid)) return 1;
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES))
     {
-        gTunMis[playerid] = true;
-        SelectTextDraw(playerid, 0x5B8DBFFF);
+        if (gTunMis[playerid]) TuningTipkovnica(playerid);
+        else
+        {
+            gTunMis[playerid] = true;
+            SelectTextDraw(playerid, 0x5B8DBFFF);
+        }
     }
     else if ((newkeys & KEY_ANALOG_RIGHT) && !(oldkeys & KEY_ANALOG_RIGHT)) TuningOdaberi(playerid);
     else if ((newkeys & KEY_ANALOG_LEFT) && !(oldkeys & KEY_ANALOG_LEFT)) TuningNatrag(playerid);
