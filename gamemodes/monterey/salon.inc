@@ -167,8 +167,7 @@ VlasnikStetaSpremiSve()
 
 static VlasnikSms(v, const tekst[])
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
-        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == gVlasnik[v]) SendClientMessage(i, COLOR_SMS, T(i, tekst), gImenaVozila[GetVehicleModel(v) - 400]);
+    MobitelMehanicarSms(gVlasnik[v], tekst, gImenaVozila[GetVehicleModel(v) - 400]);
 }
 
 VlasnikUnisten(v)
@@ -176,7 +175,7 @@ VlasnikUnisten(v)
     if (!gVlasnik[v] || gVlasnikObnova[v]) return;
     gVlasnikObnova[v] = true;
     VlasnikStetaPopravljeno(v);
-    VlasnikSms(v, "SMS od Mehanicara: Vase vozilo %s je unisteno. Popravljamo ga i za 2 minute ga dovozimo na vas parking.");
+    VlasnikSms(v, "Vase vozilo %s je unisteno. Popravljamo ga i za 2 minute ga dovozimo na vas parking.");
     SetTimerEx("VlasnikObnovi", VLASNIK_OBNOVA_MS, false, "ii", v, gVlasnikDb[v]);
 }
 
@@ -186,7 +185,7 @@ public VlasnikObnovi(v, db)
     gVlasnikObnova[v] = false;
     if (!GetVehicleModel(v) || !gVlasnik[v] || gVlasnikDb[v] != db) return;
     SetVehicleToRespawn(v);
-    VlasnikSms(v, "SMS od Mehanicara: Vase vozilo %s je popravljeno i dostavljeno na parking.");
+    VlasnikSms(v, "Vase vozilo %s je popravljeno i dostavljeno na parking.");
 }
 
 VlasnikStetaPopravljeno(v)

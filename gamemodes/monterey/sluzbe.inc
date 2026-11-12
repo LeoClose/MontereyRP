@@ -986,8 +986,7 @@ public MehanicarOdvozGotov(v, db)
     SetVehiclePos(v, px, py, pz);
     SetVehicleZAngle(v, pa);
     SetVehicleVirtualWorld(v, 0);
-    for (new i = 0; i < MAX_PLAYERS; i++)
-        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == VlasnikVozila(v)) SendClientMessage(i, COLOR_SMS, T(i, "SMS od Mehanicara: Vase vozilo %s je dostavljeno na parking."), gImenaVozila[GetVehicleModel(v) - 400]);
+    MobitelMehanicarSms(VlasnikVozila(v), "Vase vozilo %s je dostavljeno na parking.", gImenaVozila[GetVehicleModel(v) - 400]);
 }
 
 MehanicarPozovi(playerid)

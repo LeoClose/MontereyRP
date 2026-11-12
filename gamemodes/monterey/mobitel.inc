@@ -701,6 +701,15 @@ MobitelPrimiPoruku(racun, const broj[], const tekst[])
     }
 }
 
+MobitelMehanicarSms(racun, const tekst[], const model[])
+{
+    new poruka[MOBITEL_PORUKA_LEN];
+    format(poruka, sizeof poruka, tekst, model);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == racun) format(poruka, sizeof poruka, T(i, tekst), model);
+    MobitelPrimiPoruku(racun, MOBITEL_MEHANICAR_BROJ, poruka);
+}
+
 MobitelTaksiSms(playerid, const tekst[])
 {
     if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_TAKSI_BROJ, tekst);
