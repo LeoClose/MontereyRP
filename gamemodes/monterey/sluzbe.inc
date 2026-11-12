@@ -28,8 +28,10 @@
 #define MEHANICAR_ODVOZ     2500
 #define MEHANICAR_ODVOZ_MS  20000
 #define MEHANICAR_ODVOZ_SVIJET 9900
-#define MEHANICAR_PARKING_DOMET 10.0
 #define MEHANICAR_ODVOZ_VOZILA 8
+
+forward bool:VlasnikNaParkingu(v);
+forward bool:GarazaIzvana(db, &Float:x, &Float:y);
 #define MEHANICAR_SLEPANJE  250
 #define RADIONICA_X         1207.18
 #define RADIONICA_Y         -981.57
@@ -948,15 +950,15 @@ DLG:mehanicar_odvoz(playerid, response, listitem)
     if (gOdvoz[v]) return MehanicarOdvozGreska(playerid, "To vozilo se vec odvozi.");
     for (new i = 0; i < MAX_PLAYERS && !zauzeto; i++) if (IsPlayerInVehicle(i, v)) zauzeto = true;
     if (zauzeto && !gPremium[playerid]) return MehanicarOdvozGreska(playerid, "Netko je u vozilu, ne mozemo ga odslepati.");
-    new Float:x, Float:y, Float:z, Float:px, Float:py, Float:pz, Float:pa;
+    new Float:x, Float:y, Float:z;
     GetVehiclePos(v, x, y, z);
-    VlasnikParking(v, px, py, pz, pa);
-    if (!GetVehicleVirtualWorld(v) && VectorSize(x - px, y - py, z - pz) <= MEHANICAR_PARKING_DOMET) return MehanicarOdvozGreska(playerid, "Vozilo je vec na parkingu.");
+    if (VlasnikNaParkingu(v)) return MehanicarOdvozGreska(playerid, "Vozilo je vec na parkingu.");
     if (!DajNovac(playerid, -MEHANICAR_ODVOZ)) return MehanicarOdvozGreska(playerid, "Nemate dovoljno novca.");
     new model[32], odakle[28], dokle[28];
     strcopy(model, gImenaVozila[GetVehicleModel(v) - 400]);
     odakle = CestaZona(x, y);
-    dokle = CestaZona(px, py);
+    if (GetVehicleVirtualWorld(v) && GarazaIzvana(VlasnikGarazaDb(v), x, y)) odakle = CestaZona(x, y);
+    VlasnikParkingZona(v, dokle);
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze (telefon): Dobar dan, odslepajte mi %s iz %s do parkinga u %s.", GetRPIme(playerid), model, 1, odakle, dokle);
     SetTimerEx("MehanicarOdvozOdgovor", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
@@ -981,11 +983,7 @@ public MehanicarOdvozGotov(v, db)
     if (!gOdvoz[v]) return;
     gOdvoz[v] = false;
     if (!GetVehicleModel(v) || VlasnikDb(v) != db) return;
-    new Float:px, Float:py, Float:pz, Float:pa;
-    VlasnikParking(v, px, py, pz, pa);
-    SetVehiclePos(v, px, py, pz);
-    SetVehicleZAngle(v, pa);
-    SetVehicleVirtualWorld(v, 0);
+    VlasnikNaParking(v);
     MobitelMehanicarSms(VlasnikVozila(v), "Vase vozilo %s je dostavljeno na parking.", gImenaVozila[GetVehicleModel(v) - 400]);
 }
 

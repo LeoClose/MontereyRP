@@ -16,7 +16,7 @@ static gSalon[SALON_MAX][E_SALON];
 static gApSalon[MAX_PLAYERS];
 static gUSalonu[MAX_PLAYERS] = { -1, ... }, gSalonIdx[MAX_PLAYERS], gSalonVozilo[MAX_PLAYERS] = { INVALID_VEHICLE_ID, ... }, PlayerText:gSalonTd[MAX_PLAYERS][SALON_TD];
 static gVlasnik[MAX_VEHICLES], gVlasnikDb[MAX_VEHICLES], gVlasnikCijena[MAX_VEHICLES], Float:gVlasnikPark[MAX_VEHICLES][4];
-static Float:gVlasnikZdravlje[MAX_VEHICLES], gVlasnikOstecenja[MAX_VEHICLES][4], bool:gVlasnikObnova[MAX_VEHICLES];
+static Float:gVlasnikZdravlje[MAX_VEHICLES], gVlasnikOstecenja[MAX_VEHICLES][4], bool:gVlasnikObnova[MAX_VEHICLES], gVlasnikGaraza[MAX_VEHICLES];
 
 static const Float:gSalonAuto[4] = { 617.538, -1.990, 1001.2, 180.0 };
 static const Float:gSalonKamera[3] = { 620.9, -7.6, 1002.4 };
@@ -59,7 +59,10 @@ InitSalon()
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN lights INTEGER NOT NULL DEFAULT 0"));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN tires INTEGER NOT NULL DEFAULT 0"));
     }
-    res = DB_ExecuteQuery(gDB, "SELECT id, owner, model, c1, c2, x, y, z, a, price, health, panels, doors, lights, tires FROM player_vehicles");
+    res = DB_ExecuteQuery(gDB, "SELECT garage FROM player_vehicles LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN garage INTEGER NOT NULL DEFAULT 0"));
+    res = DB_ExecuteQuery(gDB, "SELECT id, owner, model, c1, c2, x, y, z, a, price, health, panels, doors, lights, tires, garage FROM player_vehicles");
     if (DB_GetRowCount(res)) do
     {
         new v = VlasnickoStvori(DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 2), DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4),
@@ -67,6 +70,8 @@ InitSalon()
         if (v == INVALID_VEHICLE_ID) continue;
         gVlasnikZdravlje[v] = DB_GetFieldFloat(res, 10);
         for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = DB_GetFieldInt(res, 11 + i);
+        gVlasnikGaraza[v] = DB_GetFieldInt(res, 15);
+        GarazaSmjesti(v, gVlasnikGaraza[v]);
         VlasnikStetaVrati(v);
     } while (DB_SelectNextRow(res));
     DB_FreeResultSet(res);
@@ -106,6 +111,7 @@ static VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Floa
     gVlasnikPark[v][3] = a;
     gVlasnikZdravlje[v] = 1000.0;
     for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = 0;
+    gVlasnikGaraza[v] = 0;
     TuningPrimijeni(v);
     return v;
 }
@@ -125,9 +131,46 @@ VlasnickoSpawn(v)
     if (!gVlasnik[v]) return;
     SetVehiclePos(v, gVlasnikPark[v][0], gVlasnikPark[v][1], gVlasnikPark[v][2]);
     SetVehicleZAngle(v, gVlasnikPark[v][3]);
+    GarazaSmjesti(v, gVlasnikGaraza[v]);
     if (gVlasnik[v] == VLASNIK_PIJACA) VoziloZakljucaj(v, true);
     TuningPrimijeni(v);
     VlasnikStetaVrati(v);
+}
+
+VlasnikGarazaDb(v)
+{
+    return v > 0 && v < MAX_VEHICLES && gVlasnik[v] ? gVlasnikGaraza[v] : 0;
+}
+
+VlasnikGaraza(v, garaza, Float:x, Float:y, Float:z, Float:a)
+{
+    gVlasnikGaraza[v] = garaza;
+    gVlasnikPark[v][0] = x;
+    gVlasnikPark[v][1] = y;
+    gVlasnikPark[v][2] = z;
+    gVlasnikPark[v][3] = a;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET x = %f, y = %f, z = %f, a = %f, garage = %d WHERE id = %d", x, y, z, a, garaza, gVlasnikDb[v]));
+}
+
+VlasnikNaParking(v)
+{
+    SetVehiclePos(v, gVlasnikPark[v][0], gVlasnikPark[v][1], gVlasnikPark[v][2]);
+    SetVehicleZAngle(v, gVlasnikPark[v][3]);
+    GarazaSmjesti(v, gVlasnikGaraza[v]);
+}
+
+bool:VlasnikNaParkingu(v)
+{
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(v, x, y, z);
+    return GetVehicleVirtualWorld(v) == GarazaSvijet(gVlasnikGaraza[v]) && VectorSize(x - gVlasnikPark[v][0], y - gVlasnikPark[v][1], z - gVlasnikPark[v][2]) <= 10.0;
+}
+
+VlasnikParkingZona(v, zona[], size = sizeof (zona))
+{
+    new Float:x = gVlasnikPark[v][0], Float:y = gVlasnikPark[v][1];
+    GarazaIzvana(gVlasnikGaraza[v], x, y);
+    format(zona, size, "%s", CestaZona(x, y));
 }
 
 VlasnikParking(v, &Float:x, &Float:y, &Float:z, &Float:a)
@@ -216,11 +259,7 @@ VlasnikCijena(v)
 
 VlasnikParkiraj(v, Float:x, Float:y, Float:z, Float:a)
 {
-    gVlasnikPark[v][0] = x;
-    gVlasnikPark[v][1] = y;
-    gVlasnikPark[v][2] = z;
-    gVlasnikPark[v][3] = a;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET x = %f, y = %f, z = %f, a = %f WHERE id = %d", x, y, z, a, gVlasnikDb[v]));
+    VlasnikGaraza(v, 0, x, y, z, a);
 }
 
 VlasnikPoDb(db)

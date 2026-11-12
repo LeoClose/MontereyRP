@@ -143,6 +143,7 @@ public OnGameModeInit()
     InitOdjeca();
     InitKuce();
     InitTuning();
+    InitGaraze();
     InitSalon();
     InitPijaca();
     InitGranica();
@@ -246,6 +247,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
+#include "monterey/garaze.inc"
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
 
