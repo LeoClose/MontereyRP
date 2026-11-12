@@ -54,6 +54,7 @@ InitNamjestaj()
     new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT price FROM furniture LIMIT 1");
     if (stupac) DB_FreeResultSet(stupac);
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE furniture ADD COLUMN price INTEGER NOT NULL DEFAULT 0"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE furniture SET price = IFNULL((SELECT MAX(c.price) FROM furniture_catalog c WHERE c.model = furniture.model), 0) WHERE price = 0"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, aktor, ax, ay, az, aa, izlog, ix, iy, iz, ia FROM furniture_shops ORDER BY id LIMIT %d", NAMJESTAJ_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
     {

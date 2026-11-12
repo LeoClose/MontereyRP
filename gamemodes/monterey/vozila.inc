@@ -1099,9 +1099,8 @@ VoziloUpdate(playerid)
     new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
     GetVehicleVelocity(v, vx, vy, vz);
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
-    new razina = TuningMotor(v), model = GetVehicleModel(v), KEY:gas, gasGore, gasStrana;
-    GetPlayerKeys(playerid, gas, gasGore, gasStrana);
-    TuningVozac(v, VectorSize(vx, vy, 0.0) * 180.0, (gas & KEY_SPRINT) && model >= 400 && model <= 611 && VectorSize(vx, vy, 0.0) * 180.0 < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)) * 0.95);
+    new razina = TuningMotor(v), model = GetVehicleModel(v);
+    TuningVozac(v);
     TuningTrubaSync(playerid, v);
     if (razina && model >= 400 && model <= 611 && GetTickCount() - gVoziloMotorMs[v] >= VOZILO_MOTOR_MS)
     {

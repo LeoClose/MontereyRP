@@ -22,7 +22,6 @@
 #define TUNING_ZATAMNJENJE  2500
 #define TUNING_TRUBA_DOMET  40.0
 #define TUNING_TRUBA_MS     1000
-#define TUNING_ISKRE_KMH    60.0
 #define TUNING_ISKRE_STUPANJ 1
 #define TUNING_ISKRE_MS     300
 #define TUNING_ISKRE_SANSA  20
@@ -587,12 +586,12 @@ static TuningIskre(v)
     for (new i = 0; i < broj; i++)
     {
         new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2], 0.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2], 90.0, 0.0, 0.0);
         SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
     }
 }
 
-TuningVozac(v, Float:kmh, bool:ubrzava)
+TuningVozac(v)
 {
     if (gTunOklop[v])
     {
@@ -606,7 +605,7 @@ TuningVozac(v, Float:kmh, bool:ubrzava)
         gTunZdravlje[v] = h;
     }
     new sad = GetTickCount();
-    if (gTunMotor[v] >= TUNING_ISKRE_STUPANJ && ubrzava && kmh >= TUNING_ISKRE_KMH && sad - gTunIskreMs[v] >= 0)
+    if (gTunMotor[v] >= TUNING_ISKRE_STUPANJ && sad - gTunIskreMs[v] >= 0)
     {
         if (random(100) < TUNING_ISKRE_SANSA)
         {
@@ -665,7 +664,7 @@ static TuningNatpis(v, const tekst[], font, boja)
     if (!duz || !TuningNatpisMoze(model)) return;
     gTunNatpisObj[v] = CreateObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     SetObjectMaterialText(gTunNatpisObj[v], tekst, 0, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), true, gTuningNatpisArgb[boja], 0, OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
-    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] - 0.03, 0.0, -90.0, 0.0);
+    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1], 0.0, -90.0, 0.0);
 }
 
 static TuningVrati(v)
