@@ -16,7 +16,7 @@ enum E_TRGOVINA { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, 
 static gTrg[TRGOVINA_MAX][E_TRGOVINA];
 static gApTrgovina[MAX_PLAYERS];
 static const Float:gTrgovinaUlaz[3] = { -25.884, -185.869, 1003.547 };
-static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 150 }, { ITEM_KANISTER, 50 } };
+static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 150 }, { ITEM_KANISTER, 50 }, { ITEM_MOBITEL, 200 } };
 
 InitTrgovina()
 {

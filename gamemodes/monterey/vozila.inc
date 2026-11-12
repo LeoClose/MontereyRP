@@ -747,11 +747,17 @@ static bool:HeliVidi(playerid, &bool:vijest)
     {
         if (!gHeliVozilo[i]) continue;
         NPC_GetPos(gHeliNpc[i], hx, hy, hz);
-        if (VectorSize(hx - x, hy - y, hz - z) > HELI_DOMET) continue;
+        if (VectorSize(hx - x, hy - y, hz - z) > HELI_DOMET || Kolizija_Zraka(hx, hy, hz - 2.0, x, y, z + 0.5)) continue;
         vidi = true;
         if (i >= HELI_LSPD) vijest = true;
     }
     return vidi;
+}
+
+HeliVidiIgraca(playerid)
+{
+    new bool:vijest;
+    return HeliVidi(playerid, vijest) ? 1 : 0;
 }
 
 static HeliPrijava(playerid)

@@ -22,11 +22,14 @@
 #define LOCATE_LS_MS        5000
 #define LOCATE_VAN_MS       10000
 #define LOCATE_IKONA        99
+#define TRAG_MOBITEL_S      900
+#define TRAG_POLICIJA_DOMET 60.0
 
 static bool:gOnDuty[MAX_PLAYERS], gWanted[MAX_PLAYERS], gJailTime[MAX_PLAYERS];
 static bool:gCuffed[MAX_PLAYERS], bool:gTased[MAX_PLAYERS], bool:gTaser[MAX_PLAYERS];
 static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount;
 static gLockerUzeo[MAX_PLAYERS];
+static gTragOd[MAX_PLAYERS], gTragVrijeme[MAX_PLAYERS], Float:gTrag[MAX_PLAYERS][3], Float:gVani[MAX_PLAYERS][3], bool:gImaVani[MAX_PLAYERS];
 static gWantedSat[MAX_PLAYERS], gLocate[MAX_PLAYERS], gLocateRacun[MAX_PLAYERS], gLocateGen[MAX_PLAYERS];
 
 enum { ORMAR_PREDMET, ORMAR_METCI, ORMAR_LIMIT }
@@ -56,6 +59,9 @@ PolicijaPrijava(playerid)
     gJailTime[playerid] = DB_GetFieldInt(res, 1);
     DB_FreeResultSet(res);
     gWantedSat[playerid] = 0;
+    gTragOd[playerid] = gWanted[playerid] ? gettime() : 0;
+    gTragVrijeme[playerid] = 0;
+    gImaVani[playerid] = false;
 }
 
 GetDragged(playerid)
@@ -85,6 +91,8 @@ VratiLisice(playerid)
 
 static SetWanted(playerid, razina)
 {
+    if (!gWanted[playerid] && razina) gTragOd[playerid] = gettime();
+    if (!razina) gTragVrijeme[playerid] = 0;
     gWanted[playerid] = razina;
     gWantedSat[playerid] = 0;
     SetPlayerWantedLevel(playerid, razina);
@@ -138,10 +146,34 @@ PolicijaSpawn(playerid)
     if (gJailTime[playerid]) IgracUCeliju(playerid);
 }
 
+static TragPrati(i)
+{
+    new Float:x, Float:y, Float:z, bool:vani = !GetPlayerInterior(i) && !GetPlayerVirtualWorld(i);
+    GetPlayerPos(i, x, y, z);
+    if (vani)
+    {
+        gVani[i][0] = x;
+        gVani[i][1] = y;
+        gVani[i][2] = z;
+        gImaVani[i] = true;
+    }
+    if (!gWanted[i] || gJailTime[i]) return;
+    new bool:vidljiv = gInv[i][ITEM_MOBITEL] > 0 && gettime() - gTragOd[i] >= TRAG_MOBITEL_S;
+    for (new c = 0; c < MAX_PLAYERS && !vidljiv; c++)
+        if (c != i && IsPlayerConnected(c) && PolicajacNaDuznosti(c) && GetPlayerVirtualWorld(c) == GetPlayerVirtualWorld(i) && GetPlayerInterior(c) == GetPlayerInterior(i) && GetPlayerDistanceFromPoint(c, x, y, z) <= TRAG_POLICIJA_DOMET) vidljiv = true;
+    if (!vidljiv && vani && HeliVidiIgraca(i)) vidljiv = true;
+    if (!vidljiv || (!vani && !gImaVani[i])) return;
+    gTrag[i][0] = vani ? x : gVani[i][0];
+    gTrag[i][1] = vani ? y : gVani[i][1];
+    gTrag[i][2] = vani ? z : gVani[i][2];
+    gTragVrijeme[i] = gettime();
+}
+
 PolicijaTick()
 {
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
+        if (gUlogiran[i] && !IsPlayerNPC(i)) TragPrati(i);
         if (gUlogiran[i] && gWanted[i] && !gJailTime[i] && ++gWantedSat[i] >= WANTED_PAD_S)
             SetWanted(i, gWanted[i] - 1);
         if (!gUlogiran[i] || !gJailTime[i]) continue;
@@ -668,9 +700,9 @@ public LocateTick(cop, gen)
         SendClientMessage(cop, COLOR_ERROR, T(cop, "Signal je izgubljen, pracenje je prekinuto."));
         return;
     }
-    new Float:x, Float:y, Float:z;
-    GetPlayerPos(target, x, y, z);
-    if (!GetPlayerInterior(target) && !GetPlayerVirtualWorld(target)) SetPlayerMapIcon(cop, LOCATE_IKONA, x, y, z, 0, 0xFF3030FF, MAPICON_GLOBAL);
+    new Float:x = gTrag[target][0], Float:y = gTrag[target][1], Float:z = gTrag[target][2];
+    if (gTragVrijeme[target]) SetPlayerMapIcon(cop, LOCATE_IKONA, x, y, z, 0, 0xFF3030FF, MAPICON_GLOBAL);
+    else RemovePlayerMapIcon(cop, LOCATE_IKONA);
     new bool:ls = x >= 44.6 && x <= 2997.1 && y >= -2893.0 && y <= -768.0;
     SetTimerEx("LocateTick", ls ? LOCATE_LS_MS : LOCATE_VAN_MS, false, "ii", cop, gen);
 }
@@ -692,6 +724,7 @@ CMD:locate(playerid, params[])
     gLocate[playerid] = target + 1;
     gLocateRacun[playerid] = gAccountId[target];
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pratite %s. Polozaj se osvjezava na karti (/locate za prekid)."), GetRPIme(target));
+    if (!gTragVrijeme[target]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Trenutno nema podataka o lokaciji."));
     LocateTick(playerid, gLocateGen[playerid]);
     return 1;
 }

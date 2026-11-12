@@ -95,7 +95,8 @@ enum
     ITEM_MARIHUANA, ITEM_KOKAIN, ITEM_SJEME,
     ITEM_COLT, ITEM_DEAGLE, ITEM_SACMARICA, ITEM_UZI, ITEM_MP5, ITEM_AK47, ITEM_M4, ITEM_NOZ, ITEM_PALICA,
     ITEM_MUN_PISTOLJ, ITEM_MUN_SACMARICA, ITEM_MUN_SMG, ITEM_MUN_PUSKA,
-    ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL
+    ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
+    ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -120,7 +121,17 @@ new const gItems[][E_ITEM] = {
     { "Crijevo za gorivo",      "kom", 1,   0,  -1, 19621 },
     { "Prazan kanister",        "kom", 3,   0,  -1, 1650  },
     { "Kanister benzina",       "L",   20,  0,  -1, 1650  },
-    { "Kanister dizela",        "L",   20,  0,  -1, 1650  }
+    { "Kanister dizela",        "L",   20,  0,  -1, 1650  },
+    { "Mobitel",                "kom", 1,   0,  -1, 18868 },
+    { "Naocale 1",              "kom", 3,   0,  -1, 19006 },
+    { "Naocale 2",              "kom", 3,   0,  -1, 19007 },
+    { "Naocale 3",              "kom", 3,   0,  -1, 19022 },
+    { "Bandana 1",              "kom", 3,   0,  -1, 18891 },
+    { "Bandana 2",              "kom", 3,   0,  -1, 18892 },
+    { "Bandana 3",              "kom", 3,   0,  -1, 18893 },
+    { "Kapa 1",                 "kom", 3,   0,  -1, 18926 },
+    { "Kapa 2",                 "kom", 3,   0,  -1, 18927 },
+    { "Kapa 3",                 "kom", 3,   0,  -1, 18939 }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -168,7 +179,14 @@ bool:GiveItem(playerid, item, amount)
     if (total) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO inventory (account, item, amount) VALUES (%d, %d, %d)", gAccountId[playerid], item, total));
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM inventory WHERE account = %d AND item = %d", gAccountId[playerid], item));
     if (!total && gItems[item][ITEM_WEAPON]) StoreItem(playerid, item);
+    if (!total) PredmetNestao(playerid, item);
     return true;
+}
+
+static PredmetNestao(playerid, item)
+{
+    if (item == ITEM_MOBITEL) MobitelZatvori(playerid);
+    else if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) OdjecaPredmetNestao(playerid, item);
 }
 
 static InventarCheck()
@@ -187,6 +205,8 @@ static KoristiItem(playerid, item)
 {
     new Float:v;
     if (gItems[item][ITEM_WEAPON]) return IzvadiOruzje(playerid, item);
+    if (item == ITEM_MOBITEL) return MobitelPrebaci(playerid);
+    if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) return OdjecaKapaPredmet(playerid, item);
     if (item == ITEM_CRIJEVO) return VoziloIsprazni(playerid);
     if (item == ITEM_KANISTER) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prazan kanister napunite na pumpi naredbom /tankaj."));
     if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return VoziloKanister(playerid, item, -1);
@@ -302,7 +322,7 @@ DLG:inventar_baci(playerid, response, const inputtext[])
         return PredmetOpcije(playerid);
     }
     BaciNaPod(playerid, item, amount);
-    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s nesto baca.", GetRPIme(playerid), "", 1);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, item == ITEM_MOBITEL ? ("* %s vadi SIM karticu i baca mobitel.") : ("* %s nesto baca."), GetRPIme(playerid), "", 1);
     return PredmetOpcije(playerid);
 }
 

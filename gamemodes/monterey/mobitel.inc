@@ -40,6 +40,13 @@
 #define MOBITEL_PORUKA_MAX  10
 #define MOBITEL_SMS_ZVUK    1057
 #define MOBITEL_JEZIK       17
+#define MOBITEL_KAMERA      3
+#define MOBITEL_BIRANJE     18
+#define MOBITEL_BIRANJE_MS  3000
+#define MOBITEL_FOTO        1
+#define MOBITEL_SELFIE      2
+#define MOBITEL_KAMERA_ZVUK 1132
+#define MOBITEL_BLJESAK_MS  150
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
@@ -50,7 +57,7 @@ static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS]
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
 static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
 static PlayerText:gMobitelLijevo[MAX_PLAYERS], PlayerText:gMobitelDesno[MAX_PLAYERS], bool:gMobitelDolje[MAX_PLAYERS];
-static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ];
+static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelKamera[MAX_PLAYERS], Text:gMobitelBljesak;
 static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], bool:gMobitelZvucnik[MAX_PLAYERS], gMobitelObavijest[MAX_PLAYERS], gMobitelPoruka[MAX_PLAYERS][MOBITEL_PORUKA_LEN];
 static gMobitelUnos[MAX_PLAYERS][MOBITEL_PORUKA_LEN], gMobitelNoviBroj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelPrimatelj[MAX_PLAYERS][MOBITEL_BROJ];
 static gMobitelKontakata[MAX_PLAYERS], gMobitelKontaktIme[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_IME], gMobitelKontaktBroj[MAX_PLAYERS][MOBITEL_KONTAKATA][MOBITEL_BROJ];
@@ -63,9 +70,15 @@ InitMobitel()
         id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, number TEXT NOT NULL, name TEXT NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_numbers (account INTEGER PRIMARY KEY, number TEXT NOT NULL UNIQUE)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_defaults (account INTEGER PRIMARY KEY)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_given (account INTEGER PRIMARY KEY)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS phone_messages (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, sender TEXT NOT NULL, text TEXT NOT NULL, sent INTEGER NOT NULL, unread INTEGER NOT NULL DEFAULT 1)"));
     for (new i = 0; i < MAX_PLAYERS; i++) gMobitelDrugi[i] = INVALID_PLAYER_ID;
+    gMobitelBljesak = TextDrawCreate(-20.0, -20.0, "_");
+    TextDrawLetterSize(gMobitelBljesak, 0.0, 60.0);
+    TextDrawTextSize(gMobitelBljesak, 660.0, 0.0);
+    TextDrawUseBox(gMobitelBljesak, true);
+    TextDrawBoxColour(gMobitelBljesak, 0xFFFFFFCC);
     new broj[MOBITEL_BROJ];
     MobitelGenerirajBroj(broj);
     assert(strlen(broj) == MOBITEL_ZNAMENKI && ProvjeriBroj(broj) && broj[0] >= '2');
@@ -107,6 +120,14 @@ MobitelPrijava(playerid)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_contacts (account, number, name) VALUES (%d, '%q', 'Taksi')", gAccountId[playerid], MOBITEL_TAKSI_BROJ));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_contacts (account, number, name) VALUES (%d, '%q', 'Mehanicar')", gAccountId[playerid], MOBITEL_MEHANICAR_BROJ));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_defaults (account) VALUES (%d)", gAccountId[playerid]));
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM phone_given WHERE account = %d", gAccountId[playerid]);
+    dodano = DB_GetRowCount(res) > 0;
+    DB_FreeResultSet(res);
+    if (!dodano)
+    {
+        GiveItem(playerid, ITEM_MOBITEL, 1);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_given (account) VALUES (%d)", gAccountId[playerid]));
     }
     res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM phone_messages WHERE account = %d AND unread = 1", gAccountId[playerid]);
     new novih = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
@@ -284,6 +305,7 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_PORUKE) return 1 + gMobitelPrimljenih[playerid];
     if (gMobitelEkran[playerid] == MOBITEL_POSTAVKE) return 1;
     if (gMobitelEkran[playerid] == MOBITEL_JEZIK) return BROJ_JEZIKA;
+    if (gMobitelEkran[playerid] == MOBITEL_KAMERA) return 2;
     return 0;
 }
 
@@ -310,7 +332,12 @@ static MobitelPrikazi(playerid)
     }
     if (ekran == MOBITEL_ZAUZET)
     {
-        MobitelEkranPoruke(playerid, gMobitelSugovornik[playerid], T(playerid, "Pretplatnik je zauzet."), T(playerid, "Natrag"), "_");
+        MobitelEkranPoruke(playerid, gMobitelSugovornik[playerid], gMobitelPoruka[playerid], T(playerid, "Natrag"), "_");
+        return;
+    }
+    if (ekran == MOBITEL_BIRANJE)
+    {
+        MobitelEkranPoruke(playerid, T(playerid, "Pozivam..."), gMobitelSugovornik[playerid], T(playerid, "Natrag"), "_");
         return;
     }
     if (ekran == MOBITEL_CITAJ)
@@ -355,6 +382,7 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelOpcije[s]));
         else if (ekran == MOBITEL_POSTAVKE) PlayerTextDrawSetString(playerid, td, T(playerid, "Jezik"));
         else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, td, gMobitelJezici[s]);
+        else if (ekran == MOBITEL_KAMERA) PlayerTextDrawSetString(playerid, td, T(playerid, s ? ("Selfie") : ("Fotoaparat")));
         else if (ekran == MOBITEL_PORUKE && s == 0) PlayerTextDrawSetString(playerid, td, T(playerid, "Nova poruka"));
         else if (ekran == MOBITEL_PORUKE)
         {
@@ -426,6 +454,7 @@ static MobitelOtvori(playerid)
 
 MobitelZatvori(playerid)
 {
+    MobitelKameraKraj(playerid);
     if (!gMobitelOtvoren[playerid]) return;
     new drugi = gMobitelDrugi[playerid];
     if (MobitelZvoni(playerid)) PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
@@ -451,7 +480,7 @@ MobitelZatvori(playerid)
 
 static bool:MobitelDostupan(playerid)
 {
-    return gUlogiran[playerid] && !IsRanjen(playerid) && !ImaLisice(playerid) && gMobitelDrugi[playerid] == INVALID_PLAYER_ID && !gMobitelPoziv[playerid];
+    return gUlogiran[playerid] && gInv[playerid][ITEM_MOBITEL] > 0 && !IsRanjen(playerid) && !ImaLisice(playerid) && gMobitelDrugi[playerid] == INVALID_PLAYER_ID && !gMobitelPoziv[playerid];
 }
 
 static MobitelDolazni(playerid, pozivatelj)
@@ -480,16 +509,23 @@ static MobitelNazovi(playerid, const broj[])
     if (!strcmp(broj, MOBITEL_TAKSI_BROJ)) return TaksiPozovi(playerid);
     if (!strcmp(broj, MOBITEL_MEHANICAR_BROJ)) return MehanicarPozovi(playerid);
     new drugi = MobitelIgrac(broj), ime[MOBITEL_IME];
-    if (drugi == INVALID_PLAYER_ID || drugi == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Broj nije u upotrebi."));
     MobitelImeBroja(playerid, broj, ime);
-    if (gMobitelDrugi[drugi] != INVALID_PLAYER_ID || gMobitelPoziv[drugi])
+    strcopy(gMobitelSugovornik[playerid], ime);
+    if (drugi == playerid || (drugi == INVALID_PLAYER_ID && !MobitelBrojZauzet(broj)))
     {
-        strcopy(gMobitelSugovornik[playerid], ime);
+        strcopy(gMobitelPoruka[playerid], T(playerid, "Broj nije u upotrebi."));
         gMobitelEkran[playerid] = MOBITEL_ZAUZET;
         MobitelPrikazi(playerid);
         return 1;
     }
-    if (!MobitelDostupan(drugi)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pretplatnik trenutno nije dostupan."));
+    if (drugi == INVALID_PLAYER_ID || !MobitelDostupan(drugi))
+    {
+        gMobitelEkran[playerid] = MOBITEL_BIRANJE;
+        MobitelPrikazi(playerid);
+        PlayerPlaySound(playerid, MOBITEL_ZVONO, 0.0, 0.0, 0.0);
+        SetTimerEx("MobitelNedostupan", MOBITEL_BIRANJE_MS, false, "ii", playerid, ++gMobitelObavijest[playerid]);
+        return 1;
+    }
     MobitelPoziv(playerid, ime, drugi);
     MobitelDolazni(drugi, playerid);
     MobitelZvono(playerid, ++gMobitelObavijest[playerid]);
@@ -515,6 +551,61 @@ static MobitelOdgovori(playerid)
     MobitelPrikazi(drugi);
 }
 
+forward MobitelNedostupan(playerid, obavijest);
+public MobitelNedostupan(playerid, obavijest)
+{
+    if (!gMobitelOtvoren[playerid] || gMobitelObavijest[playerid] != obavijest || gMobitelEkran[playerid] != MOBITEL_BIRANJE) return;
+    PlayerPlaySound(playerid, 0, 0.0, 0.0, 0.0);
+    strcopy(gMobitelPoruka[playerid], T(playerid, "Korisnik nedostupan."));
+    gMobitelEkran[playerid] = MOBITEL_ZAUZET;
+    MobitelPrikazi(playerid);
+}
+
+static MobitelKamera(playerid, nacin)
+{
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    MobitelZatvori(playerid);
+    gMobitelKamera[playerid] = nacin;
+    if (nacin == MOBITEL_FOTO)
+    {
+        GivePlayerWeapon(playerid, WEAPON_CAMERA, 50);
+        SetPlayerArmedWeapon(playerid, WEAPON_CAMERA);
+        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Fotoaparat: desnom tipkom misa ciljajte, lijevom slikajte. N za izlaz."));
+        return;
+    }
+    new Float:x, Float:y, Float:z, Float:a;
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerFacingAngle(playerid, a);
+    TogglePlayerControllable(playerid, false);
+    SetPlayerAttachedObject(playerid, MOBITEL_SLOT, MOBITEL_MODEL, 6, 0.08, 0.03, -0.02, 180.0, 165.0, -5.0);
+    ApplyAnimation(playerid, "PED", "gun_stand", 4.1, true, false, false, true, 0, SYNC_ALL);
+    SetPlayerCameraPos(playerid, x - floatsin(a, degrees) * 1.1, y + floatcos(a, degrees) * 1.1, z + 0.7);
+    SetPlayerCameraLookAt(playerid, x, y, z + 0.6);
+    SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Selfie: lijevom tipkom misa slikajte. N za izlaz."));
+}
+
+MobitelKameraKraj(playerid)
+{
+    new nacin = gMobitelKamera[playerid];
+    if (!nacin) return;
+    gMobitelKamera[playerid] = 0;
+    if (nacin == MOBITEL_FOTO)
+    {
+        SetPlayerAmmo(playerid, WEAPON_CAMERA, 0);
+        return;
+    }
+    RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
+    ClearAnimations(playerid);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+}
+
+forward MobitelBljesakKraj(playerid);
+public MobitelBljesakKraj(playerid)
+{
+    TextDrawHideForPlayer(playerid, gMobitelBljesak);
+}
+
 forward MobitelIstek(playerid, obavijest);
 public MobitelIstek(playerid, obavijest)
 {
@@ -523,7 +614,7 @@ public MobitelIstek(playerid, obavijest)
 
 static MobitelSms(playerid, const posiljatelj[], const tekst[])
 {
-    if (!gUlogiran[playerid]) return;
+    if (!gUlogiran[playerid] || !gInv[playerid][ITEM_MOBITEL]) return;
     PlayerPlaySound(playerid, MOBITEL_SMS_ZVUK, 0.0, 0.0, 0.0);
     if (!MobitelDostupan(playerid) || (gMobitelOtvoren[playerid] && MobitelUnosEkran(gMobitelEkran[playerid])))
     {
@@ -591,8 +682,21 @@ static MobitelCitaj(playerid, k)
 
 MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
+    new KEY:pritisnuto = newkeys & ~oldkeys;
+    if (gMobitelKamera[playerid])
+    {
+        if (pritisnuto & KEY_NO) MobitelKameraKraj(playerid);
+        else if (gMobitelKamera[playerid] == MOBITEL_SELFIE && (pritisnuto & KEY_FIRE))
+        {
+            PlayerPlaySound(playerid, MOBITEL_KAMERA_ZVUK, 0.0, 0.0, 0.0);
+            TextDrawShowForPlayer(playerid, gMobitelBljesak);
+            SetTimerEx("MobitelBljesakKraj", MOBITEL_BLJESAK_MS, false, "i", playerid);
+        }
+        else return 0;
+        return 1;
+    }
     if (!gMobitelOtvoren[playerid]) return 0;
-    new KEY:pritisnuto = newkeys & ~oldkeys, ekran = gMobitelEkran[playerid];
+    new ekran = gMobitelEkran[playerid];
     if (ekran == MOBITEL_DOLAZNI && (pritisnuto & KEY_YES)) MobitelOdgovori(playerid);
     else if (ekran == MOBITEL_PORUKA && (pritisnuto & KEY_YES))
     {
@@ -707,6 +811,7 @@ static MobitelOdaberi(playerid)
         gMobitelEkran[playerid] = MOBITEL_PORUKE;
         gMobitelOdabir[playerid] = 0;
     }
+    else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
     else if (ekran == MOBITEL_POSTAVKE)
     {
         gMobitelEkran[playerid] = MOBITEL_JEZIK;
@@ -919,6 +1024,7 @@ MobitelEnterVehicle(playerid)
 MobitelDisconnect(playerid)
 {
     MobitelZatvori(playerid);
+    gMobitelKamera[playerid] = 0;
     gMobitelDrugi[playerid] = INVALID_PLAYER_ID;
     gMobitelMoj[playerid][0] = EOS;
     gMobitelOtvoren[playerid] = false;
@@ -926,13 +1032,17 @@ MobitelDisconnect(playerid)
     gMobitelBroj[playerid] = 0;
 }
 
-CMD:mobitel(playerid, params[])
+MobitelPrebaci(playerid)
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid)) return 1;
-    if (gMobitelOtvoren[playerid]) MobitelZatvori(playerid);
+    if (gMobitelKamera[playerid]) MobitelKameraKraj(playerid);
+    else if (gMobitelOtvoren[playerid]) MobitelZatvori(playerid);
+    else if (!gInv[playerid][ITEM_MOBITEL]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate mobitel."));
     else MobitelOtvori(playerid);
     return 1;
 }
+
+CMD:mobitel(playerid, params[]) return MobitelPrebaci(playerid);
 
 CMD:phone(playerid, params[]) return cmd_mobitel(playerid, params);
 CMD:telefon(playerid, params[]) return cmd_mobitel(playerid, params);

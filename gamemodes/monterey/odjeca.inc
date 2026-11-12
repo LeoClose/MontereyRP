@@ -45,6 +45,7 @@ InitOdjeca()
         Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0, \
         Kabina INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, ka REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS store_items (id INTEGER PRIMARY KEY AUTOINCREMENT, store_type INTEGER NOT NULL, store INTEGER NOT NULL, kind INTEGER NOT NULL DEFAULT 0, model INTEGER NOT NULL, amount INTEGER NOT NULL DEFAULT 1, price INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS headwear_fit (account INTEGER NOT NULL, model INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, rx REAL NOT NULL, ry REAL NOT NULL, rz REAL NOT NULL, PRIMARY KEY (account, model))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_style (account INTEGER PRIMARY KEY, skin INTEGER NOT NULL DEFAULT -1, \
         kapa INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, krx REAL NOT NULL DEFAULT 0, kry REAL NOT NULL DEFAULT 0, krz REAL NOT NULL DEFAULT 0, \
         frizura INTEGER NOT NULL DEFAULT 0, fx REAL NOT NULL DEFAULT 0, fy REAL NOT NULL DEFAULT 0, fz REAL NOT NULL DEFAULT 0, frx REAL NOT NULL DEFAULT 0, fry REAL NOT NULL DEFAULT 0, frz REAL NOT NULL DEFAULT 0)"));
@@ -235,6 +236,63 @@ OdjecaPrijava(playerid)
         }
     }
     DB_FreeResultSet(res);
+    new kapa = gOdjecaNosi[playerid][0][pkModel], item = OdjecaPredmetModela(kapa);
+    if (kapa && (item == -1 || !gInv[playerid][item])) gOdjecaNosi[playerid][0][pkModel] = 0;
+}
+
+OdjecaPredmetModela(model)
+{
+    for (new item = ITEM_NAOCALE1; item <= ITEM_KAPA3; item++) if (gItems[item][ITEM_MODEL] == model) return item;
+    return -1;
+}
+
+static OdjecaNosiKapu(playerid, model)
+{
+    new bool:namjesteno = false;
+    gOdjecaNosi[playerid][0][pkModel] = model;
+    gOdjecaNosi[playerid][0][pkX] = 0.1;
+    gOdjecaNosi[playerid][0][pkY] = 0.0;
+    gOdjecaNosi[playerid][0][pkZ] = 0.0;
+    gOdjecaNosi[playerid][0][pkRx] = 0.0;
+    gOdjecaNosi[playerid][0][pkRy] = 0.0;
+    gOdjecaNosi[playerid][0][pkRz] = 0.0;
+    if (model)
+    {
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, rx, ry, rz FROM headwear_fit WHERE account = %d AND model = %d", gAccountId[playerid], model);
+        if (DB_GetRowCount(res))
+        {
+            namjesteno = true;
+            gOdjecaNosi[playerid][0][pkX] = DB_GetFieldFloat(res, 0);
+            gOdjecaNosi[playerid][0][pkY] = DB_GetFieldFloat(res, 1);
+            gOdjecaNosi[playerid][0][pkZ] = DB_GetFieldFloat(res, 2);
+            gOdjecaNosi[playerid][0][pkRx] = DB_GetFieldFloat(res, 3);
+            gOdjecaNosi[playerid][0][pkRy] = DB_GetFieldFloat(res, 4);
+            gOdjecaNosi[playerid][0][pkRz] = DB_GetFieldFloat(res, 5);
+        }
+        DB_FreeResultSet(res);
+    }
+    OdjecaSpremi(playerid);
+    OdjecaObuci(playerid);
+    if (!model || namjesteno) return;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Namjestite ga i spremite (ikona diskete)."));
+    EditAttachedObject(playerid, ODJECA_SLOT_KAPA);
+}
+
+OdjecaKapaPredmet(playerid, item)
+{
+    new model = gItems[item][ITEM_MODEL];
+    if (gOdjecaNosi[playerid][0][pkModel] == model)
+    {
+        OdjecaNosiKapu(playerid, 0);
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Skinuli ste: %s."), T(playerid, gItems[item][ITEM_NAME]));
+    }
+    OdjecaNosiKapu(playerid, model);
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stavili ste: %s."), T(playerid, gItems[item][ITEM_NAME]));
+}
+
+OdjecaPredmetNestao(playerid, item)
+{
+    if (gOdjecaNosi[playerid][0][pkModel] == gItems[item][ITEM_MODEL]) OdjecaNosiKapu(playerid, 0);
 }
 
 static PlayerText:OdjecaGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true)
@@ -326,38 +384,53 @@ OdjecaZatvori(playerid)
 
 static OdjecaKupi(playerid)
 {
-    new vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(gOdjecaU[playerid] - 1, vrsta);
+    new s = gOdjecaU[playerid] - 1, vrsta = gOdjecaVrsta[playerid], broj = OdjecaBrojVrste(s, vrsta);
     if (!broj) return;
-    new a = OdjecaArtikl(gOdjecaU[playerid] - 1, vrsta, gOdjecaIdx[playerid]), cijena = a == -1 ? 0 : gOdjArtikl[gOdjecaU[playerid] - 1][a][2];
-    if (!DajNovac(playerid, -cijena))
+    new a = OdjecaArtikl(s, vrsta, gOdjecaIdx[playerid]), cijena = a == -1 ? 0 : gOdjArtikl[s][a][2], model = a == -1 ? 0 : gOdjArtikl[s][a][1];
+    if (gNovac[playerid] < cijena)
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
         return;
     }
+    if (vrsta == ODJ_KAPA && model)
+    {
+        new item = OdjecaPredmetModela(model);
+        if (item == -1 || !GiveItem(playerid, item, 1))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
+            return;
+        }
+    }
+    DajNovac(playerid, -cijena);
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
-    new s = gOdjecaU[playerid] - 1;
     if (vrsta == ODJ_FRIZURA && gOdj[s][odImaAktor]) ApplyActorAnimation(gOdj[s][odAktor], "HAIRCUTS", "BRB_Cut", 4.1, true, false, false, false, ODJECA_SISANJE_MS);
     if (vrsta == ODJ_SKIN)
     {
-        gOdjecaNosiSkin[playerid] = gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
-        if (gOrgSkin[playerid] < 0) gOdjecaStariSkin[playerid] = gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
+        gOdjecaNosiSkin[playerid] = model;
+        if (gOrgSkin[playerid] < 0) gOdjecaStariSkin[playerid] = model;
         OdjecaSpremi(playerid);
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste novu odjecu ($%d)."), cijena);
         return;
     }
-    new i = vrsta - 1;
-    gOdjecaNosi[playerid][i][pkModel] = a == -1 ? 0 : gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
-    gOdjecaNosi[playerid][i][pkX] = 0.1;
-    gOdjecaNosi[playerid][i][pkY] = 0.0;
-    gOdjecaNosi[playerid][i][pkZ] = 0.0;
-    gOdjecaNosi[playerid][i][pkRx] = 0.0;
-    gOdjecaNosi[playerid][i][pkRy] = 0.0;
-    gOdjecaNosi[playerid][i][pkRz] = 0.0;
-    OdjecaSpremi(playerid);
     OdjecaZatvori(playerid);
-    if (a == -1) return;
+    if (vrsta == ODJ_KAPA)
+    {
+        OdjecaNosiKapu(playerid, model);
+        if (model) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste novu odjecu ($%d)."), cijena);
+        return;
+    }
+    gOdjecaNosi[playerid][1][pkModel] = model;
+    gOdjecaNosi[playerid][1][pkX] = 0.1;
+    gOdjecaNosi[playerid][1][pkY] = 0.0;
+    gOdjecaNosi[playerid][1][pkZ] = 0.0;
+    gOdjecaNosi[playerid][1][pkRx] = 0.0;
+    gOdjecaNosi[playerid][1][pkRy] = 0.0;
+    gOdjecaNosi[playerid][1][pkRz] = 0.0;
+    OdjecaSpremi(playerid);
+    OdjecaObuci(playerid);
+    if (!model) return;
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d). Namjestite ga i spremite (ikona diskete)."), T(playerid, gOdjecaVrste[vrsta]), cijena);
-    EditAttachedObject(playerid, i ? ODJECA_SLOT_FRIZURA : ODJECA_SLOT_KAPA);
+    EditAttachedObject(playerid, ODJECA_SLOT_FRIZURA);
 }
 
 OdjecaKlik(playerid, PlayerText:td)
@@ -420,6 +493,7 @@ public OnPlayerEditAttachedObject(playerid, EDIT_RESPONSE:response, index, model
         gOdjecaNosi[playerid][i][pkRy] = fRotY;
         gOdjecaNosi[playerid][i][pkRz] = fRotZ;
         OdjecaSpremi(playerid);
+        if (!i) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO headwear_fit (account, model, x, y, z, rx, ry, rz) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)", gAccountId[playerid], modelid, fOffsetX, fOffsetY, fOffsetZ, fRotX, fRotY, fRotZ));
     }
     OdjecaObuci(playerid);
     return 1;
@@ -588,7 +662,7 @@ DLG:apanel_odjeca_unos(playerid, response, const inputtext[])
         return ShowOdjecaKatalog(playerid);
     }
     new vrsta = strval(p1), model = strval(p2), cijena = strval(p3);
-    if (vrsta > ODJ_FRIZURA || !OdjecaVrstaUTrgovini(s, vrsta) || (vrsta == ODJ_SKIN ? (model > 311 || model == 74) : model < 300) || cijena > 1000000 || gOdjArtikala[s] >= ODJECA_ARTIKALA)
+    if (vrsta > ODJ_FRIZURA || !OdjecaVrstaUTrgovini(s, vrsta) || (vrsta == ODJ_SKIN ? (model > 311 || model == 74) : model < 300) || (vrsta == ODJ_KAPA && OdjecaPredmetModela(model) == -1) || cijena > 1000000 || gOdjArtikala[s] >= ODJECA_ARTIKALA)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravan artikl."));
     else
     {

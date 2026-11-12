@@ -1193,12 +1193,16 @@ RanjenSpawn(playerid)
     gRanjenPogoci[playerid] = 0;
     SetPlayerInterior(playerid, gRanjenInt[playerid]);
     SetPlayerVirtualWorld(playerid, gRanjenSvijet[playerid]);
+    new Float:hx, Float:hy, Float:hz;
+    if (!gRanjenInt[playerid] && !gRanjenSvijet[playerid] && Kolizija_Zraka(gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2] + 1.0, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2] - 300.0, hx, hy, hz))
+        gRanjenPos[playerid][2] = hz + 1.0;
     SetPlayerPos(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]);
     SetPlayerFacingAngle(playerid, gRanjenPos[playerid][3]);
     SetPlayerHealth(playerid, FLOAT_INFINITY);
     TogglePlayerControllable(playerid, false);
+    ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0, SYNC_ALL);
     gRanjenAnimId[playerid] = -2;
-    SetTimerEx("RanjenAnim", 500, false, "ii", playerid, gAccountId[playerid]);
+    SetTimerEx("RanjenAnim", 200, false, "ii", playerid, gAccountId[playerid]);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Ranjeni ste. Za 10 s mozete /odustani ili cekajte hitnu."));
     if (prvi && !gRanjenInt[playerid] && !gRanjenSvijet[playerid]) SlucajNovi(ORG_MEDICINSKA, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2], playerid);
 }

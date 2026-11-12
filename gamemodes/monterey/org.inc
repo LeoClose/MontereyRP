@@ -725,6 +725,11 @@ bool:HqUlazIzlaz(playerid)
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate pristup ovom HQ-u."));
             return true;
         }
+        if (GetWanted(playerid))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Trazeni ste i ne mozete uci u HQ."));
+            return true;
+        }
         SetPlayerInterior(playerid, gHq[i][hInt]);
         SetPlayerVirtualWorld(playerid, HQ_SVIJET + org);
         SetPlayerPos(playerid, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz]);
