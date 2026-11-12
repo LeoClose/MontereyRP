@@ -26,6 +26,7 @@
 #define MEHANICAR_POPRAVAK  150
 #define MEHANICAR_GUME      100
 #define BOLNICA_SPAWN_CIJENA 500
+#define BOLNICA_CRNO_MS     1000
 #define MEHANICAR_ODVOZ     2500
 #define MEHANICAR_ODVOZ_MS  20000
 #define MEHANICAR_ODVOZ_SVIJET 9900
@@ -1384,6 +1385,15 @@ RanjenPrimijeni(playerid, bool:spasen)
     }
     SendClientMessage(playerid, COLOR_INFO, dozvola ? T(playerid, "Izgubili ste drogu.") : T(playerid, "Izgubili ste drogu i oruzje (nemate dozvolu za oruzje)."));
     gRanjenBolnica[playerid] = true;
+    TogglePlayerControllable(playerid, false);
+    Fade(playerid, 0);
+    SetTimerEx("RanjenUmri", FADE_SLOJEVA * FADE_KORAK_MS + BOLNICA_CRNO_MS, false, "ii", playerid, gAccountId[playerid]);
+}
+
+forward RanjenUmri(playerid, racun);
+public RanjenUmri(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
     SpawnPlayer(playerid);
 }
 
@@ -1397,6 +1407,8 @@ RanjenBolnica(playerid)
     SetPlayerPos(playerid, gBolnice[b][0], gBolnice[b][1], gBolnice[b][2]);
     SetPlayerFacingAngle(playerid, gBolnice[b][3]);
     SetCameraBehindPlayer(playerid);
+    TogglePlayerControllable(playerid, true);
+    Fade(playerid, FADE_SLOJEVA + 1);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Probudili ste se u bolnici."));
     if (!gPremium[playerid]) return;
     new body[128];
@@ -1408,13 +1420,24 @@ DLG:bolnica(playerid, response, listitem)
 {
     if (!response || listitem != 1 || !gPremium[playerid] || IsRanjen(playerid)) return 1;
     if (!DajNovac(playerid, -BOLNICA_SPAWN_CIJENA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    TogglePlayerControllable(playerid, false);
+    Fade(playerid, 0);
+    SetTimerEx("BolnicaPrebaci", FADE_SLOJEVA * FADE_KORAK_MS + BOLNICA_CRNO_MS, false, "ii", playerid, gAccountId[playerid]);
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BOLNICA_SPAWN_CIJENA);
+}
+
+forward BolnicaPrebaci(playerid, racun);
+public BolnicaPrebaci(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
     SetPlayerFacingAngle(playerid, SPAWN_A);
     SetCameraBehindPlayer(playerid);
     KucaSpawn(playerid);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BOLNICA_SPAWN_CIJENA);
+    TogglePlayerControllable(playerid, true);
+    Fade(playerid, FADE_SLOJEVA + 1);
 }
 
 RanjenZavrsi(playerid, bool:spasen, ko = INVALID_PLAYER_ID)

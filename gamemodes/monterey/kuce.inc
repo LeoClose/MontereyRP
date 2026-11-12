@@ -78,6 +78,13 @@ static KucaZadaniInt(vel, cijena)
 
 static KuceUvezi()
 {
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS server_flags (name TEXT PRIMARY KEY)"));
+    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT (SELECT COUNT(*) FROM server_flags WHERE name = 'kuce_uvoz'), (SELECT COUNT(*) FROM houses)");
+    new bool:uvezeno = DB_GetFieldInt(zastava, 0) > 0, bool:imaKuca = DB_GetFieldInt(zastava, 1) > 0;
+    DB_FreeResultSet(zastava);
+    if (uvezeno) return;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('kuce_uvoz')"));
+    if (imaKuca) return;
     new DB:izvor = DB_Open("kuce.db");
     if (!izvor) return;
     new DBResult:res = DB_ExecuteQuery(izvor, "SELECT x, y, z, model, price, size FROM houses ORDER BY id");

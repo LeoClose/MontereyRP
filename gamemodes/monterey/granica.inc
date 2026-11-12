@@ -31,13 +31,9 @@ static GranicaPutnici(v, korak)
 static GranicaVrati(playerid)
 {
     new v = GetPlayerVehicleID(playerid);
-    if (!v)
-    {
-        GranicaPostavi(playerid, 0);
-        return;
-    }
     gGranicaVraca[playerid] = true;
-    GranicaPutnici(v, 0);
+    if (v) GranicaPutnici(v, 0);
+    else Fade(playerid, 0);
     SetTimerEx("GranicaVozilo", FADE_SLOJEVA * FADE_KORAK_MS, false, "iii", playerid, gAccountId[playerid], v);
 }
 
@@ -45,6 +41,13 @@ forward GranicaVozilo(playerid, racun, v);
 public GranicaVozilo(playerid, racun, v)
 {
     if (gAccountId[playerid] == racun) gGranicaVraca[playerid] = false;
+    if (!v)
+    {
+        if (gAccountId[playerid] != racun) return;
+        GranicaPostavi(playerid, 0);
+        Fade(playerid, FADE_SLOJEVA + 1);
+        return;
+    }
     if (!GetVehicleModel(v)) return;
     if (gAccountId[playerid] == racun && GetPlayerVehicleID(playerid) == v) GranicaPostavi(playerid, v);
     GranicaPutnici(v, FADE_SLOJEVA + 1);
