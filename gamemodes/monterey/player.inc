@@ -22,6 +22,7 @@ public OnPlayerConnect(playerid)
     AdminConnect(playerid);
     JezikConnect(playerid);
     OrgConnect(playerid);
+    StatsConnect(playerid);
     NovacConnect(playerid);
     InventarConnect(playerid);
     OruzjeConnect(playerid);
@@ -57,6 +58,7 @@ public OnPlayerDisconnect(playerid, reason)
     KucaDisconnect(playerid);
     MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
+    StatsDisconnect(playerid);
     gUlogiran[playerid] = false;
     AdminDisconnect(playerid);
     return 1;
@@ -199,6 +201,7 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /locate [id/ime] (pracenje na karti)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ostalo: /admini"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Statistika: /stats"));
     if (gAdmin[playerid]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Admin: /ahelp"));
     return 1;
 }
