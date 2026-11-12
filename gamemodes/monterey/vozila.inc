@@ -1232,8 +1232,8 @@ ImaKljuc(playerid, v)
 {
     new vlasnik = VlasnikVozila(v);
     if (vlasnik == VLASNIK_PIJACA) return gAdmin[playerid] >= ALVL_ORG;
-    if (vlasnik) return vlasnik == gAccountId[playerid] || gVoziloUkradeno[v] || gAdmin[playerid] >= ALVL_ORG;
-    return !gOrgVehOrg[v] || gOrgVehOrg[v] == gOrg[playerid] || gVoziloUkradeno[v] || gAdmin[playerid] >= ALVL_ORG;
+    if (vlasnik) return vlasnik == gAccountId[playerid] || gVoziloUkradeno[v];
+    return !gOrgVehOrg[v] || gOrgVehOrg[v] == gOrg[playerid] || gVoziloUkradeno[v];
 }
 
 VoziloVozac(playerid)
@@ -1245,6 +1245,7 @@ VoziloVozac(playerid)
         if (!BezMotora(GetVehicleModel(v)) && VoziloGet(v, VP_MOTOR) != 1) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Upalite motor tipkom 2 ili naredbom /motor."));
         return;
     }
+    if (MozeKljuc(v) && VoziloGet(v, VP_MOTOR) == 1) return;
     if (!MozeKljuc(v))
     {
         RemovePlayerFromVehicle(playerid);

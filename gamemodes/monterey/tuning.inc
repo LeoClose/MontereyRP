@@ -34,6 +34,7 @@
 #define TUNING_NATPIS_MAX   150
 #define TUNING_ISKRE_TRAJE  900
 #define TUNING_ISKRE_FX_Z   1.611
+#define TUNING_ISKRE_KRECE  0.03
 #define TUNING_ISKRE_OBJEKT 18702
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
@@ -606,7 +607,9 @@ TuningVozac(v)
         gTunZdravlje[v] = h;
     }
     new sad = GetTickCount();
-    if (gTunMotor[v] >= TUNING_ISKRE_STUPANJ && sad - gTunIskreMs[v] >= 0)
+    new Float:vx, Float:vy, Float:vz;
+    GetVehicleVelocity(v, vx, vy, vz);
+    if (gTunMotor[v] >= TUNING_ISKRE_STUPANJ && sad - gTunIskreMs[v] >= 0 && VectorSize(vx, vy, 0.0) >= TUNING_ISKRE_KRECE)
     {
         if (random(100) < TUNING_ISKRE_SANSA)
         {
