@@ -1,8 +1,8 @@
 #define LOGIN_TD          8
-#define LOGIN_SIRINA      300.0
-#define LOGIN_X           170.0
-#define LOGIN_Y           100.0
-#define LOGIN_KUTIJA_H    150.0
+#define LOGIN_SIRINA      250.0
+#define LOGIN_X           195.0
+#define LOGIN_Y           110.0
+#define LOGIN_KUTIJA_H    120.0
 
 enum { LTD_NASLOV, LTD_STATISTIKA }
 
@@ -48,8 +48,8 @@ LoginEkran(playerid, const naslov[])
         gLogin[playerid][LTD_NASLOV] = LoginTekst(playerid, sredina, LOGIN_Y + 6.0, "_", 0xFFFFFFFF, 0.7, 2.8, TEXT_DRAW_FONT_3);
         LoginKutija(playerid, LOGIN_X, LOGIN_Y + 40.0, LOGIN_SIRINA, 14.0, 0x000000F0);
         LoginTekst(playerid, sredina, LOGIN_Y + 42.0, ime, 0x5B8DBFFF, 0.2, 1.0, TEXT_DRAW_FONT_2);
-        LoginKutija(playerid, LOGIN_X, LOGIN_Y + 54.0, LOGIN_SIRINA, LOGIN_KUTIJA_H, 0x000000B4);
-        LoginKutija(playerid, LOGIN_X, LOGIN_Y + 58.0 + LOGIN_KUTIJA_H, LOGIN_SIRINA, 34.0, 0x000000D2);
+        LoginKutija(playerid, LOGIN_X, LOGIN_Y + 54.0, LOGIN_SIRINA, LOGIN_KUTIJA_H, 0x0F2D54C8);
+        LoginKutija(playerid, LOGIN_X, LOGIN_Y + 58.0 + LOGIN_KUTIJA_H, LOGIN_SIRINA, 34.0, 0x1E5AA8F0);
         gLogin[playerid][LTD_STATISTIKA] = LoginTekst(playerid, sredina, LOGIN_Y + 62.0 + LOGIN_KUTIJA_H, "_", 0xFFFFFFFF, 0.18, 0.9, TEXT_DRAW_FONT_1);
     }
     new registrirano, admina = 0, igraca = 0, DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM accounts");
