@@ -15,6 +15,7 @@
 #pragma dynamic 32768
 
 new Text:Ime;
+new Text:ImeRp;
 new Text:datum;
 
 new gVozila[MAX_VEHICLES], gVoziloMjesto[MAX_VEHICLES], gVozilaCount;
@@ -152,15 +153,27 @@ public OnGameModeInit()
     InitVlakovi();
     SetTimer("Sekunda", 1000, true);
 
-    Ime = TextDrawCreate(578.0, 24.0, "Monterey");
-    TextDrawLetterSize(Ime, 0.4, 1.6);
-    TextDrawTextSize(Ime, 64.0, 64.0);
+    Ime = TextDrawCreate(578.0, 14.0, "Monterey");
+    TextDrawFont(Ime, TEXT_DRAW_FONT_3);
+    TextDrawLetterSize(Ime, 0.5, 2.0);
     TextDrawAlignment(Ime, TEXT_DRAW_ALIGN_CENTRE);
-    TextDrawColour(Ime, 0x4168DFFF);
+    TextDrawColour(Ime, 0x1E5AA8FF);
     TextDrawSetShadow(Ime, 0);
     TextDrawSetOutline(Ime, 1);
+    TextDrawBackgroundColour(Ime, 0x000000FF);
+    TextDrawSetProportional(Ime, true);
 
-    datum = TextDrawCreate(578.0, 40.0, "12/12/2012");
+    ImeRp = TextDrawCreate(618.0, 31.0, "RolePlay");
+    TextDrawFont(ImeRp, TEXT_DRAW_FONT_1);
+    TextDrawLetterSize(ImeRp, 0.22, 1.0);
+    TextDrawAlignment(ImeRp, TEXT_DRAW_ALIGN_RIGHT);
+    TextDrawColour(ImeRp, 0xFFFFFFFF);
+    TextDrawSetShadow(ImeRp, 0);
+    TextDrawSetOutline(ImeRp, 1);
+    TextDrawBackgroundColour(ImeRp, 0x000000FF);
+    TextDrawSetProportional(ImeRp, true);
+
+    datum = TextDrawCreate(578.0, 44.0, "12/12/2012");
     TextDrawLetterSize(datum, 0.2, 1.0);
     TextDrawTextSize(datum, 600.0, 600.0);
     TextDrawAlignment(datum, TEXT_DRAW_ALIGN_CENTRE);
@@ -345,8 +358,13 @@ NevazecaLozinka(playerid)
 ZavrsiLogin(playerid)
 {
     if (!UcitajJezik(playerid)) return PokaziJezike(playerid);
+    LoginUlaz(playerid);
+    return 1;
+}
+
+ZavrsiUlaz(playerid)
+{
     gUlogiran[playerid] = true;
-    LoginTdSakrij(playerid);
     if (!StatsLoad(playerid)) return 0;
     LoadAdmina(playerid);
     UcitajClana(playerid);
@@ -390,12 +408,14 @@ KickTimer(playerid)
 stock ShowHud(playerid)
 {
     TextDrawShowForPlayer(playerid, Ime);
+    TextDrawShowForPlayer(playerid, ImeRp);
     TextDrawShowForPlayer(playerid, datum);
 }
 
 stock HideHud(playerid)
 {
     TextDrawHideForPlayer(playerid, Ime);
+    TextDrawHideForPlayer(playerid, ImeRp);
     TextDrawHideForPlayer(playerid, datum);
 }
 

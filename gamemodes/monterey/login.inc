@@ -1,6 +1,7 @@
 #define LOGIN_TD          12
 #define LOGIN_PANEL       170.0
-#define LOGIN_SREDINA     85.0
+#define LOGIN_X           470.0
+#define LOGIN_SREDINA     555.0
 #define LOGIN_KADAR_MS    14000
 #define LOGIN_KADROVA     4
 
@@ -13,7 +14,9 @@ static const Float:gLoginKadar[LOGIN_KADROVA][9] = {
     { 280.0, -1880.0, 45.0, 440.0, -1930.0, 45.0, 370.0, -2050.0, 10.0 }
 };
 
-static PlayerText:gLoginTd[MAX_PLAYERS][LOGIN_TD], gLoginBroj[MAX_PLAYERS], PlayerText:gLogin[MAX_PLAYERS][3], bool:gLoginIma[MAX_PLAYERS], gLoginToken[MAX_PLAYERS], gLoginKadarBr[MAX_PLAYERS];
+static const gLoginMuzika[] = "";
+
+static bool:gLoginFade[MAX_PLAYERS], PlayerText:gLoginTd[MAX_PLAYERS][LOGIN_TD], gLoginBroj[MAX_PLAYERS], PlayerText:gLogin[MAX_PLAYERS][3], bool:gLoginIma[MAX_PLAYERS], gLoginToken[MAX_PLAYERS], gLoginKadarBr[MAX_PLAYERS];
 
 static PlayerText:LoginKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
@@ -54,17 +57,18 @@ LoginEkran(playerid, const naslov[], const podnaslov[])
         for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
         gLoginIma[playerid] = true;
         gLoginBroj[playerid] = 0;
-        LoginKutija(playerid, 0.0, 0.0, LOGIN_PANEL, 448.0, 0x000000C8);
-        LoginKutija(playerid, LOGIN_PANEL, 0.0, 2.0, 448.0, 0x1E5AA8FF);
+        LoginKutija(playerid, LOGIN_X, 0.0, LOGIN_PANEL, 448.0, 0x000000C8);
+        LoginKutija(playerid, LOGIN_X - 2.0, 0.0, 2.0, 448.0, 0x1E5AA8FF);
         LoginTekst(playerid, 70.0, "MONTEREY", 0xFFFFFFFF, 0.55, 2.4, TEXT_DRAW_FONT_3);
         LoginTekst(playerid, 96.0, "ROLEPLAY", 0x1E5AA8FF, 0.3, 1.3, TEXT_DRAW_FONT_2);
-        LoginKutija(playerid, 45.0, 114.0, 80.0, 1.5, 0x1E5AA8FF);
+        LoginKutija(playerid, LOGIN_SREDINA - 40.0, 114.0, 80.0, 1.5, 0x1E5AA8FF);
         gLogin[playerid][LTD_NASLOV] = LoginTekst(playerid, 160.0, "_", 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_2);
         LoginTekst(playerid, 176.0, ime, 0x5B9BE6FF, 0.3, 1.4, TEXT_DRAW_FONT_1);
         gLogin[playerid][LTD_PODNASLOV] = LoginTekst(playerid, 200.0, "_", 0xBBBBBBFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-        LoginKutija(playerid, 30.0, 372.0, 110.0, 1.0, 0xFFFFFF40);
+        LoginKutija(playerid, LOGIN_SREDINA - 55.0, 372.0, 110.0, 1.0, 0xFFFFFF40);
         gLogin[playerid][LTD_STATISTIKA] = LoginTekst(playerid, 380.0, "_", 0xCCCCCCFF, 0.18, 0.9, TEXT_DRAW_FONT_1);
         gLoginKadarBr[playerid] = random(LOGIN_KADROVA);
+        if (gLoginMuzika[0]) PlayAudioStreamForPlayer(playerid, gLoginMuzika);
         SetTimerEx("LoginKamera", 300, false, "ii", playerid, ++gLoginToken[playerid]);
     }
     new registrirano, admina = 0, igraca = 0, DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM accounts");
@@ -95,6 +99,29 @@ public LoginKamera(playerid, token)
     SetTimerEx("LoginKamera", LOGIN_KADAR_MS, false, "ii", playerid, token);
 }
 
+LoginUlaz(playerid)
+{
+    LoginTdSakrij(playerid);
+    if (gLoginMuzika[0]) StopAudioStreamForPlayer(playerid);
+    gLoginFade[playerid] = true;
+    Fade(playerid, 0);
+    SetTimerEx("LoginUlazKraj", FADE_SLOJEVA * FADE_KORAK_MS + 300, false, "ii", playerid, gAccountId[playerid]);
+}
+
+forward LoginUlazKraj(playerid, racun);
+public LoginUlazKraj(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    ZavrsiUlaz(playerid);
+}
+
+LoginSpawn(playerid)
+{
+    if (!gLoginFade[playerid]) return;
+    gLoginFade[playerid] = false;
+    Fade(playerid, FADE_SLOJEVA + 1);
+}
+
 LoginTdSakrij(playerid)
 {
     if (!gLoginIma[playerid]) return;
@@ -106,6 +133,7 @@ LoginTdSakrij(playerid)
 
 LoginDisconnect(playerid)
 {
+    gLoginFade[playerid] = false;
     gLoginIma[playerid] = false;
     gLoginToken[playerid]++;
     gLoginBroj[playerid] = 0;

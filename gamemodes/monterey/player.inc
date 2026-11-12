@@ -90,6 +90,7 @@ public OnPlayerSpawn(playerid)
 {
     if (IsPlayerNPC(playerid)) return 1;
     ShowHud(playerid);
+    LoginSpawn(playerid);
     StetaSpawn(playerid);
     SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
     SetPlayerInterior(playerid, 0);
