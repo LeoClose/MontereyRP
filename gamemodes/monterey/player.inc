@@ -174,6 +174,21 @@ public OnPlayerUpdate(playerid)
     return 1;
 }
 
+public OnPlayerCommandText(playerid, cmdtext[])
+{
+    new cmd[32] = "cmd_", pos = 1, len = 4;
+    while (cmdtext[pos] && cmdtext[pos] != ' ')
+    {
+        if (len >= sizeof cmd - 1)
+            return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Komanda ne postoji, /help za spisak svih komandi"));
+        cmd[len++] = tolower(cmdtext[pos++]);
+    }
+    cmd[len] = EOS;
+    while (cmdtext[pos] == ' ') pos++;
+    if (len > 4 && funcidx(cmd) != -1 && CallLocalFunction(cmd, "is", playerid, cmdtext[pos])) return 1;
+    return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Komanda ne postoji, /help za spisak svih komandi"));
+}
+
 CMD:help(playerid, params[])
 {
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Komande:"));

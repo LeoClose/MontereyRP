@@ -1040,7 +1040,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Ne mozete koristiti jetpack dok ste ranjeni ili imate lisice.", "You cannot use a jetpack while injured or handcuffed.", "Нельзя использовать джетпак, пока вы ранены или в наручниках.", "No puedes usar el jetpack si estas herido o esposado.", "Yaraliyken veya kelepceliyken jetpack kullanamazsiniz." },
     { "  /afix - popravi vozilo u kojem se nalazis", "  /afix - repair the vehicle you are in", "  /afix - починить транспорт, в котором вы находитесь", "  /afix - reparar el vehiculo en el que estas", "  /afix - icinde oldugun araci tamir et" },
     { "Vozilo nije moguce popraviti.", "The vehicle could not be repaired.", "Не удалось починить транспорт.", "No se pudo reparar el vehiculo.", "Arac tamir edilemedi." },
-    { "Vozilo je popravljeno.", "The vehicle has been repaired.", "Транспорт отремонтирован.", "El vehiculo ha sido reparado.", "Arac tamir edildi." }
+    { "Vozilo je popravljeno.", "The vehicle has been repaired.", "Транспорт отремонтирован.", "El vehiculo ha sido reparado.", "Arac tamir edildi." },
+    { "Komanda ne postoji, /help za spisak svih komandi", "Unknown command, use /help for a list of commands", "Команда не существует, /help для списка команд", "El comando no existe, usa /help para ver los comandos", "Komut bulunamadi, komut listesi icin /help kullanin" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
