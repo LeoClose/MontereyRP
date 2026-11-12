@@ -1076,7 +1076,7 @@ static bool:VoziloPrebrzo(playerid, v, Float:vx, Float:vy)
 {
     new model = GetVehicleModel(v);
     if (model < 400 || model > 611 || Leti(model)) return false;
-    new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), najvise = gVoziloBrzina[model - 400];
+    new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), najvise = gVoziloBrzina[model - 400] * (100 + 8 * TuningMotor(v)) / 100;
     if (float(kmh) <= float(najvise) * VOZILO_BRZINA_PUTA + VOZILO_BRZINA_VISE) return false;
     SetVehicleToRespawn(v);
     SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo je vraceno: islo je brze nego sto moze."));
@@ -1091,6 +1091,17 @@ VoziloUpdate(playerid)
     new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
     GetVehicleVelocity(v, vx, vy, vz);
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
+    new razina = TuningMotor(v), model = GetVehicleModel(v);
+    if (razina && model >= 400 && model <= 611)
+    {
+        new KEY:tipke, gore, strana, Float:kmh = VectorSize(vx, vy, 0.0) * 180.0;
+        GetPlayerKeys(playerid, tipke, gore, strana);
+        if ((tipke & KEY_SPRINT) && kmh > 10.0 && kmh < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)))
+        {
+            new Float:pojacanje = 1.0 + 0.0015 * float(razina);
+            SetVehicleVelocity(v, vx * pojacanje, vy * pojacanje, vz);
+        }
+    }
     new Float:brzina = VectorSize(vx, vy, vz), Float:pad = gVoziloZadnja[v] - brzina;
     gVoziloZadnja[v] = brzina;
     if (pad < VOZILO_SUDAR_PAD) return;

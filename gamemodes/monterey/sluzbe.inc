@@ -24,6 +24,7 @@
 #define MEHANICAR_CEKA_S    60
 #define MEHANICAR_GORIVO    50
 #define MEHANICAR_POPRAVAK  150
+#define MEHANICAR_GUME      100
 #define MEHANICAR_SLEPANJE  250
 #define RADIONICA_X         1207.18
 #define RADIONICA_Y         -981.57
@@ -32,8 +33,7 @@
 #define MEHANICAR_SLEPANJE_S 300
 #define MEHANICAR_ODGOVOR_MS 2000
 #define MEHANICAR_RAD_MS    6000
-#define MEHANICAR_VUCA_MS   100
-#define MEHANICAR_RAZMAK    0.6
+#define MEHANICAR_VUCA_MS   1000
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -647,6 +647,7 @@ static SlucajSlepaj(s)
     }
     gSlucaj[s][slStanje] = SL_ODLAZI;
     gSlucaj[s][slRok] = MEHANICAR_SLEPANJE_S;
+    AttachTrailerToVehicle(v, kamion);
     gSlucaj[s][slVuci] = SetTimerEx("SlucajVuci", MEHANICAR_VUCA_MS, true, "i", s);
     SlucajVozi(s);
 }
@@ -655,6 +656,8 @@ static SlucajOtkaci(s)
 {
     if (gSlucaj[s][slVuci]) KillTimer(gSlucaj[s][slVuci]);
     gSlucaj[s][slVuci] = 0;
+    new kamion = gSlucaj[s][slVozilo];
+    if (kamion && IsTrailerAttachedToVehicle(kamion)) DetachTrailerFromVehicle(kamion);
 }
 
 forward SlucajVuci(s);
@@ -666,16 +669,10 @@ public SlucajVuci(s)
         SlucajOtkaci(s);
         return;
     }
-    new v = gMehanicarVozilo[p], Float:x, Float:y, Float:z, Float:a, Float:vx, Float:vy, Float:vz, Float:kx, Float:ky, Float:kz, Float:ox, Float:oy, Float:oz;
-    GetVehiclePos(kamion, x, y, z);
-    GetVehicleZAngle(kamion, a);
-    GetVehicleVelocity(kamion, vx, vy, vz);
-    GetVehicleModelInfo(GetVehicleModel(kamion), VEHICLE_MODEL_INFO_SIZE, kx, ky, kz);
-    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, ox, oy, oz);
-    new Float:razmak = (ky + oy) / 2.0 + MEHANICAR_RAZMAK;
-    SetVehiclePos(v, x + floatsin(a, degrees) * razmak, y - floatcos(a, degrees) * razmak, z);
-    SetVehicleZAngle(v, a);
-    SetVehicleVelocity(v, vx, vy, vz);
+    new v = gMehanicarVozilo[p];
+    if (GetVehicleTrailer(kamion) == v) return;
+    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+    AttachTrailerToVehicle(v, kamion);
 }
 
 static SlucajIstovari(s)
@@ -994,13 +991,13 @@ static MehanicarPonudi(playerid, s)
     if (playerid == INVALID_PLAYER_ID || !IsPlayerConnected(playerid)) return;
     new body[256];
     gMehanicar[playerid] = s + 1;
-    format(body, sizeof body, T(playerid, "Napuni gorivo ($%d)\nPopravi vozilo ($%d)\nSlepaj vozilo u radionicu ($%d)"), MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE);
+    format(body, sizeof body, T(playerid, "Napuni gorivo ($%d)\nPopravi motor ($%d)\nSlepaj vozilo u radionicu ($%d)\nZamijeni gume ($%d)"), MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE, MEHANICAR_GUME);
     PrikaziDialog(playerid, DLG_MEHANICAR, DIALOG_STYLE_LIST, T(playerid, "Mehanicar"), body, T(playerid, "Odaberi"), T(playerid, "Gotovo"));
 }
 
 DLG:mehanicar(playerid, response, listitem)
 {
-    static const cijene[] = { MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE };
+    static const cijene[] = { MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE, MEHANICAR_GUME };
     new s = gMehanicar[playerid] - 1, v = gMehanicarVozilo[playerid];
     if (s < 0 || gSlucaj[s][slStanje] != SL_PRISTANAK || gSlucaj[s][slPacijent] != playerid)
     {
@@ -1014,6 +1011,17 @@ DLG:mehanicar(playerid, response, listitem)
         return 1;
     }
     if (listitem < 0 || listitem >= sizeof cijene) return 1;
+    if (listitem == 3)
+    {
+        new VEHICLE_PANEL_STATUS:panels, VEHICLE_DOOR_STATUS:doors, VEHICLE_LIGHT_STATUS:lights, VEHICLE_TIRE_STATUS:tires;
+        GetVehicleDamageStatus(v, panels, doors, lights, tires);
+        if (!tires)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Gume su ispravne."));
+            MehanicarPonudi(playerid, s);
+            return 1;
+        }
+    }
     new igrac = gSlucaj[s][slIgrac];
     if (igrac != INVALID_PLAYER_ID ? !TransferNovac(playerid, igrac, cijene[listitem]) : !DajNovac(playerid, -cijene[listitem]))
     {
@@ -1024,6 +1032,9 @@ DLG:mehanicar(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
     if (listitem == 2 && igrac != INVALID_PLAYER_ID)
     {
+        for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+        new kamion = GetPlayerVehicleID(igrac);
+        if (kamion && GetVehicleModel(kamion) == MEHANICAR_MODEL) AttachTrailerToVehicle(v, kamion);
         SendClientMessage(igrac, COLOR_ORG, T(igrac, "Musterija je platila slepanje. Odslepajte vozilo do radionice."));
         gMehanicar[playerid] = 0;
         SlucajKraj(s, true);
@@ -1064,6 +1075,7 @@ static MehanicarRadi(s, v, posao)
     {
         if (posao == 1) MehanicarHauba(v, true);
         if (posao == 1) ApplyAnimation(igrac, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0, SYNC_ALL);
+        else if (posao == 3) ApplyAnimation(igrac, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0, SYNC_ALL);
         else ApplyAnimation(igrac, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0, SYNC_ALL);
         gSlucaj[s][slStanje] = SL_RADI;
         gSlucaj[s][slPosao] = posao;
@@ -1104,6 +1116,7 @@ static MehanicarAnim(s)
         NPC_SetFacingAngle(npc, kut + 180.0);
         NPC_ApplyAnimation(npc, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0);
     }
+    else if (gSlucaj[s][slPosao] == 3) NPC_ApplyAnimation(npc, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
     else NPC_ApplyAnimation(npc, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0);
     SetTimerEx("MehanicarGotov", MEHANICAR_RAD_MS, false, "i", s);
 }
@@ -1123,8 +1136,14 @@ public MehanicarGotov(s)
     {
         if (gSlucaj[s][slPosao] == 1)
         {
-            RepairVehicle(v);
+            SetVehicleHealth(v, 1000.0);
             MehanicarHauba(v, false);
+        }
+        else if (gSlucaj[s][slPosao] == 3)
+        {
+            new VEHICLE_PANEL_STATUS:panels, VEHICLE_DOOR_STATUS:doors, VEHICLE_LIGHT_STATUS:lights, VEHICLE_TIRE_STATUS:tires;
+            GetVehicleDamageStatus(v, panels, doors, lights, tires);
+            UpdateVehicleDamageStatus(v, panels, doors, lights, VEHICLE_TIRE_STATUS:0);
         }
         else VoziloNapuni(v);
     }

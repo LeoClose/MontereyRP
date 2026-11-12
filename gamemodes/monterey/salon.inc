@@ -87,6 +87,7 @@ static VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Floa
     gVlasnikPark[v][1] = y;
     gVlasnikPark[v][2] = z;
     gVlasnikPark[v][3] = a;
+    TuningPrimijeni(v);
     return v;
 }
 
@@ -106,6 +107,7 @@ VlasnickoSpawn(v)
     SetVehiclePos(v, gVlasnikPark[v][0], gVlasnikPark[v][1], gVlasnikPark[v][2]);
     SetVehicleZAngle(v, gVlasnikPark[v][3]);
     if (gVlasnik[v] == VLASNIK_PIJACA) VoziloZakljucaj(v, true);
+    TuningPrimijeni(v);
 }
 
 static SalonCijenaModela(model)
@@ -144,6 +146,7 @@ VlasnikPoDb(db)
 VlasnikOtpad(v)
 {
     if (!VlasnikVozila(v)) return;
+    TuningMakni(v);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_vehicles WHERE id = %d", gVlasnikDb[v]));
     DestroyVehicle(v);
 }
@@ -326,7 +329,7 @@ DLG:salon_kupi(playerid, response)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
-    if (OruzarnicaKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid)) return 1;
+    if (OruzarnicaKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid)) return 1;
     new s = gUSalonu[playerid];
     if (s == -1) return 0;
     if (playertextid == gSalonTd[playerid][STD_LIJEVO] || playertextid == gSalonTd[playerid][STD_DESNO])
@@ -351,6 +354,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
         OruzarnicaZatvori(playerid);
         OdjecaZatvori(playerid);
         MdtZatvori(playerid);
+        TuningZatvori(playerid);
     }
     if (clickedid == INVALID_TEXT_DRAW && gUSalonu[playerid] != -1) SalonZatvori(playerid);
     return 0;
