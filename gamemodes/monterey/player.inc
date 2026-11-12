@@ -54,6 +54,7 @@ public OnPlayerDisconnect(playerid, reason)
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
     OruzarnicaDisconnect(playerid);
+    MdtDisconnect(playerid);
     OdjecaDisconnect(playerid);
     KucaDisconnect(playerid);
     MobitelDisconnect(playerid);

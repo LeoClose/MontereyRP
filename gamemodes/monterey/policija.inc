@@ -33,6 +33,7 @@ static gTragOd[MAX_PLAYERS], gTragVrijeme[MAX_PLAYERS], Float:gTrag[MAX_PLAYERS]
 static gWantedSat[MAX_PLAYERS], gLocate[MAX_PLAYERS], gLocateRacun[MAX_PLAYERS], gLocateGen[MAX_PLAYERS];
 
 enum { ORMAR_PREDMET, ORMAR_METCI, ORMAR_LIMIT }
+enum { ZAPIS_POTJERNICA, ZAPIS_UHICENJE }
 static const gLocker[][3] = { { ITEM_PENDREK, 0, 12 }, { ITEM_DEAGLE, 35, 10 }, { ITEM_SACMARICA, 30, 6 }, { ITEM_MP5, 120, 4 }, { ITEM_M4, 150, 3 } };
 static gLockerVani[sizeof gLocker];
 
@@ -376,14 +377,20 @@ CMD:wanted(playerid, params[])
         }
         return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX, T(playerid, "Trazeni"), len ? list : T(playerid, "Nitko nije trazen."), T(playerid, "Zatvori"));
     }
-    new idx = 0, p1[32], p2[8];
+    new idx = 0, p1[32], p2[8], razlog[64];
     if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2) || !ProvjeriBroj(p2))
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /wanted [id/ime] [razina 1-6]"));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /wanted [id/ime] [razina 1-6] [razlog]"));
+    RestParam(params, idx, razlog);
+    RemoveBoje(razlog);
+    if (!razlog[0]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /wanted [id/ime] [razina 1-6] [razlog]"));
     new target = FindPlayer(p1), razina = strval(p2);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
-    if (razina < 1 || razina > WANTED_MAX) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /wanted [id/ime] [razina 1-6]"));
+    if (razina < 1 || razina > WANTED_MAX) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /wanted [id/ime] [razina 1-6] [razlog]"));
     if (razina <= gWanted[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Razina mora biti veca od trenutne (%d)."), gWanted[target]);
     SetWanted(target, razina);
+    new zapis[80];
+    format(zapis, sizeof zapis, "%d - %s", razina, razlog);
+    MdtZapis(gAccountId[target], ZAPIS_POTJERNICA, zapis, playerid);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "%s je sada trazen, razina %d."), GetRPIme(target), razina);
     SendClientMessage(target, COLOR_ERROR, T(target, "Policija vas trazi, razina %d."), razina);
     return 1;
@@ -612,6 +619,9 @@ CMD:arrest(playerid, params[])
     SetWanted(target, 0);
     gJailTime[target] = strval(p2) * 60;
     SaveJail(target);
+    new zapis[16];
+    format(zapis, sizeof zapis, "%d min", strval(p2));
+    MdtZapis(gAccountId[target], ZAPIS_UHICENJE, zapis, playerid);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s odvodi %s u celiju.", GetRPIme(playerid), GetRPIme(target), 1);
     IgracUCeliju(target);
     SendClientMessage(target, COLOR_ERROR, T(target, "Uhiceni ste na %d min."), strval(p2));

@@ -134,6 +134,7 @@ public OnGameModeInit()
     MapaChinatown();
     InitMarica();
     InitPolicija();
+    InitMdt();
     InitSluzbe();
     InitGepek();
     InitVozilo();
@@ -241,6 +242,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_chinatown.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
+#include "monterey/mdt.inc"
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
 
