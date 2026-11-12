@@ -3,8 +3,8 @@
 #define ORUZARNICA_DOMET        2.0
 #define ORUZARNICA_KASA_DOMET   2.5
 #define ORUZARNICA_SKIN         179
-#define ORUZARNICA_TD           40
-#define ORUZARNICA_STUPACA      4
+#define ORUZARNICA_TD           5
+#define ORUZARNICA_PULT         0.9
 #define ORUZARNICA_ROBA         12
 #define ORUZARNICA_KATALOG      0
 
@@ -26,13 +26,14 @@ static const gOruzarnicaZadano[][3] = {
     { ITEM_MUN_PISTOLJ, 50, 100 }, { ITEM_MUN_SACMARICA, 20, 120 }, { ITEM_MUN_SMG, 50, 150 }, { ITEM_MUN_PUSKA, 50, 200 }
 };
 
-#assert ORUZARNICA_ROBA <= ORUZARNICA_STUPACA * 3 && ORUZARNICA_TD >= 3 + 2 * ORUZARNICA_ROBA && sizeof gOruzarnicaZadano <= ORUZARNICA_ROBA
+#assert sizeof gOruzarnicaZadano <= ORUZARNICA_ROBA
 
 static gOruz[ORUZARNICA_MAX][E_ORUZARNICA];
 static gApOruzarnica[MAX_PLAYERS];
 static gOruzRoba[ORUZARNICA_MAX][ORUZARNICA_ROBA][3], gOruzRobaDb[ORUZARNICA_MAX][ORUZARNICA_ROBA], gOruzRobaBroj[ORUZARNICA_MAX];
-static PlayerText:gOruzarnicaTd[MAX_PLAYERS][ORUZARNICA_TD], gOruzarnicaBroj[MAX_PLAYERS], bool:gOruzarnicaKatalog[MAX_PLAYERS];
-static PlayerText:gOruzarnicaPlocica[MAX_PLAYERS][ORUZARNICA_ROBA], PlayerText:gOruzarnicaIzlaz[MAX_PLAYERS];
+enum { OTD_O_LIJEVO, OTD_O_DESNO, OTD_O_INFO, OTD_O_KUPI, OTD_O_IZADI }
+static PlayerText:gOruzarnicaTd[MAX_PLAYERS][ORUZARNICA_TD], bool:gOruzarnicaKatalog[MAX_PLAYERS], gOruzarnicaU[MAX_PLAYERS] = { -1, ... }, gOruzarnicaIdx[MAX_PLAYERS];
+static gOruzarnicaObjekt[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... }, gOruzKupac[ORUZARNICA_MAX] = { INVALID_PLAYER_ID, ... };
 
 InitOruzarnica()
 {
@@ -149,50 +150,35 @@ OruzarnicaUlaz(playerid)
     return 0;
 }
 
-static PlayerText:OruzarnicaTekst(playerid, Float:x, Float:y, const tekst[], Float:sirina, Float:visina, boja = 0xFFFFFFFF)
+forward PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true);
+
+static OruzarnicaPrikazi(playerid)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_2);
-    PlayerTextDrawAlignment(playerid, td, TEXT_DRAW_ALIGN_CENTER);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetOutline(playerid, td, 1);
-    gOruzarnicaTd[playerid][gOruzarnicaBroj[playerid]++] = td;
-    return td;
+    new s = gOruzarnicaU[playerid], r = gOruzarnicaIdx[playerid], item = gOruzRoba[s][r][0], info[96];
+    if (gOruzRoba[s][r][1] > 1) format(info, sizeof info, "%s x%d~n~~g~$%d~n~~w~%d/%d", T(playerid, gItems[item][ITEM_NAME]), gOruzRoba[s][r][1], gOruzRoba[s][r][2], r + 1, gOruzRobaBroj[s]);
+    else format(info, sizeof info, "%s~n~~g~$%d~n~~w~%d/%d", T(playerid, gItems[item][ITEM_NAME]), gOruzRoba[s][r][2], r + 1, gOruzRobaBroj[s]);
+    PlayerTextDrawSetString(playerid, gOruzarnicaTd[playerid][OTD_O_INFO], info);
+    if (gOruzarnicaObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gOruzarnicaObjekt[playerid]);
+    new Float:a = gOruz[s][orAa], Float:x = gOruz[s][orAx] + ORUZARNICA_PULT * floatsin(-a, degrees), Float:y = gOruz[s][orAy] + ORUZARNICA_PULT * floatcos(-a, degrees);
+    gOruzarnicaObjekt[playerid] = CreatePlayerObject(playerid, gItems[item][ITEM_MODEL], x, y, gOruz[s][orAz] + 0.05, 90.0, 0.0, a + 90.0);
 }
 
 static OruzarnicaOtvori(playerid, s)
 {
     gOruzarnicaKatalog[playerid] = true;
-    gOruzarnicaBroj[playerid] = 0;
-    new PlayerText:td = CreatePlayerTextDraw(playerid, 160.0, 102.0, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, 320.0, 285.0);
-    PlayerTextDrawColour(playerid, td, 0x101418E6);
-    gOruzarnicaTd[playerid][gOruzarnicaBroj[playerid]++] = td;
-    OruzarnicaTekst(playerid, 320.0, 108.0, T(playerid, "ORUZARNICA"), 0.45, 1.8, 0xD4A017FF);
-    for (new r = 0; r < gOruzRobaBroj[s]; r++)
-    {
-        new item = gOruzRoba[s][r][0], Float:x = 172.0 + float(r % ORUZARNICA_STUPACA) * 76.0, Float:y = 134.0 + float(r / ORUZARNICA_STUPACA) * 76.0, natpis[64];
-        td = CreatePlayerTextDraw(playerid, x, y, "_");
-        PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-        PlayerTextDrawTextSize(playerid, td, 70.0, 56.0);
-        PlayerTextDrawBackgroundColour(playerid, td, 0x2A3038FF);
-        PlayerTextDrawSetPreviewModel(playerid, td, gItems[item][ITEM_MODEL]);
-        PlayerTextDrawSetPreviewRot(playerid, td, -10.0, 0.0, -30.0, 1.0);
-        PlayerTextDrawSetSelectable(playerid, td, true);
-        gOruzarnicaTd[playerid][gOruzarnicaBroj[playerid]++] = td;
-        gOruzarnicaPlocica[playerid][r] = td;
-        if (gOruzRoba[s][r][1] > 1) format(natpis, sizeof natpis, "%s x%d~n~~g~$%d", T(playerid, gItems[item][ITEM_NAME]), gOruzRoba[s][r][1], gOruzRoba[s][r][2]);
-        else format(natpis, sizeof natpis, "%s~n~~g~$%d", T(playerid, gItems[item][ITEM_NAME]), gOruzRoba[s][r][2]);
-        OruzarnicaTekst(playerid, x + 35.0, y + 57.0, natpis, 0.16, 0.8);
-    }
-    gOruzarnicaIzlaz[playerid] = OruzarnicaTekst(playerid, 320.0, 364.0, T(playerid, "IZLAZ"), 0.3, 1.3);
-    PlayerTextDrawUseBox(playerid, gOruzarnicaIzlaz[playerid], true);
-    PlayerTextDrawBoxColour(playerid, gOruzarnicaIzlaz[playerid], 0x8B1A1ACC);
-    PlayerTextDrawTextSize(playerid, gOruzarnicaIzlaz[playerid], 14.0, 70.0);
-    PlayerTextDrawSetSelectable(playerid, gOruzarnicaIzlaz[playerid], true);
-    for (new i = 0; i < gOruzarnicaBroj[playerid]; i++) PlayerTextDrawShow(playerid, gOruzarnicaTd[playerid][i]);
+    gOruzarnicaU[playerid] = s;
+    gOruzarnicaIdx[playerid] = 0;
+    gOruzKupac[s] = playerid;
+    new Float:a = gOruz[s][orAa], Float:x = gOruz[s][orAx] + ORUZARNICA_PULT * floatsin(-a, degrees), Float:y = gOruz[s][orAy] + ORUZARNICA_PULT * floatcos(-a, degrees);
+    TogglePlayerControllable(playerid, false);
+    SetPlayerCameraPos(playerid, x + 1.1 * floatsin(-a, degrees), y + 1.1 * floatcos(-a, degrees), gOruz[s][orAz] + 0.7);
+    SetPlayerCameraLookAt(playerid, x, y, gOruz[s][orAz] + 0.05);
+    gOruzarnicaTd[playerid][OTD_O_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
+    gOruzarnicaTd[playerid][OTD_O_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
+    gOruzarnicaTd[playerid][OTD_O_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
+    gOruzarnicaTd[playerid][OTD_O_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
+    gOruzarnicaTd[playerid][OTD_O_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    OruzarnicaPrikazi(playerid);
     SelectTextDraw(playerid, 0xD4A017FF);
 }
 
@@ -200,33 +186,41 @@ OruzarnicaZatvori(playerid)
 {
     if (!gOruzarnicaKatalog[playerid]) return;
     gOruzarnicaKatalog[playerid] = false;
-    for (new i = 0; i < gOruzarnicaBroj[playerid]; i++) PlayerTextDrawDestroy(playerid, gOruzarnicaTd[playerid][i]);
-    gOruzarnicaBroj[playerid] = 0;
+    new s = gOruzarnicaU[playerid];
+    if (s >= 0 && gOruzKupac[s] == playerid) gOruzKupac[s] = INVALID_PLAYER_ID;
+    gOruzarnicaU[playerid] = -1;
+    for (new i = 0; i < ORUZARNICA_TD; i++) PlayerTextDrawDestroy(playerid, gOruzarnicaTd[playerid][i]);
+    if (gOruzarnicaObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gOruzarnicaObjekt[playerid]);
+    gOruzarnicaObjekt[playerid] = INVALID_OBJECT_ID;
     CancelSelectTextDraw(playerid);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
 }
 
 OruzarnicaKlik(playerid, PlayerText:td)
 {
     if (!gOruzarnicaKatalog[playerid]) return 0;
     new s = OruzarnicaIgraca(playerid);
-    if (td == gOruzarnicaIzlaz[playerid] || s == -1)
+    if (td == gOruzarnicaTd[playerid][OTD_O_IZADI] || s == -1 || s != gOruzarnicaU[playerid])
     {
         OruzarnicaZatvori(playerid);
         return 1;
     }
-    for (new r = 0; r < gOruzRobaBroj[s]; r++)
+    if (td == gOruzarnicaTd[playerid][OTD_O_LIJEVO] || td == gOruzarnicaTd[playerid][OTD_O_DESNO])
     {
-        if (td != gOruzarnicaPlocica[playerid][r]) continue;
-        new item = gOruzRoba[s][r][0], kolicina = gOruzRoba[s][r][1], cijena = gOruzRoba[s][r][2];
-        if (gNovac[playerid] < cijena) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
-        else if (!GiveItem(playerid, item, kolicina)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
-        else
-        {
-            DajNovac(playerid, -cijena);
-            PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
-            SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), T(playerid, gItems[item][ITEM_NAME]), cijena);
-        }
+        gOruzarnicaIdx[playerid] = (gOruzarnicaIdx[playerid] + (td == gOruzarnicaTd[playerid][OTD_O_DESNO] ? 1 : gOruzRobaBroj[s] - 1)) % gOruzRobaBroj[s];
+        OruzarnicaPrikazi(playerid);
         return 1;
+    }
+    if (td != gOruzarnicaTd[playerid][OTD_O_KUPI]) return 1;
+    new r = gOruzarnicaIdx[playerid], item = gOruzRoba[s][r][0], kolicina = gOruzRoba[s][r][1], cijena = gOruzRoba[s][r][2];
+    if (gNovac[playerid] < cijena) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    else if (!GiveItem(playerid, item, kolicina)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
+    else
+    {
+        DajNovac(playerid, -cijena);
+        PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), T(playerid, gItems[item][ITEM_NAME]), cijena);
     }
     return 1;
 }
@@ -236,6 +230,13 @@ OruzarnicaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid) || gOruzarnicaKatalog[playerid]) return 0;
     new s = OruzarnicaIgraca(playerid);
     if (s == -1 || !gOruz[s][orImaAktor] || !IsPlayerInRangeOfPoint(playerid, ORUZARNICA_KASA_DOMET, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz])) return 0;
+    new k = gOruzKupac[s];
+    if (k != INVALID_PLAYER_ID && k != playerid && IsPlayerConnected(k) && gOruzarnicaKatalog[k] && gOruzarnicaU[k] == s)
+    {
+        AktorKaze(playerid, gOruz[s][orAktor], "Prodavac", "Trenutno sluzim drugog kupca, pricekajte.");
+        return 1;
+    }
+    if (!gOruzRobaBroj[s]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Oruzarnica trenutno nema ponudu."));
     AktorKaze(playerid, gOruz[s][orAktor], "Prodavac", "Izvolite, pogledajte ponudu.");
     OruzarnicaOtvori(playerid, s);
     return 1;
@@ -243,8 +244,11 @@ OruzarnicaKasa(playerid)
 
 OruzarnicaDisconnect(playerid)
 {
+    new s = gOruzarnicaU[playerid];
+    if (s >= 0 && gOruzKupac[s] == playerid) gOruzKupac[s] = INVALID_PLAYER_ID;
     gOruzarnicaKatalog[playerid] = false;
-    gOruzarnicaBroj[playerid] = 0;
+    gOruzarnicaU[playerid] = -1;
+    gOruzarnicaObjekt[playerid] = INVALID_OBJECT_ID;
 }
 
 ShowOruzarnice(playerid)

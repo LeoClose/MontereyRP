@@ -225,7 +225,7 @@ SalonUlaz(playerid)
     return 0;
 }
 
-static PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true)
+PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true)
 {
     new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
     PlayerTextDrawAlignment(playerid, td, TEXT_DRAW_ALIGN_CENTER);
