@@ -10,6 +10,7 @@
 #define NAMJESTAJ_SKLADISTE     100
 #define NAMJESTAJ_KAMERA        3.5
 #define NAMJESTAJ_ISPRED        1.5
+#define NAMJESTAJ_OTKUP_POSTO   50
 
 enum E_NAMJESTAJ { bool:nmIma, nmDb, nmInt, Float:nmX, Float:nmY, Float:nmZ, Float:nmA, bool:nmImaAktor, Float:nmAx, Float:nmAy, Float:nmAz, Float:nmAa, nmAktor,
     bool:nmImaIzlog, Float:nmIx, Float:nmIy, Float:nmIz, Float:nmIa,
@@ -50,6 +51,9 @@ InitNamjestaj()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture_shops (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL DEFAULT 0, aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0, izlog INTEGER NOT NULL DEFAULT 0, ix REAL NOT NULL DEFAULT 0, iy REAL NOT NULL DEFAULT 0, iz REAL NOT NULL DEFAULT 0, ia REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture_catalog (id INTEGER PRIMARY KEY AUTOINCREMENT, shop INTEGER NOT NULL, model INTEGER NOT NULL, price INTEGER NOT NULL, name TEXT NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, model INTEGER NOT NULL, name TEXT NOT NULL, house INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0)"));
+    new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT price FROM furniture LIMIT 1");
+    if (stupac) DB_FreeResultSet(stupac);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE furniture ADD COLUMN price INTEGER NOT NULL DEFAULT 0"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, aktor, ax, ay, az, aa, izlog, ix, iy, iz, ia FROM furniture_shops ORDER BY id LIMIT %d", NAMJESTAJ_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
     {
@@ -284,7 +288,7 @@ NamjestajKlik(playerid, PlayerText:td)
     else if (!DajNovac(playerid, -cijena)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     else
     {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO furniture (owner, model, name) VALUES (%d, %d, '%q')", gAccountId[playerid], gNamRobaModel[s][r], gNamRobaIme[s][r]));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO furniture (owner, model, name, price) VALUES (%d, %d, '%q', %d)", gAccountId[playerid], gNamRobaModel[s][r], gNamRobaIme[s][r], cijena));
         PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d). Postavite ga u kuci (Y na ulazu, Namjestaj)."), gNamRobaIme[s][r], cijena);
     }
@@ -347,16 +351,16 @@ DLG:namjestaj(playerid, response, listitem)
 {
     if (!response || listitem < 0 || listitem >= gNamPopisBroj[playerid] || !NamjestajUKuci(playerid)) return 1;
     gNamOdabran[playerid] = gNamPopis[playerid][listitem];
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT house FROM furniture WHERE id = %d AND owner = %d", gNamOdabran[playerid], gAccountId[playerid]);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT house, price FROM furniture WHERE id = %d AND owner = %d", gNamOdabran[playerid], gAccountId[playerid]);
     if (!DB_GetRowCount(res))
     {
         DB_FreeResultSet(res);
         return NamjestajMeni(playerid, gNamKuca[playerid]);
     }
-    new bool:postavljeno = DB_GetFieldInt(res, 0) != 0;
+    new bool:postavljeno = DB_GetFieldInt(res, 0) != 0, list[160];
+    format(list, sizeof list, T(playerid, postavljeno ? ("Uredi poziciju\nSpremi u skladiste\nProdaj ($%d)") : ("Postavi\nProdaj ($%d)")), DB_GetFieldInt(res, 1) * NAMJESTAJ_OTKUP_POSTO / 100);
     DB_FreeResultSet(res);
-    if (postavljeno) return PrikaziDialog(playerid, DLG_NAMJESTAJ_OPCIJE, DIALOG_STYLE_LIST, T(playerid, "Namjestaj"), T(playerid, "Uredi poziciju\nSpremi u skladiste"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
-    return PrikaziDialog(playerid, DLG_NAMJESTAJ_OPCIJE, DIALOG_STYLE_LIST, T(playerid, "Namjestaj"), T(playerid, "Postavi"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
+    return PrikaziDialog(playerid, DLG_NAMJESTAJ_OPCIJE, DIALOG_STYLE_LIST, T(playerid, "Namjestaj"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 DLG:namjestaj_opcije(playerid, response, listitem)
@@ -364,14 +368,21 @@ DLG:namjestaj_opcije(playerid, response, listitem)
     new kuca = gNamKuca[playerid], db = gNamOdabran[playerid];
     if (!NamjestajUKuci(playerid)) return 1;
     if (!response) return NamjestajMeni(playerid, kuca);
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT model, house FROM furniture WHERE id = %d AND owner = %d", db, gAccountId[playerid]);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT model, house, name, price FROM furniture WHERE id = %d AND owner = %d", db, gAccountId[playerid]);
     if (!DB_GetRowCount(res))
     {
         DB_FreeResultSet(res);
         return NamjestajMeni(playerid, kuca);
     }
-    new model = DB_GetFieldInt(res, 0), bool:postavljeno = DB_GetFieldInt(res, 1) != 0;
+    new model = DB_GetFieldInt(res, 0), bool:postavljeno = DB_GetFieldInt(res, 1) != 0, ime[24], otkup = DB_GetFieldInt(res, 3) * NAMJESTAJ_OTKUP_POSTO / 100;
+    DB_GetFieldString(res, 2, ime, sizeof ime);
     DB_FreeResultSet(res);
+    if (listitem == (postavljeno ? 2 : 1))
+    {
+        new body[128];
+        format(body, sizeof body, T(playerid, "Prodati %s za $%d?"), ime, otkup);
+        return PrikaziDialog(playerid, DLG_NAMJESTAJ_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Namjestaj"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
+    }
     if (!postavljeno)
     {
         res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM furniture WHERE house = %d", kuca);
@@ -403,6 +414,28 @@ DLG:namjestaj_opcije(playerid, response, listitem)
     NamjestajMakniObjekt(db);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE furniture SET house = 0 WHERE id = %d", db));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Namjestaj je spremljen u skladiste."));
+    return NamjestajMeni(playerid, kuca);
+}
+
+DLG:namjestaj_prodaj(playerid, response)
+{
+    new kuca = gNamKuca[playerid], db = gNamOdabran[playerid];
+    if (!NamjestajUKuci(playerid)) return 1;
+    if (!response) return NamjestajMeni(playerid, kuca);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT price, name FROM furniture WHERE id = %d AND owner = %d", db, gAccountId[playerid]);
+    if (!DB_GetRowCount(res))
+    {
+        DB_FreeResultSet(res);
+        return NamjestajMeni(playerid, kuca);
+    }
+    new otkup = DB_GetFieldInt(res, 0) * NAMJESTAJ_OTKUP_POSTO / 100, ime[24];
+    DB_GetFieldString(res, 1, ime, sizeof ime);
+    DB_FreeResultSet(res);
+    if (gNamUredi[playerid] == db) gNamUredi[playerid] = -1;
+    NamjestajMakniObjekt(db);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM furniture WHERE id = %d", db));
+    DajNovac(playerid, otkup);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %s za $%d."), ime, otkup);
     return NamjestajMeni(playerid, kuca);
 }
 
