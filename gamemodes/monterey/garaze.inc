@@ -8,6 +8,8 @@
 #define GARAZA_CIJENA       25000
 #define GARAZA_OTKUP_POSTO  50
 #define GARAZA_MAX_CIJENA   100000000
+#define GRAZA_PRODAJA       1273
+#define GARAZA_PRODANA      1316
 
 enum E_GARAZA { bool:gaIma, gaDb, Float:gaX, Float:gaY, Float:gaZ, Float:gaA, gaCijena, gaVlasnik, gaVlasnikIme[MAX_PLAYER_NAME + 1], bool:gaZakljucano,
     STREAMER_TAG_PICKUP:gaPickup, STREAMER_TAG_3D_TEXT_LABEL:gaTekst, STREAMER_TAG_PICKUP:gaPickupU, STREAMER_TAG_3D_TEXT_LABEL:gaTekstU }
@@ -72,7 +74,7 @@ static GarazaStvori(g)
         format(natpis, sizeof natpis, "Garaza\nVlasnik: %s\n[Y]", ime);
     }
     gGaraza[g][gaIma] = true;
-    gGaraza[g][gaPickup] = CreateDynamicPickup(gGaraza[g][gaVlasnik] ? KUCA_PRODANA : KUCA_PRODAJA, 1, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], 0, 0);
+    gGaraza[g][gaPickup] = CreateDynamicPickup(gGaraza[g][gaVlasnik] ? GARAZA_PRODANA : GARAZA_PRODAJA, 1, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], 0, 0);
     gGaraza[g][gaTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
     new svijet = GarazaSvijet(gGaraza[g][gaDb]);
     gGaraza[g][gaPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2], svijet, GARAZA_INT);
