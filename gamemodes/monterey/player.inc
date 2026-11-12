@@ -213,6 +213,7 @@ CMD:ahelp(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /a [poruka] - admin chat"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /goto [id/ime] - teleport do igraca"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));

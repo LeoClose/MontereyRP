@@ -268,6 +268,15 @@ CMD:jetpack(playerid, params[])
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Jetpack je ukljucen."));
 }
 
+CMD:afix(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, 1)) return 1;
+    new v = GetPlayerVehicleID(playerid);
+    if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u vozilu."));
+    if (!RepairVehicle(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo nije moguce popraviti."));
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo je popravljeno."));
+}
+
 CMD:admini(playerid, params[])
 {
     new name[MAX_PLAYER_NAME + 1], count = 0;

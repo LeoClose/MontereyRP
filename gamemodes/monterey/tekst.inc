@@ -692,9 +692,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Salon trenutno nema vozila u ponudi.", "This dealership has no vehicles for sale right now.", "В этом салоне сейчас нет машин в продаже.", "Este concesionario no tiene vehiculos a la venta ahora.", "Bu galeride su an satilik arac yok." },
     { "KUPI", "BUY", "КУПИТЬ", "COMPRAR", "SATIN AL" },
     { "IZLAZ", "EXIT", "ВЫХОД", "SALIR", "CIKIS" },
-    { "IZADI", "EXIT", "ВЫЙТИ", "SALIR", "CIK" },
-    { "Trenutno sluzim drugog kupca, pricekajte.", "I'm serving another customer, please wait.", "Я обслуживаю другого покупателя, подождите.", "Estoy atendiendo a otro cliente, espere.", "Baska bir musteriyle ilgileniyorum, lutfen bekleyin." },
-    { "Oruzarnica trenutno nema ponudu.", "The gun shop has nothing for sale right now.", "В оружейном магазине сейчас нет товара.", "La armeria no tiene nada a la venta ahora.", "Silah dukkaninda su an satilik bir sey yok." },
     { "Mozete imati najvise %d vozila.", "You can own at most %d vehicles.", "Можно иметь не больше %d машин.", "Puedes tener como maximo %d vehiculos.", "En fazla %d araca sahip olabilirsiniz." },
     { "Nemate dovoljno novca.", "You don't have enough money.", "У вас недостаточно денег.", "No tienes suficiente dinero.", "Yeterli paraniz yok." },
     { "Vozilo trenutno nije moguce isporuciti.", "The vehicle can't be delivered right now.", "Сейчас машину нельзя доставить.", "Ahora no se puede entregar el vehiculo.", "Arac su an teslim edilemiyor." },
@@ -1040,7 +1037,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Nije moguce promijeniti jetpack.", "Could not change the jetpack.", "Не удалось изменить состояние джетпака.", "No se pudo cambiar el jetpack.", "Jetpack degistirilemedi." },
     { "Jetpack je iskljucen.", "Jetpack disabled.", "Джетпак выключен.", "Jetpack desactivado.", "Jetpack kapatildi." },
     { "Jetpack je ukljucen.", "Jetpack enabled.", "Джетпак включен.", "Jetpack activado.", "Jetpack acildi." },
-    { "Ne mozete koristiti jetpack dok ste ranjeni ili imate lisice.", "You cannot use a jetpack while injured or handcuffed.", "Нельзя использовать джетпак, пока вы ранены или в наручниках.", "No puedes usar el jetpack si estas herido o esposado.", "Yaraliyken veya kelepceliyken jetpack kullanamazsiniz." }
+    { "Ne mozete koristiti jetpack dok ste ranjeni ili imate lisice.", "You cannot use a jetpack while injured or handcuffed.", "Нельзя использовать джетпак, пока вы ранены или в наручниках.", "No puedes usar el jetpack si estas herido o esposado.", "Yaraliyken veya kelepceliyken jetpack kullanamazsiniz." },
+    { "  /afix - popravi vozilo u kojem se nalazis", "  /afix - repair the vehicle you are in", "  /afix - починить транспорт, в котором вы находитесь", "  /afix - reparar el vehiculo en el que estas", "  /afix - icinde oldugun araci tamir et" },
+    { "Vozilo nije moguce popraviti.", "The vehicle could not be repaired.", "Не удалось починить транспорт.", "No se pudo reparar el vehiculo.", "Arac tamir edilemedi." },
+    { "Vozilo je popravljeno.", "The vehicle has been repaired.", "Транспорт отремонтирован.", "El vehiculo ha sido reparado.", "Arac tamir edildi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
