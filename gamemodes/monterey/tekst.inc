@@ -987,7 +987,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "* %s zakljucava kucu.", "* %s locks the house.", "* %s запирает дом.", "* %s cierra la casa con llave.", "* %s evi kilitliyor." },
     { "* %s otkljucava kucu.", "* %s unlocks the house.", "* %s отпирает дом.", "* %s abre la casa.", "* %s evin kilidini aciyor." },
     { "Zakljucaj kucu", "Lock house", "Запереть дом", "Cerrar casa", "Evi kilitle" },
-    { "Otkljucaj kucu", "Unlock house", "Отпереть дом", "Abrir casa", "Evin kilidini ac" }
+    { "Otkljucaj kucu", "Unlock house", "Отпереть дом", "Abrir casa", "Evin kilidini ac" },
+    { "Frizer je zauzet, pricekajte.", "The barber is busy, please wait.", "Парикмахер занят, подождите.", "El barbero esta ocupado, espera.", "Berber mesgul, lutfen bekleyin." },
+    { "Kabina je zauzeta, pricekajte.", "The fitting room is occupied, please wait.", "Примерочная занята, подождите.", "El probador esta ocupado, espera.", "Deneme kabini dolu, lutfen bekleyin." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

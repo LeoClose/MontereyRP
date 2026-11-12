@@ -7,6 +7,7 @@
 #define ODJECA_TD               16
 #define ODJECA_SLOT_KAPA        8
 #define ODJECA_SLOT_FRIZURA     7
+#define ODJECA_SISANJE_MS       6000
 
 enum { ODJ_PRODAVAONICA, ODJ_FRIZER }
 enum { ODJ_SKIN, ODJ_KAPA, ODJ_FRIZURA }
@@ -334,6 +335,8 @@ static OdjecaKupi(playerid)
         return;
     }
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+    new s = gOdjecaU[playerid] - 1;
+    if (vrsta == ODJ_FRIZURA && gOdj[s][odImaAktor]) ApplyActorAnimation(gOdj[s][odAktor], "HAIRCUTS", "BRB_Cut", 4.1, true, false, false, false, ODJECA_SISANJE_MS);
     if (vrsta == ODJ_SKIN)
     {
         gOdjecaNosiSkin[playerid] = gOdjArtikl[gOdjecaU[playerid] - 1][a][1];
@@ -387,6 +390,12 @@ OdjecaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid) || gOdjecaU[playerid]) return 0;
     new s = OdjecaIgraca(playerid);
     if (s == -1 || !gOdj[s][odImaAktor] || !IsPlayerInRangeOfPoint(playerid, ODJECA_KASA_DOMET, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz])) return 0;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (i == playerid || gOdjecaU[i] != s + 1) continue;
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, gOdj[s][odTip] == ODJ_FRIZER ? ("Frizer je zauzet, pricekajte.") : ("Kabina je zauzeta, pricekajte.")));
+        return 1;
+    }
     if (!gOdj[s][odImaKabina])
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kabina jos nije postavljena."));
