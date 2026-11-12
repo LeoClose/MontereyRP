@@ -734,6 +734,13 @@ PolicijaLocirajPrekini(playerid)
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pracenje je prekinuto."));
 }
 
+PolicijaTrag(target, &Float:x, &Float:y)
+{
+    x = gTrag[target][0];
+    y = gTrag[target][1];
+    return gTragVrijeme[target];
+}
+
 PolicijaLocira(playerid)
 {
     return gLocate[playerid] ? gLocate[playerid] - 1 : INVALID_PLAYER_ID;

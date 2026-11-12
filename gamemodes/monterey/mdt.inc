@@ -206,17 +206,28 @@ static MdtOsoba(playerid, const unos[])
         MdtPostavi(playerid, MTD_VRIJEDNOSTI, "_");
         return MdtPostavi(playerid, MTD_ZAPISI, T(playerid, "Osoba nije pronadena u bazi."));
     }
-    new tekst[MDT_TEKST], red[96], ime[MAX_PLAYER_NAME + 1], broj[16], DBResult:res = DB_ExecuteQuery(gDB, "SELECT replace(a.name, '_', ' '), a.wanted, IFNULL((SELECT number FROM phone_numbers WHERE account = a.id), '-'), a.level, a.zatvor, IFNULL((SELECT skin FROM player_style WHERE account = a.id), -1), a.vozacka FROM accounts a WHERE a.id = %d", racun);
+    new tekst[MDT_TEKST], red[96], ime[MAX_PLAYER_NAME + 1], broj[16], DBResult:res = DB_ExecuteQuery(gDB, "SELECT replace(a.name, '_', ' '), a.wanted, IFNULL((SELECT number FROM phone_numbers WHERE account = a.id), '-'), a.zatvor, IFNULL((SELECT skin FROM player_style WHERE account = a.id), -1), a.vozacka FROM accounts a WHERE a.id = %d", racun);
     DB_GetFieldString(res, 0, ime, sizeof ime);
     DB_GetFieldString(res, 2, broj, sizeof broj);
-    new wanted = DB_GetFieldInt(res, 1), level = DB_GetFieldInt(res, 3), zatvor = DB_GetFieldInt(res, 4), skin = DB_GetFieldInt(res, 5), vozacka = DB_GetFieldInt(res, 6);
+    new wanted = DB_GetFieldInt(res, 1), zatvor = DB_GetFieldInt(res, 3), skin = DB_GetFieldInt(res, 4), vozacka = DB_GetFieldInt(res, 5);
     DB_FreeResultSet(res);
     MdtCisti(ime);
     MdtCisti(broj);
     MdtFoto(playerid, target != INVALID_PLAYER_ID ? GetPlayerSkin(target) : skin < 0 ? 0 : skin);
-    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Level"), T(playerid, "Vozila"), T(playerid, "Kuca"));
+    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Zadnja lokacija"), T(playerid, "Vozila"), T(playerid, "Kuca"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
-    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%d~n~", ime, broj, vozacka ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"), level);
+    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~", ime, broj, vozacka ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"));
+    new Float:lx, Float:ly, kada = target != INVALID_PLAYER_ID ? PolicijaTrag(target, lx, ly) : 0;
+    if (kada)
+    {
+        format(red, sizeof red, T(playerid, "%s (prije %d min)~n~"), CestaZona(lx, ly), (gettime() - kada) / 60);
+        strcat(tekst, red);
+    }
+    else
+    {
+        strcat(tekst, T(playerid, "Nepoznata"));
+        strcat(tekst, "~n~");
+    }
     res = DB_ExecuteQuery(gDB, "SELECT id, model FROM player_vehicles WHERE owner = %d LIMIT 2", racun);
     new n = DB_GetRowCount(res);
     for (new i = 0; i < n; i++, DB_SelectNextRow(res))
@@ -295,16 +306,16 @@ static MdtOtvori(playerid)
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMdtOtvoren[playerid] = true;
     gMdtBroj[playerid] = 0;
-    MdtKutija(playerid, -14.0, 268.0, 428.0, 12.0, 0x1A1A1AFF);
-    MdtKutija(playerid, 170.0, 276.0, 60.0, 3.0, 0x0A0A0AFF);
+    MdtKutija(playerid, -14.0, 272.0, 428.0, 12.0, 0x1A1A1AFF);
+    MdtKutija(playerid, 170.0, 280.0, 60.0, 3.0, 0x0A0A0AFF);
     MdtKutija(playerid, 0.0, 0.0, 400.0, 270.0, 0x0A0A0AFF);
     MdtKutija(playerid, 198.0, 1.0, 4.0, 2.0, 0x3A3A3AFF);
-    MdtKutija(playerid, 4.0, 4.0, 392.0, 262.0, 0x0F1A27FF);
+    MdtKutija(playerid, 4.0, 4.0, 392.0, 258.0, 0x0F1A27FF);
     MdtKutija(playerid, 4.0, 4.0, 392.0, 20.0, 0x1F3A5FFF);
     MdtTekst(playerid, 15.0, 12.0, "LSPD", 0xFFFFFFFF, 0.22, 1.0);
     MdtTekst(playerid, 200.0, 12.0, T(playerid, "MOBILNI PODATKOVNI TERMINAL"), 0xDCE4ECFF, 0.18, 0.95, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     gMdt[playerid][MTD_SAT] = MdtTekst(playerid, 385.0, 12.0, vrijeme, 0xFFFFFFFF, 0.2, 0.95, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_RIGHT);
-    MdtKutija(playerid, 4.0, 24.0, 96.0, 242.0, 0x15212FFF);
+    MdtKutija(playerid, 4.0, 24.0, 96.0, 238.0, 0x15212FFF);
     MdtTekst(playerid, 15.0, 29.0, T(playerid, "Policajac"), 0x8AA0B6FF, 0.16, 0.8);
     MdtTekst(playerid, 15.0, 38.0, GetRPIme(playerid), 0xFFFFFFFF, 0.17, 0.85);
     MdtKutija(playerid, 14.0, 51.0, 82.0, 1.0, 0x2E4A68FF);
@@ -316,15 +327,15 @@ static MdtOtvori(playerid)
         PlayerTextDrawSetSelectable(playerid, td, true);
         gMdt[playerid][MTD_TAB + i] = td;
     }
-    gMdt[playerid][MTD_IZADI] = MdtTekst(playerid, 55.0, 243.0, T(playerid, "IZADI"), 0xFFFFFFFF, 0.2, 0.95, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    gMdt[playerid][MTD_IZADI] = MdtTekst(playerid, 55.0, 243.0, T(playerid, "UGASI"), 0xFFFFFFFF, 0.2, 0.95, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gMdt[playerid][MTD_IZADI], true);
     PlayerTextDrawBoxColour(playerid, gMdt[playerid][MTD_IZADI], 0x1E5AA8FF);
     PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_IZADI], 12.0, 78.0);
     PlayerTextDrawSetSelectable(playerid, gMdt[playerid][MTD_IZADI], true);
-    gMdt[playerid][MTD_LOCIRAJ] = MdtTekst(playerid, 346.0, 118.0, "_", 0xFFFFFFFF, 0.16, 0.8, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    gMdt[playerid][MTD_LOCIRAJ] = MdtTekst(playerid, 344.0, 30.0, "_", 0xFFFFFFFF, 0.16, 0.8, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gMdt[playerid][MTD_LOCIRAJ], true);
     PlayerTextDrawBoxColour(playerid, gMdt[playerid][MTD_LOCIRAJ], 0x5B8DBFFF);
-    PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_LOCIRAJ], 10.0, 72.0);
+    PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_LOCIRAJ], 10.0, 78.0);
     PlayerTextDrawSetSelectable(playerid, gMdt[playerid][MTD_LOCIRAJ], true);
     gMdt[playerid][MTD_NASLOV] = MdtTekst(playerid, 108.0, 29.0, "_", 0x5B8DBFFF, 0.26, 1.2);
     MdtKutija(playerid, 108.0, 44.0, 276.0, 1.0, 0x2E4A68FF);
@@ -338,9 +349,9 @@ static MdtOtvori(playerid)
     gMdt[playerid][MTD_FOTO] = foto;
     gMdt[playerid][MTD_NAZIVI] = MdtTekst(playerid, 182.0, 52.0, "_", 0x8AA0B6FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
     gMdt[playerid][MTD_VRIJEDNOSTI] = MdtTekst(playerid, 252.0, 52.0, "_", 0xFFFFFFFF, 0.18, 0.95, TEXT_DRAW_FONT_1);
-    gMdt[playerid][MTD_ZNACKA] = MdtTekst(playerid, 346.0, 30.0, "_", 0xFFFFFFFF, 0.16, 0.8, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    gMdt[playerid][MTD_ZNACKA] = MdtTekst(playerid, 262.0, 30.0, "_", 0xFFFFFFFF, 0.16, 0.8, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, gMdt[playerid][MTD_ZNACKA], true);
-    PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_ZNACKA], 10.0, 72.0);
+    PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_ZNACKA], 10.0, 78.0);
     gMdt[playerid][MTD_KARTICA] = MdtKutija(playerid, 108.0, 138.0, 276.0, 116.0, 0x132233FF);
     MdtTekst(playerid, 113.0, 141.0, T(playerid, "DOSJE"), 0x5B8DBFFF, 0.18, 0.85);
     gMdt[playerid][MTD_ZAPISI] = MdtTekst(playerid, 113.0, 153.0, "_", 0xDCE4ECFF, 0.16, 0.85, TEXT_DRAW_FONT_1);
