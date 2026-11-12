@@ -32,7 +32,8 @@
 #define TUNING_NATPIS_OBJEKT 19483
 #define TUNING_NATPIS_FONT  340
 #define TUNING_NATPIS_MAX   150
-#define TUNING_ISKRE_TRAJE  600
+#define TUNING_ISKRE_TRAJE  900
+#define TUNING_ISKRE_NAPRIJED 0.8
 #define TUNING_ISKRE_OBJEKT 18702
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
@@ -586,7 +587,7 @@ static TuningIskre(v)
     for (new i = 0; i < broj; i++)
     {
         new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2], 90.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1] + TUNING_ISKRE_NAPRIJED, gTuningAuspuh[m][2], 90.0, 0.0, 0.0);
         SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
     }
 }
