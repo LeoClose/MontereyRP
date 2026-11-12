@@ -24,6 +24,7 @@ bans.json
 scriptfiles/*
 !scriptfiles/.gitkeep
 !scriptfiles/kolizija.bin
+!scriptfiles/kuce.db
 
 # Editor / OS
 .vscode/
