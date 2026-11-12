@@ -54,6 +54,7 @@ public OnPlayerDisconnect(playerid, reason)
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
     OruzarnicaDisconnect(playerid);
+    NamjestajDisconnect(playerid);
     MdtDisconnect(playerid);
     OdjecaDisconnect(playerid);
     LoginDisconnect(playerid);
@@ -151,7 +152,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 static Interakcija(playerid)
 {
     if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid)) return;
+    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid)) return;
     if (!gUlogiran[playerid] || IsRanjen(playerid) || MobitelOtvoren(playerid) || MdtOtvoren(playerid)) return;
     if (IsPlayerInAnyVehicle(playerid)) VoziloMeni(playerid);
     else if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !VoziloMeni(playerid)) PrikaziInventar(playerid);

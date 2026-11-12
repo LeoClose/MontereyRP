@@ -160,6 +160,7 @@ static KucaOsvjezi(k)
 
 static KucaPostaviVlasnika(k, racun, const ime[])
 {
+    if (gKuca[k][kuVlasnik] != racun) NamjestajKucaIsprazni(gKuca[k][kuDb]);
     gKuca[k][kuVlasnik] = racun;
     gKuca[k][kuVlasnikIme][0] = EOS;
     if (racun) strcopy(gKuca[k][kuVlasnikIme], ime, MAX_PLAYER_NAME + 1);
@@ -193,6 +194,18 @@ static KucaIgraca(playerid)
 {
     new k = KucaPoDb(GetPlayerVirtualWorld(playerid) - KUCA_SVIJET);
     return k != -1 && GetPlayerInterior(playerid) == gKucaInt[gKuca[k][kuInt]][kiInt] ? k : -1;
+}
+
+KucaInterijerDb(db)
+{
+    new k = KucaPoDb(db);
+    return k == -1 ? -1 : gKucaInt[gKuca[k][kuInt]][kiInt];
+}
+
+KucaIgracaDb(playerid)
+{
+    new k = KucaIgraca(playerid);
+    return k != -1 && gKuca[k][kuVlasnik] == gAccountId[playerid] ? gKuca[k][kuDb] : 0;
 }
 
 static bool:KucaStanar(playerid, k)
@@ -258,7 +271,7 @@ static KucaIzlazMeni(playerid, k)
 {
     new list[256];
     gKucaMeni[playerid] = k + 1;
-    if (gKuca[k][kuVlasnik] == gAccountId[playerid]) strcat(list, T(playerid, "Izadi\nPreuredi kucu\nPostavi kao mjesto spawna\nIznajmljivanje"));
+    if (gKuca[k][kuVlasnik] == gAccountId[playerid]) strcat(list, T(playerid, "Izadi\nPreuredi kucu\nPostavi kao mjesto spawna\nIznajmljivanje\nNamjestaj"));
     else if (KucaStanar(playerid, k)) strcat(list, T(playerid, "Izadi\nPostavi kao mjesto spawna\nPrestani iznajmljivati"));
     else
     {
@@ -474,7 +487,7 @@ DLG:kuca_izlaz(playerid, response, listitem)
         KucaVani(playerid, k);
         return 1;
     }
-    if (listitem == (vlasnik ? 4 : 3))
+    if (listitem == (vlasnik ? 5 : 3))
     {
         KucaZakljucaj(playerid);
         return KucaIzlazMeni(playerid, k);
@@ -496,6 +509,7 @@ DLG:kuca_izlaz(playerid, response, listitem)
         KucaVani(playerid, k);
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vise ne iznajmljujete ovu kucu."));
     }
+    if (listitem == 4) return NamjestajMeni(playerid, gKuca[k][kuDb]);
     gKucaMeni[playerid] = k + 1;
     if (listitem == 3) return PrikaziDialog(playerid, DLG_KUCA_NAJAM, DIALOG_STYLE_INPUT, T(playerid, "Najam"), T(playerid, "Unesite dnevnu cijenu najma (0 = iskljuceno):"), T(playerid, "Potvrdi"), T(playerid, "Natrag"));
     new list[512], row[64], len = 0;
@@ -522,6 +536,7 @@ DLG:kuca_preuredi(playerid, response, listitem)
     if (listitem == gKuca[k][kuInt]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo je vec vas interijer."));
     if (!DajNovac(playerid, -gKucaInt[listitem][kiCijena])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     new stari = gKuca[k][kuInt];
+    NamjestajKucaIsprazni(gKuca[k][kuDb]);
     gKuca[k][kuInt] = listitem;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET interior = %d WHERE id = %d", listitem, gKuca[k][kuDb]));
     for (new i = 0; i < MAX_PLAYERS; i++)

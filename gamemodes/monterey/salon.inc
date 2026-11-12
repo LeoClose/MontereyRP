@@ -455,7 +455,7 @@ DLG:salon_kupi(playerid, response)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
-    if (OruzarnicaKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid)) return 1;
+    if (OruzarnicaKlik(playerid, playertextid) || NamjestajKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid)) return 1;
     new s = gUSalonu[playerid];
     if (s == -1) return 0;
     if (playertextid == gSalonTd[playerid][STD_LIJEVO] || playertextid == gSalonTd[playerid][STD_DESNO])
@@ -478,6 +478,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
     if (clickedid == INVALID_TEXT_DRAW)
     {
         OruzarnicaZatvori(playerid);
+        NamjestajZatvori(playerid);
         OdjecaZatvori(playerid);
         MdtZatvori(playerid);
         TuningMisIskljuci(playerid);

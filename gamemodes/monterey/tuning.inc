@@ -665,7 +665,7 @@ static TuningNatpis(v, const tekst[], font, boja)
     if (!duz || !TuningNatpisMoze(model)) return;
     gTunNatpisObj[v] = CreateObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     SetObjectMaterialText(gTunNatpisObj[v], tekst, 0, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), true, gTuningNatpisArgb[boja], 0, OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
-    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] - 0.08, 0.0, -90.0, 0.0);
+    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] - 0.05, 0.0, -90.0, 0.0);
 }
 
 static TuningVrati(v)
