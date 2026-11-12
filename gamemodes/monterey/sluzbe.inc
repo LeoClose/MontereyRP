@@ -33,7 +33,9 @@
 #define MEHANICAR_SLEPANJE_S 300
 #define MEHANICAR_ODGOVOR_MS 2000
 #define MEHANICAR_RAD_MS    6000
-#define MEHANICAR_VUCA_MS   1000
+#define MEHANICAR_VUCA_MS   500
+#define MEHANICAR_RAZMAK    0.6
+#define MEHANICAR_ODVOJEN   3.0
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -547,7 +549,7 @@ SlucajPrepreke(sad, bool:snimljeno)
         }
         GetVehiclePos(v, x, y, z);
         if (st == SL_NPC) SlucajMakniTaksije(v, x, y, z);
-        new Float:d = CestaPrepreka(v, gSlucaj[s][slPacijent], x, y, z, kupac, ox, oy);
+        new p = gSlucaj[s][slSlepa] - 1, Float:d = CestaPrepreka(v, gSlucaj[s][slPacijent], x, y, z, kupac, ox, oy, p >= 0 ? gMehanicarVozilo[p] : 0);
         gSlucaj[s][slSporo] = d >= TAKSI_USPORI ? 100 : clamp(floatround(d / TAKSI_USPORI * 100.0), 30, 100);
         if (d >= TAKSI_STOP)
         {
@@ -636,7 +638,7 @@ static SlucajSlepaj(s)
         SlucajVratiKamion(s);
         return;
     }
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+    for (new i = 0; i < MAX_PLAYERS; i++) if (i != p && IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
     PutPlayerInVehicle(p, kamion, 1);
     NPC_SetKeys(gSlucaj[s][slNpc], 0, 0, 0);
     if (SlucajPutOdKamiona(s, kamion, CestaNajbliza(RADIONICA_X, RADIONICA_Y, RADIONICA_Z)) < 0)
@@ -669,10 +671,19 @@ public SlucajVuci(s)
         SlucajOtkaci(s);
         return;
     }
-    new v = gMehanicarVozilo[p];
-    if (GetVehicleTrailer(kamion) == v) return;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
-    AttachTrailerToVehicle(v, kamion);
+    new v = gMehanicarVozilo[p], Float:x, Float:y, Float:z, Float:a, Float:kx, Float:ky, Float:kz, Float:ox, Float:oy, Float:oz, Float:cx, Float:cy, Float:cz;
+    GetVehiclePos(kamion, x, y, z);
+    GetVehicleZAngle(kamion, a);
+    GetVehiclePos(v, cx, cy, cz);
+    GetVehicleModelInfo(GetVehicleModel(kamion), VEHICLE_MODEL_INFO_SIZE, kx, ky, kz);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, ox, oy, oz);
+    new Float:razmak = (ky + oy) / 2.0 + MEHANICAR_RAZMAK, Float:tx = x + floatsin(a, degrees) * razmak, Float:ty = y - floatcos(a, degrees) * razmak;
+    if (VectorSize(cx - tx, cy - ty, 0.0) > MEHANICAR_ODVOJEN)
+    {
+        SetVehiclePos(v, tx, ty, z);
+        SetVehicleZAngle(v, a);
+    }
+    if (GetVehicleTrailer(kamion) != v) AttachTrailerToVehicle(v, kamion);
 }
 
 static SlucajIstovari(s)
