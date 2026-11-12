@@ -1,7 +1,7 @@
 #define LOGIN_TD          8
-#define LOGIN_SIRINA      140.0
-#define LOGIN_X           250.0
-#define LOGIN_Y           110.0
+#define LOGIN_SIRINA      120.0
+#define LOGIN_X           245.0
+#define LOGIN_Y           115.0
 #define LOGIN_KUTIJA_H    100.0
 
 enum { LTD_NASLOV, LTD_STATISTIKA }
