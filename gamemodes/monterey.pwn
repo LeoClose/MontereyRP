@@ -16,7 +16,6 @@
 
 new Text:Ime;
 new Text:ImeRp;
-new Text:datum;
 
 new gVozila[MAX_VEHICLES], gVoziloMjesto[MAX_VEHICLES], gVozilaCount;
 
@@ -164,22 +163,14 @@ public OnGameModeInit()
     TextDrawSetProportional(Ime, true);
 
     ImeRp = TextDrawCreate(612.0, 34.0, "RolePlay");
-    TextDrawFont(ImeRp, TEXT_DRAW_FONT_1);
-    TextDrawLetterSize(ImeRp, 0.22, 1.0);
+    TextDrawFont(ImeRp, TEXT_DRAW_FONT_3);
+    TextDrawLetterSize(ImeRp, 0.28, 1.1);
     TextDrawAlignment(ImeRp, TEXT_DRAW_ALIGN_RIGHT);
     TextDrawColour(ImeRp, 0xFFFFFFFF);
     TextDrawSetShadow(ImeRp, 0);
     TextDrawSetOutline(ImeRp, 1);
     TextDrawBackgroundColour(ImeRp, 0x000000FF);
     TextDrawSetProportional(ImeRp, true);
-
-    datum = TextDrawCreate(574.0, 34.0, "12/12/2012");
-    TextDrawLetterSize(datum, 0.2, 1.0);
-    TextDrawTextSize(datum, 600.0, 600.0);
-    TextDrawAlignment(datum, TEXT_DRAW_ALIGN_RIGHT);
-    TextDrawColour(datum, 0xFFFFFFFF);
-    TextDrawSetShadow(datum, 0);
-    TextDrawSetOutline(datum, 1);
     return 1;
 }
 
@@ -409,14 +400,12 @@ stock ShowHud(playerid)
 {
     TextDrawShowForPlayer(playerid, Ime);
     TextDrawShowForPlayer(playerid, ImeRp);
-    TextDrawShowForPlayer(playerid, datum);
 }
 
 stock HideHud(playerid)
 {
     TextDrawHideForPlayer(playerid, Ime);
     TextDrawHideForPlayer(playerid, ImeRp);
-    TextDrawHideForPlayer(playerid, datum);
 }
 
 forward KickajIgraca(playerid);
