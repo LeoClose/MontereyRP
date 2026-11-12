@@ -378,6 +378,11 @@ MdtStateChange(playerid, PLAYER_STATE:oldstate)
     if (oldstate == PLAYER_STATE_DRIVER || oldstate == PLAYER_STATE_PASSENGER) MdtZatvori(playerid);
 }
 
+MdtOtvoren(playerid)
+{
+    return gMdtOtvoren[playerid];
+}
+
 MdtDisconnect(playerid)
 {
     gMdtOtvoren[playerid] = false;

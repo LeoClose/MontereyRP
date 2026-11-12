@@ -747,6 +747,11 @@ static MobitelCitaj(playerid, k)
     gMobitelEkran[playerid] = MOBITEL_CITAJ;
 }
 
+MobitelOtvoren(playerid)
+{
+    return gMobitelOtvoren[playerid] || gMobitelKamera[playerid];
+}
+
 MobitelKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     new KEY:pritisnuto = newkeys & ~oldkeys;

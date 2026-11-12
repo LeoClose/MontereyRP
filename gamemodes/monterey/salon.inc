@@ -326,6 +326,7 @@ CMD:parkiraj(playerid, params[])
     new v = GetPlayerVehicleID(playerid);
     if (!v || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate voziti."));
     if (gVlasnik[v] != gAccountId[playerid] || !gVlasnik[v]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo nije vase vozilo."));
+    if (GarazaParkiraj(playerid, v)) return 1;
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo se parkira samo izvana."));
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(v, x, y, z);

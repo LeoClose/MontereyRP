@@ -1283,6 +1283,71 @@ VoziloKey(playerid, KEY:newkeys, KEY:oldkeys)
     if ((newkeys & KEY_CROUCH) && !(oldkeys & KEY_CROUCH) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER) TuningTrubi(playerid);
 }
 
+enum { VM_MOTOR, VM_SVJETLA, VM_HAUBA, VM_PRTLJAZNIK, VM_ZAKLJUCAJ, VM_PARKIRAJ, VM_PROZOR, VM_POJAS, VM_PROMETNA }
+static gVoziloMeni[MAX_PLAYERS][9], gVoziloMeniBroj[MAX_PLAYERS];
+
+VoziloMeni(playerid)
+{
+    new v = GetPlayerVehicleID(playerid), model = GetVehicleModel(v), bool:vozac = GetPlayerState(playerid) == PLAYER_STATE_DRIVER, n = 0, list[512], row[64], len = 0;
+    if (!v) return 0;
+    if (vozac && !BezMotora(model))
+    {
+        gVoziloMeni[playerid][n++] = VM_MOTOR;
+        gVoziloMeni[playerid][n++] = VM_SVJETLA;
+    }
+    if (vozac && HasGepek(v))
+    {
+        gVoziloMeni[playerid][n++] = VM_HAUBA;
+        gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
+    }
+    if (vozac) gVoziloMeni[playerid][n++] = VM_ZAKLJUCAJ;
+    if (vozac && VlasnikVozila(v) == gAccountId[playerid]) gVoziloMeni[playerid][n++] = VM_PARKIRAJ;
+    if (!BezKrova(model))
+    {
+        gVoziloMeni[playerid][n++] = VM_PROZOR;
+        gVoziloMeni[playerid][n++] = VM_POJAS;
+    }
+    gVoziloMeni[playerid][n++] = VM_PROMETNA;
+    gVoziloMeniBroj[playerid] = n;
+    for (new i = 0; i < n; i++)
+    {
+        switch (gVoziloMeni[playerid][i])
+        {
+            case VM_MOTOR: format(row, sizeof row, "%s", VoziloGet(v, VP_MOTOR) == 1 ? T(playerid, "Ugasi motor") : T(playerid, "Upali motor"));
+            case VM_SVJETLA: format(row, sizeof row, "%s", VoziloGet(v, VP_SVJETLA) == 1 ? T(playerid, "Ugasi svjetla") : T(playerid, "Upali svjetla"));
+            case VM_HAUBA: format(row, sizeof row, "%s", T(playerid, "Hauba"));
+            case VM_PRTLJAZNIK: format(row, sizeof row, "%s", T(playerid, "Prtljaznik"));
+            case VM_ZAKLJUCAJ: format(row, sizeof row, "%s", VoziloGet(v, VP_VRATA) == 1 ? T(playerid, "Otkljucaj") : T(playerid, "Zakljucaj"));
+            case VM_PARKIRAJ: format(row, sizeof row, "%s", T(playerid, "Parkiraj ovdje"));
+            case VM_PROZOR: format(row, sizeof row, "%s", T(playerid, "Prozor"));
+            case VM_POJAS: format(row, sizeof row, "%s", gPojas[playerid] ? T(playerid, "Skini pojas") : T(playerid, "Stavi pojas"));
+            case VM_PROMETNA: format(row, sizeof row, "%s", T(playerid, "Prometna dozvola"));
+        }
+        DodajStupac(list, len, row);
+    }
+    PrikaziDialog(playerid, DLG_VOZILO_MENI, DIALOG_STYLE_LIST, gImenaVozila[model - 400], list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
+    return 1;
+}
+
+DLG:vozilo_meni(playerid, response, listitem)
+{
+    if (!response || listitem < 0 || listitem >= gVoziloMeniBroj[playerid] || !IsPlayerInAnyVehicle(playerid)) return 1;
+    new prazno[1];
+    switch (gVoziloMeni[playerid][listitem])
+    {
+        case VM_MOTOR: cmd_motor(playerid, prazno);
+        case VM_SVJETLA: cmd_svjetla(playerid, prazno);
+        case VM_HAUBA: cmd_hood(playerid, prazno);
+        case VM_PRTLJAZNIK: cmd_trunk(playerid, prazno);
+        case VM_ZAKLJUCAJ: cmd_zakljucaj(playerid, prazno);
+        case VM_PARKIRAJ: cmd_parkiraj(playerid, prazno);
+        case VM_PROZOR: cmd_prozor(playerid, prazno);
+        case VM_POJAS: cmd_pojas(playerid, prazno);
+        case VM_PROMETNA: return cmd_prometna(playerid, prazno);
+    }
+    return VoziloMeni(playerid);
+}
+
 CMD:motor(playerid, params[])
 {
     return VoziloMotor(playerid);
