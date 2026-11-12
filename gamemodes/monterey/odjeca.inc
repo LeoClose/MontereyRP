@@ -189,9 +189,18 @@ OdjecaUlaz(playerid)
     return 0;
 }
 
+// head bone (2): x runs up the head, y forward, z sideways; keeps hair and headwear on the upper head
+static OdjecaNaGlavi(&Float:x, &Float:y, &Float:z)
+{
+    x = x < 0.05 ? 0.05 : x > 0.25 ? 0.25 : x;
+    y = y < -0.1 ? -0.1 : y > 0.1 ? 0.1 : y;
+    z = z < -0.06 ? -0.06 : z > 0.06 ? 0.06 : z;
+}
+
 static OdjecaPrivjesak(playerid, i, model, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
     new slot = i ? ODJECA_SLOT_FRIZURA : ODJECA_SLOT_KAPA;
+    OdjecaNaGlavi(x, y, z);
     if (model) SetPlayerAttachedObject(playerid, slot, model, 2, x, y, z, rx, ry, rz);
     else RemovePlayerAttachedObject(playerid, slot);
 }
@@ -484,6 +493,7 @@ public OnPlayerEditAttachedObject(playerid, EDIT_RESPONSE:response, index, model
     new i = index == ODJECA_SLOT_FRIZURA ? 1 : 0;
     if (response == EDIT_RESPONSE_FINAL && modelid == gOdjecaNosi[playerid][i][pkModel])
     {
+        OdjecaNaGlavi(fOffsetX, fOffsetY, fOffsetZ);
         gOdjecaNosi[playerid][i][pkX] = fOffsetX;
         gOdjecaNosi[playerid][i][pkY] = fOffsetY;
         gOdjecaNosi[playerid][i][pkZ] = fOffsetZ;
