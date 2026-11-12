@@ -121,8 +121,8 @@ public OnGameModeInit()
     MapaIdlewood();
     MapaIdlewoodFlats();
     MapaDacoradiona();
-	MapaChinatownUkloni(INVALID_PLAYER_ID);
-	MapaChinatown();
+    MapaChinatownUkloni(INVALID_PLAYER_ID);
+    MapaChinatown();
     InitMarica();
     InitPolicija();
     InitSluzbe();
@@ -140,7 +140,7 @@ public OnGameModeInit()
     InitVlakovi();
     SetTimer("Sekunda", 1000, true);
 
-	Ime = TextDrawCreate(578.0, 24.0, "Monterey");
+    Ime = TextDrawCreate(578.0, 24.0, "Monterey");
     TextDrawLetterSize(Ime, 0.4, 1.6);
     TextDrawTextSize(Ime, 64.0, 64.0);
     TextDrawAlignment(Ime, TEXT_DRAW_ALIGN_CENTRE);
@@ -334,7 +334,7 @@ ZavrsiLogin(playerid)
     TeritorijPrijava(playerid);
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     TogglePlayerSpectating(playerid, false);
-	ShowHud();
+    ShowHud(playerid);
     return 1;
 }
 
