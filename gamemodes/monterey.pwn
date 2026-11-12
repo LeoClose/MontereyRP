@@ -348,6 +348,7 @@ ZavrsiLogin(playerid)
     SetSpawnInfo(playerid, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     TogglePlayerSpectating(playerid, false);
     ShowHud(playerid);
+    AdminPrijava(playerid);
     return 1;
 }
 
