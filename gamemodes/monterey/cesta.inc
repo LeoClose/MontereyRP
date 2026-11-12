@@ -341,7 +341,7 @@ static Float:TaksiNaPutu(Float:dx, Float:dy, Float:dz, Float:fx, Float:fy)
     return uz > -1.0 && floatabs(dx * fy - dy * fx) < TAKSI_SIRINA ? uz : TAKSI_USPORI;
 }
 
-Float:CestaPrepreka(v, m, Float:x, Float:y, Float:z, &bool:kupac, &Float:ox, &Float:oy, zanemari = 0)
+Float:CestaPrepreka(v, m, Float:x, Float:y, Float:z, &bool:kupac, &Float:ox, &Float:oy)
 {
     new Float:a, Float:naj = TAKSI_USPORI, mx = floatround(x), my = floatround(y);
     GetVehicleZAngle(v, a);
@@ -350,7 +350,7 @@ Float:CestaPrepreka(v, m, Float:x, Float:y, Float:z, &bool:kupac, &Float:ox, &Fl
     for (new i = 0; i < gVozilaCount; i++)
     {
         new dx = gPrepVozilaM[i][0] - mx, dy = gPrepVozilaM[i][1] - my;
-        if (dx > TAKSI_DOSEG || dx < -TAKSI_DOSEG || dy > TAKSI_DOSEG || dy < -TAKSI_DOSEG || gVozila[i] == v || gVozila[i] == zanemari) continue;
+        if (dx > TAKSI_DOSEG || dx < -TAKSI_DOSEG || dy > TAKSI_DOSEG || dy < -TAKSI_DOSEG || gVozila[i] == v) continue;
         new Float:d = TaksiNaPutu(gPrepVozila[i][0] - x, gPrepVozila[i][1] - y, gPrepVozila[i][2] - z, fx, fy);
         if (d < naj)
         {

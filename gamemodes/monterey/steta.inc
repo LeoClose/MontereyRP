@@ -5,7 +5,6 @@
 #define STETA_ORUZJA        39
 #define STETA_NOZ_KRADOM    1000.0
 #define STETA_NOZ_MS        3000
-#define STETA_VOZILO_GORI   250.0
 #define STETA_VOZILO_MIN    300.0
 #define STETA_DIO_POSTO     35
 #define STETA_GUMA_DOMET    0.6
@@ -357,16 +356,6 @@ StetaTick()
         new PLAYER_STATE:st = GetPlayerState(i);
         new bool:ziv = st == PLAYER_STATE_ONFOOT || st == PLAYER_STATE_DRIVER || st == PLAYER_STATE_PASSENGER;
         StetaTrakaVidljiva(i, ziv);
-        if ((st == PLAYER_STATE_DRIVER || st == PLAYER_STATE_PASSENGER) && !IsRanjen(i) && !ZatvorProvjera(i))
-        {
-            GetVehicleHealth(GetPlayerVehicleID(i), h);
-            if (h < STETA_VOZILO_GORI)
-            {
-                gZivot[i] = 0.0;
-                RanjenProvjeri(i, 0.0);
-                continue;
-            }
-        }
         if (!ziv || sad - gStetaPostavljeno[i] < STETA_SYNC_MS) continue;
         GetPlayerArmour(i, o);
         if (o > gOklop[i] + 1.0) SetPlayerArmour(i, gOklop[i]);
