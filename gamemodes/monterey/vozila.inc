@@ -974,7 +974,7 @@ BezKrova(model)
     return 0;
 }
 
-static BezMotora(model)
+BezMotora(model)
 {
     return model == 481 || model == 509 || model == 510;
 }
@@ -1013,16 +1013,21 @@ VoziloImaGoriva(v)
     return gGorivo[v] > 0.0 ? 1 : 0;
 }
 
+Float:VoziloTank(v)
+{
+    return VOZILO_TANK * (1.0 + 0.5 * float(TuningRezervoar(v)));
+}
+
 VoziloNapuni(v)
 {
-    gGorivo[v] = VOZILO_TANK;
+    gGorivo[v] = VoziloTank(v);
     gKrivoGorivo[v] = 0.0;
     gKrivoVoznja[v] = 0;
 }
 
 static VoziloReset(v)
 {
-    gGorivo[v] = VOZILO_TANK;
+    gGorivo[v] = VoziloTank(v);
     gVoziloZadnja[v] = 0.0;
     gVoziloUkradeno[v] = 0;
     gKrivoGorivo[v] = 0.0;
@@ -1092,6 +1097,9 @@ VoziloUpdate(playerid)
     new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
     GetVehicleVelocity(v, vx, vy, vz);
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
+    new KEY:gas, gasGore, gasStrana;
+    GetPlayerKeys(playerid, gas, gasGore, gasStrana);
+    TuningVozac(v, gas, VectorSize(vx, vy, 0.0) * 180.0);
     new razina = TuningMotor(v), model = GetVehicleModel(v);
     if (razina && model >= 400 && model <= 611 && GetTickCount() - gVoziloMotorMs[v] >= VOZILO_MOTOR_MS)
     {
@@ -1271,6 +1279,7 @@ static VoziloMotor(playerid)
 VoziloKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if ((newkeys & KEY_SUBMISSION) && !(oldkeys & KEY_SUBMISSION) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER) VoziloMotor(playerid);
+    if ((newkeys & KEY_CROUCH) && !(oldkeys & KEY_CROUCH) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER) TuningTrubi(playerid);
 }
 
 CMD:motor(playerid, params[])
@@ -1368,7 +1377,7 @@ static PokaziPrometnu(t, v)
     GetVehicleHealth(v, zdravlje);
     format(body, sizeof body, T(t, "Vozilo: %s\nTablice: %s\nVlasnik: %s\nGodina: %d\nGorivo: %s\nSpremnik: %s (%d/%d L)\nNajveca brzina: %d km/h\nSjedala: %d\nStanje: %d%%"),
         gImenaVozila[model - 400], tablica, vlasnik, 1990 + v * 7 % 32, BezMotora(model) ? T(t, "Nema") : JeDizel(model) ? T(t, "Dizel") : T(t, "Benzin"),
-        BezMotora(model) ? T(t, "Nema") : Spremnik(t, v), BezMotora(model) ? 0 : floatround(gGorivo[v]), floatround(VOZILO_TANK), gVoziloBrzina[model - 400], GetVehicleSeats(v), floatround(zdravlje / 10.0));
+        BezMotora(model) ? T(t, "Nema") : Spremnik(t, v), BezMotora(model) ? 0 : floatround(gGorivo[v]), floatround(VoziloTank(v)), gVoziloBrzina[model - 400], GetVehicleSeats(v), floatround(zdravlje / 10.0));
     return PrikaziDialog(t, DLG_NONE, DIALOG_STYLE_MSGBOX, T(t, "Prometna dozvola"), body, T(t, "Zatvori"));
 }
 
@@ -1401,7 +1410,7 @@ static GorivoPitaj(playerid, nacin, item, maks, const upozorenje[] = "")
 
 static VoziloProstor(v)
 {
-    return floatround(VOZILO_TANK - gGorivo[v], floatround_floor);
+    return floatround(VoziloTank(v) - gGorivo[v], floatround_floor);
 }
 
 static KanisterNapuni(playerid, litara)

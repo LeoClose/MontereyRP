@@ -15,8 +15,16 @@
 #define TUNING_CEKAJ_MS     350
 #define TUNING_PONOVI_MS    120
 #define TUNING_ULAZ_MS      1500
+#define TUNING_TRUBA        1500
+#define TUNING_PLAMEN       5000
+#define TUNING_TRUBA_DOMET  40.0
+#define TUNING_TRUBA_MS     1000
+#define TUNING_PLAMEN_KMH   60.0
+#define TUNING_PLAMEN_MS    1500
+#define TUNING_PLAMEN_TRAJE 400
+#define TUNING_PLAMEN_OBJEKT 18694
 
-enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_DIO }
+enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_PLAMEN, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_RED }
 enum E_TUNING { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_MAP_ICON:tgIkona }
 
@@ -25,10 +33,16 @@ static const gTuningDioCijena[] = { 1500, 1200, 1000, 1200, 400, 0, 800, 2000, 5
 static const gTuningDioPogled[] = { 1, 4, 3, 2, 4, 1, 1, 2, 0, 2, 4, 1, 3, 3 };
 static const gTuningMotorCijena[] = { 0, 5000, 10000, 20000 };
 static const gTuningNeon[][] = { "Bez", "Crveni", "Plavi", "Zeleni", "Zuti", "Ruzicasti", "Bijeli" };
+static const gTuningOklopCijena[] = { 0, 4000, 8000, 15000 };
+static const gTuningOklopPosto[] = { 0, 20, 35, 50 };
+static const gTuningRezervoarCijena[] = { 0, 3000, 6000 };
+static const gTuningTruba[][] = { "Tvornicka", "Klasicna", "Zracna", "Duga zracna", "Zvono", "Zvonce" };
+static const gTuningTrubaZvuk[] = { 0, 1147, 3200, 3201, 3401, 6401 };
 static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 } };
 
 static gTuning[TUNING_MAX][E_TUNING];
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
+static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunPlamen[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], bool:gTunGas[MAX_VEHICLES], gTunPlamenMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
 static gTunDijelovi[MAX_PLAYERS][TUNING_DIJELOVA], gTunKategorije[MAX_PLAYERS][TK_DIO + 14], gTunKatBroj[MAX_PLAYERS];
 static PlayerText:gTunTd[MAX_PLAYERS][TUNING_TD], gTunTdBroj[MAX_PLAYERS], PlayerText:gTun[MAX_PLAYERS][TTD_RED + TUNING_REDOVA * 3];
@@ -37,7 +51,16 @@ static gApTuning[MAX_PLAYERS], gTunSmjer[MAX_PLAYERS], gTunPonovi[MAX_PLAYERS], 
 InitTuning()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS tuning_garages (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS vehicle_tuning (vehicle INTEGER PRIMARY KEY, mods TEXT NOT NULL DEFAULT '', paintjob INTEGER NOT NULL DEFAULT 3, neon INTEGER NOT NULL DEFAULT 0, motor INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS vehicle_tuning (vehicle INTEGER PRIMARY KEY, mods TEXT NOT NULL DEFAULT '', paintjob INTEGER NOT NULL DEFAULT 3, neon INTEGER NOT NULL DEFAULT 0, motor INTEGER NOT NULL DEFAULT 0, oklop INTEGER NOT NULL DEFAULT 0, rezervoar INTEGER NOT NULL DEFAULT 0, truba INTEGER NOT NULL DEFAULT 0, plamen INTEGER NOT NULL DEFAULT 0)"));
+    new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT oklop FROM vehicle_tuning LIMIT 1");
+    if (stupac) DB_FreeResultSet(stupac);
+    else
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN oklop INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN rezervoar INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN truba INTEGER NOT NULL DEFAULT 0"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN plamen INTEGER NOT NULL DEFAULT 0"));
+    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM tuning_garages ORDER BY id LIMIT %d", TUNING_MAX);
     for (new g = 0, n = DB_GetRowCount(res); g < n; g++, DB_SelectNextRow(res))
     {
@@ -62,6 +85,58 @@ static TuningStvori(g)
 TuningMotor(v)
 {
     return v > 0 && v < MAX_VEHICLES ? gTunMotor[v] : 0;
+}
+
+TuningRezervoar(v)
+{
+    return v > 0 && v < MAX_VEHICLES ? gTunRezervoar[v] : 0;
+}
+
+forward TuningPlamenKraj(objekt);
+public TuningPlamenKraj(objekt)
+{
+    DestroyObject(objekt);
+}
+
+static TuningPlamenIspusti(v)
+{
+    new Float:sx, Float:sy, Float:sz;
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    new objekt = CreateObject(TUNING_PLAMEN_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    AttachObjectToVehicle(objekt, v, 0.35, -sy / 2.0 - 0.1, -sz / 2.0 + 0.35, 0.0, 0.0, 180.0);
+    SetTimerEx("TuningPlamenKraj", TUNING_PLAMEN_TRAJE, false, "i", objekt);
+}
+
+TuningVozac(v, KEY:tipke, Float:kmh)
+{
+    if (gTunOklop[v])
+    {
+        new Float:h;
+        GetVehicleHealth(v, h);
+        if (gTunZdravlje[v] > 0.0 && h > 0.0 && h < gTunZdravlje[v])
+        {
+            h = gTunZdravlje[v] - (gTunZdravlje[v] - h) * float(100 - gTuningOklopPosto[gTunOklop[v]]) / 100.0;
+            SetVehicleHealth(v, h);
+        }
+        gTunZdravlje[v] = h;
+    }
+    new bool:gas = (tipke & KEY_SPRINT) != KEY:0;
+    if (gTunPlamen[v] && gTunGas[v] && !gas && kmh >= TUNING_PLAMEN_KMH && GetTickCount() - gTunPlamenMs[v] >= TUNING_PLAMEN_MS)
+    {
+        gTunPlamenMs[v] = GetTickCount();
+        TuningPlamenIspusti(v);
+    }
+    gTunGas[v] = gas;
+}
+
+TuningTrubi(playerid)
+{
+    new v = GetPlayerVehicleID(playerid), zvuk = v ? gTuningTrubaZvuk[gTunTruba[v]] : 0, Float:x, Float:y, Float:z;
+    if (!zvuk || GetTickCount() - gTunTrubaMs[v] < TUNING_TRUBA_MS) return;
+    gTunTrubaMs[v] = GetTickCount();
+    GetVehiclePos(v, x, y, z);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == GetVehicleVirtualWorld(v) && IsPlayerInRangeOfPoint(i, TUNING_TRUBA_DOMET, x, y, z)) PlayerPlaySound(i, zvuk, x, y, z);
 }
 
 static TuningNeon(v, boja)
@@ -97,7 +172,12 @@ TuningPrimijeni(v)
     gTunPaint[v] = 3;
     gTunNeon[v] = 0;
     gTunMotor[v] = 0;
-    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
+    gTunOklop[v] = 0;
+    gTunRezervoar[v] = 0;
+    gTunTruba[v] = 0;
+    gTunPlamen[v] = 0;
+    gTunZdravlje[v] = 0.0;
+    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0), IFNULL(t.oklop, 0), IFNULL(t.rezervoar, 0), IFNULL(t.truba, 0), IFNULL(t.plamen, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
     if (!DB_GetRowCount(res))
     {
         DB_FreeResultSet(res);
@@ -109,6 +189,10 @@ TuningPrimijeni(v)
     gTunPaint[v] = DB_GetFieldInt(res, 3);
     gTunNeon[v] = clamp(DB_GetFieldInt(res, 4), 0, sizeof gTuningNeon - 1);
     gTunMotor[v] = clamp(DB_GetFieldInt(res, 5), 0, sizeof gTuningMotorCijena - 1);
+    gTunOklop[v] = clamp(DB_GetFieldInt(res, 6), 0, sizeof gTuningOklopCijena - 1);
+    gTunRezervoar[v] = clamp(DB_GetFieldInt(res, 7), 0, sizeof gTuningRezervoarCijena - 1);
+    gTunTruba[v] = clamp(DB_GetFieldInt(res, 8), 0, sizeof gTuningTruba - 1);
+    gTunPlamen[v] = clamp(DB_GetFieldInt(res, 9), 0, 1);
     DB_FreeResultSet(res);
     for (new i = 0, c = 0; ; i++)
     {
@@ -129,6 +213,10 @@ TuningMakni(v)
 {
     TuningNeon(v, 0);
     gTunMotor[v] = 0;
+    gTunOklop[v] = 0;
+    gTunRezervoar[v] = 0;
+    gTunTruba[v] = 0;
+    gTunPlamen[v] = 0;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM vehicle_tuning WHERE vehicle = %d", VlasnikDb(v)));
 }
 
@@ -141,7 +229,7 @@ static TuningSpremi(v)
         format(dio, sizeof dio, "%d ", gTunMod[v][s]);
         strcat(mods, dio);
     }
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor) VALUES (%d, '%q', %d, %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor, oklop, rezervoar, truba, plamen) VALUES (%d, '%q', %d, %d, %d, %d, %d, %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v], gTunOklop[v], gTunRezervoar[v], gTunTruba[v], gTunPlamen[v]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET c1 = %d, c2 = %d WHERE id = %d", gTunBoja[v][0], gTunBoja[v][1], VlasnikDb(v)));
 }
 
@@ -204,6 +292,10 @@ static TuningKatIme(playerid, kat, ime[], size = sizeof (ime))
         case TK_PAINTJOB: format(ime, size, T(playerid, "Paintjob"));
         case TK_MOTOR: format(ime, size, T(playerid, "Motor"));
         case TK_NEON: format(ime, size, T(playerid, "Neon"));
+        case TK_OKLOP: format(ime, size, T(playerid, "Ojacana karoserija"));
+        case TK_REZERVOAR: format(ime, size, T(playerid, "Spremnik goriva"));
+        case TK_TRUBA: format(ime, size, T(playerid, "Truba"));
+        case TK_PLAMEN: format(ime, size, T(playerid, "Plamen iz auspuha"));
         default: format(ime, size, T(playerid, gTuningDio[kat - TK_DIO]));
     }
 }
@@ -252,6 +344,31 @@ static TuningStavka(playerid, i, &vrijednost, &cijena, ime[], size = sizeof (ime
             cijena = i ? TUNING_NEON : 0;
             format(ime, size, T(playerid, gTuningNeon[i]));
         }
+        case TK_OKLOP:
+        {
+            vrijednost = i;
+            cijena = gTuningOklopCijena[i];
+            if (i) format(ime, size, T(playerid, "Stupanj %d (-%d%% stete)"), i, gTuningOklopPosto[i]);
+            else format(ime, size, T(playerid, "Tvornicki"));
+        }
+        case TK_REZERVOAR:
+        {
+            vrijednost = i;
+            cijena = gTuningRezervoarCijena[i];
+            format(ime, size, "%d L", floatround(VOZILO_TANK * (1.0 + 0.5 * float(i))));
+        }
+        case TK_TRUBA:
+        {
+            vrijednost = i;
+            cijena = i ? TUNING_TRUBA : 0;
+            format(ime, size, T(playerid, gTuningTruba[i]));
+        }
+        case TK_PLAMEN:
+        {
+            vrijednost = i;
+            cijena = i ? TUNING_PLAMEN : 0;
+            format(ime, size, T(playerid, i ? ("Ugradeni") : ("Bez")));
+        }
         default:
         {
             vrijednost = i ? gTunDijelovi[playerid][i - 1] : 0;
@@ -272,6 +389,10 @@ static bool:TuningUgradeno(playerid, vrijednost)
         case TK_PAINTJOB: return gTunPaint[v] == vrijednost;
         case TK_MOTOR: return gTunMotor[v] == vrijednost;
         case TK_NEON: return gTunNeon[v] == vrijednost;
+        case TK_OKLOP: return gTunOklop[v] == vrijednost;
+        case TK_REZERVOAR: return gTunRezervoar[v] == vrijednost;
+        case TK_TRUBA: return gTunTruba[v] == vrijednost;
+        case TK_PLAMEN: return gTunPlamen[v] == vrijednost;
     }
     return gTunMod[v][kat - TK_DIO] == vrijednost;
 }
@@ -327,7 +448,9 @@ static TuningPregled(playerid)
         case TK_BOJA2: ChangeVehicleColours(v, gTunBoja[v][0], vrijednost);
         case TK_PAINTJOB: ChangeVehiclePaintjob(v, vrijednost);
         case TK_NEON: TuningNeon(v, vrijednost);
-        case TK_POPRAVAK, TK_MOTOR: {}
+        case TK_TRUBA: if (gTuningTrubaZvuk[vrijednost]) PlayerPlaySound(playerid, gTuningTrubaZvuk[vrijednost], 0.0, 0.0, 0.0);
+        case TK_PLAMEN: if (vrijednost) TuningPlamenIspusti(v);
+        case TK_POPRAVAK, TK_MOTOR, TK_OKLOP, TK_REZERVOAR: {}
         default:
         {
             new stari = GetVehicleComponentInSlot(v, CARMODTYPE:(kat - TK_DIO));
@@ -351,6 +474,10 @@ static TuningOtvoriKat(playerid, kat)
         case TK_PAINTJOB: gTunBroj[playerid] = TuningPaintjoba(model) + 1;
         case TK_MOTOR: gTunBroj[playerid] = sizeof gTuningMotorCijena;
         case TK_NEON: gTunBroj[playerid] = sizeof gTuningNeon;
+        case TK_OKLOP: gTunBroj[playerid] = sizeof gTuningOklopCijena;
+        case TK_REZERVOAR: gTunBroj[playerid] = sizeof gTuningRezervoarCijena;
+        case TK_TRUBA: gTunBroj[playerid] = sizeof gTuningTruba;
+        case TK_PLAMEN: gTunBroj[playerid] = 2;
         default:
         {
             new n = 0;
@@ -371,7 +498,7 @@ static TuningOtvoriKat(playerid, kat)
             break;
         }
     }
-    TuningKamera(playerid, kat == -1 || kat < TK_DIO ? (kat == TK_NEON ? 2 : kat == TK_MOTOR ? 4 : 0) : gTuningDioPogled[kat - TK_DIO]);
+    TuningKamera(playerid, kat == -1 || kat < TK_DIO ? (kat == TK_NEON ? 2 : kat == TK_MOTOR ? 4 : kat == TK_PLAMEN ? 1 : 0) : gTuningDioPogled[kat - TK_DIO]);
     TuningPregled(playerid);
     TuningPrikazi(playerid);
 }
@@ -385,6 +512,10 @@ static TuningIzbornik(playerid)
     if (TuningPaintjoba(model)) gTunKategorije[playerid][n++] = TK_PAINTJOB;
     gTunKategorije[playerid][n++] = TK_MOTOR;
     gTunKategorije[playerid][n++] = TK_NEON;
+    gTunKategorije[playerid][n++] = TK_OKLOP;
+    if (!BezMotora(model)) gTunKategorije[playerid][n++] = TK_REZERVOAR;
+    gTunKategorije[playerid][n++] = TK_TRUBA;
+    gTunKategorije[playerid][n++] = TK_PLAMEN;
     for (new s = 0; s < 14; s++)
     {
         for (new c = 1000; c <= 1193; c++)
@@ -504,6 +635,10 @@ static TuningKupi(playerid)
         case TK_PAINTJOB: gTunPaint[v] = vrijednost;
         case TK_MOTOR: gTunMotor[v] = vrijednost;
         case TK_NEON: gTunNeon[v] = vrijednost;
+        case TK_OKLOP: gTunOklop[v] = vrijednost;
+        case TK_REZERVOAR: gTunRezervoar[v] = vrijednost;
+        case TK_TRUBA: gTunTruba[v] = vrijednost;
+        case TK_PLAMEN: gTunPlamen[v] = vrijednost;
         default: gTunMod[v][kat - TK_DIO] = vrijednost;
     }
     if (kat != TK_POPRAVAK) TuningSpremi(v);
