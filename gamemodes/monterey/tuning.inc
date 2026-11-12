@@ -483,7 +483,7 @@ static const gTuningFont[][] = { "Arial", "Impact", "Verdana", "Comic Sans MS", 
 static const gTuningNatpisBoja[][] = { "Bijela", "Crvena", "Plava", "Zelena", "Zuta", "Ruzicasta", "Crna", "Zlatna" };
 static const gTuningNatpisArgb[] = { 0xFFFFFFFF, 0xFFE02020, 0xFF2080FF, 0xFF20D040, 0xFFFFE020, 0xFFFF69B4, 0xFF000000, 0xFFFFC020 };
 
-static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 } };
+static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 }, { 0.0, -0.3, 5.5 } };
 
 static gTuning[TUNING_MAX][E_TUNING];
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
@@ -665,7 +665,7 @@ static TuningNatpis(v, const tekst[], font, boja)
     if (!duz || !TuningNatpisMoze(model)) return;
     gTunNatpisObj[v] = CreateObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     SetObjectMaterialText(gTunNatpisObj[v], tekst, 0, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), true, gTuningNatpisArgb[boja], 0, OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
-    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] + 0.02, 0.0, -90.0, 0.0);
+    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1] - 0.08, 0.0, -90.0, 0.0);
 }
 
 static TuningVrati(v)
@@ -1057,7 +1057,7 @@ static TuningOtvoriKat(playerid, kat)
             break;
         }
     }
-    TuningKamera(playerid, kat == -1 || kat < TK_DIO ? (kat == TK_NEON ? 2 : kat == TK_MOTOR ? 4 : kat == TK_ISKRE ? 1 : 0) : gTuningDioPogled[kat - TK_DIO]);
+    TuningKamera(playerid, kat == -1 || kat < TK_DIO ? (kat == TK_NEON ? 2 : kat == TK_MOTOR ? 4 : kat == TK_ISKRE ? 1 : kat == TK_NATPIS ? 5 : 0) : gTuningDioPogled[kat - TK_DIO]);
     TuningPregled(playerid);
     TuningPrikazi(playerid);
 }
