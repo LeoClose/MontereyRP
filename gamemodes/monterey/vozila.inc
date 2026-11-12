@@ -1099,9 +1099,10 @@ VoziloUpdate(playerid)
     new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
     GetVehicleVelocity(v, vx, vy, vz);
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
-    TuningVozac(v, VectorSize(vx, vy, 0.0) * 180.0);
+    new razina = TuningMotor(v), model = GetVehicleModel(v), KEY:gas, gasGore, gasStrana;
+    GetPlayerKeys(playerid, gas, gasGore, gasStrana);
+    TuningVozac(v, VectorSize(vx, vy, 0.0) * 180.0, (gas & KEY_SPRINT) && model >= 400 && model <= 611 && VectorSize(vx, vy, 0.0) * 180.0 < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)) * 0.95);
     TuningTrubaSync(playerid, v);
-    new razina = TuningMotor(v), model = GetVehicleModel(v);
     if (razina && model >= 400 && model <= 611 && GetTickCount() - gVoziloMotorMs[v] >= VOZILO_MOTOR_MS)
     {
         new KEY:tipke, gore, strana, Float:a, Float:ravno = VectorSize(vx, vy, 0.0), Float:kmh = ravno * 180.0;
@@ -1284,12 +1285,54 @@ VoziloKey(playerid, KEY:newkeys, KEY:oldkeys)
 }
 
 enum { VM_MOTOR, VM_SVJETLA, VM_HAUBA, VM_PRTLJAZNIK, VM_ZAKLJUCAJ, VM_PARKIRAJ, VM_PROZOR, VM_POJAS, VM_PROMETNA }
-static gVoziloMeni[MAX_PLAYERS][9], gVoziloMeniBroj[MAX_PLAYERS];
+static gVoziloMeni[MAX_PLAYERS][9], gVoziloMeniBroj[MAX_PLAYERS], gVoziloMeniV[MAX_PLAYERS];
+
+static VoziloMojeBlizu(playerid)
+{
+    new najblize = 0, Float:naj = VOZILO_DOMET, Float:x, Float:y, Float:z;
+    for (new i = 0; i < gVozilaCount; i++)
+    {
+        new v = gVozila[i];
+        if (VlasnikVozila(v) != gAccountId[playerid] || GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid)) continue;
+        GetVehiclePos(v, x, y, z);
+        new Float:d = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        if (d > naj) continue;
+        naj = d;
+        najblize = v;
+    }
+    return najblize;
+}
+
+static bool:VoziloMeniVrijedi(playerid, v)
+{
+    if (!GetVehicleModel(v)) return false;
+    if (IsPlayerInAnyVehicle(playerid)) return GetPlayerVehicleID(playerid) == v;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || VlasnikVozila(v) != gAccountId[playerid]) return false;
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(v, x, y, z);
+    return IsPlayerInRangeOfPoint(playerid, VOZILO_DOMET, x, y, z);
+}
 
 VoziloMeni(playerid)
 {
-    new v = GetPlayerVehicleID(playerid), model = GetVehicleModel(v), bool:vozac = GetPlayerState(playerid) == PLAYER_STATE_DRIVER, n = 0, list[512], row[64], len = 0;
+    new v = GetPlayerVehicleID(playerid), bool:pjesice = false;
+    if (!v && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
+    {
+        v = VoziloMojeBlizu(playerid);
+        pjesice = true;
+    }
     if (!v) return 0;
+    new model = GetVehicleModel(v), bool:vozac = GetPlayerState(playerid) == PLAYER_STATE_DRIVER, n = 0, list[512], row[64], len = 0;
+    gVoziloMeniV[playerid] = v;
+    if (pjesice)
+    {
+        gVoziloMeni[playerid][n++] = VM_ZAKLJUCAJ;
+        if (HasGepek(v))
+        {
+            gVoziloMeni[playerid][n++] = VM_HAUBA;
+            gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
+        }
+    }
     if (vozac && !BezMotora(model))
     {
         gVoziloMeni[playerid][n++] = VM_MOTOR;
@@ -1302,7 +1345,7 @@ VoziloMeni(playerid)
     }
     if (vozac) gVoziloMeni[playerid][n++] = VM_ZAKLJUCAJ;
     if (vozac && VlasnikVozila(v) == gAccountId[playerid]) gVoziloMeni[playerid][n++] = VM_PARKIRAJ;
-    if (!BezKrova(model))
+    if (!pjesice && !BezKrova(model))
     {
         gVoziloMeni[playerid][n++] = VM_PROZOR;
         gVoziloMeni[playerid][n++] = VM_POJAS;
@@ -1331,8 +1374,24 @@ VoziloMeni(playerid)
 
 DLG:vozilo_meni(playerid, response, listitem)
 {
-    if (!response || listitem < 0 || listitem >= gVoziloMeniBroj[playerid] || !IsPlayerInAnyVehicle(playerid)) return 1;
+    new v = gVoziloMeniV[playerid];
+    if (!response || listitem < 0 || listitem >= gVoziloMeniBroj[playerid] || !VoziloMeniVrijedi(playerid, v)) return 1;
     new prazno[1];
+    if (!IsPlayerInAnyVehicle(playerid))
+    {
+        switch (gVoziloMeni[playerid][listitem])
+        {
+            case VM_ZAKLJUCAJ: VoziloKljuc(playerid, v);
+            case VM_HAUBA: PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, Poklopac(v, true) ? ("* %s otvara haubu.") : ("* %s zatvara haubu."), GetRPIme(playerid), "", 1);
+            case VM_PRTLJAZNIK:
+            {
+                if (GepekVozilo(playerid, -1.0) == v) return cmd_trunk(playerid, prazno);
+                PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, Poklopac(v, false) ? ("* %s otvara prtljaznik.") : ("* %s zatvara prtljaznik."), GetRPIme(playerid), "", 1);
+            }
+            case VM_PROMETNA: return PokaziPrometnu(playerid, v);
+        }
+        return VoziloMeni(playerid);
+    }
     switch (gVoziloMeni[playerid][listitem])
     {
         case VM_MOTOR: cmd_motor(playerid, prazno);
@@ -1370,6 +1429,11 @@ CMD:zakljucaj(playerid, params[])
     if (!IsPlayerInAnyVehicle(playerid) && (KucaZakljucaj(playerid) || GarazaZakljucaj(playerid))) return 1;
     new v = GetPlayerVehicleID(playerid);
     if (!v) v = VoziloBlizu(playerid);
+    return VoziloKljuc(playerid, v);
+}
+
+static VoziloKljuc(playerid, v)
+{
     if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod vozila."));
     if (!MozeKljuc(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nije moguce zakljucati."));
     if (!ImaKljuc(playerid, v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate kljuceve ovog vozila."));

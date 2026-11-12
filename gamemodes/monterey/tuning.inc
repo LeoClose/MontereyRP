@@ -20,7 +20,8 @@
 #define TUNING_ZATAMNJENJE  2500
 #define TUNING_TRUBA_DOMET  40.0
 #define TUNING_TRUBA_MS     1000
-#define TUNING_ISKRE_KMH    140.0
+#define TUNING_ISKRE_KMH    60.0
+#define TUNING_ISKRE_STUPANJ 2
 #define TUNING_ISKRE_MS     300
 #define TUNING_ISKRE_SANSA  20
 #define TUNING_ISKRE_PAUZA  1500
@@ -137,12 +138,12 @@ static TuningIskre(v)
     for (new i = -1; i <= 1; i += 2)
     {
         new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.22, -sy / 2.0 + 0.35, bz - 0.1, 90.0, 0.0, 0.0);
+        AttachObjectToVehicle(objekt, v, float(i) * sx * 0.18, -sy / 2.0 + 0.8, bz - 0.1, 90.0, 0.0, 0.0);
         SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
     }
 }
 
-TuningVozac(v, Float:kmh)
+TuningVozac(v, Float:kmh, bool:ubrzava)
 {
     if (gTunOklop[v])
     {
@@ -156,7 +157,7 @@ TuningVozac(v, Float:kmh)
         gTunZdravlje[v] = h;
     }
     new sad = GetTickCount();
-    if (gTunIskre[v] && kmh >= TUNING_ISKRE_KMH && sad - gTunIskreMs[v] >= 0)
+    if (gTunMotor[v] >= TUNING_ISKRE_STUPANJ && ubrzava && kmh >= TUNING_ISKRE_KMH && sad - gTunIskreMs[v] >= 0)
     {
         if (random(100) < TUNING_ISKRE_SANSA)
         {
@@ -577,7 +578,6 @@ static TuningIzbornik(playerid)
     gTunKategorije[playerid][n++] = TK_OKLOP;
     if (!BezMotora(model)) gTunKategorije[playerid][n++] = TK_REZERVOAR;
     gTunKategorije[playerid][n++] = TK_TRUBA;
-    gTunKategorije[playerid][n++] = TK_ISKRE;
     if (!BezKrova(model)) gTunKategorije[playerid][n++] = TK_ZATAMNJENJE;
     for (new s = 0; s < 14; s++)
     {
