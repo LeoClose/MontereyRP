@@ -100,6 +100,7 @@ StatsUpdate(playerid)
         gStatsRespekti[playerid] -= potrebno;
         gStatsLevel[playerid]++;
         SetPlayerScore(playerid, gStatsLevel[playerid]);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Cestitam, presli ste na sledeci level!"));
         potrebno = StatsPotrebno(gStatsLevel[playerid]);
     }
 }

@@ -1200,6 +1200,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Podaci sa servera", "Server statistics", "Данные сервера", "Datos del servidor", "Sunucu bilgileri" },
     { "Novac", "Money", "Деньги", "Dinero", "Para" },
     { "Level", "Level", "Уровень", "Nivel", "Seviye" },
+    { "Cestitam, presli ste na sledeci level!", "Congratulations, you have reached the next level!", "Поздравляем, вы перешли на следующий уровень!", "¡Felicidades, has pasado al siguiente nivel!", "Tebrikler, bir sonraki seviyeye gectiniz!" },
     { "Respekti", "Respect", "Уважение", "Respeto", "Saygi" },
     { "Sati igre", "Playtime", "Время игры", "Tiempo de juego", "Oyun suresi" },
     { "Organizacija", "Organisation", "Организация", "Organizacion", "Organizasyon" },
