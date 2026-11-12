@@ -153,9 +153,9 @@ public OnGameModeInit()
     InitVlakovi();
     SetTimer("Sekunda", 1000, true);
 
-    Ime = TextDrawCreate(578.0, 14.0, "Monterey");
+    Ime = TextDrawCreate(580.0, 20.0, "Monterey");
     TextDrawFont(Ime, TEXT_DRAW_FONT_3);
-    TextDrawLetterSize(Ime, 0.5, 2.0);
+    TextDrawLetterSize(Ime, 0.38, 1.5);
     TextDrawAlignment(Ime, TEXT_DRAW_ALIGN_CENTRE);
     TextDrawColour(Ime, 0x1E5AA8FF);
     TextDrawSetShadow(Ime, 0);
@@ -163,7 +163,7 @@ public OnGameModeInit()
     TextDrawBackgroundColour(Ime, 0x000000FF);
     TextDrawSetProportional(Ime, true);
 
-    ImeRp = TextDrawCreate(618.0, 31.0, "RolePlay");
+    ImeRp = TextDrawCreate(612.0, 34.0, "RolePlay");
     TextDrawFont(ImeRp, TEXT_DRAW_FONT_1);
     TextDrawLetterSize(ImeRp, 0.22, 1.0);
     TextDrawAlignment(ImeRp, TEXT_DRAW_ALIGN_RIGHT);
@@ -173,10 +173,10 @@ public OnGameModeInit()
     TextDrawBackgroundColour(ImeRp, 0x000000FF);
     TextDrawSetProportional(ImeRp, true);
 
-    datum = TextDrawCreate(578.0, 44.0, "12/12/2012");
+    datum = TextDrawCreate(574.0, 34.0, "12/12/2012");
     TextDrawLetterSize(datum, 0.2, 1.0);
     TextDrawTextSize(datum, 600.0, 600.0);
-    TextDrawAlignment(datum, TEXT_DRAW_ALIGN_CENTRE);
+    TextDrawAlignment(datum, TEXT_DRAW_ALIGN_RIGHT);
     TextDrawColour(datum, 0xFFFFFFFF);
     TextDrawSetShadow(datum, 0);
     TextDrawSetOutline(datum, 1);
