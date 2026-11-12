@@ -1073,6 +1073,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zadnja lokacija", "Last known location", "Последнее местоположение", "Ultima ubicacion", "Son konum" },
     { "%s (prije %d min)~n~", "%s (%d min ago)~n~", "%s (%d мин назад)~n~", "%s (hace %d min)~n~", "%s (%d dk once)~n~" },
     { "Nepoznata", "Unknown", "Неизвестно", "Desconocida", "Bilinmiyor" },
+    { "Osoba nije na mrezi.", "That person is offline.", "Этот человек не в сети.", "Esa persona no esta conectada.", "Bu kisi cevrimdisi." },
     { "Trenutno nema podataka o lokaciji.", "No location data at the moment.", "Сейчас нет данных о местоположении.", "Ahora mismo no hay datos de ubicacion.", "Su an konum bilgisi yok." },
     { "  Statistika: /stats", "  Statistics: /stats", "  Статистика: /stats", "  Estadisticas: /stats", "  Istatistik: /stats" },
     { "Statistika nije ucitana. Ponovno se spojite.", "Statistics could not be loaded. Please reconnect.", "Статистика не загружена. Переподключитесь.", "No se pudieron cargar las estadisticas. Vuelve a conectarte.", "Istatistikler yuklenemedi. Yeniden baglanin." },

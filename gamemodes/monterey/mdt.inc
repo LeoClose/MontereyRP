@@ -255,11 +255,8 @@ static MdtOsoba(playerid, const unos[])
         MdtZnacka(playerid, red, 0xB71C1CFF);
     }
     else MdtZnacka(playerid, T(playerid, "CIST"), 0x2E7D32FF);
-    if (target != INVALID_PLAYER_ID && target != playerid)
-    {
-        gMdtMeta[playerid] = target;
-        MdtLocirajGumb(playerid);
-    }
+    gMdtMeta[playerid] = target == INVALID_PLAYER_ID ? -1 : target;
+    MdtLocirajGumb(playerid);
     return 1;
 }
 
@@ -306,8 +303,8 @@ static MdtOtvori(playerid)
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMdtOtvoren[playerid] = true;
     gMdtBroj[playerid] = 0;
-    MdtKutija(playerid, -14.0, 272.0, 428.0, 12.0, 0x1A1A1AFF);
-    MdtKutija(playerid, 170.0, 280.0, 60.0, 3.0, 0x0A0A0AFF);
+    MdtKutija(playerid, -14.0, 268.0, 428.0, 12.0, 0x1A1A1AFF);
+    MdtKutija(playerid, 170.0, 276.0, 60.0, 3.0, 0x0A0A0AFF);
     MdtKutija(playerid, 0.0, 0.0, 400.0, 270.0, 0x0A0A0AFF);
     MdtKutija(playerid, 198.0, 1.0, 4.0, 2.0, 0x3A3A3AFF);
     MdtKutija(playerid, 4.0, 4.0, 392.0, 258.0, 0x0F1A27FF);
@@ -395,6 +392,8 @@ MdtKlik(playerid, PlayerText:td)
     {
         new t = gMdtMeta[playerid], prati = PolicijaLocira(playerid);
         if (t == MAX_PLAYERS) return 1;
+        if (t == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Osoba nije na mrezi."));
+        if (t == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to sami sebi."));
         if (prati != INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == prati)) PolicijaLocirajPrekini(playerid);
         else if (t != INVALID_PLAYER_ID && IsPlayerConnected(t) && gUlogiran[t]) PolicijaLociraj(playerid, t);
         MdtLocirajGumb(playerid);
