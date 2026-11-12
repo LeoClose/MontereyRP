@@ -98,8 +98,17 @@ public OnGameModeInit()
             org_perms INTEGER NOT NULL DEFAULT 0,\
             org_skin INTEGER NOT NULL DEFAULT -1,\
             wanted INTEGER NOT NULL DEFAULT 0,\
-            zatvor INTEGER NOT NULL DEFAULT 0\
+            zatvor INTEGER NOT NULL DEFAULT 0,\
+            level INTEGER NOT NULL DEFAULT 1,\
+            respekti INTEGER NOT NULL DEFAULT 0,\
+            playtime INTEGER NOT NULL DEFAULT 0\
         )"));
+    if (!InitStats())
+    {
+        print("[Stats] Nije moguce pripremiti bazu statistike. Server se gasi.");
+        SendRconCommand("exit");
+        return 0;
+    }
     TekstPokreni();
     InitSteta();
     InitDialog();
@@ -161,6 +170,7 @@ public OnGameModeInit()
 forward Sekunda();
 public Sekunda()
 {
+    StatsTick();
     GranicaTick();
     KurvaTick();
     PolicijaTick();
@@ -174,6 +184,7 @@ public Sekunda()
 
 public OnGameModeExit()
 {
+    StatsSaveAll();
     DB_Close(gDB);
     return 1;
 }
@@ -230,6 +241,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_chinatown.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
+#include "monterey/stats.inc"
 #include "monterey/player.inc"
 
 DLG:registracija(playerid, response, const inputtext[])
@@ -323,6 +335,7 @@ ZavrsiLogin(playerid)
 {
     if (!UcitajJezik(playerid)) return PokaziJezike(playerid);
     gUlogiran[playerid] = true;
+    if (!StatsLoad(playerid)) return 0;
     LoadAdmina(playerid);
     UcitajClana(playerid);
     UcitajNovac(playerid);
