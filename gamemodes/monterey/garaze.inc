@@ -2,6 +2,8 @@
 #define GARAZA_DOMET        7.0
 #define GARAZA_ULAZ_DOMET   3.5
 #define GARAZA_SJEDNI_MS    400
+#define GARAZA_IZLAZ_ODMAK  5.0
+#define GARAZA_IZLAZ_MS     1000
 #define GARAZA_SVIJET       30000
 #define GARAZA_INT          3
 #define GARAZA_VOZILA       2
@@ -122,6 +124,12 @@ static GarazaNajbliza(playerid)
     return najbliza;
 }
 
+static GarazaIzvezi(v, g)
+{
+    new Float:a = gGaraza[g][gaA] + 180.0;
+    GarazaPrebaci(v, gGaraza[g][gaX] - GARAZA_IZLAZ_ODMAK * floatsin(a, degrees), gGaraza[g][gaY] + GARAZA_IZLAZ_ODMAK * floatcos(a, degrees), gGaraza[g][gaZ] + 0.5, a, 0);
+}
+
 static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
 {
     new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], n = 0, svijet = GarazaSvijet(db), interijer = db ? GARAZA_INT : 0;
@@ -130,6 +138,11 @@ static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
         if (!IsPlayerInVehicle(i, v)) continue;
         putnici[n] = i;
         sjedala[n++] = GetPlayerVehicleSeat(i);
+    }
+    for (new i = 0; i < n; i++)
+    {
+        Streamer_UpdateEx(putnici[i], x, y, z, svijet, interijer, STREAMER_TYPE_OBJECT, 1000);
+        TogglePlayerControllable(putnici[i], false);
     }
     SetVehiclePos(v, x, y, z);
     SetVehicleZAngle(v, a);
@@ -142,7 +155,14 @@ static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
         SetPlayerPos(putnici[i], x, y, z + 1.0);
         PutPlayerInVehicle(putnici[i], v, sjedala[i]);
         SetTimerEx("GarazaSjedni", GARAZA_SJEDNI_MS, false, "iiii", putnici[i], v, sjedala[i], svijet);
+        SetTimerEx("GarazaOdmrzni", GARAZA_IZLAZ_MS, false, "ii", putnici[i], gAccountId[putnici[i]]);
     }
+}
+
+forward GarazaOdmrzni(playerid, racun);
+public GarazaOdmrzni(playerid, racun)
+{
+    if (IsPlayerConnected(playerid) && gAccountId[playerid] == racun) TogglePlayerControllable(playerid, true);
 }
 
 forward GarazaSjedni(playerid, v, sjedalo, svijet);
@@ -232,7 +252,7 @@ static GarazaIsprazni(g)
         new v = gVozila[i];
         if (VlasnikGarazaDb(v) != db) continue;
         VlasnikGaraza(v, 0, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], gGaraza[g][gaA]);
-        if (GetVehicleVirtualWorld(v) == svijet) GarazaPrebaci(v, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], gGaraza[g][gaA], 0);
+        if (GetVehicleVirtualWorld(v) == svijet) GarazaIzvezi(v, g);
     }
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == svijet && !IsPlayerInAnyVehicle(i)) GarazaVani(i, g);
 }
@@ -279,7 +299,7 @@ GarazaKey(playerid)
     {
         if (st == PLAYER_STATE_DRIVER)
         {
-            GarazaPrebaci(GetPlayerVehicleID(playerid), gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], gGaraza[g][gaA], 0);
+            GarazaIzvezi(GetPlayerVehicleID(playerid), g);
             return 1;
         }
         if (st != PLAYER_STATE_ONFOOT || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 0;
