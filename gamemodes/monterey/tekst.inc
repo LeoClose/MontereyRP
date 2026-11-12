@@ -1,4 +1,4 @@
-#define TEKST_HASH          1024
+#define TEKST_HASH          2048
 #define TEKST_LEN           256
 
 static const gTekst[][BROJ_JEZIKA][] = {
@@ -335,7 +335,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vas taksi je stigao. Ugodnu voznju!", "Your taxi has arrived. Enjoy the ride!", "Ваше такси прибыло. Приятной поездки!", "Tu taxi ha llegado. Buen viaje!", "Taksiniz geldi. Iyi yolculuklar!" },
     { "Pomoc: Pricekajte taksi na mjestu gdje ste ga pozvali.", "Hint: Wait for the taxi where you called it.", "Подсказка: Ждите такси там, где вызвали его.", "Ayuda: Espera el taxi donde lo llamaste.", "Ipucu: Taksiyi cagirdiginiz yerde bekleyin." },
     { "Pomoc: Ovo je taksi, udite kao putnik tipkom G.", "Hint: This is a taxi, get in as a passenger with G.", "Подсказка: Это такси, садитесь как пассажир клавишей G.", "Ayuda: Esto es un taxi, sube como pasajero con G.", "Ipucu: Bu bir taksi, G tusu ile yolcu olarak binin." },
-    { "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) i vratite se u igru.", "Hint: Mark your destination on the map (ESC, Map, right click) and return to the game.", "Подсказка: Отметьте место на карте (ESC, Карта, правый клик) и вернитесь в игру.", "Ayuda: Marca el destino en el mapa (ESC, Mapa, clic derecho) y vuelve al juego.", "Ipucu: Haritada hedefi isaretleyin (ESC, Harita, sag tik) ve oyuna donun." },
+    { "Pomoc: Oznacite odrediste na karti (ESC, Karta, desni klik) ili ga odaberite na mobitelu (Internet, Lokacije).", "Hint: Mark your destination on the map (ESC, Map, right click) or pick it on your phone (Internet, Locations).", "Подсказка: Отметьте место на карте (ESC, Карта, правый клик) или выберите его в телефоне (Интернет, Места).", "Ayuda: Marca el destino en el mapa (ESC, Mapa, clic derecho) o eligelo en el movil (Internet, Lugares).", "Ipucu: Haritada hedefi isaretleyin (ESC, Harita, sag tik) ya da telefonda secin (Internet, Konumlar)." },
     { "Pomoc: Taksi je unisten, voznja je otkazana.", "Hint: The taxi was destroyed, the ride is cancelled.", "Подсказка: Такси уничтожено, поездка отменена.", "Ayuda: El taxi fue destruido, el viaje se cancela.", "Ipucu: Taksi yok edildi, yolculuk iptal edildi." },
     { "Vozac kaze: Dobar dan! Kamo cemo?", "Driver says: Good day! Where to?", "Водитель говорит: Добрый день! Куда едем?", "El conductor dice: Buenas! A donde vamos?", "Sofor diyor: Iyi gunler! Nereye gidiyoruz?" },
     { "Vozac kaze: Onamo ne mogu, zao mi je. Mozete li odabrati drugo mjesto?", "Driver says: Sorry, I can't go there. Could you pick another place?", "Водитель говорит: Простите, туда не могу. Выберете другое место?", "El conductor dice: Lo siento, alli no puedo ir. Puedes elegir otro lugar?", "Sofor diyor: Uzgunum, oraya gidemem. Baska bir yer secer misiniz?" },
@@ -1009,6 +1009,16 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Stavili ste: %s.", "You put on: %s.", "Вы надели: %s.", "Te has puesto: %s.", "Taktiniz: %s." },
     { "Namjestite ga i spremite (ikona diskete).", "Adjust it and save (floppy disk icon).", "Настройте и сохраните (значок дискеты).", "Ajustalo y guarda (icono del disquete).", "Ayarlayip kaydedin (disket simgesi)." },
     { "Trazeni ste i ne mozete uci u HQ.", "You are wanted and cannot enter the HQ.", "Вы в розыске и не можете войти в штаб.", "Estas buscado y no puedes entrar al HQ.", "Araniyorsunuz ve HQya giremezsiniz." },
+    { "Poslovi", "Jobs", "Работа", "Empleos", "Isler" },
+    { "Lokacije", "Locations", "Места", "Lugares", "Konumlar" },
+    { "Frizeri", "Barbers", "Парикмахерские", "Barberias", "Berberler" },
+    { "Saloni", "Car dealers", "Автосалоны", "Concesionarios", "Galeriler" },
+    { "Ostalo", "Other", "Прочее", "Otros", "Diger" },
+    { "Pijaca", "Market", "Рынок", "Mercado", "Pazar" },
+    { "Poslovi ce uskoro biti dostupni.", "Jobs will be available soon.", "Работа скоро будет доступна.", "Los empleos estaran disponibles pronto.", "Isler yakinda kullanilabilir olacak." },
+    { "Ovdje jos nema lokacija.", "No locations here yet.", "Здесь пока нет мест.", "Aun no hay lugares aqui.", "Burada henuz konum yok." },
+    { "Lokacija je oznacena na karti: %s.", "Location marked on the map: %s.", "Место отмечено на карте: %s.", "Lugar marcado en el mapa: %s.", "Konum haritada isaretlendi: %s." },
+    { "Stigli ste na odrediste.", "You have arrived.", "Вы прибыли на место.", "Has llegado.", "Hedefe vardiniz." },
     { "Trenutno nema podataka o lokaciji.", "No location data at the moment.", "Сейчас нет данных о местоположении.", "Ahora mismo no hay datos de ubicacion.", "Su an konum bilgisi yok." },
     { "  Statistika: /stats", "  Statistics: /stats", "  Статистика: /stats", "  Estadisticas: /stats", "  Istatistik: /stats" },
     { "Statistika nije ucitana. Ponovno se spojite.", "Statistics could not be loaded. Please reconnect.", "Статистика не загружена. Переподключитесь.", "No se pudieron cargar las estadisticas. Vuelve a conectarte.", "Istatistikler yuklenemedi. Yeniden baglanin." },
@@ -1020,7 +1030,14 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Sati igre", "Playtime", "Время игры", "Tiempo de juego", "Oyun suresi" },
     { "Organizacija", "Organisation", "Организация", "Organizacion", "Organizasyon" },
     { "Wanted level", "Wanted level", "Уровень розыска", "Nivel de busqueda", "Aranma seviyesi" },
-    { "Civil", "Civilian", "Гражданский", "Civil", "Sivil" }
+    { "Civil", "Civilian", "Гражданский", "Civil", "Sivil" },
+    { "  /jetpack - ukljuci ili iskljuci jetpack", "  /jetpack - toggle jetpack", "  /jetpack - включить или выключить джетпак", "  /jetpack - activar o desactivar el jetpack", "  /jetpack - jetpack ac veya kapat" },
+    { "Igrac: %s se prijavio na server | Pozicija: Admin", "Player: %s logged in to the server | Position: Admin", "Игрок: %s вошел на сервер | Роль: Админ", "Jugador: %s inicio sesion en el servidor | Posicion: Admin", "Oyuncu: %s sunucuya giris yapti | Rol: Admin" },
+    { "Igrac: %s se prijavio na server | Pozicija: Obican igrac", "Player: %s logged in to the server | Position: Player", "Игрок: %s вошел на сервер | Роль: Игрок", "Jugador: %s inicio sesion en el servidor | Posicion: Jugador", "Oyuncu: %s sunucuya giris yapti | Rol: Oyuncu" },
+    { "Nije moguce promijeniti jetpack.", "Could not change the jetpack.", "Не удалось изменить состояние джетпака.", "No se pudo cambiar el jetpack.", "Jetpack degistirilemedi." },
+    { "Jetpack je iskljucen.", "Jetpack disabled.", "Джетпак выключен.", "Jetpack desactivado.", "Jetpack kapatildi." },
+    { "Jetpack je ukljucen.", "Jetpack enabled.", "Джетпак включен.", "Jetpack activado.", "Jetpack acildi." },
+    { "Ne mozete koristiti jetpack dok ste ranjeni ili imate lisice.", "You cannot use a jetpack while injured or handcuffed.", "Нельзя использовать джетпак, пока вы ранены или в наручниках.", "No puedes usar el jetpack si estas herido o esposado.", "Yaraliyken veya kelepceliyken jetpack kullanamazsiniz." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

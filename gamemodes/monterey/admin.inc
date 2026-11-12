@@ -45,6 +45,20 @@ LoadAdmina(playerid)
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prijavljeni ste kao %s (razina %d)."), gRankName[gAdmin[playerid]], gAdmin[playerid]);
 }
 
+AdminPrijava(playerid)
+{
+    new name[MAX_PLAYER_NAME + 1];
+    GetPlayerName(playerid, name, sizeof name);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!IsPlayerConnected(i) || !gUlogiran[i] || gAdmin[i] < 1) continue;
+        if (gAdmin[playerid])
+            SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se prijavio na server | Pozicija: Admin"), name);
+        else
+            SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se prijavio na server | Pozicija: Obican igrac"), name);
+    }
+}
+
 bool:PostaviAdmina(const name[], level)
 {
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM accounts WHERE name = '%q'", name);
@@ -238,6 +252,20 @@ CMD:goto(playerid, params[])
     SetPlayerPos(playerid, x + 1.0, y, z + 0.5);
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste do igraca %s."), GetRPIme(target));
     return 1;
+}
+
+CMD:jetpack(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, 1)) return 1;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti pjeske."));
+    if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_USEJETPACK)
+    {
+        if (!SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nije moguce promijeniti jetpack."));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Jetpack je iskljucen."));
+    }
+    if (IsRanjen(playerid) || ImaLisice(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete koristiti jetpack dok ste ranjeni ili imate lisice."));
+    if (!SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USEJETPACK)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nije moguce promijeniti jetpack."));
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Jetpack je ukljucen."));
 }
 
 CMD:admini(playerid, params[])
