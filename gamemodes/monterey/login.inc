@@ -1,7 +1,7 @@
 #define LOGIN_TD          8
 #define LOGIN_SIRINA      100.0
 #define LOGIN_X           270.0
-#define LOGIN_Y           120.0
+#define LOGIN_Y           110.0
 #define LOGIN_KUTIJA_H    90.0
 
 enum { LTD_NASLOV, LTD_STATISTIKA }
@@ -40,10 +40,12 @@ LoginEkran(playerid, const naslov[])
 {
     new Float:sredina = LOGIN_X + LOGIN_SIRINA / 2.0, ime[MAX_PLAYER_NAME + 1], statistika[160];
     if (!gLoginIma[playerid])
-    {
-        gLoginIma[playerid] = true;
-        gLoginBroj[playerid] = 0;
-        GetPlayerName(playerid, ime, sizeof ime);
+	{
+	    gLoginBroj[playerid] = 0;
+	    logo = LoginTekst(playerid, 320.0, 24.0, "Monterey", 0x4168DFFF, 0.4, 1.6, TEXT_DRAW_FONT_1);
+	    PlayerTextDrawSetOutline(playerid, logo, 1);
+	    gLoginIma[playerid] = true;
+	    GetPlayerName(playerid, ime, sizeof ime);
         LoginKutija(playerid, LOGIN_X, LOGIN_Y, LOGIN_SIRINA, 40.0, 0x1E5AA8F0);
         gLogin[playerid][LTD_NASLOV] = LoginTekst(playerid, sredina, LOGIN_Y + 6.0, "_", 0xFFFFFFFF, 0.7, 2.8, TEXT_DRAW_FONT_3);
         LoginKutija(playerid, LOGIN_X, LOGIN_Y + 40.0, LOGIN_SIRINA, 14.0, 0x0F2D54F0);
