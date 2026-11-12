@@ -10,18 +10,18 @@
 #define KUCA_OTKUP_POSTO    50
 #define KUCA_MAX_NAJAM      100000
 
-enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuNajam, bool:kuZakljucano,
+enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuVel, kuNajam, bool:kuZakljucano,
     STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
 
-enum E_KUCA_INT { kiIme[16], kiInt, Float:kiX, Float:kiY, Float:kiZ, kiCijena }
+enum E_KUCA_INT { kiIme[16], kiVel, kiInt, Float:kiX, Float:kiY, Float:kiZ, kiCijena }
 static const gKucaInt[][E_KUCA_INT] = {
-    { "Mala kuca", 11, 2283.04, -1140.28, 1050.90, 10000 },
-    { "Mala kuca", 1, 223.20, 1287.08, 1082.14, 15000 },
-    { "Srednja kuca", 8, 2365.30, -1135.60, 1050.88, 30000 },
-    { "Srednja kuca", 12, 2324.53, -1149.54, 1050.71, 35000 },
-    { "Srednja kuca", 10, 2270.38, -1210.35, 1047.56, 45000 },
-    { "Velika kuca", 7, 225.68, 1021.45, 1084.02, 90000 },
-    { "Vila", 5, 140.17, 1366.07, 1083.65, 180000 }
+    { "Mala kuca", 0, 11, 2283.04, -1140.28, 1050.90, 10000 },
+    { "Mala kuca", 0, 1, 223.20, 1287.08, 1082.14, 15000 },
+    { "Srednja kuca", 1, 8, 2365.30, -1135.60, 1050.88, 30000 },
+    { "Srednja kuca", 1, 12, 2324.53, -1149.54, 1050.71, 35000 },
+    { "Srednja kuca", 1, 10, 2270.38, -1210.35, 1047.56, 45000 },
+    { "Velika kuca", 2, 7, 225.68, 1021.45, 1084.02, 90000 },
+    { "Vila", 2, 5, 140.17, 1366.07, 1083.65, 180000 }
 };
 
 static gKuca[KUCA_MAX][E_KUCA];
@@ -40,10 +40,13 @@ InitKuce()
     res = DB_ExecuteQuery(gDB, "SELECT locked FROM houses LIMIT 1");
     if (res) DB_FreeResultSet(res);
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN locked INTEGER NOT NULL DEFAULT 1"));
+    res = DB_ExecuteQuery(gDB, "SELECT size FROM houses LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN size INTEGER NOT NULL DEFAULT 1"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS house_renters (house INTEGER NOT NULL, account INTEGER NOT NULL, paid INTEGER NOT NULL, PRIMARY KEY (house, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_spawn (account INTEGER PRIMARY KEY, house INTEGER NOT NULL)"));
     KuceUvezi();
-    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
+    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked, h.size FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKuca[k][kuDb] = DB_GetFieldInt(res, 0);
@@ -56,7 +59,8 @@ InitKuce()
         gKuca[k][kuInt] = DB_GetFieldInt(res, 8);
         gKuca[k][kuNajam] = DB_GetFieldInt(res, 9);
         gKuca[k][kuZakljucano] = DB_GetFieldInt(res, 10) != 0;
-        if (gKuca[k][kuInt] < 0 || gKuca[k][kuInt] >= sizeof gKucaInt) gKuca[k][kuInt] = KucaZadaniInt(gKuca[k][kuCijena]);
+        gKuca[k][kuVel] = clamp(DB_GetFieldInt(res, 11), 0, 2);
+        if (gKuca[k][kuInt] < 0 || gKuca[k][kuInt] >= sizeof gKucaInt) gKuca[k][kuInt] = KucaZadaniInt(gKuca[k][kuVel], gKuca[k][kuCijena]);
         if (DB_GetFieldInt(res, 7)) KucaTlo(k);
         KucaStvori(k);
         DB_SelectNextRow(res);
@@ -65,11 +69,10 @@ InitKuce()
     SetTimer("KuceNajam", KUCA_NAJAM_MS, true);
 }
 
-static KucaZadaniInt(cijena)
+static KucaZadaniInt(vel, cijena)
 {
-    if (cijena < 60000) return 0;
-    if (cijena < 150000) return 2;
-    if (cijena < 400000) return 4;
+    if (vel == 0) return 0;
+    if (vel == 1) return 2;
     return cijena < 900000 ? 5 : 6;
 }
 
@@ -77,7 +80,7 @@ static KuceUvezi()
 {
     new DB:izvor = DB_Open("kuce.db");
     if (!izvor) return;
-    new DBResult:res = DB_ExecuteQuery(izvor, "SELECT x, y, z, model, price FROM houses ORDER BY id");
+    new DBResult:res = DB_ExecuteQuery(izvor, "SELECT x, y, z, model, price, size FROM houses ORDER BY id");
     if (res && DB_GetRowCount(res))
     {
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
@@ -90,9 +93,10 @@ static KuceUvezi()
             DB_FreeResultSet(ima);
             if (!id)
             {
-                DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, snap) VALUES (%f, %f, %f, %d, %d, 1)", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4)));
+                DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, size, snap) VALUES (%f, %f, %f, %d, %d, %d, 1)", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4), DB_GetFieldInt(res, 5)));
                 id = ZadnjiId();
             }
+            else DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET size = %d WHERE id = %d", DB_GetFieldInt(res, 5), id));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO kuce_ok (id) VALUES (%d)", id));
         }
         while (DB_SelectNextRow(res));
@@ -330,6 +334,8 @@ static KucaNova(playerid)
     if (k == KUCA_MAX || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kuca se postavlja samo izvana."));
     GetPlayerPos(playerid, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ]);
     gKuca[k][kuCijena] = 50000;
+    gKuca[k][kuVel] = 1;
+    gKuca[k][kuInt] = KucaZadaniInt(1, 50000);
     gKuca[k][kuVlasnik] = 0;
     gKuca[k][kuVlasnikIme][0] = EOS;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, price) VALUES (%f, %f, %f, %d)", gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ], gKuca[k][kuCijena]));
@@ -485,6 +491,7 @@ DLG:kuca_izlaz(playerid, response, listitem)
     new list[512], row[64], len = 0;
     for (new i = 0; i < sizeof gKucaInt; i++)
     {
+        if (gKucaInt[i][kiVel] != gKuca[k][kuVel]) continue;
         format(row, sizeof row, "%d. %s - $%d%s", i + 1, T(playerid, gKucaInt[i][kiIme]), gKucaInt[i][kiCijena], T(playerid, i == gKuca[k][kuInt] ? (" (trenutno)") : ("")));
         DodajStupac(list, len, row);
     }
@@ -497,7 +504,11 @@ DLG:kuca_preuredi(playerid, response, listitem)
     gKucaMeni[playerid] = 0;
     if (k < 0 || !gKuca[k][kuIma] || gKuca[k][kuVlasnik] != gAccountId[playerid] || KucaIgraca(playerid) != k) return 1;
     if (!response) return KucaIzlazMeni(playerid, k);
-    if (listitem < 0 || listitem >= sizeof gKucaInt) return 1;
+    new izbor = -1;
+    for (new i = 0; i < sizeof gKucaInt && izbor == -1; i++)
+        if (gKucaInt[i][kiVel] == gKuca[k][kuVel] && !listitem--) izbor = i;
+    if (izbor == -1) return 1;
+    listitem = izbor;
     if (listitem == gKuca[k][kuInt]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo je vec vas interijer."));
     if (!DajNovac(playerid, -gKucaInt[listitem][kiCijena])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     new stari = gKuca[k][kuInt];
