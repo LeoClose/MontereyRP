@@ -42,7 +42,7 @@ LoginEkran(playerid, const naslov[])
     if (!gLoginIma[playerid])
 	{
 	    gLoginBroj[playerid] = 0;
-	    logo = LoginTekst(playerid, 320.0, 24.0, "Monterey", 0x4168DFFF, 0.4, 1.6, TEXT_DRAW_FONT_1);
+	    new PlayerText:logo = LoginTekst(playerid, 320.0, 24.0, "Monterey", 0x4168DFFF, 0.4, 1.6, TEXT_DRAW_FONT_1);
 	    PlayerTextDrawSetOutline(playerid, logo, 1);
 	    gLoginIma[playerid] = true;
 	    GetPlayerName(playerid, ime, sizeof ime);

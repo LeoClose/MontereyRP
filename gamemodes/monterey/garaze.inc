@@ -8,7 +8,7 @@
 #define GARAZA_CIJENA       25000
 #define GARAZA_OTKUP_POSTO  50
 #define GARAZA_MAX_CIJENA   100000000
-#define GRAZA_PRODAJA       1273
+#define GARAZA_PRODAJA      1273
 #define GARAZA_PRODANA      1316
 
 enum E_GARAZA { bool:gaIma, gaDb, Float:gaX, Float:gaY, Float:gaZ, Float:gaA, gaCijena, gaVlasnik, gaVlasnikIme[MAX_PLAYER_NAME + 1], bool:gaZakljucano,
