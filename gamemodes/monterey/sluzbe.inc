@@ -35,7 +35,6 @@
 #define MEHANICAR_RAD_MS    6000
 #define MEHANICAR_VUCA_MS   500
 #define MEHANICAR_RAZMAK    0.6
-#define MEHANICAR_ODVOJEN   3.0
 #define KAMION_PO_TIPU      8
 #define AMBULANTA_MODEL     416
 #define AMBULANTA_SKIN      274
@@ -658,8 +657,17 @@ static SlucajOtkaci(s)
 {
     if (gSlucaj[s][slVuci]) KillTimer(gSlucaj[s][slVuci]);
     gSlucaj[s][slVuci] = 0;
-    new kamion = gSlucaj[s][slVozilo];
-    if (kamion && IsTrailerAttachedToVehicle(kamion)) DetachTrailerFromVehicle(kamion);
+    new kamion = gSlucaj[s][slVozilo], v = GetVehicleTrailer(kamion);
+    if (!kamion || !v) return;
+    new Float:x, Float:y, Float:z, Float:a, Float:kx, Float:ky, Float:kz, Float:ox, Float:oy, Float:oz;
+    GetVehiclePos(kamion, x, y, z);
+    GetVehicleZAngle(kamion, a);
+    GetVehicleModelInfo(GetVehicleModel(kamion), VEHICLE_MODEL_INFO_SIZE, kx, ky, kz);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, ox, oy, oz);
+    new Float:razmak = (ky + oy) / 2.0 + MEHANICAR_RAZMAK;
+    DetachTrailerFromVehicle(kamion);
+    SetVehiclePos(v, x + floatsin(a, degrees) * razmak, y - floatcos(a, degrees) * razmak, z);
+    SetVehicleZAngle(v, a);
 }
 
 forward SlucajVuci(s);
@@ -671,18 +679,7 @@ public SlucajVuci(s)
         SlucajOtkaci(s);
         return;
     }
-    new v = gMehanicarVozilo[p], Float:x, Float:y, Float:z, Float:a, Float:kx, Float:ky, Float:kz, Float:ox, Float:oy, Float:oz, Float:cx, Float:cy, Float:cz;
-    GetVehiclePos(kamion, x, y, z);
-    GetVehicleZAngle(kamion, a);
-    GetVehiclePos(v, cx, cy, cz);
-    GetVehicleModelInfo(GetVehicleModel(kamion), VEHICLE_MODEL_INFO_SIZE, kx, ky, kz);
-    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, ox, oy, oz);
-    new Float:razmak = (ky + oy) / 2.0 + MEHANICAR_RAZMAK, Float:tx = x + floatsin(a, degrees) * razmak, Float:ty = y - floatcos(a, degrees) * razmak;
-    if (VectorSize(cx - tx, cy - ty, 0.0) > MEHANICAR_ODVOJEN)
-    {
-        SetVehiclePos(v, tx, ty, z);
-        SetVehicleZAngle(v, a);
-    }
+    new v = gMehanicarVozilo[p];
     if (GetVehicleTrailer(kamion) != v) AttachTrailerToVehicle(v, kamion);
 }
 
