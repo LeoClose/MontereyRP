@@ -254,6 +254,37 @@ CMD:goto(playerid, params[])
     return 1;
 }
 
+static bool:AdminBrojParam(const params[], max, &vrijednost)
+{
+    new idx = 0, broj[8];
+    if (!SljedeciParam(params, idx, broj) || strlen(broj) > 3 || !ProvjeriBroj(broj)) return false;
+    while (params[idx] == ' ') idx++;
+    if (params[idx]) return false;
+    vrijednost = strval(broj);
+    return vrijednost <= max;
+}
+
+CMD:time(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
+    new sat;
+    if (!AdminBrojParam(params, 23, sat))
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /time [sat 0-23]"));
+    SetWorldTime(sat);
+    MaricaVratiTamnoVrijeme();
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrijeme na serveru postavljeno je na %02d:00."), sat);
+}
+
+CMD:weather(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
+    new vrijeme;
+    if (!AdminBrojParam(params, 22, vrijeme))
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /weather [ID 0-22]"));
+    SetWeather(vrijeme);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrijeme na serveru postavljeno je na ID %d."), vrijeme);
+}
+
 CMD:jetpack(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, 1)) return 1;
