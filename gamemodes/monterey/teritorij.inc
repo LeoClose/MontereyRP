@@ -214,6 +214,7 @@ public OnNPCSpawn(npcid)
         SlucajSpawn(npcid);
         HeliSpawn(npcid);
         VlakSpawn(npcid);
+        BankaSpawn(npcid);
         return 1;
     }
     DilerPostavi(npcid, k / MAX_TER_NPC, k % MAX_TER_NPC);
@@ -337,6 +338,11 @@ static Obavijesti(playerid, const poruka[])
 
 bool:IsShootingBlocked(playerid)
 {
+    if (BankaBlokira(playerid))
+    {
+        Obavijesti(playerid, "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.");
+        return true;
+    }
     new u = gTerUmro[playerid];
     if (u && gTer[u - 1][terNapadac] && IsUZoni(playerid, u - 1, TER_BLIZINA))
     {

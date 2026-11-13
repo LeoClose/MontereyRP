@@ -180,6 +180,7 @@ public OnPlayerUpdate(playerid)
     VoziloUpdate(playerid);
     TuningUpdate(playerid);
     TrgovinaUpdate(playerid);
+    BankaUpdate(playerid);
     TaksiPovratak(playerid);
     new WEAPON:w = GetPlayerWeapon(playerid);
     if (w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN && IsShootingBlocked(playerid)) SetPlayerArmedWeapon(playerid, WEAPON_FIST);

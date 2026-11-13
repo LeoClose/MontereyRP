@@ -1392,7 +1392,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pomoc: Upisite broj mobitela primatelja u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Help: type the recipient's phone number in chat (T), then press the right arrow (Select).", "Подсказка: введите номер телефона получателя в чат (T), затем нажмите правую стрелку (Выбрать).", "Ayuda: escribe el numero del destinatario en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: aliciinin telefon numarasini sohbete (T) yazin, sonra sag oka basin (Sec)." },
     { "Pomoc: Upisite iznos u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Help: type the amount in chat (T), then press the right arrow (Select).", "Подсказка: введите сумму в чат (T), затем нажмите правую стрелку (Выбрать).", "Ayuda: escribe la cantidad en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: tutari sohbete (T) yazin, sonra sag oka basin (Sec)." },
     { " - bez sluzbenika", " - no clerk", " - без служащего", " - sin empleado", " - memur yok" },
-    { "Banka (zadano)", "Bank (default)", "Банк (по умолчанию)", "Banco (por defecto)", "Banka (varsayilan)" },
+    { "Gradski ured", "City office", "Городской офис", "Oficina municipal", "Belediye ofisi" },
     { "Banka dodana: %s. Udite i postavite sluzbenika.", "Bank added: %s. Go inside and place the clerk.", "Банк добавлен: %s. Зайдите и поставьте служащего.", "Banco anadido: %s. Entra y coloca al empleado.", "Banka eklendi: %s. Iceri girip memuru yerlestirin." },
     { "Banka obrisana.", "Bank deleted.", "Банк удалён.", "Banco eliminado.", "Banka silindi." },
     { "Banka se postavlja samo izvana.", "A bank can only be placed outside.", "Банк ставится только снаружи.", "El banco solo se coloca afuera.", "Banka sadece disarida yerlestirilir." },
@@ -1421,7 +1421,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Podigni sa stednje", "Withdraw from savings", "Снять со сбережений", "Retirar de ahorros", "Birikimden cek" },
     { "Posalji novac", "Send money", "Отправить деньги", "Enviar dinero", "Para gonder" },
     { "Poslali ste $%d.", "You sent $%d.", "Вы отправили $%d.", "Enviaste $%d.", "$%d gonderdiniz." },
-    { "Postavi sluzbenika na mojoj poziciji\nPostavi unutarnji ulaz na mojoj poziciji\nObrisi banku", "Place the clerk at my position\nSet the inside entrance at my position\nDelete bank", "Поставить служащего на мою позицию\nПоставить внутренний вход на мою позицию\nУдалить банк", "Colocar al empleado en mi posicion\nPoner la entrada interior en mi posicion\nEliminar banco", "Memuru konumuma yerlestir\nIc girisi konumuma ayarla\nBankayi sil" },
     { "Prebaci na stednju", "Move to savings", "Перевести на сбережения", "Pasar a ahorros", "Birikime aktar" },
     { "Prilagodeni (postavite ulaz kasnije na svojoj poziciji)", "Custom (set the entrance later at your position)", "Свой (задайте вход позже на своей позиции)", "Personalizado (pon la entrada luego en tu posicion)", "Ozel (girisi daha sonra konumunuza ayarlayin)" },
     { "Primatelj nema bankovni racun.", "The recipient has no bank account.", "У получателя нет банковского счёта.", "El destinatario no tiene cuenta bancaria.", "Alicinin banka hesabi yok." },
@@ -1437,7 +1436,18 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vec imate kredit.", "You already have a loan.", "У вас уже есть кредит.", "Ya tienes un prestamo.", "Zaten krediniz var." },
     { "{8AB4F8}+ Nova banka na mojoj poziciji", "{8AB4F8}+ New bank at my position", "{8AB4F8}+ Новый банк на моей позиции", "{8AB4F8}+ Nuevo banco en mi posicion", "{8AB4F8}+ Konumuma yeni banka" },
     { "~n~Kredit: $%d~n~Rata $%d za %d h", "~n~Loan: $%d~n~Installment $%d in %d h", "~n~Кредит: $%d~n~Платёж $%d через %d ч", "~n~Prestamo: $%d~n~Cuota $%d en %d h", "~n~Kredi: $%d~n~Taksit $%d, %d sa sonra" },
-    { "~n~Kredit: nema", "~n~Loan: none", "~n~Кредит: нет", "~n~Prestamo: ninguno", "~n~Kredi: yok" }
+    { "~n~Kredit: nema", "~n~Loan: none", "~n~Кредит: нет", "~n~Prestamo: ninguno", "~n~Kredi: yok" },
+    { "Palomino Creek banka", "Palomino Creek bank", "Банк Паломино-Крик", "Banco de Palomino Creek", "Palomino Creek bankasi" },
+    { "Postavi sluzbenika na mojoj poziciji\nPostavi unutarnji ulaz na mojoj poziciji\nDodaj cuvara na mojoj poziciji\nObrisi sve cuvare\nObrisi banku", "Place the clerk at my position\nSet the inside entrance at my position\nAdd a guard at my position\nDelete all guards\nDelete bank", "Поставить служащего на мою позицию\nПоставить внутренний вход на мою позицию\nДобавить охранника на мою позицию\nУдалить всех охранников\nУдалить банк", "Colocar al empleado en mi posicion\nPoner la entrada interior en mi posicion\nAnadir guardia en mi posicion\nEliminar todos los guardias\nEliminar banco", "Memuru konumuma yerlestir\nIc girisi konumuma ayarla\nKonumuma guvenlik ekle\nTum guvenlikleri sil\nBankayi sil" },
+    { "Banka vec ima %d cuvara.", "The bank already has %d guards.", "В банке уже %d охранников.", "El banco ya tiene %d guardias.", "Bankada zaten %d guvenlik var." },
+    { "Cuvar je postavljen.", "Guard placed.", "Охранник поставлен.", "Guardia colocado.", "Guvenlik yerlestirildi." },
+    { "Cuvari obrisani.", "Guards deleted.", "Охранники удалены.", "Guardias eliminados.", "Guvenlikler silindi." },
+    { "Ova banka je nedavno opljackana.", "This bank was robbed recently.", "Этот банк недавно ограбили.", "Este banco fue robado hace poco.", "Bu banka yakin zamanda soyuldu." },
+    { "Pljacka banke je pocela! Izdrzite %d s unutar banke.", "The bank robbery has started! Hold out %d s inside the bank.", "Ограбление банка началось! Продержитесь %d с внутри.", "El robo al banco ha empezado! Aguanta %d s dentro.", "Banka soygunu basladi! Bankanin icinde %d sn dayanin." },
+    { "Dojava: pljacka banke u tijeku, %s.", "Dispatch: bank robbery in progress, %s.", "Вызов: ограбление банка, %s.", "Aviso: robo al banco en curso, %s.", "Ihbar: banka soygunu devam ediyor, %s." },
+    { "Pljacka banke je propala.", "The bank robbery failed.", "Ограбление банка провалилось.", "El robo al banco ha fracasado.", "Banka soygunu basarisiz oldu." },
+    { "Pljacka uspjela! Vas dio: $%d.", "Robbery successful! Your cut: $%d.", "Ограбление удалось! Ваша доля: $%d.", "Robo exitoso! Tu parte: $%d.", "Soygun basarili! Payiniz: $%d." },
+    { "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.", "You can only draw weapons in a bank with at least 4 members of your organisation.", "Оружие в банке можно достать только вместе с минимум 4 членами организации.", "Solo puedes sacar armas en el banco con al menos 4 miembros de tu organizacion.", "Bankada silah ancak orgutunuzden en az 4 kisiyle cekilebilir." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
