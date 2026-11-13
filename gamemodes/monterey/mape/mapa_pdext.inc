@@ -9,6 +9,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Remove Buildings///////////////////////////////////////////////////////////////////////////////////////////////
+MapaPdExtUkloni(playerid)
+{
 RemoveBuildingForPlayer(playerid, 5408, 1873.739, -1682.479, 34.796, 0.250);
 RemoveBuildingForPlayer(playerid, 5544, 1873.739, -1682.479, 34.796, 0.250);
 RemoveBuildingForPlayer(playerid, 1533, 1837.439, -1677.920, 12.296, 0.250);
@@ -35,9 +37,13 @@ RemoveBuildingForPlayer(playerid, 1308, 1891.969, -1622.000, 12.781, 0.250);
 RemoveBuildingForPlayer(playerid, 620, 1879.510, -1623.099, 10.804, 0.250);
 RemoveBuildingForPlayer(playerid, 620, 1855.719, -1623.280, 10.804, 0.250);
 RemoveBuildingForPlayer(playerid, 1311, 1823.420, -1647.270, 16.671, 0.250);
+}
 
 //Objects////////////////////////////////////////////////////////////////////////////////////////////////////////
-new tmpobjid, object_world = -1, object_int = -1;
+MapaPdExt()
+{
+gMapaInt = -1;
+new STREAMER_TAG_OBJECT:tmpobjid;
 tmpobjid = CreateDynamicObjectEx(10965, 1861.635131, -1683.975708, 24.919109, 0.000000, 0.000000, 360.000000, 300.00, 300.00); 
 SetDynamicObjectMaterial(tmpobjid, 0, 6284, "bev_law2", "pierwall02_law", 0xFFFFFFFF);
 SetDynamicObjectMaterial(tmpobjid, 1, 3881, "apsecurity_sfxrf", "ws_rooftarmac2", 0x00000000);
@@ -624,6 +630,7 @@ tmpobjid = CreateDynamicObjectEx(19482, 1868.435424, -1738.562377, 15.062804, -0
 SetDynamicObjectMaterial(tmpobjid, 0, 5998, "sunstr_lawn", "ganggraf02_LA", 0xFFFFFFFF);
 tmpobjid = CreateDynamicObjectEx(19482, 1874.144897, -1738.562377, 15.062804, -0.000007, 0.000007, -89.999946, 300.00, 300.00); 
 SetDynamicObjectMaterial(tmpobjid, 0, 4981, "wiresetc2_las", "ganggraf03_LA", 0xFFFFFFFF);
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
