@@ -1331,7 +1331,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zetoni: %d~n~Ulog: $%d", "Chips: %d~n~Bet: $%d", "Фишки: %d~n~Ставка: $%d", "Fichas: %d~n~Apuesta: $%d", "Fisler: %d~n~Bahis: $%d" },
     { "Zetoni: %d~n~Postavite zetone i kliknite Spin.", "Chips: %d~n~Place your chips and click Spin.", "Фишки: %d~n~Поставьте фишки и нажмите Spin.", "Fichas: %d~n~Coloca tus fichas y pulsa Spin.", "Fisler: %d~n~Fislerinizi koyun ve Spin'e tiklayin." },
     { "Zetoni: %d, ukupni ulog: $%d~n~%s: $%d", "Chips: %d, total bet: $%d~n~%s: $%d", "Фишки: %d, общая ставка: $%d~n~%s: $%d", "Fichas: %d, apuesta total: $%d~n~%s: $%d", "Fisler: %d, toplam bahis: $%d~n~%s: $%d" },
-    { "Odaberite zetone za ulog.", "Pick chips for your bet.", "Выберите фишки для ставки.", "Elige fichas para tu apuesta.", "Bahsiniz icin fis secin." }
+    { "Odaberite zetone za ulog.", "Pick chips for your bet.", "Выберите фишки для ставки.", "Elige fichas para tu apuesta.", "Bahsiniz icin fis secin." },
+    { "Konjske utrke", "Horse racing", "Скачки", "Carreras de caballos", "At yarisi" },
+    { "Pobjednik: %s", "Winner: %s", "Победитель: %s", "Ganador: %s", "Kazanan: %s" },
+    { "Isplata: $%d", "Payout: $%d", "Выплата: $%d", "Pago: $%d", "Odeme: $%d" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

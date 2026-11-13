@@ -15,7 +15,7 @@
 #define BJ_RED              58.0
 #define BJ_RAZMAK           18.0
 
-enum { KZ_BLACKJACK, KZ_RULET, KZ_POKER, KZ_KOCKE, KZ_SLOT, KZ_BLAGAJNA }
+enum { KZ_BLACKJACK, KZ_RULET, KZ_POKER, KZ_KOCKE, KZ_SLOT, KZ_BLAGAJNA, KZ_BACCARAT, KZ_AVIATOR, KZ_KONJI }
 enum { KZI_POZADINA, KZI_NASLOV, KZI_STATUS, KZI_LIJEVO, KZI_DESNO, KZI_PRVI }
 enum { BTD_DILER = KZI_PRVI, BTD_DOUBLE, BTD_SPLIT, BTD_SURRENDER, BTD_RUKA, BTD_KARTA = BTD_RUKA + BJ_RUKE }
 enum { VTD_KARTA = KZI_PRVI, VTD_DRZI = VTD_KARTA + 5 }
@@ -23,6 +23,9 @@ enum { RTD_BROJ = KZI_PRVI, RTD_PONISTI, RTD_ZETON, RTD_POLJE = RTD_ZETON + 16 }
 enum { UTD_PONISTI = KZI_PRVI, UTD_ZETON }
 enum { DTD_IGRAC = KZI_PRVI, DTD_DILER }
 enum { STD_OKVIR = KZI_PRVI, STD_VALJAK = STD_OKVIR + 3 }
+enum { BCTD_IGRAC = KZI_PRVI, BCTD_BANKER, BCTD_KARTA }
+enum { ATD_AVION = KZI_PRVI, ATD_MNOZITELJ }
+enum { KTD_STAZA = KZI_PRVI, KTD_CILJ, KTD_KONJ }
 
 enum E_KAZINO { bool:kzIma, kzDb, kzTip, Float:kzX, Float:kzY, Float:kzZ, Float:kzA, kzInt, kzSvijet, kzAktor, STREAMER_TAG_3D_TEXT_LABEL:kzTekst }
 enum E_BJ { bjRuke, bjAktivna, bjDilerKarte[BJ_KARATA], bjDilerN, bool:bjOsiguranje, bjOsigUlog, bool:bjPrvi, bool:bjPredao, bool:bjAsovi }
@@ -34,8 +37,15 @@ static gBj[MAX_PLAYERS][E_BJ], gBjKarte[MAX_PLAYERS][BJ_RUKE][BJ_KARATA], gBjN[M
 static gVpKarte[MAX_PLAYERS][5], bool:gVpDrzi[MAX_PLAYERS][5], bool:gVpKoristeno[MAX_PLAYERS][52];
 static gRulIshod[MAX_PLAYERS], gRulZeton[MAX_PLAYERS], gRulUlog[MAX_PLAYERS][RUL_POLJA];
 static gKocke[MAX_PLAYERS][4], gSlot[MAX_PLAYERS][3];
+static gKzIzbor[MAX_PLAYERS], gAvM[MAX_PLAYERS], gAvKraj[MAX_PLAYERS], gKonj[MAX_PLAYERS][5], gKonjPobjednik[MAX_PLAYERS], Float:gKonjY[MAX_PLAYERS];
 
-static const gKzIme[][] = { "Blackjack", "Rulet", "Video poker", "Kocke", "Slot", "Blagajna" };
+static const gKzIme[][] = { "Blackjack", "Rulet", "Video poker", "Kocke", "Slot", "Blagajna", "Baccarat", "Aviator", "Konjske utrke" };
+static const gKonjIme[][] = { "Munja", "Vihor", "Sjena", "Plamen", "Oluja" };
+static const gKonjSlovo[] = "bgpry";
+static const gKonjTd[][] = { "~b~", "~g~", "~p~", "~r~", "~y~" };
+static const gKonjBoja[] = { 0x1E88E5FF, 0x43A047FF, 0x8E24AAFF, 0xE53935FF, 0xFDD835FF };
+static const gKonjKvota[] = { 3, 4, 5, 6, 8 };
+static const gKonjTezina[] = { 40, 30, 24, 20, 15 };
 static const gBjBoja[] = "cdhs";
 static const gKzZetoni[] = { 1, 5, 10, 25, 100, 500, 1000, 5000 };
 static const gKzZetonSprite[][] = { "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulgre", "LD_ROUL:roulgre", "LD_ROUL:roulbla", "LD_ROUL:roulbla", "LD_ROUL:roulbla" };
@@ -47,12 +57,27 @@ static const gSlotTezina[] = { 35, 25, 18, 12, 7, 3 };
 static const gSlotIsplata[] = { 6, 12, 20, 40, 80, 200 };
 enum { VP_NISTA, VP_JOB, VP_2P, VP_3K, VP_STRAIGHT, VP_FLUSH, VP_FH, VP_4K, VP_SF, VP_ROYAL }
 
+static bool:BacBankerVuce(b, p3)
+{
+    if (p3 == -1) return b <= 5;
+    switch (b)
+    {
+        case 0, 1, 2: return true;
+        case 3: return p3 != 8;
+        case 4: return p3 >= 2 && p3 <= 7;
+        case 5: return p3 >= 4 && p3 <= 7;
+        case 6: return p3 >= 6 && p3 <= 7;
+    }
+    return false;
+}
+
 InitKazino()
 {
     new k1[] = { 0, 25 }, k2[] = { 13, 39, 8 }, k3[] = { 9, 18, 45 };
     assert(BjVrijednost(k1, 2) == 21 && BjVrijednost(k2, 3) == 21 && BjVrijednost(k3, 3) == 23);
     new r1[] = { 0, 9, 10, 11, 12 }, r2[] = { 0, 1, 2, 3, 17 }, r3[] = { 10, 23, 4, 5, 7 }, r4[] = { 1, 14, 27, 4, 17 }, r5[] = { 9, 22, 2, 16, 30 }, r6[] = { 5, 18, 7, 20, 32 };
     assert(VpOcjena(r1) == VP_ROYAL && VpOcjena(r2) == VP_STRAIGHT && VpOcjena(r3) == VP_JOB && VpOcjena(r4) == VP_FH && VpOcjena(r5) == VP_NISTA && VpOcjena(r6) == VP_2P);
+    assert(BacBankerVuce(5, -1) && !BacBankerVuce(6, -1) && !BacBankerVuce(3, 8) && BacBankerVuce(6, 7) && !BacBankerVuce(4, 1) && BacBankerVuce(2, 9));
     assert(RulDobitak(45, 1) == 2 && RulDobitak(45, 2) == 0 && RulDobitak(39, 36) == 3 && RulDobitak(17, 17) == 36 && RulDobitak(44, 0) == 0 && RulDobitak(0, 0) == 36 && RulDobitak(40, 4) == 3 && RulDobitak(42, 36) == 3 && RulDobitak(41, 36) == 0);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS casino_dealers (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT igra FROM casino_dealers LIMIT 1");
@@ -77,7 +102,7 @@ InitKazino()
 
 static bool:KazinoMasina(tip)
 {
-    return tip == KZ_POKER || tip == KZ_SLOT;
+    return tip == KZ_POKER || tip == KZ_SLOT || tip == KZ_AVIATOR || tip == KZ_KONJI;
 }
 
 static KazinoStvori(k)
@@ -211,6 +236,7 @@ KazinoKey(playerid)
     if (!gInv[playerid][ITEM_ZETONI]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate zetona. Kupite ih na blagajni kazina."));
     if (gKaz[k][kzAktor] != INVALID_ACTOR_ID) AktorKaze(playerid, gKaz[k][kzAktor], "Krupije", "Dobrodosli za stol, koliko ulazete?");
     if (gKzTip[playerid] == KZ_RULET) return RulOtvori(playerid);
+    if (gKzTip[playerid] == KZ_BACCARAT || gKzTip[playerid] == KZ_KONJI) return KzIzbor(playerid);
     return KzUlogOtvori(playerid);
 }
 
@@ -272,6 +298,9 @@ static bool:KzPokreni(playerid, ulog)
         case KZ_POKER: VpPocni(playerid);
         case KZ_KOCKE: KockePocni(playerid);
         case KZ_SLOT: SlotPocni(playerid);
+        case KZ_BACCARAT: BacPocni(playerid);
+        case KZ_AVIATOR: AvPocni(playerid);
+        case KZ_KONJI: KonjiPocni(playerid);
     }
     return true;
 }
@@ -373,6 +402,196 @@ static KzUlogKlik(playerid, PlayerText:td)
     return 1;
 }
 
+static KzIzbor(playerid)
+{
+    new list[256], row[64], len = 0;
+    if (gKzTip[playerid] == KZ_BACCARAT)
+    {
+        DodajStupac(list, len, "Player (1:1)");
+        DodajStupac(list, len, "Banker (0.95:1)");
+        DodajStupac(list, len, "Tie (8:1)");
+    }
+    else for (new i = 0; i < sizeof gKonjIme; i++)
+    {
+        format(row, sizeof row, "{%06x}%s{FFFFFF} - %d:1", gKonjBoja[i] >>> 8, gKonjIme[i], gKonjKvota[i] - 1);
+        DodajStupac(list, len, row);
+    }
+    return PrikaziDialog(playerid, DLG_KAZINO_IZBOR, DIALOG_STYLE_LIST, T(playerid, gKzIme[gKzTip[playerid]]), list, T(playerid, "Dalje"), T(playerid, "Zatvori"));
+}
+
+DLG:kazino_izbor(playerid, response, listitem)
+{
+    if (!response || listitem < 0 || listitem >= (gKzTip[playerid] == KZ_BACCARAT ? 3 : sizeof gKonjIme) || gKzIgra[playerid] || !KazinoBlizu(playerid, gKzStol[playerid])) return 1;
+    gKzIzbor[playerid] = listitem;
+    return KzUlogOtvori(playerid);
+}
+
+static BacVrijednost(c)
+{
+    new r = c % 13 + 1;
+    return r >= 10 ? 0 : r;
+}
+
+static BacZbroj(const karte[], n)
+{
+    new s = 0;
+    for (new i = 0; i < n; i++) s += BacVrijednost(karte[i]);
+    return s % 10;
+}
+
+static BacPocni(playerid)
+{
+    new igrac[3], banker[3], ni = 2, nb = 2, p3 = -1, sprite[16], tekst[48], Float:x = KZ_SREDINA - 100.0, Float:y = KzPanel(playerid, 200.0, 206.0);
+    for (new i = 0; i < 2; i++)
+    {
+        igrac[i] = random(52);
+        banker[i] = random(52);
+    }
+    if (BacZbroj(igrac, 2) < 8 && BacZbroj(banker, 2) < 8)
+    {
+        if (BacZbroj(igrac, 2) <= 5)
+        {
+            igrac[ni++] = random(52);
+            p3 = BacVrijednost(igrac[2]);
+        }
+        if (BacBankerVuce(BacZbroj(banker, 2), p3)) banker[nb++] = random(52);
+    }
+    new pt = BacZbroj(igrac, ni), bt = BacZbroj(banker, nb), u = gKzUlog[playerid], izbor = gKzIzbor[playerid], isplata = 0;
+    format(tekst, sizeof tekst, "Player: %d", pt);
+    KzTekst(playerid, BCTD_IGRAC, x + 16.0, y + 24.0, tekst, izbor == 0 ? 0xE8C15AFF : 0xFFFFFFFF, 0.2, 0.9);
+    format(tekst, sizeof tekst, "Banker: %d", bt);
+    KzTekst(playerid, BCTD_BANKER, x + 16.0, y + 84.0, tekst, izbor == 1 ? 0xE8C15AFF : 0xFFFFFFFF, 0.2, 0.9);
+    PlayerTextDrawShow(playerid, gKzTd[playerid][BCTD_IGRAC]);
+    PlayerTextDrawShow(playerid, gKzTd[playerid][BCTD_BANKER]);
+    for (new r = 0; r < 2; r++)
+        for (new i = 0; i < 3; i++)
+        {
+            new c = r ? banker[i] : igrac[i], idx = BCTD_KARTA + r * 3 + i;
+            format(sprite, sizeof sprite, "LD_CARD:cd%d%c", c % 13 + 1, gBjBoja[c / 13]);
+            KzSprite(playerid, idx, x + 16.0 + float(i) * 38.0, y + (r ? 96.0 : 36.0), 34.0, 46.0, sprite);
+            if (i < (r ? nb : ni)) PlayerTextDrawShow(playerid, gKzTd[playerid][idx]);
+        }
+    if (pt == bt) isplata = izbor == 2 ? u * 9 : u;
+    else if (izbor == (pt > bt ? 0 : 1)) isplata = izbor ? u + u * 95 / 100 : u * 2;
+    if (pt == bt) format(tekst, sizeof tekst, "Tie %d - %d", pt, bt);
+    else format(tekst, sizeof tekst, "%s %d - %d", pt > bt ? ("Player") : ("Banker"), pt > bt ? pt : bt, pt > bt ? bt : pt);
+    KzDiler(playerid, "dealone");
+    KzKraj(playerid, tekst, u, isplata);
+}
+
+static AvCrtaj(playerid, bool:pao)
+{
+    new tekst[32], m = gAvM[playerid];
+    format(tekst, sizeof tekst, "%d.%02dx", m / 100, m % 100);
+    PlayerTextDrawColour(playerid, gKzTd[playerid][ATD_MNOZITELJ], pao ? 0xD32F2FFF : 0x66BB6AFF);
+    KzPostavi(playerid, ATD_MNOZITELJ, tekst);
+    if (pao || !gKzIgra[playerid]) return;
+    format(tekst, sizeof tekst, T(playerid, "Isplata: $%d"), gKzUlog[playerid] * m / 100);
+    KzPostavi(playerid, KZI_STATUS, tekst);
+}
+
+static AvPocni(playerid)
+{
+    new Float:y = KzPanel(playerid, 220.0, 170.0), Float:u = float(random(1000000)) / 1000000.0;
+    gAvKraj[playerid] = clamp(floatround(97.0 / (1.0 - u), floatround_floor), 100, 10000);
+    gAvM[playerid] = 100;
+    KzSprite(playerid, ATD_AVION, KZ_SREDINA - 50.0, y + 18.0, 100.0, 64.0, "_");
+    new PlayerText:td = gKzTd[playerid][ATD_AVION];
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_MODEL_PREVIEW);
+    PlayerTextDrawSetPreviewModel(playerid, td, 593);
+    PlayerTextDrawSetPreviewRot(playerid, td, -10.0, 0.0, -50.0, 1.0);
+    PlayerTextDrawBackgroundColour(playerid, td, 0x00000000);
+    PlayerTextDrawShow(playerid, td);
+    KzTekst(playerid, ATD_MNOZITELJ, KZ_SREDINA, y + 80.0, "_", 0x66BB6AFF, 0.6, 2.4, TEXT_DRAW_ALIGN_CENTER);
+    KzPostavi(playerid, KZI_LIJEVO, "Cash out");
+    KzPostavi(playerid, KZI_DESNO, "_", false);
+    AvCrtaj(playerid, false);
+    KzVrti(playerid);
+}
+
+static AvKraj(playerid, bool:isplati)
+{
+    new m = gAvM[playerid], tekst[48];
+    gKzIgra[playerid] = false;
+    if (gKzOtvoren[playerid]) AvCrtaj(playerid, !isplati);
+    format(tekst, sizeof tekst, "%s %d.%02dx", isplati ? ("Cash out") : ("Crash"), m / 100, m % 100);
+    KzKraj(playerid, tekst, gKzUlog[playerid], isplati ? gKzUlog[playerid] * m / 100 : 0);
+}
+
+static bool:AvKorak(playerid)
+{
+    new m = gAvM[playerid] + gAvM[playerid] / 60;
+    gAvM[playerid] = m > gAvM[playerid] ? m : m + 1;
+    if (gAvM[playerid] >= gAvKraj[playerid])
+    {
+        gAvM[playerid] = gAvKraj[playerid];
+        AvKraj(playerid, false);
+        return false;
+    }
+    AvCrtaj(playerid, false);
+    return true;
+}
+
+static KonjPostavi(playerid, i, frame)
+{
+    new sprite[20], Float:x = KZ_SREDINA - 160.0 + 10.0 + float(gKonj[playerid][i]) * 2.6;
+    if (KTD_KONJ + i < gKzTdN[playerid]) PlayerTextDrawDestroy(playerid, gKzTd[playerid][KTD_KONJ + i]);
+    format(sprite, sizeof sprite, "LD_OTB:%cride%d", gKonjSlovo[i], frame % 8 + 1);
+    KzSprite(playerid, KTD_KONJ + i, x, gKonjY[playerid] + float(i) * 22.0, 40.0, 22.0, sprite);
+    PlayerTextDrawShow(playerid, gKzTd[playerid][KTD_KONJ + i]);
+}
+
+static KonjiPocni(playerid)
+{
+    new Float:x = KZ_SREDINA - 160.0, Float:y = KzPanel(playerid, 320.0, 200.0), tekst[64], r = random(129), w = 0;
+    while (r >= gKonjTezina[w]) r -= gKonjTezina[w++];
+    gKonjPobjednik[playerid] = w;
+    gKonjY[playerid] = y + 26.0;
+    KzSprite(playerid, KTD_STAZA, x + 6.0, y + 24.0, 308.0, 114.0, "LD_OTB:bckgrnd");
+    KzSprite(playerid, KTD_CILJ, x + 300.0, y + 24.0, 2.0, 114.0, "LD_SPAC:white");
+    PlayerTextDrawShow(playerid, gKzTd[playerid][KTD_STAZA]);
+    PlayerTextDrawShow(playerid, gKzTd[playerid][KTD_CILJ]);
+    for (new i = 0; i < sizeof gKonjIme; i++)
+    {
+        gKonj[playerid][i] = 0;
+        KonjPostavi(playerid, i, i);
+    }
+    format(tekst, sizeof tekst, "%s%s ~w~- %d:1", gKonjTd[gKzIzbor[playerid]], gKonjIme[gKzIzbor[playerid]], gKonjKvota[gKzIzbor[playerid]] - 1);
+    KzPostavi(playerid, KZI_STATUS, tekst);
+    KzPostavi(playerid, KZI_LIJEVO, "_", false);
+    KzPostavi(playerid, KZI_DESNO, "_", false);
+    KzVrti(playerid);
+}
+
+static KonjiKraj(playerid)
+{
+    new w = gKonjPobjednik[playerid], tekst[64];
+    if (gKzOtvoren[playerid])
+    {
+        gKonj[playerid][w] = 100;
+        KonjPostavi(playerid, w, 0);
+    }
+    format(tekst, sizeof tekst, T(playerid, "Pobjednik: %s"), gKonjIme[w]);
+    KzKraj(playerid, tekst, gKzUlog[playerid], gKzIzbor[playerid] == w ? gKzUlog[playerid] * gKonjKvota[w] : 0);
+}
+
+static bool:KonjiKorak(playerid, korak)
+{
+    new w = gKonjPobjednik[playerid];
+    for (new i = 0; i < sizeof gKonjIme; i++)
+    {
+        gKonj[playerid][i] += 1 + random(3) + (i == w && random(10) < 3 ? 1 : 0);
+        if (i != w && gKonj[playerid][i] > 98) gKonj[playerid][i] = 98;
+    }
+    if (gKonj[playerid][w] >= 100)
+    {
+        KonjiKraj(playerid);
+        return false;
+    }
+    for (new i = 0; i < sizeof gKonjIme; i++) KonjPostavi(playerid, i, korak + i);
+    return true;
+}
+
 static KzVrti(playerid)
 {
     SetTimerEx("KazinoVrti", KZ_VRTI_MS, false, "iii", playerid, gKzRunda[playerid], 0);
@@ -382,6 +601,11 @@ forward KazinoVrti(playerid, runda, korak);
 public KazinoVrti(playerid, runda, korak)
 {
     if (!gKzIgra[playerid] || gKzRunda[playerid] != runda) return;
+    if (gKzTip[playerid] == KZ_AVIATOR || gKzTip[playerid] == KZ_KONJI)
+    {
+        if (gKzTip[playerid] == KZ_AVIATOR ? AvKorak(playerid) : KonjiKorak(playerid, korak)) SetTimerEx("KazinoVrti", KZ_VRTI_MS, false, "iii", playerid, runda, korak + 1);
+        return;
+    }
     if (korak >= KZ_KORACI)
     {
         KzZavrsi(playerid);
@@ -405,6 +629,8 @@ static KzZavrsi(playerid)
         case KZ_RULET: RulKraj(playerid);
         case KZ_KOCKE: KockeKraj(playerid);
         case KZ_SLOT: SlotKraj(playerid);
+        case KZ_AVIATOR: AvKraj(playerid, true);
+        case KZ_KONJI: KonjiKraj(playerid);
     }
 }
 
@@ -446,6 +672,12 @@ KazinoKlik(playerid, PlayerText:td)
     {
         case KZ_BLACKJACK: return BjKlik(playerid, td);
         case KZ_POKER: return VpKlik(playerid, td);
+        case KZ_AVIATOR:
+        {
+            if (td != gKzTd[playerid][KZI_LIJEVO]) return 0;
+            AvKraj(playerid, true);
+            return 1;
+        }
     }
     return 0;
 }
