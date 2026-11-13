@@ -891,7 +891,7 @@ static KonjiOtvori(playerid)
 
 static AvOtvori(playerid)
 {
-    new Float:x = KZ_SREDINA - 150.0, Float:y = KzTablaOtvori(playerid, 300.0, 262.0, 150.0, 0x0E0E16F0);
+    new Float:x = KZ_SREDINA - 150.0, Float:y = KzTablaOtvori(playerid, 320.0, 262.0, 150.0, 0x0E0E16F0);
     gAvDno[playerid] = y + 28.0 + AV_VISINA;
     KzSprite(playerid, ATD_GRAF, x + 14.0, y + 28.0, AV_SIRINA, AV_VISINA, "LD_SPAC:white", 0x1B1B2BFF);
     PlayerTextDrawShow(playerid, gKzTd[playerid][ATD_GRAF]);

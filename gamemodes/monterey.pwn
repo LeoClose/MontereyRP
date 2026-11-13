@@ -140,6 +140,7 @@ public OnGameModeInit()
     InitVozilo();
     InitTrgovina();
     InitKazino();
+    InitBanka();
     InitOruzarnica();
     InitOdjeca();
     InitKuce();
@@ -190,6 +191,7 @@ public Sekunda()
     TeritorijTick();
     VoziloTick();
     VlakTick();
+    BankaTick();
 }
 
 public OnGameModeExit()
@@ -236,6 +238,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/vlakovi.inc"
 #include "monterey/trgovina.inc"
 #include "monterey/kazino.inc"
+#include "monterey/banka.inc"
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
 #include "monterey/kuce.inc"

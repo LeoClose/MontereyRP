@@ -96,7 +96,7 @@ enum
     ITEM_COLT, ITEM_DEAGLE, ITEM_SACMARICA, ITEM_UZI, ITEM_MP5, ITEM_AK47, ITEM_M4, ITEM_NOZ, ITEM_PALICA,
     ITEM_MUN_PISTOLJ, ITEM_MUN_SACMARICA, ITEM_MUN_SMG, ITEM_MUN_PUSKA,
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
-    ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI
+    ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -132,7 +132,8 @@ new const gItems[][E_ITEM] = {
     { "Kapa 1",                 "kom", 3,   0,  -1, 18926 },
     { "Kapa 2",                 "kom", 3,   0,  -1, 18927 },
     { "Kapa 3",                 "kom", 3,   0,  -1, 18939 },
-    { "Kazino zetoni",          "kom", 10000000, 0, -1, 1212 }
+    { "Kazino zetoni",          "kom", 10000000, 0, -1, 1212 },
+    { "Bankovna kartica",       "kom", 1,   0,  -1, 1581  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -209,6 +210,7 @@ static KoristiItem(playerid, item)
     if (item == ITEM_MOBITEL) return MobitelPrebaci(playerid);
     if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) return OdjecaKapaPredmet(playerid, item);
     if (item == ITEM_CRIJEVO) return VoziloIsprazni(playerid);
+    if (item == ITEM_KARTICA) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Karticu koristite u banci i na mobitelu (Internet, Banka)."));
     if (item == ITEM_ZETONI) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zetone mijenjate na blagajni kazina."));
     if (item == ITEM_KANISTER) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prazan kanister napunite na pumpi naredbom /tankaj."));
     if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return VoziloKanister(playerid, item, -1);
