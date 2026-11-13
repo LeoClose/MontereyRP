@@ -4,6 +4,7 @@ public OnPlayerConnect(playerid)
     MapaIdlewoodUkloni(playerid);
     MapaIdlewoodFlatsUkloni(playerid);
     MapaChinatownUkloni(playerid);
+    MapaPdExtUkloni(playerid);
     if (IsPlayerNPC(playerid)) return 1;
     new ljudi = 0;
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) ljudi++;
