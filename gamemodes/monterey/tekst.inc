@@ -1386,11 +1386,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vozilo trenutno nije u gradu.", "The vehicle is not in the city right now.", "Транспорта сейчас нет в городе.", "El vehiculo no esta en la ciudad ahora.", "Arac su an sehirde degil." },
     { "Banka", "Bank", "Банк", "Banco", "Banka" },
     { "Banke", "Banks", "Банки", "Bancos", "Bankalar" },
-    { "Posalji", "Send", "Отправить", "Enviar", "Gonder" },
     { "Bankovna kartica", "Bank card", "Банковская карта", "Tarjeta bancaria", "Banka karti" },
     { "Karticu koristite u banci i na mobitelu (Internet, Banka).", "Use the card at the bank and on your phone (Internet, Bank).", "Карта используется в банке и в телефоне (Интернет, Банк).", "Usa la tarjeta en el banco y en el movil (Internet, Banco).", "Karti bankada ve telefonda kullanin (Internet, Banka)." },
-    { "Pomoc: Upisite broj mobitela primatelja u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Help: type the recipient's phone number in chat (T), then press the right arrow (Select).", "Подсказка: введите номер телефона получателя в чат (T), затем нажмите правую стрелку (Выбрать).", "Ayuda: escribe el numero del destinatario en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: aliciinin telefon numarasini sohbete (T) yazin, sonra sag oka basin (Sec)." },
-    { "Pomoc: Upisite iznos u chat (T), pa pritisnite desnu strelicu (Odaberi).", "Help: type the amount in chat (T), then press the right arrow (Select).", "Подсказка: введите сумму в чат (T), затем нажмите правую стрелку (Выбрать).", "Ayuda: escribe la cantidad en el chat (T) y pulsa la flecha derecha (Elegir).", "Ipucu: tutari sohbete (T) yazin, sonra sag oka basin (Sec)." },
     { " - bez sluzbenika", " - no clerk", " - без служащего", " - sin empleado", " - memur yok" },
     { "Gradski ured", "City office", "Городской офис", "Oficina municipal", "Belediye ofisi" },
     { "Banka dodana: %s. Udite i postavite sluzbenika.", "Bank added: %s. Go inside and place the clerk.", "Банк добавлен: %s. Зайдите и поставьте служащего.", "Banco anadido: %s. Entra y coloca al empleado.", "Banka eklendi: %s. Iceri girip memuru yerlestirin." },
@@ -1447,7 +1444,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dojava: pljacka banke u tijeku, %s.", "Dispatch: bank robbery in progress, %s.", "Вызов: ограбление банка, %s.", "Aviso: robo al banco en curso, %s.", "Ihbar: banka soygunu devam ediyor, %s." },
     { "Pljacka banke je propala.", "The bank robbery failed.", "Ограбление банка провалилось.", "El robo al banco ha fracasado.", "Banka soygunu basarisiz oldu." },
     { "Pljacka uspjela! Vas dio: $%d.", "Robbery successful! Your cut: $%d.", "Ограбление удалось! Ваша доля: $%d.", "Robo exitoso! Tu parte: $%d.", "Soygun basarili! Payiniz: $%d." },
-    { "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.", "You can only draw weapons in a bank with at least 4 members of your organisation.", "Оружие в банке можно достать только вместе с минимум 4 членами организации.", "Solo puedes sacar armas en el banco con al menos 4 miembros de tu organizacion.", "Bankada silah ancak orgutunuzden en az 4 kisiyle cekilebilir." }
+    { "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.", "You can only draw weapons in a bank with at least 4 members of your organisation.", "Оружие в банке можно достать только вместе с минимум 4 членами организации.", "Solo puedes sacar armas en el banco con al menos 4 miembros de tu organizacion.", "Bankada silah ancak orgutunuzden en az 4 kisiyle cekilebilir." },
+    { "Informacije", "Information", "Информация", "Informacion", "Bilgiler" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

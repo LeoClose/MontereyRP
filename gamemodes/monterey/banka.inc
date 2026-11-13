@@ -30,8 +30,8 @@ static const gBankaInt[][E_BANKA_INT] = {
     { "Atrium", 18, 1727.285, -1642.945, 20.225 }
 };
 
-enum { BA_OTVORI, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, BA_POSALJI, BA_KREDIT, BA_OTPLATI, BA_KARTICA }
-static const gBankaAkcija[][] = { "Otvori racun ($%d)", "Uplati novac", "Podigni novac", "Prebaci na stednju", "Podigni sa stednje", "Posalji novac", "Podigni kredit", "Otplati kredit", "Nova kartica ($%d)" };
+enum { BA_OTVORI, BA_INFO, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, BA_POSALJI, BA_KREDIT, BA_OTPLATI, BA_KARTICA }
+static const gBankaAkcija[][] = { "Otvori racun ($%d)", "Informacije", "Uplati novac", "Podigni novac", "Prebaci na stednju", "Podigni sa stednje", "Posalji novac", "Podigni kredit", "Otplati kredit", "Nova kartica ($%d)" };
 
 static gBanka[BANKA_MAX][E_BANKA];
 static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_PLAYER_ID, ... }, ... }, gBankaCuvarDb[BANKA_MAX][BANKA_CUVARI], Float:gBankaCuvarPoz[BANKA_MAX][BANKA_CUVARI][4], gNpcBanka[MAX_PLAYERS] = { -1, ... }, gBankaPoruka[MAX_PLAYERS];
@@ -337,14 +337,6 @@ bool:BankaTekst(playerid, tekst[], size = sizeof (tekst))
     return true;
 }
 
-static BankaRacunPoBroju(const broj[])
-{
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT account FROM phone_numbers WHERE number = '%q'", broj);
-    new racun = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
-    DB_FreeResultSet(res);
-    return racun;
-}
-
 static bool:BankaPosalji(playerid, racun, iznos)
 {
     new stanje, stednja, kredit, rata, rok, a, b, c, d, e;
@@ -382,16 +374,6 @@ static bool:BankaPosalji(playerid, racun, iznos)
         SendClientMessage(i, COLOR_INFO, T(i, "Na vas racun je stiglo $%d od %s."), iznos, GetRPIme(playerid));
     }
     return true;
-}
-
-bool:BankaPosaljiBroj(playerid, const broj[], iznos)
-{
-    if (!gInv[playerid][ITEM_KARTICA])
-    {
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate bankovnu karticu."));
-        return false;
-    }
-    return BankaPosalji(playerid, BankaRacunPoBroju(broj), iznos);
 }
 
 BankaTick()
@@ -433,11 +415,11 @@ BankaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
     new s = BankaIgraca(playerid);
     if (s == -1 || !gBanka[s][bkImaAktor] || !IsPlayerInRangeOfPoint(playerid, BANKA_KASA_DOMET, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz])) return 0;
-    new stanje, stednja, kredit, rata, rok, list[512], row[64], len = 0, n = 0, naslov[96];
+    new stanje, stednja, kredit, rata, rok, list[512], row[64], len = 0, n = 0;
     if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok)) gBankaMeni[playerid][n++] = BA_OTVORI;
     else
     {
-        for (new a = BA_UPLATI; a <= BA_KREDIT; a++) if (a != BA_KREDIT || !kredit) gBankaMeni[playerid][n++] = a;
+        for (new a = BA_INFO; a <= BA_KREDIT; a++) if (a != BA_KREDIT || !kredit) gBankaMeni[playerid][n++] = a;
         if (kredit) gBankaMeni[playerid][n++] = BA_OTPLATI;
         if (!gInv[playerid][ITEM_KARTICA]) gBankaMeni[playerid][n++] = BA_KARTICA;
     }
@@ -447,9 +429,8 @@ BankaKasa(playerid)
         DodajStupac(list, len, row);
     }
     for (new i = n; i < sizeof gBankaAkcija; i++) gBankaMeni[playerid][i] = -1;
-    if (BankaTekst(playerid, naslov)) for (new i = 0; naslov[i]; i++) if (naslov[i] == '~') naslov[i] = ' ';
     AktorKaze(playerid, gBanka[s][bkAktor], "Sluzbenik", "Izvolite, kako vam mogu pomoci?");
-    PrikaziDialog(playerid, DLG_BANKA, DIALOG_STYLE_LIST, naslov[0] ? naslov : T(playerid, "Banka"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
+    PrikaziDialog(playerid, DLG_BANKA, DIALOG_STYLE_LIST, T(playerid, "Banka"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
     return 1;
 }
 
@@ -458,6 +439,17 @@ DLG:banka(playerid, response, listitem)
     if (!response || listitem < 0 || listitem >= sizeof gBankaAkcija || BankaIgraca(playerid) == -1) return 1;
     new a = gBankaMeni[playerid][listitem], body[160];
     if (a == -1) return 1;
+    if (a == BA_INFO)
+    {
+        new tekst[160];
+        BankaTekst(playerid, tekst);
+        for (new i = 0; tekst[i]; i++) if (tekst[i] == '~' && tekst[i + 1] == 'n' && tekst[i + 2] == '~')
+        {
+            tekst[i] = '\n';
+            strdel(tekst, i + 1, i + 3);
+        }
+        return PrikaziDialog(playerid, DLG_BANKA_INFO, DIALOG_STYLE_MSGBOX, T(playerid, "Informacije"), tekst, T(playerid, "Natrag"));
+    }
     if (a == BA_OTVORI || a == BA_KARTICA)
     {
         new cijena = a == BA_OTVORI ? BANKA_OTVARANJE : BANKA_KARTICA;
@@ -474,6 +466,11 @@ DLG:banka(playerid, response, listitem)
     else if (a == BA_KREDIT) format(body, sizeof body, T(playerid, "Iznos kredita (najvise $%d). Kamata %d%%, otplata u %d dnevnih rata:"), BANKA_KREDIT_MAX, BANKA_KAMATA, BANKA_RATA);
     else format(body, sizeof body, T(playerid, "Unesite iznos:"));
     return PrikaziDialog(playerid, DLG_BANKA_UNOS, DIALOG_STYLE_INPUT, T(playerid, "Banka"), body, T(playerid, "Potvrdi"), T(playerid, "Natrag"));
+}
+
+DLG:banka_info(playerid)
+{
+    return BankaKasa(playerid);
 }
 
 DLG:banka_unos(playerid, response, const inputtext[])

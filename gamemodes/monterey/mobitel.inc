@@ -55,8 +55,6 @@
 #define MOBITEL_LOKACIJA    24
 #define MOBITEL_GPS_DOMET   6.0
 #define MOBITEL_BANKA       30
-#define MOBITEL_BANKA_BROJ  31
-#define MOBITEL_BANKA_IZNOS 32
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
@@ -224,7 +222,7 @@ static PlayerText:MobitelTekst(playerid, Float:x, Float:y, const tekst[], boja, 
 
 static bool:MobitelUnosEkran(ekran)
 {
-    return ekran == MOBITEL_NAZOVI || ekran == MOBITEL_NOVI_BROJ || ekran == MOBITEL_NOVO_IME || ekran == MOBITEL_PREIMENUJ || ekran == MOBITEL_SMS_BROJ || ekran == MOBITEL_SMS_UNOS || ekran == MOBITEL_BANKA_BROJ || ekran == MOBITEL_BANKA_IZNOS;
+    return ekran == MOBITEL_NAZOVI || ekran == MOBITEL_NOVI_BROJ || ekran == MOBITEL_NOVO_IME || ekran == MOBITEL_PREIMENUJ || ekran == MOBITEL_SMS_BROJ || ekran == MOBITEL_SMS_UNOS;
 }
 
 static bool:MobitelSkocni(ekran)
@@ -399,7 +397,7 @@ static MobitelPrikazi(playerid)
     {
         new tekst[160];
         if (!BankaTekst(playerid, tekst)) strcat(tekst, T(playerid, "Nemate bankovni racun."));
-        MobitelEkranPoruke(playerid, T(playerid, "Banka"), tekst, T(playerid, "Natrag"), T(playerid, "Posalji"));
+        MobitelEkranPoruke(playerid, T(playerid, "Banka"), tekst, T(playerid, "Natrag"), "_");
         return;
     }
     if (ekran == MOBITEL_BRISI)
@@ -414,8 +412,6 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_PREIMENUJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Novo ime"));
     else if (ekran == MOBITEL_SMS_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Primatelj"));
     else if (ekran == MOBITEL_SMS_UNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Nova poruka"));
-    else if (ekran == MOBITEL_BANKA_BROJ) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Primatelj"));
-    else if (ekran == MOBITEL_BANKA_IZNOS) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Iznos"));
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
     else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Jezik"));
     else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Lokacije"));
@@ -895,17 +891,6 @@ static MobitelOdaberi(playerid)
         gMobitelEkran[playerid] = MOBITEL_PORUKE;
         gMobitelOdabir[playerid] = 0;
     }
-    else if (ekran == MOBITEL_BANKA) MobitelUnos(playerid, MOBITEL_BANKA_BROJ, "Pomoc: Upisite broj mobitela primatelja u chat (T), pa pritisnite desnu strelicu (Odaberi).");
-    else if (ekran == MOBITEL_BANKA_BROJ && gMobitelUnos[playerid][0])
-    {
-        strcopy(gMobitelPrimatelj[playerid], gMobitelUnos[playerid]);
-        MobitelUnos(playerid, MOBITEL_BANKA_IZNOS, "Pomoc: Upisite iznos u chat (T), pa pritisnite desnu strelicu (Odaberi).");
-    }
-    else if (ekran == MOBITEL_BANKA_IZNOS && gMobitelUnos[playerid][0])
-    {
-        if (!ProvjeriBroj(gMobitelUnos[playerid]) || strlen(gMobitelUnos[playerid]) > 9) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Iznos mora biti veci od 0."));
-        else if (BankaPosaljiBroj(playerid, gMobitelPrimatelj[playerid], strval(gMobitelUnos[playerid]))) gMobitelEkran[playerid] = MOBITEL_BANKA;
-    }
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
     else if (ekran == MOBITEL_INTERNET)
     {
@@ -1005,11 +990,6 @@ static MobitelNatrag(playerid, ekran)
         {
             gMobitelOdabir[playerid] = ekran == MOBITEL_BANKA ? 2 : 1;
             gMobitelEkran[playerid] = MOBITEL_INTERNET;
-        }
-        case MOBITEL_BANKA_BROJ, MOBITEL_BANKA_IZNOS:
-        {
-            gMobitelEkran[playerid] = MOBITEL_BANKA;
-            gMobitelOdabir[playerid] = 0;
         }
         case MOBITEL_LOKACIJE:
         {
