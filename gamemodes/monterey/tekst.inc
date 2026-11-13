@@ -1373,7 +1373,17 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vihor", "Whirlwind", "Вихрь", "Torbellino", "Kasirga" },
     { "Sjena", "Shadow", "Тень", "Sombra", "Golge" },
     { "Plamen", "Flame", "Пламя", "Llama", "Alev" },
-    { "Oluja", "Storm", "Буря", "Tormenta", "Firtina" }
+    { "Oluja", "Storm", "Буря", "Tormenta", "Firtina" },
+    { "Runda u tijeku", "Round in progress", "Идёт раунд", "Ronda en curso", "Tur devam ediyor" },
+    { "Vas ulog: $%d", "Your bet: $%d", "Ваша ставка: $%d", "Tu apuesta: $%d", "Bahsiniz: $%d" },
+    { "Postavite zetone za sljedecu rundu.", "Place chips for the next round.", "Поставьте фишки на следующий раунд.", "Coloca fichas para la siguiente ronda.", "Sonraki tur icin fis koyun." },
+    { "Odletio na %d.%02dx", "Flew away at %d.%02dx", "Улетел на %d.%02dx", "Se fue volando en %d.%02dx", "%d.%02dx'te ucup gitti" },
+    { "%s~n~Pocetak za %d s  |  Zetoni: %d  |  Ulog: $%d", "%s~n~Starts in %d s  |  Chips: %d  |  Bet: $%d", "%s~n~Старт через %d с  |  Фишки: %d  |  Ставка: $%d", "%s~n~Empieza en %d s  |  Fichas: %d  |  Apuesta: $%d", "%s~n~%d sn sonra basliyor  |  Fis: %d  |  Bahis: $%d" },
+    { "POTJERNICA", "WARRANT", "РОЗЫСК", "ORDEN", "ARANIYOR" },
+    { "MDT - Potjernica", "MDT - Warrant", "MDT - Розыск", "MDT - Orden de busqueda", "MDT - Arama emri" },
+    { "Unesite razinu potjernice (1-6) i razlog, npr. 2 pljacka trgovine:", "Enter the wanted level (1-6) and reason, e.g. 2 store robbery:", "Введите уровень розыска (1-6) и причину, напр. 2 ограбление магазина:", "Introduce el nivel de busqueda (1-6) y el motivo, p. ej. 2 robo a tienda:", "Aranma seviyesi (1-6) ve sebep girin, orn. 2 market soygunu:" },
+    { "Izdaj", "Issue", "Выдать", "Emitir", "Cikar" },
+    { "Vozilo trenutno nije u gradu.", "The vehicle is not in the city right now.", "Транспорта сейчас нет в городе.", "El vehiculo no esta en la ciudad ahora.", "Arac su an sehirde degil." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

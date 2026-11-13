@@ -6,9 +6,9 @@
 #define MDT_TAB_H           16.0
 
 enum { MDT_POCETNA, MDT_OSOBA, MDT_VOZILO, MDT_POTJERNICE }
-enum { MTD_SAT, MTD_OZNAKA, MTD_NASLOV, MTD_FOTO_OKVIR, MTD_FOTO, MTD_NAZIVI, MTD_VRIJEDNOSTI, MTD_ZNACKA, MTD_KARTICA, MTD_ZAPISI, MTD_IZADI, MTD_LOCIRAJ, MTD_TAB, MTD_IMENOVANI }
+enum { MTD_SAT, MTD_OZNAKA, MTD_NASLOV, MTD_FOTO_OKVIR, MTD_FOTO, MTD_NAZIVI, MTD_VRIJEDNOSTI, MTD_ZNACKA, MTD_KARTICA, MTD_ZAPISI, MTD_IZADI, MTD_LOCIRAJ, MTD_VEZA_NASLOV, MTD_VEZA, MTD_VEZA2, MTD_TAB, MTD_IMENOVANI }
 
-static PlayerText:gMdtTd[MAX_PLAYERS][MDT_TD], gMdtBroj[MAX_PLAYERS], PlayerText:gMdt[MAX_PLAYERS][MTD_IMENOVANI + 3], bool:gMdtOtvoren[MAX_PLAYERS], gMdtEkran[MAX_PLAYERS], gMdtMeta[MAX_PLAYERS];
+static PlayerText:gMdtTd[MAX_PLAYERS][MDT_TD], gMdtBroj[MAX_PLAYERS], PlayerText:gMdt[MAX_PLAYERS][MTD_IMENOVANI + 3], bool:gMdtOtvoren[MAX_PLAYERS], gMdtEkran[MAX_PLAYERS], gMdtMeta[MAX_PLAYERS], gMdtVeza[MAX_PLAYERS][2], gMdtPotjernica[MAX_PLAYERS];
 static const gMdtTabovi[][] = { "Pocetna", "Osoba", "Vozilo", "Potjernice" };
 
 InitMdt()
@@ -90,14 +90,42 @@ static MdtFoto(playerid, model, bool:vozilo = false)
 
 static MdtLocirajGumb(playerid)
 {
-    new prati = PolicijaLocira(playerid), t = gMdtMeta[playerid];
-    if (t == MAX_PLAYERS || (prati == INVALID_PLAYER_ID && t == INVALID_PLAYER_ID))
+    new prati = PolicijaLocira(playerid), t = gMdtMeta[playerid], PlayerText:td = gMdt[playerid][MTD_LOCIRAJ];
+    if (t == MAX_PLAYERS || (prati == INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == -1 || t == playerid)))
     {
-        PlayerTextDrawHide(playerid, gMdt[playerid][MTD_LOCIRAJ]);
+        PlayerTextDrawHide(playerid, td);
         return;
     }
-    PlayerTextDrawSetString(playerid, gMdt[playerid][MTD_LOCIRAJ], prati != INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == prati) ? T(playerid, "PREKINI PRACENJE") : T(playerid, "LOCIRAJ"));
-    PlayerTextDrawShow(playerid, gMdt[playerid][MTD_LOCIRAJ]);
+    if (prati != INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == -1 || t == prati || t == playerid))
+    {
+        PlayerTextDrawBoxColour(playerid, td, 0x5B8DBFFF);
+        PlayerTextDrawSetString(playerid, td, T(playerid, "PREKINI PRACENJE"));
+    }
+    else if (GetWanted(t))
+    {
+        PlayerTextDrawBoxColour(playerid, td, 0x5B8DBFFF);
+        PlayerTextDrawSetString(playerid, td, T(playerid, "LOCIRAJ"));
+    }
+    else
+    {
+        PlayerTextDrawBoxColour(playerid, td, 0xB71C1CFF);
+        PlayerTextDrawSetString(playerid, td, T(playerid, "POTJERNICA"));
+    }
+    PlayerTextDrawShow(playerid, td);
+}
+
+static MdtVeze(playerid, const naslov[], const prva[], const druga[])
+{
+    if (!naslov[0])
+    {
+        for (new i = MTD_VEZA_NASLOV; i <= MTD_VEZA2; i++) PlayerTextDrawHide(playerid, gMdt[playerid][i]);
+        return;
+    }
+    MdtPostavi(playerid, MTD_VEZA_NASLOV, naslov);
+    if (prva[0]) MdtPostavi(playerid, MTD_VEZA, prva);
+    else PlayerTextDrawHide(playerid, gMdt[playerid][MTD_VEZA]);
+    if (druga[0]) MdtPostavi(playerid, MTD_VEZA2, druga);
+    else PlayerTextDrawHide(playerid, gMdt[playerid][MTD_VEZA2]);
 }
 
 static MdtEkran(playerid, ekran, const naslov[])
@@ -115,6 +143,7 @@ static MdtEkran(playerid, ekran, const naslov[])
     MdtPostavi(playerid, MTD_NASLOV, naslov);
     MdtFoto(playerid, -1);
     MdtZnacka(playerid, "", 0);
+    MdtVeze(playerid, "", "", "");
 }
 
 static MdtDosje(playerid, racun, tekst[], size = sizeof (tekst))
@@ -199,9 +228,14 @@ static MdtOsoba(playerid, const unos[])
         new DBResult:r = DB_ExecuteQuery(gDB, "SELECT id FROM accounts WHERE name = '%q' COLLATE NOCASE", trazi);
         if (DB_GetRowCount(r)) racun = DB_GetFieldInt(r, 0);
         DB_FreeResultSet(r);
-        target = INVALID_PLAYER_ID;
-        for (new i = 0; i < MAX_PLAYERS; i++) if (racun && gUlogiran[i] && gAccountId[i] == racun) target = i;
     }
+    return MdtOsobaRacun(playerid, racun);
+}
+
+static MdtOsobaRacun(playerid, racun)
+{
+    new target = INVALID_PLAYER_ID;
+    for (new i = 0; i < MAX_PLAYERS; i++) if (racun && gUlogiran[i] && gAccountId[i] == racun) target = i;
     MdtEkran(playerid, MDT_OSOBA, T(playerid, "OSOBA"));
     if (!racun)
     {
@@ -217,7 +251,7 @@ static MdtOsoba(playerid, const unos[])
     MdtCisti(ime);
     MdtCisti(broj);
     MdtFoto(playerid, target != INVALID_PLAYER_ID ? GetPlayerSkin(target) : skin < 0 ? 0 : skin);
-    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Dozvola za oruzje"), T(playerid, "Zadnja lokacija"), T(playerid, "Vozila"), T(playerid, "Kuca"));
+    format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Dozvola za oruzje"), T(playerid, "Zadnja lokacija"), T(playerid, "Kuca"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
     format(tekst, sizeof tekst, "%s~n~%s~n~%s~w~~n~%s~w~~n~", ime, broj, vozacka ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"), oruzje ? T(playerid, "~g~Ima") : T(playerid, "~r~Nema"));
     new Float:lx, Float:ly, kada = target != INVALID_PLAYER_ID ? PolicijaTrag(target, lx, ly) : 0;
@@ -231,23 +265,31 @@ static MdtOsoba(playerid, const unos[])
         strcat(tekst, T(playerid, "Nepoznata"));
         strcat(tekst, "~n~");
     }
+    new veza[2][32];
+    gMdtVeza[playerid][0] = 0;
+    gMdtVeza[playerid][1] = 0;
     res = DB_ExecuteQuery(gDB, "SELECT id, model FROM player_vehicles WHERE owner = %d LIMIT 2", racun);
     new n = DB_GetRowCount(res);
     for (new i = 0; i < n; i++, DB_SelectNextRow(res))
     {
         new v = VlasnikPoDb(DB_GetFieldInt(res, 0)), tablica[12] = "-";
         if (v) VoziloTablica(v, tablica);
-        format(red, sizeof red, "%s%s (%s)", i ? (", ") : (""), gImenaVozila[DB_GetFieldInt(res, 1) - 400], tablica);
-        strcat(tekst, red);
+        gMdtVeza[playerid][i] = v;
+        format(veza[i], sizeof veza[], "%s %s", gImenaVozila[DB_GetFieldInt(res, 1) - 400], tablica);
     }
     DB_FreeResultSet(res);
-    if (!n) strcat(tekst, "-");
-    strcat(tekst, "~n~");
     res = DB_ExecuteQuery(gDB, "SELECT x, y FROM houses WHERE owner = %d LIMIT 1", racun);
     if (DB_GetRowCount(res)) strcat(tekst, CestaZona(DB_GetFieldFloat(res, 0), DB_GetFieldFloat(res, 1)));
     else strcat(tekst, "-");
     DB_FreeResultSet(res);
     MdtPostavi(playerid, MTD_VRIJEDNOSTI, tekst);
+    format(red, sizeof red, "%s:", T(playerid, "Vozila"));
+    if (n) MdtVeze(playerid, red, veza[0], n > 1 ? veza[1] : (""));
+    else
+    {
+        strcat(red, " -");
+        MdtVeze(playerid, red, "", "");
+    }
     tekst[0] = EOS;
     MdtDosje(playerid, racun, tekst);
     MdtPostavi(playerid, MTD_ZAPISI, tekst);
@@ -294,6 +336,13 @@ static MdtVozilo(playerid, const unos[])
     }
     else strcat(tekst, T(playerid, "Nema zapisa."));
     MdtPostavi(playerid, MTD_ZAPISI, tekst);
+    if (racun > 0 && racun != VLASNIK_PIJACA)
+    {
+        new red[32];
+        gMdtVeza[playerid][0] = racun;
+        format(red, sizeof red, "%s:", T(playerid, "Vlasnik"));
+        MdtVeze(playerid, red, vlasnik, "");
+    }
     if (wanted) MdtZnacka(playerid, T(playerid, "VLASNIK TRAZEN"), 0xB71C1CFF);
     else MdtZnacka(playerid, T(playerid, "UREDNO"), 0x2E7D32FF);
     return 1;
@@ -354,6 +403,16 @@ static MdtOtvori(playerid)
     PlayerTextDrawTextSize(playerid, gMdt[playerid][MTD_ZNACKA], 10.0, 78.0);
     gMdt[playerid][MTD_KARTICA] = MdtKutija(playerid, 108.0, 138.0, 276.0, 116.0, 0x132233FF);
     MdtTekst(playerid, 113.0, 141.0, T(playerid, "DOSJE"), 0x5B8DBFFF, 0.18, 0.85);
+    gMdt[playerid][MTD_VEZA_NASLOV] = MdtTekst(playerid, 182.0, 121.0, "_", 0x8AA0B6FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
+    for (new i = 0; i < 2; i++)
+    {
+        new PlayerText:veza = MdtTekst(playerid, 266.0 + float(i) * 82.0, 121.0, "_", 0xFFFFFFFF, 0.15, 0.8, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+        PlayerTextDrawUseBox(playerid, veza, true);
+        PlayerTextDrawBoxColour(playerid, veza, 0x1F3A5FFF);
+        PlayerTextDrawTextSize(playerid, veza, 10.0, 78.0);
+        PlayerTextDrawSetSelectable(playerid, veza, true);
+        gMdt[playerid][MTD_VEZA + i] = veza;
+    }
     gMdt[playerid][MTD_ZAPISI] = MdtTekst(playerid, 113.0, 153.0, "_", 0xDCE4ECFF, 0.16, 0.85, TEXT_DRAW_FONT_1);
     for (new i = 0; i < gMdtBroj[playerid]; i++) PlayerTextDrawShow(playerid, gMdtTd[playerid][i]);
     MdtPocetna(playerid);
@@ -400,11 +459,27 @@ MdtKlik(playerid, PlayerText:td)
     {
         new t = gMdtMeta[playerid], prati = PolicijaLocira(playerid);
         if (t == MAX_PLAYERS) return 1;
-        if (t == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Osoba nije na mrezi."));
-        if (t == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to sami sebi."));
-        if (prati != INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == prati)) PolicijaLocirajPrekini(playerid);
-        else if (t != INVALID_PLAYER_ID && IsPlayerConnected(t) && gUlogiran[t]) PolicijaLociraj(playerid, t);
+        if (prati != INVALID_PLAYER_ID && (t == INVALID_PLAYER_ID || t == -1 || t == prati || t == playerid)) PolicijaLocirajPrekini(playerid);
+        else if (t == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Osoba nije na mrezi."));
+        else if (t == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to sami sebi."));
+        else if (t != INVALID_PLAYER_ID && IsPlayerConnected(t) && gUlogiran[t])
+        {
+            if (GetWanted(t)) PolicijaLociraj(playerid, t);
+            else
+            {
+                gMdtPotjernica[playerid] = gAccountId[t];
+                return PrikaziDialog(playerid, DLG_MDT_POTJERNICA, DIALOG_STYLE_INPUT, T(playerid, "MDT - Potjernica"), T(playerid, "Unesite razinu potjernice (1-6) i razlog, npr. 2 pljacka trgovine:"), T(playerid, "Izdaj"), T(playerid, "Natrag"));
+            }
+        }
         MdtLocirajGumb(playerid);
+    }
+    else if (td == gMdt[playerid][MTD_VEZA] || td == gMdt[playerid][MTD_VEZA2])
+    {
+        new veza = gMdtVeza[playerid][td == gMdt[playerid][MTD_VEZA2] ? 1 : 0], unos[8];
+        if (gMdtEkran[playerid] == MDT_VOZILO) return MdtOsobaRacun(playerid, veza);
+        if (!veza) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo trenutno nije u gradu."));
+        valstr(unos, veza);
+        MdtVozilo(playerid, unos);
     }
     else if (td == gMdt[playerid][MTD_TAB + MDT_POCETNA]) MdtPocetna(playerid);
     else if (td == gMdt[playerid][MTD_TAB + MDT_POTJERNICE]) MdtPotjernice(playerid);
@@ -419,6 +494,22 @@ DLG:mdt_osoba(playerid, response, const inputtext[])
     SelectTextDraw(playerid, 0x5B8DBFFF);
     if (response && inputtext[0] && strlen(inputtext) <= MAX_PLAYER_NAME) MdtOsoba(playerid, inputtext);
     return 1;
+}
+
+DLG:mdt_potjernica(playerid, response, const inputtext[])
+{
+    if (!gMdtOtvoren[playerid]) return 1;
+    SelectTextDraw(playerid, 0x5B8DBFFF);
+    new t = INVALID_PLAYER_ID;
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == gMdtPotjernica[playerid]) t = i;
+    if (t == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Osoba nije na mrezi."));
+    if (response && inputtext[0])
+    {
+        new p[160];
+        format(p, sizeof p, "%d %s", t, inputtext);
+        cmd_wanted(playerid, p);
+    }
+    return MdtOsobaRacun(playerid, gAccountId[t]);
 }
 
 DLG:mdt_vozilo(playerid, response, const inputtext[])
