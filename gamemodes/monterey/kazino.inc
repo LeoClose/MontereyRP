@@ -4,7 +4,7 @@
 #define KAZINO_SKIN_BLAGAJNA 172
 #define KAZINO_MIN_ULOG     1
 #define KAZINO_MAX_ULOG     5000
-#define KZ_TD               72
+#define KZ_TD               80
 #define KZ_VRTI_MS          110
 #define KZ_KORACI           14
 #define KZ_SREDINA          320.0
@@ -19,7 +19,7 @@ enum { KZ_BLACKJACK, KZ_RULET, KZ_POKER, KZ_KOCKE, KZ_SLOT, KZ_BLAGAJNA }
 enum { KZI_POZADINA, KZI_NASLOV, KZI_STATUS, KZI_LIJEVO, KZI_DESNO, KZI_PRVI }
 enum { BTD_DILER = KZI_PRVI, BTD_DOUBLE, BTD_SPLIT, BTD_SURRENDER, BTD_RUKA, BTD_KARTA = BTD_RUKA + BJ_RUKE }
 enum { VTD_KARTA = KZI_PRVI, VTD_DRZI = VTD_KARTA + 5 }
-enum { RTD_BROJ = KZI_PRVI, RTD_PONISTI, RTD_ZETON, RTD_POLJE = RTD_ZETON + 8 }
+enum { RTD_BROJ = KZI_PRVI, RTD_PONISTI, RTD_ZETON, RTD_POLJE = RTD_ZETON + 16 }
 enum { UTD_PONISTI = KZI_PRVI, UTD_ZETON }
 enum { DTD_IGRAC = KZI_PRVI, DTD_DILER }
 enum { STD_OKVIR = KZI_PRVI, STD_VALJAK = STD_OKVIR + 3 }
@@ -38,7 +38,7 @@ static gKocke[MAX_PLAYERS][4], gSlot[MAX_PLAYERS][3];
 static const gKzIme[][] = { "Blackjack", "Rulet", "Video poker", "Kocke", "Slot", "Blagajna" };
 static const gBjBoja[] = "cdhs";
 static const gKzZetoni[] = { 1, 5, 10, 25, 100, 500, 1000, 5000 };
-static const gKzZetonBoja[] = { 0xDDDDDDFF, 0xB22222FF, 0x1E5AA8FF, 0x2E7D32FF, 0x222222FF, 0x6A1B9AFF, 0xC9A227FF, 0xE65100FF };
+static const gKzZetonSprite[][] = { "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulgre", "LD_ROUL:roulgre", "LD_ROUL:roulbla", "LD_ROUL:roulbla", "LD_ROUL:roulbla" };
 static const gRulVani[][] = { "1-12", "13-24", "25-36", "2:1", "2:1", "2:1", "1-18", "Par", "Crveno", "Crno", "Nepar", "19-36" };
 static const gVpIme[][] = { "Nista", "Jacks or Better", "Two Pair", "Three of a Kind", "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush", "Royal Flush" };
 static const gVpIsplata[] = { 0, 1, 2, 3, 4, 6, 9, 25, 50, 250 };
@@ -286,25 +286,34 @@ static KzZetoniNapravi(playerid, prvi, Float:x, Float:y)
     new tekst[8];
     for (new i = 0; i < sizeof gKzZetoni; i++)
     {
+        new Float:cx = x + float(i) * 40.0;
+        KzSprite(playerid, prvi + i, cx - 13.0, y, 26.0, 26.0, gKzZetonSprite[i]);
+        PlayerTextDrawSetSelectable(playerid, gKzTd[playerid][prvi + i], true);
         format(tekst, sizeof tekst, "$%d", gKzZetoni[i]);
-        KzGumb(playerid, prvi + i, x + float(i) * 40.0, y, 36.0, gKzZetonBoja[i]);
-        PlayerTextDrawSetString(playerid, gKzTd[playerid][prvi + i], tekst);
+        KzTekst(playerid, prvi + sizeof gKzZetoni + i, cx, y + 8.0, tekst, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_ALIGN_CENTER);
     }
+}
+
+static KzZetoniSakrij(playerid, prvi)
+{
+    for (new i = 0; i < sizeof gKzZetoni * 2; i++) PlayerTextDrawHide(playerid, gKzTd[playerid][prvi + i]);
 }
 
 static KzZetoniPrikazi(playerid, prvi, slobodno, odabran = -1)
 {
     for (new i = 0; i < sizeof gKzZetoni; i++)
     {
-        new PlayerText:td = gKzTd[playerid][prvi + i];
+        new PlayerText:td = gKzTd[playerid][prvi + i], PlayerText:tekst = gKzTd[playerid][prvi + sizeof gKzZetoni + i];
         if (gKzZetoni[i] > slobodno)
         {
             PlayerTextDrawHide(playerid, td);
+            PlayerTextDrawHide(playerid, tekst);
             continue;
         }
-        PlayerTextDrawBoxColour(playerid, td, i == odabran ? 0xE8C15AFF : gKzZetonBoja[i]);
-        PlayerTextDrawColour(playerid, td, i == odabran || !i ? 0x000000FF : 0xFFFFFFFF);
+        PlayerTextDrawColour(playerid, td, i == odabran ? 0xFFD54FFF : 0xFFFFFFFF);
+        PlayerTextDrawColour(playerid, tekst, i == odabran ? 0xFFD54FFF : 0xFFFFFFFF);
         PlayerTextDrawShow(playerid, td);
+        PlayerTextDrawShow(playerid, tekst);
     }
 }
 
@@ -856,7 +865,7 @@ static RulOtvori(playerid)
     PlayerTextDrawUseBox(playerid, gKzTd[playerid][RTD_BROJ], true);
     PlayerTextDrawTextSize(playerid, gKzTd[playerid][RTD_BROJ], 20.0, 36.0);
     KzGumb(playerid, RTD_PONISTI, KZ_SREDINA, y + 162.0, 60.0, 0x555555FF);
-    KzZetoniNapravi(playerid, RTD_ZETON, x + 30.0, y + 118.0);
+    KzZetoniNapravi(playerid, RTD_ZETON, x + 30.0, y + 114.0);
     RulPolje(playerid, 0, x + 24.0, y + 30.0, 30.0, "_~n~0~n~_");
     PlayerTextDrawLetterSize(playerid, gKzTd[playerid][RTD_POLJE], 0.2, 1.55);
     PlayerTextDrawShow(playerid, gKzTd[playerid][RTD_POLJE]);
@@ -912,7 +921,7 @@ static RulVrti(playerid)
     KzPostavi(playerid, KZI_LIJEVO, "_", false);
     KzPostavi(playerid, KZI_DESNO, "_", false);
     KzPostavi(playerid, RTD_PONISTI, "_", false);
-    for (new i = 0; i < sizeof gKzZetoni; i++) PlayerTextDrawHide(playerid, gKzTd[playerid][RTD_ZETON + i]);
+    KzZetoniSakrij(playerid, RTD_ZETON);
     KzDiler(playerid, "dealone");
     KzVrti(playerid);
 }
