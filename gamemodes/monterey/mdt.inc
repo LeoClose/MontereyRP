@@ -306,9 +306,9 @@ static MdtOtvori(playerid)
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMdtOtvoren[playerid] = true;
     gMdtBroj[playerid] = 0;
+    MdtKutija(playerid, 0.0, 0.0, 400.0, 268.0, 0x0A0A0AFF);
     MdtKutija(playerid, -14.0, 268.0, 428.0, 12.0, 0x1A1A1AFF);
     MdtKutija(playerid, 170.0, 276.0, 60.0, 3.0, 0x0A0A0AFF);
-    MdtKutija(playerid, 0.0, 0.0, 400.0, 270.0, 0x0A0A0AFF);
     MdtKutija(playerid, 198.0, 1.0, 4.0, 2.0, 0x3A3A3AFF);
     MdtKutija(playerid, 4.0, 4.0, 392.0, 258.0, 0x0F1A27FF);
     MdtKutija(playerid, 4.0, 4.0, 392.0, 20.0, 0x1F3A5FFF);

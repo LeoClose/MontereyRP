@@ -12,7 +12,8 @@
 #define AV_POVRAT           85.0
 #define AV_MAX              3000
 #define AV_STUPACA          20
-#define AV_TAKT             7
+#define AV_TAKT             14
+#define AV_MS               55
 #define AV_SIRINA           272.0
 #define AV_VISINA           118.0
 #define BJ_KARATA           8
@@ -31,7 +32,7 @@ enum { UTD_PONISTI = KZI_PRVI, UTD_ZETON }
 enum { DTD_IGRAC = KZI_PRVI, DTD_DILER }
 enum { STD_OKVIR = KZI_PRVI, STD_VALJAK = STD_OKVIR + 3 }
 enum { BCTD_IGRAC = TTD_POLJE + 3, BCTD_BANKER, BCTD_KARTA }
-enum { ATD_GRAF = KZI_PRVI, ATD_STUPAC, ATD_ODLETIO = ATD_STUPAC + AV_STUPACA, ATD_MNOZITELJ, ATD_AVION, ATD_AVION2 }
+enum { ATD_GRAF = KZI_PRVI, ATD_STUPAC, ATD_ODLETIO = ATD_STUPAC + AV_STUPACA, ATD_MNOZITELJ, ATD_AVION }
 enum { KTD_STAZA = TTD_POLJE + 5, KTD_CILJ, KTD_KONJ }
 
 enum E_KAZINO { bool:kzIma, kzDb, kzTip, Float:kzX, Float:kzY, Float:kzZ, Float:kzA, kzInt, kzSvijet, kzAktor, STREAMER_TAG_3D_TEXT_LABEL:kzTekst }
@@ -44,7 +45,7 @@ static gBj[MAX_PLAYERS][E_BJ], gBjKarte[MAX_PLAYERS][BJ_RUKE][BJ_KARATA], gBjN[M
 static gVpKarte[MAX_PLAYERS][5], bool:gVpDrzi[MAX_PLAYERS][5], bool:gVpKoristeno[MAX_PLAYERS][52];
 static gRulIshod[MAX_PLAYERS], gKzZeton[MAX_PLAYERS], gTabla[MAX_PLAYERS][RUL_POLJA];
 static gBacKarte[MAX_PLAYERS][6], gBacRed[MAX_PLAYERS][6], gBacN[MAX_PLAYERS], gBacPt[MAX_PLAYERS], gBacBt[MAX_PLAYERS];
-static gAvSlot[MAX_PLAYERS], gAvT[MAX_PLAYERS], gAvIsplaceno[MAX_PLAYERS], Float:gAvDno[MAX_PLAYERS], Float:gAvX[MAX_PLAYERS], Float:gAvY[MAX_PLAYERS];
+static gAvT[MAX_PLAYERS], gAvIsplaceno[MAX_PLAYERS], Float:gAvDno[MAX_PLAYERS], Float:gAvX[MAX_PLAYERS], Float:gAvY[MAX_PLAYERS];
 static gKocke[MAX_PLAYERS][4], gSlot[MAX_PLAYERS][3];
 static gAvM[MAX_PLAYERS], gAvKraj[MAX_PLAYERS], gKonj[MAX_PLAYERS][5], gKonjPobjednik[MAX_PLAYERS], Float:gKonjY[MAX_PLAYERS];
 
@@ -800,20 +801,10 @@ static Float:AvVisina(m)
 
 static AvAvion(playerid, Float:x, Float:y)
 {
-    new staro = ATD_AVION + gAvSlot[playerid];
-    gAvSlot[playerid] = !gAvSlot[playerid];
-    new novo = ATD_AVION + gAvSlot[playerid];
     gAvX[playerid] = x;
     gAvY[playerid] = y;
-    PlayerTextDrawDestroy(playerid, gKzTd[playerid][novo]);
-    KzSprite(playerid, novo, x - 24.0, y - 26.0, 48.0, 34.0, "_");
-    new PlayerText:td = gKzTd[playerid][novo];
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-    PlayerTextDrawSetPreviewModel(playerid, td, 593);
-    PlayerTextDrawSetPreviewRot(playerid, td, -15.0, 0.0, -90.0, 1.0);
-    PlayerTextDrawBackgroundColour(playerid, td, 0x00000000);
-    PlayerTextDrawShow(playerid, td);
-    PlayerTextDrawHide(playerid, gKzTd[playerid][staro]);
+    PlayerTextDrawSetPos(playerid, gKzTd[playerid][ATD_AVION], x - 16.0, y - 18.0);
+    PlayerTextDrawShow(playerid, gKzTd[playerid][ATD_AVION]);
 }
 
 static AvCrtaj(playerid)
@@ -841,9 +832,11 @@ static AvPocni(playerid)
     for (new j = 0; j < AV_STUPACA; j++) KzSprite(playerid, ATD_STUPAC + j, x + 14.0, gAvDno[playerid] - 1.0, 1.0, 1.0, "LD_SPAC:white", 0x00000000);
     KzTekst(playerid, ATD_ODLETIO, KZ_SREDINA, y + 40.0, T(playerid, "ODLETIO!"), 0xE53935FF, 0.4, 1.6, TEXT_DRAW_ALIGN_CENTER);
     KzTekst(playerid, ATD_MNOZITELJ, KZ_SREDINA, y + 66.0, "_", 0xFFFFFFFF, 0.7, 2.8, TEXT_DRAW_ALIGN_CENTER);
-    KzSprite(playerid, ATD_AVION, x, y, 1.0, 1.0, "_");
-    KzSprite(playerid, ATD_AVION2, x, y, 1.0, 1.0, "_");
-    gAvSlot[playerid] = 0;
+    KzSprite(playerid, ATD_AVION, x, y, 32.0, 22.0, "_");
+    PlayerTextDrawFont(playerid, gKzTd[playerid][ATD_AVION], TEXT_DRAW_FONT_MODEL_PREVIEW);
+    PlayerTextDrawSetPreviewModel(playerid, gKzTd[playerid][ATD_AVION], 464);
+    PlayerTextDrawSetPreviewRot(playerid, gKzTd[playerid][ATD_AVION], -15.0, 0.0, -90.0, 1.0);
+    PlayerTextDrawBackgroundColour(playerid, gKzTd[playerid][ATD_AVION], 0x00000000);
     AvAvion(playerid, x + 14.0, gAvDno[playerid]);
     KzPostavi(playerid, KZI_LIJEVO, T(playerid, "Isplati"));
     KzPostavi(playerid, KZI_DESNO, "_", false);
@@ -877,20 +870,19 @@ forward AvOdleti(playerid, runda, korak);
 public AvOdleti(playerid, runda, korak)
 {
     if (gKzRunda[playerid] != runda || !gKzOtvoren[playerid] || gKzIgra[playerid] || gKzTip[playerid] != KZ_AVIATOR) return;
-    if (korak >= 6)
+    if (korak >= 12)
     {
         PlayerTextDrawHide(playerid, gKzTd[playerid][ATD_AVION]);
-        PlayerTextDrawHide(playerid, gKzTd[playerid][ATD_AVION2]);
         return;
     }
-    AvAvion(playerid, gAvX[playerid] + 24.0, gAvY[playerid] - 16.0);
-    SetTimerEx("AvOdleti", KZ_VRTI_MS, false, "iii", playerid, runda, korak + 1);
+    AvAvion(playerid, gAvX[playerid] + 12.0, gAvY[playerid] - 8.0);
+    SetTimerEx("AvOdleti", AV_MS, false, "iii", playerid, runda, korak + 1);
 }
 
 static bool:AvKorak(playerid)
 {
     new m = gAvM[playerid], t = ++gAvT[playerid], Float:x0 = KZ_SREDINA - 136.0, Float:sirina = AV_SIRINA / float(AV_STUPACA);
-    gAvM[playerid] = m + (m / 60 > 0 ? m / 60 : 1);
+    if (t % 2) gAvM[playerid] = m + (m / 60 > 0 ? m / 60 : 1);
     if (gAvM[playerid] >= gAvKraj[playerid])
     {
         gAvM[playerid] = gAvKraj[playerid];
@@ -904,7 +896,7 @@ static bool:AvKorak(playerid)
         KzSprite(playerid, ATD_STUPAC + j, x0 + float(j) * sirina, gAvDno[playerid] - h, sirina, h, "LD_SPAC:white", 0xD32F2FAA);
         PlayerTextDrawShow(playerid, gKzTd[playerid][ATD_STUPAC + j]);
     }
-    new Float:dio = float(t) / float(AV_TAKT), Float:val = t > AV_TAKT * AV_STUPACA ? floatsin(float(t) * 25.0, degrees) * 3.0 : 0.0;
+    new Float:dio = float(t) / float(AV_TAKT), Float:val = t > AV_TAKT * AV_STUPACA ? floatsin(float(t) * 12.5, degrees) * 3.0 : 0.0;
     if (dio > float(AV_STUPACA)) dio = float(AV_STUPACA);
     AvAvion(playerid, x0 + dio * sirina, gAvDno[playerid] - AvVisina(gAvM[playerid]) + val);
     AvCrtaj(playerid);
@@ -929,7 +921,7 @@ public KazinoVrti(playerid, runda, korak)
             case KZ_KONJI: dalje = KonjiKorak(playerid, korak);
             default: dalje = BacKorak(playerid, korak);
         }
-        if (dalje) SetTimerEx("KazinoVrti", KZ_VRTI_MS, false, "iii", playerid, runda, korak + 1);
+        if (dalje) SetTimerEx("KazinoVrti", gKzTip[playerid] == KZ_AVIATOR ? AV_MS : KZ_VRTI_MS, false, "iii", playerid, runda, korak + 1);
         return;
     }
     if (korak >= KZ_KORACI)
