@@ -1,7 +1,9 @@
 #define LOGIN_TD          12
-#define LOGIN_PANEL       170.0
-#define LOGIN_X           470.0
-#define LOGIN_SREDINA     555.0
+#define LOGIN_PANEL       180.0
+#define LOGIN_X           442.0
+#define LOGIN_Y           316.0
+#define LOGIN_VISINA      106.0
+#define LOGIN_SREDINA     532.0
 #define LOGIN_KADAR_MS    14000
 #define LOGIN_KADROVA     4
 
@@ -57,16 +59,21 @@ LoginEkran(playerid, const naslov[], const podnaslov[])
         for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
         gLoginIma[playerid] = true;
         gLoginBroj[playerid] = 0;
-        LoginKutija(playerid, LOGIN_X, 0.0, LOGIN_PANEL, 448.0, 0x000000C8);
-        LoginKutija(playerid, LOGIN_X - 2.0, 0.0, 2.0, 448.0, 0x1E5AA8FF);
-        LoginTekst(playerid, 70.0, "MONTEREY", 0xFFFFFFFF, 0.55, 2.4, TEXT_DRAW_FONT_3);
-        LoginTekst(playerid, 96.0, "ROLEPLAY", 0x1E5AA8FF, 0.3, 1.3, TEXT_DRAW_FONT_2);
-        LoginKutija(playerid, LOGIN_SREDINA - 40.0, 114.0, 80.0, 1.5, 0x1E5AA8FF);
-        gLogin[playerid][LTD_NASLOV] = LoginTekst(playerid, 160.0, "_", 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_2);
-        LoginTekst(playerid, 176.0, ime, 0x5B9BE6FF, 0.3, 1.4, TEXT_DRAW_FONT_1);
-        gLogin[playerid][LTD_PODNASLOV] = LoginTekst(playerid, 200.0, "_", 0xBBBBBBFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-        LoginKutija(playerid, LOGIN_SREDINA - 55.0, 372.0, 110.0, 1.0, 0xFFFFFF40);
-        gLogin[playerid][LTD_STATISTIKA] = LoginTekst(playerid, 380.0, "_", 0xCCCCCCFF, 0.18, 0.9, TEXT_DRAW_FONT_1);
+        LoginKutija(playerid, LOGIN_X, LOGIN_Y, LOGIN_PANEL, LOGIN_VISINA, 0x0B0B12D8);
+        LoginKutija(playerid, LOGIN_X, LOGIN_Y, 2.0, LOGIN_VISINA, 0x1E5AA8FF);
+        new PlayerText:logo = LoginTekst(playerid, LOGIN_Y + 4.0, "Monterey", 0x1E5AA8FF, 0.5, 2.0, TEXT_DRAW_FONT_3);
+        PlayerTextDrawSetOutline(playerid, logo, 1);
+        PlayerTextDrawBackgroundColour(playerid, logo, 0x000000FF);
+        logo = LoginTekst(playerid, LOGIN_Y + 22.0, "RolePlay", 0xFFFFFFFF, 0.34, 1.35, TEXT_DRAW_FONT_3);
+        PlayerTextDrawSetOutline(playerid, logo, 1);
+        PlayerTextDrawBackgroundColour(playerid, logo, 0x000000FF);
+        PlayerTextDrawAlignment(playerid, logo, TEXT_DRAW_ALIGN_RIGHT);
+        PlayerTextDrawSetPos(playerid, logo, LOGIN_SREDINA + 44.0, LOGIN_Y + 22.0);
+        LoginKutija(playerid, LOGIN_X + 14.0, LOGIN_Y + 42.0, LOGIN_PANEL - 28.0, 1.0, 0xFFFFFF30);
+        gLogin[playerid][LTD_NASLOV] = LoginTekst(playerid, LOGIN_Y + 47.0, "_", 0xFFFFFFFF, 0.19, 0.9, TEXT_DRAW_FONT_2);
+        LoginTekst(playerid, LOGIN_Y + 57.0, ime, 0x5B9BE6FF, 0.28, 1.25, TEXT_DRAW_FONT_1);
+        gLogin[playerid][LTD_PODNASLOV] = LoginTekst(playerid, LOGIN_Y + 74.0, "_", 0xBBBBBBFF, 0.17, 0.8, TEXT_DRAW_FONT_1);
+        gLogin[playerid][LTD_STATISTIKA] = LoginTekst(playerid, LOGIN_Y + 89.0, "_", 0x8899AAFF, 0.16, 0.75, TEXT_DRAW_FONT_1);
         gLoginKadarBr[playerid] = random(LOGIN_KADROVA);
         if (gLoginMuzika[0]) PlayAudioStreamForPlayer(playerid, gLoginMuzika);
         SetTimerEx("LoginKamera", 300, false, "ii", playerid, ++gLoginToken[playerid]);
@@ -80,7 +87,7 @@ LoginEkran(playerid, const naslov[], const podnaslov[])
         igraca++;
         if (gUlogiran[i] && gAdmin[i] > 0) admina++;
     }
-    format(statistika, sizeof statistika, T(playerid, "Registriranih igraca: %d~n~Admina online: %d~n~Igraca online: %d"), registrirano, admina, igraca);
+    format(statistika, sizeof statistika, T(playerid, "Online: %d  |  Admina: %d  |  Racuna: %d"), igraca, admina, registrirano);
     PlayerTextDrawSetString(playerid, gLogin[playerid][LTD_NASLOV], naslov);
     PlayerTextDrawSetString(playerid, gLogin[playerid][LTD_PODNASLOV], podnaslov);
     PlayerTextDrawSetString(playerid, gLogin[playerid][LTD_STATISTIKA], statistika);
