@@ -374,6 +374,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koristenje: /goto [id/ime]", "Usage: /goto [id/name]", "Использование: /goto [id/имя]", "Uso: /goto [id/nombre]", "Kullanim: /goto [id/isim]" },
     { "Teleportirani ste do igraca %s.", "You teleported to %s.", "Вы телепортировались к %s.", "Te has teletransportado a %s.", "%s yanina isinlandiniz." },
     { "  /goto [id/ime] - teleport do igraca", "  /goto [id/name] - teleport to a player", "  /goto [id/имя] - телепорт к игроку", "  /goto [id/nombre] - teletransporte a un jugador", "  /goto [id/isim] - oyuncuya isinlan" },
+    { "  /pdint - teleport do PD enterijera", "  /pdint - teleport to the PD interior", "  /pdint - телепорт в интерьер полиции", "  /pdint - teletransporte al interior de la policia", "  /pdint - polis merkezi icine isinlan" },
+    { "Teleportirani ste u PD enterijer.", "You teleported to the PD interior.", "Вы телепортировались в интерьер полиции.", "Te has teletransportado al interior de la policia.", "Polis merkezinin icine isinlandiniz." },
     { "Taksi stanice", "Taxi stands", "Стоянки такси", "Paradas de taxi", "Taksi duraklari" },
     { "Taksi stanice (%d/%d)", "Taxi stands (%d/%d)", "Стоянки такси (%d/%d)", "Paradas de taxi (%d/%d)", "Taksi duraklari (%d/%d)" },
     { "{8AB4F8}+ Nova stanica na mojoj poziciji", "{8AB4F8}+ New stand at my position", "{8AB4F8}+ Новая стоянка на моей позиции", "{8AB4F8}+ Nueva parada en mi posicion", "{8AB4F8}+ Konumumda yeni durak" },

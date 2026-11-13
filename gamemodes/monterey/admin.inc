@@ -254,6 +254,17 @@ CMD:goto(playerid, params[])
     return 1;
 }
 
+CMD:pdint(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
+    if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stisni Enter da izadjes iz vozila."));
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerPos(playerid, 1292.0, -1190.0, -28.8);
+    SetCameraBehindPlayer(playerid);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste u PD enterijer."));
+}
+
 static bool:AdminBrojParam(const params[], max, &vrijednost)
 {
     new idx = 0, broj[8];

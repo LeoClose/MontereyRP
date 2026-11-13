@@ -250,7 +250,10 @@ CMD:ahelp(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
+    {
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /pdint - teleport do PD enterijera"));
+    }
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
     return 1;
 }
