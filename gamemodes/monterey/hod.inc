@@ -74,7 +74,12 @@ static Float:HodVozilo(Float:x, Float:y, Float:z, Float:px, Float:py)
         new Float:c = floatcos(a, degrees), Float:s = floatsin(a, degrees), Float:sirina = sx / 2.0 + HOD_VOZILO_RAZMAK, Float:dugo = sy / 2.0 + HOD_VOZILO_RAZMAK;
         new Float:ax = (x - vx) * c + (y - vy) * s, Float:ay = (y - vy) * c - (x - vx) * s;
         new Float:bx = (px - vx) * c + (py - vy) * s, Float:by = (py - vy) * c - (px - vx) * s;
-        if ((floatabs(ax) <= sirina && floatabs(ay) <= dugo) || (floatabs(bx) <= sirina && floatabs(by) <= dugo)) continue;
+        if ((floatabs(ax) <= sirina && floatabs(ay) <= dugo) || (floatabs(bx) <= sirina && floatabs(by) <= dugo))
+        {
+            sirina = sx / 2.0;
+            dugo = sy / 2.0;
+            if ((floatabs(ax) <= sirina && floatabs(ay) <= dugo) || (floatabs(bx) <= sirina && floatabs(by) <= dugo)) continue;
+        }
         new Float:pocetak = 0.0, Float:kraj = 1.0;
         if (HodPojas(ax, bx, sirina, pocetak, kraj) && HodPojas(ay, by, dugo, pocetak, kraj) && pocetak < najblize) najblize = pocetak;
     }
@@ -159,12 +164,12 @@ static HodKorak(npc)
         }
         else
         {
-            new Float:a = atan2(dy, dx), bool:ima = false;
+            new Float:a = atan2(dy, dx), bool:ima = false, Float:korak = d > HOD_KORAK ? HOD_KORAK : d < HOD_RAZMAK ? HOD_RAZMAK : d;
             for (new k = 0; k < 10 && !ima; k++)
             {
                 new Float:kut = a + float(30 + 30 * (k / 2)) * float(k % 2 ? -gHod[npc][hdStrana] : gHod[npc][hdStrana]);
-                px = x + HOD_KORAK * floatcos(kut, degrees);
-                py = y + HOD_KORAK * floatsin(kut, degrees);
+                px = x + korak * floatcos(kut, degrees);
+                py = y + korak * floatsin(kut, degrees);
                 pz = HodTlo(px, py, z);
                 if (HodZid(npc, x, y, z, px, py, pz, hx, hy)) continue;
                 if (k % 2) gHod[npc][hdStrana] = -gHod[npc][hdStrana];

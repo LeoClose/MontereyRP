@@ -610,13 +610,16 @@ public SlucajPjeske(s)
 
 static SlucajUKamion(s)
 {
-    new npc = gSlucaj[s][slNpc], Float:x, Float:y, Float:z;
+    new npc = gSlucaj[s][slNpc], v = gSlucaj[s][slVozilo], Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
     NPC_StopMove(npc);
     NPC_StopAim(npc);
     NPC_ClearAnimations(npc);
     NPC_SetWeapon(npc, WEAPON_FIST);
-    GetVehiclePos(gSlucaj[s][slVozilo], x, y, z);
-    NPCHodaj(npc, x, y, z, NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 4.0);
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:px = x - fy * (sx / 2.0 + 1.0) + fx * (sy / 4.0), Float:py = y + fx * (sx / 2.0 + 1.0) + fy * (sy / 4.0);
+    NPCHodaj(npc, px, py, HodTlo(px, py, z), NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 1.0);
     gSlucaj[s][slStanje] = SL_POVRATAK;
     gSlucaj[s][slRok] = SLUCAJ_POVRATAK_S;
 }
