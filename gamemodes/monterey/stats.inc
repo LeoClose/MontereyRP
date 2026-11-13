@@ -3,6 +3,10 @@ new gStatsRespekti[MAX_PLAYERS];
 new gStatsPlaytime[MAX_PLAYERS];
 new gStatsLastUpdate[MAX_PLAYERS];
 new gStatsUnsaved[MAX_PLAYERS];
+new gStatsStranica[MAX_PLAYERS];
+new bool:gStatsImaSljedecu[MAX_PLAYERS];
+
+#define STATS_KUCA_PO_STRANICI 40
 
 InitStats()
 {
@@ -45,6 +49,8 @@ StatsConnect(playerid)
     gStatsPlaytime[playerid] = 0;
     gStatsLastUpdate[playerid] = 0;
     gStatsUnsaved[playerid] = 0;
+    gStatsStranica[playerid] = 0;
+    gStatsImaSljedecu[playerid] = false;
 }
 
 StatsLoad(playerid)
@@ -143,22 +149,78 @@ StatsDisconnect(playerid)
     if (gUlogiran[playerid]) StatsSave(playerid);
 }
 
-CMD:stats(playerid, params[])
+static StatsPrikazi(playerid, stranica)
 {
     if (!gUlogiran[playerid]) return 1;
     StatsUpdate(playerid);
 
-    new org[MAX_ORG_NAME], body[512];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT balance FROM bank_accounts WHERE account = %d", gAccountId[playerid]);
+    if (res == DBResult:0)
+    {
+        printf("[Stats] Ucitavanje bankovnog racuna %d nije uspjelo.", gAccountId[playerid]);
+        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Podaci za statistiku nisu dostupni. Pokusajte ponovno."));
+    }
+    new banka[32];
+    if (DB_GetRowCount(res)) format(banka, sizeof banka, "$%d", DB_GetFieldInt(res, 0));
+    else strcopy(banka, T(playerid, "Nema"), sizeof banka);
+    DB_FreeResultSet(res);
+
+    res = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE owner = %d ORDER BY id LIMIT %d OFFSET %d",
+        gAccountId[playerid], STATS_KUCA_PO_STRANICI + 1, stranica * STATS_KUCA_PO_STRANICI);
+    if (res == DBResult:0)
+    {
+        printf("[Stats] Ucitavanje kuca racuna %d nije uspjelo.", gAccountId[playerid]);
+        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Podaci za statistiku nisu dostupni. Pokusajte ponovno."));
+    }
+    new kuce[STATS_KUCA_PO_STRANICI * 13 + 1], row[16], brojKuca = DB_GetRowCount(res);
+    for (new i = 0; i < brojKuca && i < STATS_KUCA_PO_STRANICI; i++)
+    {
+        if (i) strcat(kuce, i % 5 == 0 ? ("\n") : (", "));
+        format(row, sizeof row, "%d", DB_GetFieldInt(res, 0));
+        strcat(kuce, row);
+        DB_SelectNextRow(res);
+    }
+    DB_FreeResultSet(res);
+    if (!brojKuca) strcopy(kuce, T(playerid, "Nema"), sizeof kuce);
+
+    new vlasnistva[VLASNISTVO_MAX], vozila[VLASNISTVO_MAX * 13 + 1];
+    new brojVozila = VlasnistvaIgraca(playerid, vlasnistva);
+    for (new i = 0; i < brojVozila; i++)
+    {
+        format(row, sizeof row, i ? (", %d") : ("%d"), vlasnistva[i]);
+        strcat(vozila, row);
+    }
+    if (!brojVozila) strcopy(vozila, T(playerid, "Nema"), sizeof vozila);
+
+    new org[MAX_ORG_NAME], body[2048];
     if (!GetOrgIme(gOrg[playerid], org)) strcopy(org, T(playerid, "Civil"), sizeof org);
     format(body, sizeof body,
-        "{FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}$%d\n{8AB4F8}%s: {FFFFFF}%d\n\
+        "{FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%d\n\
         {8AB4F8}%s: {FFFFFF}[%d/%d]\n{8AB4F8}%s: {FFFFFF}%d h %d min\n\
-        {8AB4F8}%s: {FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%d",
-        T(playerid, "Podaci sa servera"), T(playerid, "Novac"), gNovac[playerid],
-        T(playerid, "Level"), gStatsLevel[playerid], T(playerid, "Respekti"), gStatsRespekti[playerid],
+        {8AB4F8}%s: {FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%d\n\n\
+        {FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}$%d\n{8AB4F8}%s: {FFFFFF}%s\n\
+        {8AB4F8}%s: {FFFFFF}%d\n\n{FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%s\n{8AB4F8}%s: {FFFFFF}%s",
+        T(playerid, "Podaci sa servera"), T(playerid, "Level"), gStatsLevel[playerid], T(playerid, "Respekti"), gStatsRespekti[playerid],
         StatsPotrebno(gStatsLevel[playerid]), T(playerid, "Sati igre"),
         gStatsPlaytime[playerid] / 3600, (gStatsPlaytime[playerid] % 3600) / 60,
-        T(playerid, "Organizacija"), org, T(playerid, "Wanted level"), GetWanted(playerid));
-    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX,
-        T(playerid, "Statistika"), body, T(playerid, "U redu"));
+        T(playerid, "Organizacija"), org, T(playerid, "Wanted level"), GetWanted(playerid),
+        T(playerid, "Sredstva"), T(playerid, "Novac u dzepu"), gNovac[playerid],
+        T(playerid, "Novac u banci"), banka, T(playerid, "Casino Tokeni"), gInv[playerid][ITEM_ZETONI],
+        T(playerid, "Imovina"), T(playerid, "Vozila (ID)"), vozila, T(playerid, "Kuce (ID)"), kuce);
+    gStatsStranica[playerid] = stranica;
+    gStatsImaSljedecu[playerid] = brojKuca > STATS_KUCA_PO_STRANICI;
+    return PrikaziDialog(playerid, DLG_STATS, DIALOG_STYLE_MSGBOX, T(playerid, "Statistika"), body,
+        T(playerid, gStatsImaSljedecu[playerid] ? ("Sljedeca") : ("U redu")),
+        gStatsImaSljedecu[playerid] ? T(playerid, "Zatvori") : (""));
+}
+
+CMD:stats(playerid, params[])
+{
+    return StatsPrikazi(playerid, 0);
+}
+
+DLG:stats(playerid, response)
+{
+    if (response && gStatsImaSljedecu[playerid]) return StatsPrikazi(playerid, gStatsStranica[playerid] + 1);
+    return 1;
 }
