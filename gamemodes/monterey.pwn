@@ -71,7 +71,7 @@ main() {}
 
 public OnGameModeInit()
 {
-    SetGameModeText("Â©M:RP by Leo and Krti");
+    SetGameModeText("©M:RP by Leo and Krti");
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
     DisableInteriorEnterExits();
     EnableStuntBonusForAll(false);
@@ -134,6 +134,8 @@ public OnGameModeInit()
     MapaChinatown();
     MapaPdExtUkloni(INVALID_PLAYER_ID);
     MapaPdExt();
+    WilshirePdUkloni(INVALID_PLAYER_ID);
+    WilshirePd();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -257,6 +259,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_chinatown.inc"
 #include "monterey/mape/mapa_pdext.inc"
 #include "monterey/mape/mapa_pd.inc"
+#include "monterey/mape/wilshire_pd.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"
@@ -423,3 +426,4 @@ public KickajIgraca(playerid)
 {
     Kick(playerid);
 }
+
