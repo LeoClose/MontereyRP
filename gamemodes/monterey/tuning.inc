@@ -489,7 +489,7 @@ static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }
 static gTuning[TUNING_MAX][E_TUNING];
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
-static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS];
+static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS];
 static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], gTunNatpisObj[MAX_VEHICLES];
 static gTunNTekst[MAX_PLAYERS][TUNING_NATPIS_DUZ + 1], gTunNFont[MAX_PLAYERS], gTunNBoja[MAX_PLAYERS], bool:gTunUnos[MAX_PLAYERS];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
@@ -622,25 +622,45 @@ TuningVozac(v)
 
 TuningTrubaSync(playerid, v)
 {
-    new tiha = gTuningTrubaZvuk[gTunTruba[v]] ? 1 : 0;
+    new tiha = gTuningTrubaZvuk[gTunTruba[v]] && !GetVehicleComponentInSlot(v, CARMODTYPE_HYDRAULICS) ? 1 : 0;
     if (GetPVarInt(playerid, "truba_tiha") != tiha)
     {
         SetPVarInt(playerid, "truba_tiha", tiha);
         SetPVarInt(playerid, "truba", 0);
     }
     new pritisnuta = GetPVarInt(playerid, "truba");
-    if (pritisnuta && !gTunTrubaStaro[playerid]) TuningTrubi(playerid);
+    if (pritisnuta && !gTunTrubaStaro[playerid])
+    {
+        new KEY:tipke, gore, strana;
+        GetPlayerKeys(playerid, tipke, gore, strana);
+        OnPlayerKeyStateChange(playerid, tipke | KEY_CROUCH, tipke & ~KEY_CROUCH);
+    }
+    else if (!pritisnuta && gTunTrubaStaro[playerid]) TuningTrubaStani(playerid);
     gTunTrubaStaro[playerid] = pritisnuta;
 }
 
 TuningTrubi(playerid)
 {
     new v = GetPlayerVehicleID(playerid), zvuk = v ? gTuningTrubaZvuk[gTunTruba[v]] : 0, Float:x, Float:y, Float:z;
-    if (!zvuk || GetTickCount() - gTunTrubaMs[v] < TUNING_TRUBA_MS) return;
+    if (!zvuk || GetVehicleComponentInSlot(v, CARMODTYPE_HYDRAULICS) || GetTickCount() - gTunTrubaMs[v] < TUNING_TRUBA_MS) return;
     gTunTrubaMs[v] = GetTickCount();
     GetVehiclePos(v, x, y, z);
     for (new i = 0; i < MAX_PLAYERS; i++)
-        if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == GetVehicleVirtualWorld(v) && IsPlayerInRangeOfPoint(i, TUNING_TRUBA_DOMET, x, y, z)) PlayerPlaySound(i, zvuk, x, y, z);
+    {
+        if (!IsPlayerConnected(i) || GetPlayerVirtualWorld(i) != GetVehicleVirtualWorld(v) || !IsPlayerInRangeOfPoint(i, TUNING_TRUBA_DOMET, x, y, z)) continue;
+        PlayerPlaySound(i, zvuk, x, y, z);
+        gTunTrubaSlusa[i] = playerid + 1;
+    }
+}
+
+static TuningTrubaStani(playerid)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gTunTrubaSlusa[i] != playerid + 1) continue;
+        gTunTrubaSlusa[i] = 0;
+        if (IsPlayerConnected(i)) PlayerPlaySound(i, 0, 0.0, 0.0, 0.0);
+    }
 }
 
 static TuningNeon(v, boja)
@@ -1172,6 +1192,7 @@ TuningZatvori(playerid, bool:uVozilo = true)
 
 TuningStateChange(playerid, PLAYER_STATE:oldstate)
 {
+    if (oldstate == PLAYER_STATE_DRIVER) TuningTrubaStani(playerid);
     if (gTunU[playerid] == -1 || oldstate != PLAYER_STATE_DRIVER || GetTickCount() - gTunOd[playerid] < TUNING_ULAZ_MS) return;
     TuningZatvori(playerid, false);
 }
@@ -1189,6 +1210,8 @@ TuningMisIskljuci(playerid)
 
 TuningDisconnect(playerid)
 {
+    TuningTrubaStani(playerid);
+    gTunTrubaSlusa[playerid] = 0;
     gTunUnos[playerid] = false;
     TuningZatvori(playerid);
     gTunU[playerid] = -1;

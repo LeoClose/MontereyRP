@@ -1270,7 +1270,30 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "  /afix - popravi vozilo u kojem se nalazis", "  /afix - repair the vehicle you are in", "  /afix - починить транспорт, в котором вы находитесь", "  /afix - reparar el vehiculo en el que estas", "  /afix - icinde oldugun araci tamir et" },
     { "Vozilo nije moguce popraviti.", "The vehicle could not be repaired.", "Не удалось починить транспорт.", "No se pudo reparar el vehiculo.", "Arac tamir edilemedi." },
     { "Vozilo je popravljeno.", "The vehicle has been repaired.", "Транспорт отремонтирован.", "El vehiculo ha sido reparado.", "Arac tamir edildi." },
-    { "Komanda ne postoji, /help za spisak svih komandi", "Unknown command, use /help for a list of commands", "Команда не существует, /help для списка команд", "El comando no existe, usa /help para ver los comandos", "Komut bulunamadi, komut listesi icin /help kullanin" }
+    { "Komanda ne postoji, /help za spisak svih komandi", "Unknown command, use /help for a list of commands", "Команда не существует, /help для списка команд", "El comando no existe, usa /help para ver los comandos", "Komut bulunamadi, komut listesi icin /help kullanin" },
+    { "Unesite ulog ($%d - $%d):", "Enter your bet ($%d - $%d):", "Введите ставку ($%d - $%d):", "Introduce tu apuesta ($%d - $%d):", "Bahsinizi girin ($%d - $%d):" },
+    { "Krupije", "Croupier", "Крупье", "Crupier", "Krupiye" },
+    { "Dobrodosli za stol, koliko ulazete?", "Welcome to the table, how much are you betting?", "Добро пожаловать за стол, сколько ставите?", "Bienvenido a la mesa, cuanto apuestas?", "Masaya hos geldiniz, ne kadar oynuyorsunuz?" },
+    { "Igraj", "Play", "Играть", "Jugar", "Oyna" },
+    { "Diler: %s ?\nVi: %s (%d)\nUlog: $%d", "Dealer: %s ?\nYou: %s (%d)\nBet: $%d", "Дилер: %s ?\nВы: %s (%d)\nСтавка: $%d", "Crupier: %s ?\nTu: %s (%d)\nApuesta: $%d", "Krupiye: %s ?\nSiz: %s (%d)\nBahis: $%d" },
+    { "Karta", "Hit", "Ещё", "Pedir", "Kart" },
+    { "Stani", "Stand", "Хватит", "Plantarse", "Dur" },
+    { "Prebacili ste 21. Gubite ulog.", "Bust. You lose your bet.", "Перебор. Ставка проиграна.", "Te pasaste de 21. Pierdes la apuesta.", "21'i gectiniz. Bahsi kaybettiniz." },
+    { "Blackjack! Isplata 3:2.", "Blackjack! Pays 3:2.", "Блэкджек! Выплата 3:2.", "Blackjack! Paga 3:2.", "Blackjack! 3:2 odeme." },
+    { "Diler ima blackjack. Gubite ulog.", "Dealer has blackjack. You lose your bet.", "У дилера блэкджек. Ставка проиграна.", "El crupier tiene blackjack. Pierdes la apuesta.", "Krupiyede blackjack var. Bahsi kaybettiniz." },
+    { "Pobijedili ste!", "You win!", "Вы выиграли!", "Has ganado!", "Kazandiniz!" },
+    { "Nerijeseno, ulog vam se vraca.", "Push, your bet is returned.", "Ничья, ставка возвращена.", "Empate, se te devuelve la apuesta.", "Berabere, bahsiniz iade edildi." },
+    { "Diler pobjeduje.", "Dealer wins.", "Дилер выигрывает.", "Gana el crupier.", "Krupiye kazandi." },
+    { "Diler: %s (%d)\nVi: %s (%d)\n\n%s\nUlog: $%d, isplata: $%d", "Dealer: %s (%d)\nYou: %s (%d)\n\n%s\nBet: $%d, payout: $%d", "Дилер: %s (%d)\nВы: %s (%d)\n\n%s\nСтавка: $%d, выплата: $%d", "Crupier: %s (%d)\nTu: %s (%d)\n\n%s\nApuesta: $%d, pago: $%d", "Krupiye: %s (%d)\nSiz: %s (%d)\n\n%s\nBahis: $%d, odeme: $%d" },
+    { "Ponovno", "Again", "Ещё раз", "Otra vez", "Tekrar" },
+    { "Ulog mora biti izmedu $%d i $%d.", "Bet must be between $%d and $%d.", "Ставка должна быть от $%d до $%d.", "La apuesta debe estar entre $%d y $%d.", "Bahis $%d ile $%d arasinda olmali." },
+    { "{8AB4F8}+ Novi blackjack diler na mojoj poziciji", "{8AB4F8}+ New blackjack dealer at my position", "{8AB4F8}+ Новый дилер блэкджека на моей позиции", "{8AB4F8}+ Nuevo crupier de blackjack en mi posicion", "{8AB4F8}+ Konumuma yeni blackjack krupiyesi" },
+    { "[%d] %s (int %d, svijet %d)", "[%d] %s (int %d, world %d)", "[%d] %s (инт %d, мир %d)", "[%d] %s (int %d, mundo %d)", "[%d] %s (int %d, dunya %d)" },
+    { "Kazino", "Casino", "Казино", "Casino", "Kumarhane" },
+    { "Dosegnut je maksimalan broj dilera.", "Maximum number of dealers reached.", "Достигнуто максимальное число дилеров.", "Se alcanzo el maximo de crupieres.", "Maksimum krupiye sayisina ulasildi." },
+    { "Blackjack diler postavljen.", "Blackjack dealer placed.", "Дилер блэкджека установлен.", "Crupier de blackjack colocado.", "Blackjack krupiyesi yerlestirildi." },
+    { "Obrisati ovog dilera?", "Delete this dealer?", "Удалить этого дилера?", "Eliminar este crupier?", "Bu krupiye silinsin mi?" },
+    { "Diler obrisan.", "Dealer deleted.", "Дилер удалён.", "Crupier eliminado.", "Krupiye silindi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

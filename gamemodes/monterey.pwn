@@ -139,6 +139,7 @@ public OnGameModeInit()
     InitGepek();
     InitVozilo();
     InitTrgovina();
+    InitKazino();
     InitOruzarnica();
     InitOdjeca();
     InitKuce();
@@ -234,6 +235,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/vozila.inc"
 #include "monterey/vlakovi.inc"
 #include "monterey/trgovina.inc"
+#include "monterey/kazino.inc"
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
 #include "monterey/kuce.inc"
