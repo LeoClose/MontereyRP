@@ -271,7 +271,6 @@ CMD:time(playerid, params[])
     if (!AdminBrojParam(params, 23, sat))
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /time [sat 0-23]"));
     SetWorldTime(sat);
-    MaricaVratiTamnoVrijeme();
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrijeme na serveru postavljeno je na %02d:00."), sat);
 }
 
