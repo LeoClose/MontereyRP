@@ -1275,7 +1275,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Krupije", "Croupier", "Крупье", "Crupier", "Krupiye" },
     { "Dobrodosli za stol, koliko ulazete?", "Welcome to the table, how much are you betting?", "Добро пожаловать за стол, сколько ставите?", "Bienvenido a la mesa, cuanto apuestas?", "Masaya hos geldiniz, ne kadar oynuyorsunuz?" },
     { "Igraj", "Play", "Играть", "Jugar", "Oyna" },
-    { "Diler: %s ?\nVi: %s (%d)\nUlog: $%d", "Dealer: %s ?\nYou: %s (%d)\nBet: $%d", "Дилер: %s ?\nВы: %s (%d)\nСтавка: $%d", "Crupier: %s ?\nTu: %s (%d)\nApuesta: $%d", "Krupiye: %s ?\nSiz: %s (%d)\nBahis: $%d" },
     { "Karta", "Hit", "Ещё", "Pedir", "Kart" },
     { "Stani", "Stand", "Хватит", "Plantarse", "Dur" },
     { "Prebacili ste 21. Gubite ulog.", "Bust. You lose your bet.", "Перебор. Ставка проиграна.", "Te pasaste de 21. Pierdes la apuesta.", "21'i gectiniz. Bahsi kaybettiniz." },
@@ -1284,7 +1283,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pobijedili ste!", "You win!", "Вы выиграли!", "Has ganado!", "Kazandiniz!" },
     { "Nerijeseno, ulog vam se vraca.", "Push, your bet is returned.", "Ничья, ставка возвращена.", "Empate, se te devuelve la apuesta.", "Berabere, bahsiniz iade edildi." },
     { "Diler pobjeduje.", "Dealer wins.", "Дилер выигрывает.", "Gana el crupier.", "Krupiye kazandi." },
-    { "Diler: %s (%d)\nVi: %s (%d)\n\n%s\nUlog: $%d, isplata: $%d", "Dealer: %s (%d)\nYou: %s (%d)\n\n%s\nBet: $%d, payout: $%d", "Дилер: %s (%d)\nВы: %s (%d)\n\n%s\nСтавка: $%d, выплата: $%d", "Crupier: %s (%d)\nTu: %s (%d)\n\n%s\nApuesta: $%d, pago: $%d", "Krupiye: %s (%d)\nSiz: %s (%d)\n\n%s\nBahis: $%d, odeme: $%d" },
     { "Ponovno", "Again", "Ещё раз", "Otra vez", "Tekrar" },
     { "Ulog mora biti izmedu $%d i $%d.", "Bet must be between $%d and $%d.", "Ставка должна быть от $%d до $%d.", "La apuesta debe estar entre $%d y $%d.", "Bahis $%d ile $%d arasinda olmali." },
     { "{8AB4F8}+ Novi blackjack diler na mojoj poziciji", "{8AB4F8}+ New blackjack dealer at my position", "{8AB4F8}+ Новый дилер блэкджека на моей позиции", "{8AB4F8}+ Nuevo crupier de blackjack en mi posicion", "{8AB4F8}+ Konumuma yeni blackjack krupiyesi" },
@@ -1293,7 +1291,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dosegnut je maksimalan broj dilera.", "Maximum number of dealers reached.", "Достигнуто максимальное число дилеров.", "Se alcanzo el maximo de crupieres.", "Maksimum krupiye sayisina ulasildi." },
     { "Blackjack diler postavljen.", "Blackjack dealer placed.", "Дилер блэкджека установлен.", "Crupier de blackjack colocado.", "Blackjack krupiyesi yerlestirildi." },
     { "Obrisati ovog dilera?", "Delete this dealer?", "Удалить этого дилера?", "Eliminar este crupier?", "Bu krupiye silinsin mi?" },
-    { "Diler obrisan.", "Dealer deleted.", "Дилер удалён.", "Crupier eliminado.", "Krupiye silindi." }
+    { "Diler obrisan.", "Dealer deleted.", "Дилер удалён.", "Crupier eliminado.", "Krupiye silindi." },
+    { "Diler: %d", "Dealer: %d", "Дилер: %d", "Crupier: %d", "Krupiye: %d" },
+    { "Vi: %d", "You: %d", "Вы: %d", "Tu: %d", "Siz: %d" },
+    { "Ulog: $%d", "Bet: $%d", "Ставка: $%d", "Apuesta: $%d", "Bahis: $%d" },
+    { "%s Ulog: $%d, isplata: $%d", "%s Bet: $%d, payout: $%d", "%s Ставка: $%d, выплата: $%d", "%s Apuesta: $%d, pago: $%d", "%s Bahis: $%d, odeme: $%d" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

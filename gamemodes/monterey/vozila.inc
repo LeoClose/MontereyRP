@@ -832,6 +832,7 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_SUDAR_STETA      150.0
 #define VOZILO_SUDAR_POJAS      0.4
 #define VOZILO_KRADJA_MS        6000
+#define VOZILO_ALARM_MS         15000
 #define VOZILO_BRZINA_PUTA      1.3
 #define VOZILO_BRZINA_VISE      20.0
 #define VOZILO_MOTOR_MS         200
@@ -1158,12 +1159,20 @@ static VoziloPotrosnja(playerid, v)
     SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Motor se ugasio zbog kvara."));
 }
 
+forward VoziloAlarmStani(v);
+public VoziloAlarmStani(v)
+{
+    if (!GetVehicleModel(v) || VoziloGet(v, VP_ALARM) != 1) return;
+    VoziloSet(v, VP_ALARM, 0);
+    new vozac = GetVehicleOccupant(v, 0);
+    if (vozac != INVALID_PLAYER_ID) PutPlayerInVehicle(vozac, v, 0);
+}
+
 static KradjaKraj(playerid, uspjeh)
 {
     new v = gKradja[playerid];
     gKradja[playerid] = 0;
     gVoziloKradjac[v] = 0;
-    VoziloSet(v, VP_ALARM, 0);
     VoziloSet(v, VP_SVJETLA, 0);
     if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ClearAnimations(playerid);
     if (!uspjeh) return;
@@ -1460,6 +1469,7 @@ CMD:ukradi(playerid, params[])
     gKradjaKraj[playerid] = GetTickCount() + VOZILO_KRADJA_MS;
     gVoziloKradjac[v] = playerid + 1;
     VoziloSet(v, VP_ALARM, 1);
+    SetTimerEx("VoziloAlarmStani", VOZILO_ALARM_MS, false, "i", v);
     if (stanje == PLAYER_STATE_ONFOOT) ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, stanje == PLAYER_STATE_ONFOOT ? ("* %s pokusava obiti vozilo.") : ("* %s spaja zice ispod volana."), GetRPIme(playerid), "", 1);
     return 1;
