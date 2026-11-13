@@ -21,7 +21,10 @@ static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 150 }, { ITEM_KANISTER, 50 }
 InitTrgovina()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS shops (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, Aktor, ax, ay, az, aa FROM shops ORDER BY id LIMIT %d", TRGOVINA_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT Aktor FROM shops LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE shops RENAME COLUMN akter TO Aktor"));
+    res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, Aktor, ax, ay, az, aa FROM shops ORDER BY id LIMIT %d", TRGOVINA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
     {
         gTrg[s][tgDb] = DB_GetFieldInt(res, 0);
