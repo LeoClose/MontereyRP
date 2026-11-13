@@ -4,17 +4,21 @@
 #define KAZINO_MIN_ULOG     10
 #define KAZINO_MAX_ULOG     5000
 #define BJ_KARATA           8
-#define BJ_X                160.0
-#define BJ_Y                110.0
+#define BJ_W                190.0
+#define BJ_X                225.0
+#define BJ_Y                120.0
+#define BJ_RED              60.0
+#define BJ_RAZMAK           18.0
 
 enum E_KAZINO { bool:kzIma, kzDb, Float:kzX, Float:kzY, Float:kzZ, Float:kzA, kzInt, kzSvijet, kzAktor, STREAMER_TAG_3D_TEXT_LABEL:kzTekst }
-enum E_BJ { bjUlog, bjDiler, bjIgrac[BJ_KARATA], bjIgracN, bjDilerKarte[BJ_KARATA], bjDilerN }
-enum { BTD_POZADINA, BTD_NASLOV, BTD_DILER, BTD_IGRAC, BTD_STATUS, BTD_LIJEVO, BTD_DESNO, BTD_KARTA }
+enum E_BJ { bool:bjIgra, bjUlog, bjDiler, bjRuke, bjAktivna, bjDilerKarte[BJ_KARATA], bjDilerN }
+enum { BTD_POZADINA, BTD_NASLOV, BTD_DILER, BTD_STATUS, BTD_HIT, BTD_SPLIT, BTD_STAND, BTD_RUKA, BTD_KARTA = BTD_RUKA + 2 }
 
 static gKaz[KAZINO_MAX][E_KAZINO];
 static gBj[MAX_PLAYERS][E_BJ];
 static gApKazino[MAX_PLAYERS];
-static PlayerText:gBjTd[MAX_PLAYERS][BTD_KARTA + BJ_KARATA * 2], bool:gBjOtvoren[MAX_PLAYERS];
+static PlayerText:gBjTd[MAX_PLAYERS][BTD_KARTA + BJ_KARATA * 3], bool:gBjOtvoren[MAX_PLAYERS];
+static gBjKarte[MAX_PLAYERS][2][BJ_KARATA], gBjN[MAX_PLAYERS][2];
 static const gBjBoja[] = "cdhs";
 
 InitKazino()
@@ -77,8 +81,8 @@ KazinoKey(playerid)
     new k = 0;
     while (k < KAZINO_MAX && !KazinoBlizu(playerid, k)) k++;
     if (k == KAZINO_MAX) return 0;
+    if (gBj[playerid][bjIgra]) return 1;
     new body[96];
-    gBj[playerid][bjUlog] = 0;
     gBj[playerid][bjDiler] = k;
     format(body, sizeof body, T(playerid, "Unesite ulog ($%d - $%d):"), KAZINO_MIN_ULOG, KAZINO_MAX_ULOG);
     AktorKaze(playerid, gKaz[k][kzAktor], "Krupije", "Dobrodosli za stol, koliko ulazete?");
@@ -108,58 +112,70 @@ static PlayerText:BjSprite(playerid, Float:x, Float:y, Float:w, Float:h, const s
     return td;
 }
 
-static PlayerText:BjGumb(playerid, Float:x, boja)
+static PlayerText:BjGumb(playerid, Float:x, Float:y, boja)
 {
-    new PlayerText:td = BjTekst(playerid, x, BJ_Y + 214.0, "_", 0xFFFFFFFF, 0.25, 1.2, TEXT_DRAW_ALIGN_CENTER);
+    new PlayerText:td = BjTekst(playerid, x, y, "_", 0xFFFFFFFF, 0.22, 1.1, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawSetOutline(playerid, td, 0);
     PlayerTextDrawUseBox(playerid, td, true);
     PlayerTextDrawBoxColour(playerid, td, boja);
-    PlayerTextDrawTextSize(playerid, td, 14.0, 100.0);
+    PlayerTextDrawTextSize(playerid, td, 12.0, 52.0);
     PlayerTextDrawSetSelectable(playerid, td, true);
     return td;
+}
+
+static BjNapravi(playerid)
+{
+    new Float:s = gBj[playerid][bjRuke] == 2 ? BJ_RED : 0.0;
+    gBjTd[playerid][BTD_POZADINA] = BjSprite(playerid, BJ_X, BJ_Y, BJ_W, 184.0 + s, "LD_SPAC:white", 0x0F4D2AEE);
+    gBjTd[playerid][BTD_NASLOV] = BjTekst(playerid, BJ_X + BJ_W / 2.0, BJ_Y + 4.0, "BLACKJACK", 0xE8C15AFF, 0.4, 1.6, TEXT_DRAW_ALIGN_CENTER);
+    gBjTd[playerid][BTD_DILER] = BjTekst(playerid, BJ_X + 12.0, BJ_Y + 26.0, "_", 0xFFFFFFFF, 0.2, 0.9);
+    gBjTd[playerid][BTD_STATUS] = BjTekst(playerid, BJ_X + BJ_W / 2.0, BJ_Y + 146.0 + s, "_", 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_ALIGN_CENTER);
+    gBjTd[playerid][BTD_HIT] = BjGumb(playerid, BJ_X + 34.0, BJ_Y + 166.0 + s, 0x1E5AA8FF);
+    gBjTd[playerid][BTD_SPLIT] = BjGumb(playerid, BJ_X + BJ_W / 2.0, BJ_Y + 166.0 + s, 0x8A6D1EFF);
+    gBjTd[playerid][BTD_STAND] = BjGumb(playerid, BJ_X + BJ_W - 34.0, BJ_Y + 166.0 + s, 0x8B2E2EFF);
+    for (new h = 0; h < 2; h++) gBjTd[playerid][BTD_RUKA + h] = BjTekst(playerid, BJ_X + 12.0, BJ_Y + 86.0 + float(h) * BJ_RED, "_", 0xFFFFFFFF, 0.2, 0.9);
+    for (new r = 0; r < 3; r++)
+        for (new i = 0; i < BJ_KARATA; i++)
+            gBjTd[playerid][BTD_KARTA + r * BJ_KARATA + i] = BjSprite(playerid, BJ_X + 12.0 + float(i) * BJ_RAZMAK, BJ_Y + (r ? 98.0 + float(r - 1) * BJ_RED : 38.0), 32.0, 46.0, "LD_CARD:cdback");
+    for (new i = BTD_POZADINA; i <= BTD_STAND; i++) if (i != BTD_SPLIT) PlayerTextDrawShow(playerid, gBjTd[playerid][i]);
+    PlayerTextDrawShow(playerid, gBjTd[playerid][BTD_RUKA]);
+    if (s > 0.0) PlayerTextDrawShow(playerid, gBjTd[playerid][BTD_RUKA + 1]);
+}
+
+static BjUnisti(playerid)
+{
+    for (new i = 0; i < sizeof gBjTd[]; i++) PlayerTextDrawDestroy(playerid, gBjTd[playerid][i]);
 }
 
 static BjOtvori(playerid)
 {
     if (gBjOtvoren[playerid]) return;
     gBjOtvoren[playerid] = true;
-    gBjTd[playerid][BTD_POZADINA] = BjSprite(playerid, BJ_X, BJ_Y, 320.0, 240.0, "LD_SPAC:white", 0x0F4D2AEE);
-    gBjTd[playerid][BTD_NASLOV] = BjTekst(playerid, BJ_X + 160.0, BJ_Y + 4.0, "BLACKJACK", 0xE8C15AFF, 0.45, 1.8, TEXT_DRAW_ALIGN_CENTER);
-    gBjTd[playerid][BTD_DILER] = BjTekst(playerid, BJ_X + 16.0, BJ_Y + 30.0, "_", 0xFFFFFFFF, 0.22, 1.0);
-    gBjTd[playerid][BTD_IGRAC] = BjTekst(playerid, BJ_X + 16.0, BJ_Y + 104.0, "_", 0xFFFFFFFF, 0.22, 1.0);
-    gBjTd[playerid][BTD_STATUS] = BjTekst(playerid, BJ_X + 160.0, BJ_Y + 182.0, "_", 0xFFFFFFFF, 0.2, 0.95, TEXT_DRAW_ALIGN_CENTER);
-    gBjTd[playerid][BTD_LIJEVO] = BjGumb(playerid, BJ_X + 100.0, 0x1E5AA8FF);
-    gBjTd[playerid][BTD_DESNO] = BjGumb(playerid, BJ_X + 220.0, 0x8B2E2EFF);
-    for (new i = 0; i < BJ_KARATA; i++)
-    {
-        gBjTd[playerid][BTD_KARTA + i] = BjSprite(playerid, BJ_X + 16.0 + float(i) * 36.0, BJ_Y + 44.0, 34.0, 50.0, "LD_CARD:cdback");
-        gBjTd[playerid][BTD_KARTA + BJ_KARATA + i] = BjSprite(playerid, BJ_X + 16.0 + float(i) * 36.0, BJ_Y + 118.0, 34.0, 50.0, "LD_CARD:cdback");
-    }
-    for (new i = 0; i < BTD_KARTA; i++) PlayerTextDrawShow(playerid, gBjTd[playerid][i]);
+    BjNapravi(playerid);
     SelectTextDraw(playerid, 0xE8C15AFF);
 }
 
 KazinoZatvori(playerid)
 {
     if (!gBjOtvoren[playerid]) return;
-    if (gBj[playerid][bjUlog]) BjKraj(playerid);
+    if (gBj[playerid][bjIgra]) BjKraj(playerid);
     gBjOtvoren[playerid] = false;
-    for (new i = 0; i < sizeof gBjTd[]; i++) PlayerTextDrawDestroy(playerid, gBjTd[playerid][i]);
+    BjUnisti(playerid);
     CancelSelectTextDraw(playerid);
 }
 
 KazinoDisconnect(playerid)
 {
     gBjOtvoren[playerid] = false;
-    gBj[playerid][bjUlog] = 0;
+    gBj[playerid][bjIgra] = false;
 }
 
-static BjRed(playerid, prva, const karte[], n, skrivena)
+static BjRed(playerid, red, const karte[], n, skrivena)
 {
     new sprite[16];
     for (new i = 0; i < BJ_KARATA; i++)
     {
-        new PlayerText:td = gBjTd[playerid][prva + i];
+        new PlayerText:td = gBjTd[playerid][BTD_KARTA + red * BJ_KARATA + i];
         if (i >= n)
         {
             PlayerTextDrawHide(playerid, td);
@@ -172,91 +188,167 @@ static BjRed(playerid, prva, const karte[], n, skrivena)
     }
 }
 
+static bool:BjMozeSplit(playerid)
+{
+    return gBj[playerid][bjRuke] == 1 && gBjN[playerid][0] == 2 && gBjKarte[playerid][0][0] % 13 == gBjKarte[playerid][0][1] % 13 && gNovac[playerid] >= gBj[playerid][bjUlog];
+}
+
 static BjCrtaj(playerid, bool:kraj)
 {
-    new tekst[64];
-    BjRed(playerid, BTD_KARTA, gBj[playerid][bjDilerKarte], gBj[playerid][bjDilerN], kraj ? -1 : 1);
-    BjRed(playerid, BTD_KARTA + BJ_KARATA, gBj[playerid][bjIgrac], gBj[playerid][bjIgracN], -1);
+    new tekst[64], ruke = gBj[playerid][bjRuke];
+    BjRed(playerid, 0, gBj[playerid][bjDilerKarte], gBj[playerid][bjDilerN], kraj ? -1 : 1);
     format(tekst, sizeof tekst, T(playerid, "Diler: %d"), BjVrijednost(gBj[playerid][bjDilerKarte], kraj ? gBj[playerid][bjDilerN] : 1));
     PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_DILER], tekst);
-    format(tekst, sizeof tekst, T(playerid, "Vi: %d"), BjVrijednost(gBj[playerid][bjIgrac], gBj[playerid][bjIgracN]));
-    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_IGRAC], tekst);
-    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_LIJEVO], T(playerid, kraj ? ("Ponovno") : ("Karta")));
-    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_DESNO], T(playerid, kraj ? ("Zatvori") : ("Stani")));
+    for (new h = 0; h < ruke; h++)
+    {
+        new PlayerText:td = gBjTd[playerid][BTD_RUKA + h], v = BjVrijednost(gBjKarte[playerid][h], gBjN[playerid][h]);
+        BjRed(playerid, h + 1, gBjKarte[playerid][h], gBjN[playerid][h], -1);
+        if (ruke == 1) format(tekst, sizeof tekst, T(playerid, "Vi: %d"), v);
+        else format(tekst, sizeof tekst, T(playerid, "Ruka %d: %d"), h + 1, v);
+        PlayerTextDrawColour(playerid, td, !kraj && ruke == 2 && h == gBj[playerid][bjAktivna] ? 0xE8C15AFF : 0xFFFFFFFF);
+        PlayerTextDrawSetString(playerid, td, tekst);
+        PlayerTextDrawShow(playerid, td);
+    }
+    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_HIT], kraj ? T(playerid, "Ponovno") : ("Hit"));
+    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_STAND], kraj ? T(playerid, "Zatvori") : ("Stand"));
+    PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_SPLIT], "Split");
+    if (!kraj && BjMozeSplit(playerid)) PlayerTextDrawShow(playerid, gBjTd[playerid][BTD_SPLIT]);
+    else PlayerTextDrawHide(playerid, gBjTd[playerid][BTD_SPLIT]);
     if (kraj) return;
-    format(tekst, sizeof tekst, T(playerid, "Ulog: $%d"), gBj[playerid][bjUlog]);
+    format(tekst, sizeof tekst, T(playerid, "Ulog: $%d"), gBj[playerid][bjUlog] * ruke);
     PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_STATUS], tekst);
 }
 
 static BjKraj(playerid)
 {
-    new ulog = gBj[playerid][bjUlog], ig = BjVrijednost(gBj[playerid][bjIgrac], gBj[playerid][bjIgracN]), bool:prirodni = ig == 21 && gBj[playerid][bjIgracN] == 2;
-    gBj[playerid][bjUlog] = 0;
-    if (ig <= 21 && !prirodni)
+    new ulog = gBj[playerid][bjUlog], ruke = gBj[playerid][bjRuke], bool:prirodni = ruke == 1 && gBjN[playerid][0] == 2 && BjVrijednost(gBjKarte[playerid][0], 2) == 21, bool:vuci = false;
+    gBj[playerid][bjIgra] = false;
+    for (new h = 0; h < ruke; h++) if (BjVrijednost(gBjKarte[playerid][h], gBjN[playerid][h]) <= 21) vuci = true;
+    if (vuci && !prirodni)
         while (BjVrijednost(gBj[playerid][bjDilerKarte], gBj[playerid][bjDilerN]) < 17 && gBj[playerid][bjDilerN] < BJ_KARATA)
             gBj[playerid][bjDilerKarte][gBj[playerid][bjDilerN]++] = random(52);
-    new dl = BjVrijednost(gBj[playerid][bjDilerKarte], gBj[playerid][bjDilerN]), bool:dilerPrirodni = dl == 21 && gBj[playerid][bjDilerN] == 2, isplata = 0;
+    new dl = BjVrijednost(gBj[playerid][bjDilerKarte], gBj[playerid][bjDilerN]), bool:dilerPrirodni = dl == 21 && gBj[playerid][bjDilerN] == 2, ukupno = 0;
     new tekst[128], ishod[64];
-    if (ig > 21) ishod = "Prebacili ste 21. Gubite ulog.";
-    else if (prirodni && !dilerPrirodni) { isplata = ulog * 5 / 2; ishod = "Blackjack! Isplata 3:2."; }
-    else if (dilerPrirodni && !prirodni) ishod = "Diler ima blackjack. Gubite ulog.";
-    else if (dl > 21 || ig > dl) { isplata = ulog * 2; ishod = "Pobijedili ste!"; }
-    else if (ig == dl) { isplata = ulog; ishod = "Nerijeseno, ulog vam se vraca."; }
-    else ishod = "Diler pobjeduje.";
-    if (isplata) DajNovac(playerid, isplata);
-    BjDiler(playerid, "CASINO", isplata > ulog ? ("cards_lose") : ("cards_win"));
-    format(tekst, sizeof tekst, T(playerid, "%s Ulog: $%d, isplata: $%d"), T(playerid, ishod), ulog, isplata);
-    SendClientMessage(playerid, isplata > ulog ? COLOR_INFO : COLOR_ERROR, "Blackjack: %s", tekst);
+    for (new h = 0; h < ruke; h++)
+    {
+        new ig = BjVrijednost(gBjKarte[playerid][h], gBjN[playerid][h]), isplata = 0;
+        if (ig > 21) ishod = "Prebacili ste 21. Gubite ulog.";
+        else if (prirodni && !dilerPrirodni) { isplata = ulog * 5 / 2; ishod = "Blackjack! Isplata 3:2."; }
+        else if (dilerPrirodni && !prirodni) ishod = "Diler ima blackjack. Gubite ulog.";
+        else if (dl > 21 || ig > dl) { isplata = ulog * 2; ishod = "Pobijedili ste!"; }
+        else if (ig == dl) { isplata = ulog; ishod = "Nerijeseno, ulog vam se vraca."; }
+        else ishod = "Diler pobjeduje.";
+        ukupno += isplata;
+        format(tekst, sizeof tekst, T(playerid, "%s Ulog: $%d, isplata: $%d"), T(playerid, ishod), ulog, isplata);
+        if (ruke == 1) SendClientMessage(playerid, isplata > ulog ? COLOR_INFO : COLOR_ERROR, "Blackjack: %s", tekst);
+        else SendClientMessage(playerid, isplata > ulog ? COLOR_INFO : COLOR_ERROR, "Blackjack (%d/2): %s", h + 1, tekst);
+    }
+    if (ukupno) DajNovac(playerid, ukupno);
+    BjDiler(playerid, "CASINO", ukupno > ulog * ruke ? ("cards_lose") : ("cards_win"));
     if (!gBjOtvoren[playerid]) return;
     BjCrtaj(playerid, true);
+    format(tekst, sizeof tekst, T(playerid, "%s~n~Ulog: $%d, isplata: $%d"), ruke == 1 ? T(playerid, ishod) : ("Split"), ulog * ruke, ukupno);
     PlayerTextDrawSetString(playerid, gBjTd[playerid][BTD_STATUS], tekst);
+}
+
+static bool:BjDijeli(playerid, ulog)
+{
+    if (ulog < KAZINO_MIN_ULOG || ulog > KAZINO_MAX_ULOG)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ulog mora biti izmedu $%d i $%d."), KAZINO_MIN_ULOG, KAZINO_MAX_ULOG);
+        return false;
+    }
+    if (gNovac[playerid] < ulog)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+        return false;
+    }
+    DajNovac(playerid, -ulog);
+    new bool:bio = gBj[playerid][bjRuke] == 2;
+    gBj[playerid][bjIgra] = true;
+    gBj[playerid][bjUlog] = ulog;
+    gBj[playerid][bjRuke] = 1;
+    gBj[playerid][bjAktivna] = 0;
+    gBj[playerid][bjDilerN] = 2;
+    gBjN[playerid][0] = 2;
+    gBjN[playerid][1] = 0;
+    for (new i = 0; i < 2; i++)
+    {
+        gBjKarte[playerid][0][i] = random(52);
+        gBj[playerid][bjDilerKarte][i] = random(52);
+    }
+    BjDiler(playerid, "CASINO", "dealone");
+    if (gBjOtvoren[playerid] && bio)
+    {
+        BjUnisti(playerid);
+        BjNapravi(playerid);
+    }
+    BjOtvori(playerid);
+    BjCrtaj(playerid, false);
+    if (BjVrijednost(gBjKarte[playerid][0], 2) == 21) BjKraj(playerid);
+    return true;
 }
 
 DLG:kazino_ulog(playerid, response, const inputtext[])
 {
-    if (!response || gBj[playerid][bjUlog] || !KazinoBlizu(playerid, gBj[playerid][bjDiler]))
+    if (gBj[playerid][bjIgra]) return 1;
+    if (!response || !KazinoBlizu(playerid, gBj[playerid][bjDiler]))
     {
         KazinoZatvori(playerid);
         return 1;
     }
-    new ulog = ProvjeriBroj(inputtext) && strlen(inputtext) < 9 ? strval(inputtext) : 0;
-    if (ulog < KAZINO_MIN_ULOG || ulog > KAZINO_MAX_ULOG) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ulog mora biti izmedu $%d i $%d."), KAZINO_MIN_ULOG, KAZINO_MAX_ULOG);
-    if (gNovac[playerid] < ulog) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
-    DajNovac(playerid, -ulog);
-    gBj[playerid][bjUlog] = ulog;
-    gBj[playerid][bjIgracN] = 2;
-    gBj[playerid][bjDilerN] = 2;
-    for (new i = 0; i < 2; i++)
-    {
-        gBj[playerid][bjIgrac][i] = random(52);
-        gBj[playerid][bjDilerKarte][i] = random(52);
-    }
-    BjDiler(playerid, "CASINO", "dealone");
-    BjOtvori(playerid);
-    BjCrtaj(playerid, false);
-    if (BjVrijednost(gBj[playerid][bjIgrac], 2) == 21) BjKraj(playerid);
+    BjDijeli(playerid, ProvjeriBroj(inputtext) && strlen(inputtext) < 9 ? strval(inputtext) : 0);
     return 1;
+}
+
+static BjStani(playerid)
+{
+    if (gBj[playerid][bjRuke] == 2 && gBj[playerid][bjAktivna] == 0)
+    {
+        gBj[playerid][bjAktivna] = 1;
+        BjCrtaj(playerid, false);
+        if (BjVrijednost(gBjKarte[playerid][1], gBjN[playerid][1]) == 21) BjStani(playerid);
+        return;
+    }
+    BjKraj(playerid);
 }
 
 KazinoKlik(playerid, PlayerText:td)
 {
     if (!gBjOtvoren[playerid]) return 0;
-    if (td == gBjTd[playerid][BTD_LIJEVO])
+    new h = gBj[playerid][bjAktivna];
+    if (td == gBjTd[playerid][BTD_HIT])
     {
-        if (!gBj[playerid][bjUlog])
+        if (!gBj[playerid][bjIgra])
         {
-            if (!KazinoKey(playerid)) KazinoZatvori(playerid);
+            if (!KazinoBlizu(playerid, gBj[playerid][bjDiler])) KazinoZatvori(playerid);
+            else if (!BjDijeli(playerid, gBj[playerid][bjUlog])) KazinoKey(playerid);
             return 1;
         }
-        gBj[playerid][bjIgrac][gBj[playerid][bjIgracN]++] = random(52);
+        gBjKarte[playerid][h][gBjN[playerid][h]++] = random(52);
         BjDiler(playerid, "CASINO", "dealone");
         BjCrtaj(playerid, false);
-        if (BjVrijednost(gBj[playerid][bjIgrac], gBj[playerid][bjIgracN]) >= 21 || gBj[playerid][bjIgracN] == BJ_KARATA) BjKraj(playerid);
+        if (BjVrijednost(gBjKarte[playerid][h], gBjN[playerid][h]) >= 21 || gBjN[playerid][h] == BJ_KARATA) BjStani(playerid);
     }
-    else if (td == gBjTd[playerid][BTD_DESNO])
+    else if (td == gBjTd[playerid][BTD_STAND])
     {
-        if (gBj[playerid][bjUlog]) BjKraj(playerid);
+        if (gBj[playerid][bjIgra]) BjStani(playerid);
         else KazinoZatvori(playerid);
+    }
+    else if (td == gBjTd[playerid][BTD_SPLIT])
+    {
+        if (!gBj[playerid][bjIgra] || !BjMozeSplit(playerid)) return 1;
+        DajNovac(playerid, -gBj[playerid][bjUlog]);
+        gBj[playerid][bjRuke] = 2;
+        gBjKarte[playerid][1][0] = gBjKarte[playerid][0][1];
+        gBjKarte[playerid][0][1] = random(52);
+        gBjKarte[playerid][1][1] = random(52);
+        gBjN[playerid][1] = 2;
+        BjDiler(playerid, "CASINO", "dealone");
+        BjUnisti(playerid);
+        BjNapravi(playerid);
+        BjCrtaj(playerid, false);
+        if (BjVrijednost(gBjKarte[playerid][0], 2) == 21) BjStani(playerid);
     }
     else return 0;
     return 1;

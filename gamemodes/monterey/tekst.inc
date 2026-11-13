@@ -1275,8 +1275,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Krupije", "Croupier", "Крупье", "Crupier", "Krupiye" },
     { "Dobrodosli za stol, koliko ulazete?", "Welcome to the table, how much are you betting?", "Добро пожаловать за стол, сколько ставите?", "Bienvenido a la mesa, cuanto apuestas?", "Masaya hos geldiniz, ne kadar oynuyorsunuz?" },
     { "Igraj", "Play", "Играть", "Jugar", "Oyna" },
-    { "Karta", "Hit", "Ещё", "Pedir", "Kart" },
-    { "Stani", "Stand", "Хватит", "Plantarse", "Dur" },
     { "Prebacili ste 21. Gubite ulog.", "Bust. You lose your bet.", "Перебор. Ставка проиграна.", "Te pasaste de 21. Pierdes la apuesta.", "21'i gectiniz. Bahsi kaybettiniz." },
     { "Blackjack! Isplata 3:2.", "Blackjack! Pays 3:2.", "Блэкджек! Выплата 3:2.", "Blackjack! Paga 3:2.", "Blackjack! 3:2 odeme." },
     { "Diler ima blackjack. Gubite ulog.", "Dealer has blackjack. You lose your bet.", "У дилера блэкджек. Ставка проиграна.", "El crupier tiene blackjack. Pierdes la apuesta.", "Krupiyede blackjack var. Bahsi kaybettiniz." },
@@ -1295,7 +1293,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Diler: %d", "Dealer: %d", "Дилер: %d", "Crupier: %d", "Krupiye: %d" },
     { "Vi: %d", "You: %d", "Вы: %d", "Tu: %d", "Siz: %d" },
     { "Ulog: $%d", "Bet: $%d", "Ставка: $%d", "Apuesta: $%d", "Bahis: $%d" },
-    { "%s Ulog: $%d, isplata: $%d", "%s Bet: $%d, payout: $%d", "%s Ставка: $%d, выплата: $%d", "%s Apuesta: $%d, pago: $%d", "%s Bahis: $%d, odeme: $%d" }
+    { "%s Ulog: $%d, isplata: $%d", "%s Bet: $%d, payout: $%d", "%s Ставка: $%d, выплата: $%d", "%s Apuesta: $%d, pago: $%d", "%s Bahis: $%d, odeme: $%d" },
+    { "Ruka %d: %d", "Hand %d: %d", "Рука %d: %d", "Mano %d: %d", "El %d: %d" },
+    { "%s~n~Ulog: $%d, isplata: $%d", "%s~n~Bet: $%d, payout: $%d", "%s~n~Ставка: $%d, выплата: $%d", "%s~n~Apuesta: $%d, pago: $%d", "%s~n~Bahis: $%d, odeme: $%d" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
