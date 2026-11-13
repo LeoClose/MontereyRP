@@ -151,7 +151,6 @@ public OnGameModeInit()
     InitGaraze();
     InitSalon();
     InitPijaca();
-    InitGranica();
     InitOpstina();
     InitHeli();
     InitVlakovi();
@@ -184,7 +183,6 @@ forward Sekunda();
 public Sekunda()
 {
     StatsTick();
-    GranicaTick();
     KurvaTick();
     PolicijaTick();
     SlucajTick();
@@ -247,7 +245,6 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/namjestaj.inc"
 #include "monterey/salon.inc"
 #include "monterey/pijaca.inc"
-#include "monterey/granica.inc"
 #include "monterey/opstina.inc"
 #include "monterey/mape/mapa.inc"
 #include "monterey/mape/mapa_marica.inc"
