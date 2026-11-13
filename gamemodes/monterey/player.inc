@@ -15,7 +15,6 @@ public OnPlayerConnect(playerid)
     }
     StetaConnect(playerid);
     PijacaConnect(playerid);
-    GranicaConnect(playerid);
     gAccountId[playerid] = 0;
     gUlogiran[playerid] = false;
     gLoginAttempts[playerid] = 0;
