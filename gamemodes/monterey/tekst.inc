@@ -1479,10 +1479,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Prodali ste %d dionica (%s) za $%d.", "You sold %d shares (%s) for $%d.", "Вы продали %d акций (%s) за $%d.", "Vendiste %d acciones (%s) por $%d.", "%d hisse (%s) sattiniz, $%d." },
     { "Najvise %d dionica po tvrtki.", "Max %d shares per company.", "Максимум %d акций на компанию.", "Maximo %d acciones por empresa.", "Sirket basina en fazla %d hisse." },
     { "Nemate toliko dionica.", "You don't have that many shares.", "У вас нет столько акций.", "No tienes tantas acciones.", "Bu kadar hisseniz yok." },
-    { "~w~Dobrodosli, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Odaberite aplikaciju u izborniku lijevo.", "~w~Welcome, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Pick an app in the menu on the left.", "~w~Добро пожаловать, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Выберите приложение в меню слева.", "~w~Bienvenido, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Elige una aplicacion en el menu de la izquierda.", "~w~Hos geldiniz, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Soldaki menuden bir uygulama secin." },
     { "Nema oglasa.", "No ads.", "Объявлений нет.", "No hay anuncios.", "Ilan yok." },
     { "Objavi ($%d)", "Post ($%d)", "Подать ($%d)", "Publicar ($%d)", "Ilan ver ($%d)" },
-    { "~b~~h~~h~Kliknite tvrtku za kupnju ili prodaju.", "~b~~h~~h~Click a company to buy or sell.", "~b~~h~~h~Нажмите на компанию, чтобы купить или продать.", "~b~~h~~h~Haz clic en una empresa para comprar o vender.", "~b~~h~~h~Alim veya satim icin bir sirkete tiklayin." }
+    { "Kliknite tvrtku za kupnju ili prodaju.", "Click a company to buy or sell.", "Нажмите на компанию, чтобы купить или продать.", "Haz clic en una empresa para comprar o vender.", "Alim veya satim icin bir sirkete tiklayin." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

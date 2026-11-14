@@ -8,20 +8,22 @@
 #define DIONICA_MAX_KOM     10000
 #define DIONICA_PROVIZIJA   1
 #define DIONICA_MINUTA      5
-#define PC_TD               40
-#define PC_X                140.0
-#define PC_Y                90.0
+#define PC_TD               48
+#define PC_X                120.0
+#define PC_Y                80.0
 
 enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS }
 enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE }
-enum { PTD_OZNAKA, PTD_UGASI, PTD_NASLOV, PTD_SADRZAJ, PTD_APP, PTD_AKCIJA = PTD_APP + 4, PTD_DIONICA = PTD_AKCIJA + 2, PTD_IMENOVANI = PTD_DIONICA + 5 }
+enum { PTD_START, PTD_TRAKA, PTD_PROZOR, PTD_NASLOV = PTD_PROZOR + 3, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 2, PTD_APP, PTD_AKCIJA = PTD_APP + 4, PTD_DIONICA = PTD_AKCIJA + 2, PTD_IMENOVANI = PTD_DIONICA + 5 }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaPocetna[] = { 120, 80, 60, 150, 40 };
 static gDionica[sizeof gDionicaIme], gDionicaStara[sizeof gDionicaIme], gDionicaSat;
-static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS];
+static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS];
 static PlayerText:gPcTd[MAX_PLAYERS][PC_TD], gPcBroj[MAX_PLAYERS], PlayerText:gPc[MAX_PLAYERS][PTD_IMENOVANI];
 static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice" };
+static const gPcIkona[][] = { "", "$", "@", "%" };
+static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF };
 
 static DionicaNova(cijena, pocetna, pomak)
 {
@@ -93,14 +95,15 @@ static PlayerText:PcTekst(playerid, Float:x, Float:y, const tekst[], boja, Float
     PlayerTextDrawColour(playerid, td, boja);
     PlayerTextDrawSetShadow(playerid, td, 0);
     PlayerTextDrawSetOutline(playerid, td, 0);
+    PlayerTextDrawSetProportional(playerid, td, true);
     PlayerTextDrawAlignment(playerid, td, poravnanje);
     gPcTd[playerid][gPcBroj[playerid]++] = td;
     return td;
 }
 
-static PlayerText:PcGumb(playerid, Float:x, Float:y, Float:w, boja, const tekst[] = "_")
+static PlayerText:PcGumb(playerid, Float:x, Float:y, Float:w, boja, const tekst[] = "_", tekstBoja = 0xFFFFFFFF)
 {
-    new PlayerText:td = PcTekst(playerid, x, y, tekst, 0xFFFFFFFF, 0.17, 0.85, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    new PlayerText:td = PcTekst(playerid, x, y, tekst, tekstBoja, 0.17, 0.85, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, td, true);
     PlayerTextDrawBoxColour(playerid, td, boja);
     PlayerTextDrawTextSize(playerid, td, 10.0, w);
@@ -120,29 +123,34 @@ static PcPostavi(playerid, dio, const tekst[], bool:vidljivo = true)
     else PlayerTextDrawHide(playerid, gPc[playerid][dio]);
 }
 
+static PcStart(playerid, bool:otvori)
+{
+    gPcStart[playerid] = otvori;
+    for (new i = PTD_START_PANEL; i <= PTD_UGASI; i++)
+    {
+        if (otvori) PlayerTextDrawShow(playerid, gPc[playerid][i]);
+        else PlayerTextDrawHide(playerid, gPc[playerid][i]);
+    }
+}
+
 static PcEkran(playerid, ekran)
 {
-    new tekst[1024], red[160], naslov[48];
+    new tekst[1024], red[160];
     gPcEkran[playerid] = ekran;
-    PlayerTextDrawSetPos(playerid, gPc[playerid][PTD_OZNAKA], PC_X + 10.0, PC_Y + 34.0 + float(ekran) * 18.0);
-    PlayerTextDrawShow(playerid, gPc[playerid][PTD_OZNAKA]);
-    for (new i = 0; i < sizeof gPcAplikacije; i++)
-    {
-        PlayerTextDrawColour(playerid, gPc[playerid][PTD_APP + i], i == ekran ? 0xFFFFFFFF : 0x8AA0B6FF);
-        PlayerTextDrawShow(playerid, gPc[playerid][PTD_APP + i]);
-    }
+    PcStart(playerid, false);
     for (new i = 0; i < 2; i++) PlayerTextDrawHide(playerid, gPc[playerid][PTD_AKCIJA + i]);
     for (new d = 0; d < sizeof gDionicaIme; d++) PlayerTextDrawHide(playerid, gPc[playerid][PTD_DIONICA + d]);
-    strcat(naslov, T(playerid, gPcAplikacije[ekran]));
+    if (ekran == PCE_POCETNA)
+    {
+        for (new i = PTD_PROZOR; i <= PTD_SADRZAJ; i++) PlayerTextDrawHide(playerid, gPc[playerid][i]);
+        PlayerTextDrawHide(playerid, gPc[playerid][PTD_TRAKA]);
+        return;
+    }
+    for (new i = PTD_PROZOR; i <= PTD_ZATVORI; i++) PlayerTextDrawShow(playerid, gPc[playerid][i]);
+    PcPostavi(playerid, PTD_NASLOV, T(playerid, gPcAplikacije[ekran]));
+    PcPostavi(playerid, PTD_TRAKA, T(playerid, gPcAplikacije[ekran]));
     switch (ekran)
     {
-        case PCE_POCETNA:
-        {
-            new d, m, g, sat, minuta;
-            getdate(g, m, d);
-            gettime(sat, minuta);
-            format(tekst, sizeof tekst, T(playerid, "~w~Dobrodosli, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Odaberite aplikaciju u izborniku lijevo."), GetRPIme(playerid), d, m, g, sat, minuta);
-        }
         case PCE_BANKA:
         {
             if (!gInv[playerid][ITEM_KARTICA]) strcat(tekst, T(playerid, "Nemate bankovnu karticu."));
@@ -165,7 +173,7 @@ static PcEkran(playerid, ekran)
                 DB_GetFieldString(res, 2, broj, sizeof broj);
                 PcCisti(oglas);
                 PcCisti(ime);
-                format(red, sizeof red, "~w~%s~n~~b~~h~~h~   %s, %s~n~", oglas, ime, broj);
+                format(red, sizeof red, "%s~n~~b~   %s, %s~l~~n~", oglas, ime, broj);
                 strcat(tekst, red);
             }
             DB_FreeResultSet(res);
@@ -175,52 +183,66 @@ static PcEkran(playerid, ekran)
         }
         case PCE_DIONICE:
         {
-            strcat(tekst, T(playerid, "~b~~h~~h~Kliknite tvrtku za kupnju ili prodaju."));
+            strcat(tekst, T(playerid, "Kliknite tvrtku za kupnju ili prodaju."));
             for (new d = 0; d < sizeof gDionicaIme; d++)
             {
                 new razlika = gDionica[d] - gDionicaStara[d];
-                format(red, sizeof red, "%s   $%d   %s%s%d~w~   (%d)", gDionicaIme[d], gDionica[d], razlika > 0 ? ("~g~") : razlika < 0 ? ("~r~") : ("~w~"), razlika > 0 ? ("+") : (""), razlika, PcKomada(playerid, d));
+                format(red, sizeof red, "%s   $%d   %s%s%d~l~   (%d)", gDionicaIme[d], gDionica[d], razlika > 0 ? ("~g~") : razlika < 0 ? ("~r~") : ("~l~"), razlika > 0 ? ("+") : (""), razlika, PcKomada(playerid, d));
                 PcPostavi(playerid, PTD_DIONICA + d, red);
             }
         }
     }
-    PcPostavi(playerid, PTD_NASLOV, naslov);
     PcPostavi(playerid, PTD_SADRZAJ, tekst);
 }
 
 static PcOtvori(playerid)
 {
-    new sat, minuta, vrijeme[8];
+    new sat, minuta, d, m, g, vrijeme[8], datum[12], dobrodosli[64];
     gettime(sat, minuta);
+    getdate(g, m, d);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
+    format(datum, sizeof datum, "%02d.%02d.%d", d, m, g);
+    format(dobrodosli, sizeof dobrodosli, "%s~n~%s", GetRPIme(playerid), vrijeme);
     gPcOtvoren[playerid] = true;
     gPcBroj[playerid] = 0;
-    PcKutija(playerid, 0.0, 0.0, 360.0, 236.0, 0x0A0A0AFF);
-    PcKutija(playerid, 4.0, 4.0, 352.0, 210.0, 0x0E1621FF);
-    PcKutija(playerid, 4.0, 4.0, 352.0, 18.0, 0x1F3A5FFF);
-    PcTekst(playerid, 12.0, 8.0, "MontereyOS", 0xFFFFFFFF, 0.2, 0.95);
-    PcKutija(playerid, 4.0, 214.0, 352.0, 18.0, 0x15212FFF);
-    PcTekst(playerid, 348.0, 218.0, vrijeme, 0xDCE4ECFF, 0.18, 0.85, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_RIGHT);
-    PcKutija(playerid, 160.0, 236.0, 40.0, 6.0, 0x1A1A1AFF);
-    PcKutija(playerid, 120.0, 242.0, 120.0, 4.0, 0x1A1A1AFF);
-    PcKutija(playerid, 4.0, 22.0, 90.0, 192.0, 0x15212FFF);
-    gPc[playerid][PTD_OZNAKA] = PcKutija(playerid, 10.0, 34.0, 78.0, 14.0, 0x5B8DBFFF);
-    for (new i = 0; i < sizeof gPcAplikacije; i++)
+    PcKutija(playerid, 0.0, 0.0, 400.0, 248.0, 0x111111FF);
+    PcKutija(playerid, 180.0, 248.0, 40.0, 8.0, 0x222222FF);
+    PcKutija(playerid, 140.0, 256.0, 120.0, 4.0, 0x222222FF);
+    PcKutija(playerid, 4.0, 4.0, 392.0, 220.0, 0x0B4F8AFF);
+    PcKutija(playerid, 4.0, 4.0, 392.0, 110.0, 0x1366ADFF);
+    PcKutija(playerid, 4.0, 4.0, 392.0, 50.0, 0x1A7BC8FF);
+    PcTekst(playerid, 386.0, 10.0, dobrodosli, 0xFFFFFFDD, 0.2, 1.0, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+    for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        new PlayerText:td = PcTekst(playerid, 16.0, 36.0 + float(i) * 18.0, T(playerid, gPcAplikacije[i]), 0x8AA0B6FF, 0.19, 0.9);
-        PlayerTextDrawTextSize(playerid, td, PC_X + 88.0, 10.0);
-        PlayerTextDrawSetSelectable(playerid, td, true);
-        gPc[playerid][PTD_APP + i] = td;
+        new Float:y = 12.0 + float(i - 1) * 50.0;
+        gPc[playerid][PTD_APP + i] = PcKutija(playerid, 16.0, y, 30.0, 30.0, gPcIkonaBoja[i]);
+        PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_APP + i], true);
+        PcTekst(playerid, 31.0, y + 7.0, gPcIkona[i], 0xFFFFFFFF, 0.42, 1.7, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+        new PlayerText:ime = PcTekst(playerid, 31.0, y + 32.0, T(playerid, gPcAplikacije[i]), 0xFFFFFFFF, 0.15, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+        PlayerTextDrawSetShadow(playerid, ime, 1);
     }
-    gPc[playerid][PTD_UGASI] = PcGumb(playerid, 49.0, 196.0, 74.0, 0x8B2E2EFF, T(playerid, "UGASI"));
-    gPc[playerid][PTD_NASLOV] = PcTekst(playerid, 104.0, 28.0, "_", 0x5B8DBFFF, 0.26, 1.2);
-    PcKutija(playerid, 104.0, 44.0, 244.0, 1.0, 0x2E4A68FF);
-    gPc[playerid][PTD_SADRZAJ] = PcTekst(playerid, 106.0, 50.0, "_", 0xDCE4ECFF, 0.18, 0.95, TEXT_DRAW_FONT_1);
-    for (new d = 0; d < sizeof gDionicaIme; d++) gPc[playerid][PTD_DIONICA + d] = PcGumb(playerid, 226.0, 68.0 + float(d) * 20.0, 238.0, 0x1F3A5FFF);
-    for (new i = 0; i < 2; i++) gPc[playerid][PTD_AKCIJA + i] = PcGumb(playerid, 150.0 + float(i) * 100.0, 196.0, 90.0, 0x1E5AA8FF);
+    PcKutija(playerid, 4.0, 224.0, 392.0, 20.0, 0x0D141CF2);
+    gPc[playerid][PTD_START] = PcKutija(playerid, 8.0, 226.0, 16.0, 16.0, 0x00000001);
+    PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_START], true);
+    for (new i = 0; i < 4; i++) PcKutija(playerid, 10.0 + float(i % 2) * 7.0, 228.0 + float(i / 2) * 7.0, 5.5, 5.5, 0x4FC3F7FF);
+    gPc[playerid][PTD_TRAKA] = PcGumb(playerid, 70.0, 229.0, 70.0, 0xFFFFFF22);
+    PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_TRAKA], false);
+    PcTekst(playerid, 390.0, 226.0, vrijeme, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+    PcTekst(playerid, 390.0, 234.0, datum, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+    gPc[playerid][PTD_PROZOR] = PcKutija(playerid, 83.0, 23.0, 300.0, 186.0, 0x00000055);
+    gPc[playerid][PTD_PROZOR + 1] = PcKutija(playerid, 80.0, 20.0, 300.0, 186.0, 0xFFFFFFFF);
+    gPc[playerid][PTD_PROZOR + 2] = PcKutija(playerid, 80.0, 20.0, 300.0, 16.0, 0xF0F0F0FF);
+    gPc[playerid][PTD_NASLOV] = PcTekst(playerid, 88.0, 23.0, "_", 0x202020FF, 0.18, 0.85, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_ZATVORI] = PcGumb(playerid, 371.0, 23.0, 16.0, 0xE81123FF, "X");
+    gPc[playerid][PTD_SADRZAJ] = PcTekst(playerid, 88.0, 42.0, "_", 0x202020FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
+    for (new k = 0; k < sizeof gDionicaIme; k++) gPc[playerid][PTD_DIONICA + k] = PcGumb(playerid, 230.0, 60.0 + float(k) * 20.0, 280.0, 0xE8E8E8FF, "_", 0x202020FF);
+    for (new i = 0; i < 2; i++) gPc[playerid][PTD_AKCIJA + i] = PcGumb(playerid, 180.0 + float(i) * 100.0, 190.0, 90.0, 0x0078D4FF);
+    gPc[playerid][PTD_START_PANEL] = PcKutija(playerid, 4.0, 164.0, 130.0, 60.0, 0x1B2430F2);
+    gPc[playerid][PTD_START_PANEL + 1] = PcTekst(playerid, 12.0, 170.0, GetRPIme(playerid), 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_UGASI] = PcGumb(playerid, 69.0, 204.0, 110.0, 0x2C3746FF, T(playerid, "Ugasi"));
     for (new i = 0; i < gPcBroj[playerid]; i++) PlayerTextDrawShow(playerid, gPcTd[playerid][i]);
     PcEkran(playerid, PCE_POCETNA);
-    SelectTextDraw(playerid, 0x5B8DBFFF);
+    SelectTextDraw(playerid, 0x4FC3F7FF);
 }
 
 PcZatvori(playerid)
@@ -263,7 +285,7 @@ static PcUnos(playerid, akcija, const tekst[])
 static PcNatrag(playerid)
 {
     if (!gPcOtvoren[playerid]) return 1;
-    SelectTextDraw(playerid, 0x5B8DBFFF);
+    SelectTextDraw(playerid, 0x4FC3F7FF);
     if (!PcBlizu(playerid))
     {
         PcZatvori(playerid);
@@ -286,7 +308,17 @@ PcKlik(playerid, PlayerText:td)
         PcZatvori(playerid);
         return 1;
     }
-    for (new i = 0; i < sizeof gPcAplikacije; i++)
+    if (td == gPc[playerid][PTD_START])
+    {
+        PcStart(playerid, !gPcStart[playerid]);
+        return 1;
+    }
+    if (td == gPc[playerid][PTD_ZATVORI])
+    {
+        PcEkran(playerid, PCE_POCETNA);
+        return 1;
+    }
+    for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
         if (td != gPc[playerid][PTD_APP + i]) continue;
         PcEkran(playerid, i);
