@@ -488,6 +488,7 @@ OdjecaKasa(playerid)
 
 public OnPlayerEditAttachedObject(playerid, EDIT_RESPONSE:response, index, modelid, boneid, Float:fOffsetX, Float:fOffsetY, Float:fOffsetZ, Float:fRotX, Float:fRotY, Float:fRotZ, Float:fScaleX, Float:fScaleY, Float:fScaleZ)
 {
+    if (ZlataraUredi(playerid, response, index, fOffsetX, fOffsetY, fOffsetZ, fRotX, fRotY, fRotZ)) return 1;
     if (index != ODJECA_SLOT_KAPA && index != ODJECA_SLOT_FRIZURA) return 1;
     new i = index == ODJECA_SLOT_FRIZURA ? 1 : 0;
     if (response == EDIT_RESPONSE_FINAL && modelid == gOdjecaNosi[playerid][i][pkModel])

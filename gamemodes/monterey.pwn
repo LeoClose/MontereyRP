@@ -153,6 +153,7 @@ public OnGameModeInit()
     InitKazino();
     InitBanka();
     InitRacunalo();
+    InitZlatara();
     InitOruzarnica();
     InitOdjeca();
     InitKuce();
@@ -203,6 +204,7 @@ public Sekunda()
     VlakTick();
     BankaTick();
     RacunaloTick();
+    ZlataraTick();
 }
 
 public OnGameModeExit()
@@ -251,6 +253,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kazino.inc"
 #include "monterey/banka.inc"
 #include "monterey/racunalo.inc"
+#include "monterey/zlatara.inc"
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
 #include "monterey/kuce.inc"

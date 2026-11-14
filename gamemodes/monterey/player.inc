@@ -64,6 +64,7 @@ public OnPlayerDisconnect(playerid, reason)
     TuningDisconnect(playerid);
     KazinoDisconnect(playerid);
     PcDisconnect(playerid);
+    ZlataraDisconnect(playerid);
     KucaDisconnect(playerid);
     MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
@@ -110,6 +111,7 @@ public OnPlayerSpawn(playerid)
     KucaSpawn(playerid);
     RanjenSpawn(playerid);
     OdjecaSpawn(playerid);
+    ZlataraSpawn(playerid);
     RanjenBolnica(playerid);
     return 1;
 }
@@ -158,7 +160,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 static Interakcija(playerid)
 {
     if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid)) return;
+    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || BacenoPodigni(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || PreprodavacKey(playerid)) return;
     if (!gUlogiran[playerid] || IsRanjen(playerid) || MobitelOtvoren(playerid) || MdtOtvoren(playerid)) return;
     if (IsPlayerInAnyVehicle(playerid)) VoziloMeni(playerid);
     else if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !VoziloMeni(playerid)) PrikaziInventar(playerid);
@@ -186,6 +188,7 @@ public OnPlayerUpdate(playerid)
     TuningUpdate(playerid);
     TrgovinaUpdate(playerid);
     BankaUpdate(playerid);
+    ZlataraUpdate(playerid);
     TaksiPovratak(playerid);
     new WEAPON:w = GetPlayerWeapon(playerid);
     if (w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN && IsShootingBlocked(playerid)) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
