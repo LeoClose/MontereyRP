@@ -5,6 +5,8 @@
 #define WANTED_MAX          6
 #define VUCA_RAZMAK         1.0
 #define VUCA_MS             250
+#define VUCA_HOD            1.2
+#define VUCA_TELEPORT       4.0
 #define TASER_DOMET         15.0
 #define TASER_MS            7000
 #define TASER_METAK         100
@@ -27,7 +29,7 @@
 
 static bool:gOnDuty[MAX_PLAYERS], gWanted[MAX_PLAYERS], gJailTime[MAX_PLAYERS];
 static bool:gCuffed[MAX_PLAYERS], bool:gTased[MAX_PLAYERS], bool:gTaser[MAX_PLAYERS];
-static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount;
+static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount, bool:gDragHoda[MAX_PLAYERS];
 static gLockerUzeo[MAX_PLAYERS];
 static gTragOd[MAX_PLAYERS], gTragVrijeme[MAX_PLAYERS], Float:gTrag[MAX_PLAYERS][3], Float:gVani[MAX_PLAYERS][3], bool:gImaVani[MAX_PLAYERS];
 static gWantedSat[MAX_PLAYERS], gLocate[MAX_PLAYERS], gLocateRacun[MAX_PLAYERS], gLocateGen[MAX_PLAYERS];
@@ -249,6 +251,12 @@ StopDrag(target)
     gDragBy[target] = 0;
     gDragging[p] = 0;
     gDragCount--;
+    if (gDragHoda[target])
+    {
+        gDragHoda[target] = false;
+        ClearAnimations(target, SYNC_ALL);
+        VratiLisice(target);
+    }
     if (!gTased[target]) TogglePlayerControllable(target, true);
 }
 
@@ -283,14 +291,34 @@ public DragTick()
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (!gDragging[i]) continue;
-        new t = gDragging[i] - 1, Float:x, Float:y, Float:z, Float:a;
+        new t = gDragging[i] - 1, Float:x, Float:y, Float:z, Float:a, Float:tx, Float:ty, Float:tz;
         GetPlayerPos(i, x, y, z);
+        GetPlayerPos(t, tx, ty, tz);
+        new Float:d = VectorSize(x - tx, y - ty, 0.0);
+        if (GetPlayerInterior(t) == GetPlayerInterior(i) && GetPlayerVirtualWorld(t) == GetPlayerVirtualWorld(i) && d <= VUCA_TELEPORT && floatabs(z - tz) < 2.0)
+        {
+            if (d > VUCA_HOD)
+            {
+                SetPlayerFacingAngle(t, atan2(tx - x, y - ty));
+                if (!gDragHoda[t]) ApplyAnimation(t, "PED", "WALK_civi", 4.1, true, true, true, false, 0, SYNC_ALL);
+                gDragHoda[t] = true;
+            }
+            else if (gDragHoda[t])
+            {
+                gDragHoda[t] = false;
+                ClearAnimations(t, SYNC_ALL);
+                VratiLisice(t);
+            }
+            continue;
+        }
         GetPlayerFacingAngle(i, a);
         x += VUCA_RAZMAK * floatsin(a, degrees);
         y -= VUCA_RAZMAK * floatcos(a, degrees);
         if (GetPlayerInterior(t) != GetPlayerInterior(i)) SetPlayerInterior(t, GetPlayerInterior(i));
         if (GetPlayerVirtualWorld(t) != GetPlayerVirtualWorld(i)) SetPlayerVirtualWorld(t, GetPlayerVirtualWorld(i));
-        if (IsPlayerInRangeOfPoint(t, 0.3, x, y, z)) continue;
+        gDragHoda[t] = false;
+        ClearAnimations(t, SYNC_ALL);
+        VratiLisice(t);
         SetPlayerPos(t, x, y, z);
         SetPlayerFacingAngle(t, a);
     }

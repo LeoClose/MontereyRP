@@ -1474,14 +1474,21 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Imate", "Owned", "У вас", "Tienes", "Sizde" },
     { "Tekst oglasa (najvise %d znakova, cijena $%d s racuna):", "Ad text (max %d characters, costs $%d from your account):", "Текст объявления (макс. %d символов, стоимость $%d со счёта):", "Texto del anuncio (max %d caracteres, cuesta $%d de tu cuenta):", "Ilan metni (en fazla %d karakter, hesabinizdan $%d):" },
     { "[Oglas] %s (%s, tel. %s)", "[Ad] %s (%s, tel. %s)", "[Объявление] %s (%s, тел. %s)", "[Anuncio] %s (%s, tel. %s)", "[Ilan] %s (%s, tel. %s)" },
-    { "%s: $%d po dionici, imate %d.~n~Unesite broj dionica (kupnja s racuna, prodaja uz %d%% provizije):", "%s: $%d per share, you own %d.~n~Enter the number of shares (bought from your account, sold with %d%% commission):", "%s: $%d за акцию, у вас %d.~n~Введите количество акций (покупка со счёта, продажа с комиссией %d%%):", "%s: $%d por accion, tienes %d.~n~Introduce el numero de acciones (compra desde la cuenta, venta con %d%% de comision):", "%s: hisse basi $%d, sizde %d.~n~Hisse sayisini girin (alim hesaptan, satis %%%d komisyonla):" },
     { "Kupili ste %d dionica (%s) za $%d.", "You bought %d shares (%s) for $%d.", "Вы купили %d акций (%s) за $%d.", "Compraste %d acciones (%s) por $%d.", "%d hisse (%s) aldiniz, $%d." },
     { "Prodali ste %d dionica (%s) za $%d.", "You sold %d shares (%s) for $%d.", "Вы продали %d акций (%s) за $%d.", "Vendiste %d acciones (%s) por $%d.", "%d hisse (%s) sattiniz, $%d." },
     { "Najvise %d dionica po tvrtki.", "Max %d shares per company.", "Максимум %d акций на компанию.", "Maximo %d acciones por empresa.", "Sirket basina en fazla %d hisse." },
     { "Nemate toliko dionica.", "You don't have that many shares.", "У вас нет столько акций.", "No tienes tantas acciones.", "Bu kadar hisseniz yok." },
     { "Nema oglasa.", "No ads.", "Объявлений нет.", "No hay anuncios.", "Ilan yok." },
     { "Objavi ($%d)", "Post ($%d)", "Подать ($%d)", "Publicar ($%d)", "Ilan ver ($%d)" },
-    { "Kliknite tvrtku za kupnju ili prodaju.", "Click a company to buy or sell.", "Нажмите на компанию, чтобы купить или продать.", "Haz clic en una empresa para comprar o vender.", "Alim veya satim icin bir sirkete tiklayin." }
+    { "%s  ~l~$%d.%02d  %s%d.%d%%~l~   Imate: %d", "%s  ~l~$%d.%02d  %s%d.%d%%~l~   Owned: %d", "%s  ~l~$%d.%02d  %s%d.%d%%~l~   У вас: %d", "%s  ~l~$%d.%02d  %s%d.%d%%~l~   Tienes: %d", "%s  ~l~$%d.%02d  %s%d.%d%%~l~   Sizde: %d" },
+    { "%s: $%d.%02d po dionici, imate %d. Koliko kupujete?", "%s: $%d.%02d per share, you own %d. How many are you buying?", "%s: $%d.%02d за акцию, у вас %d. Сколько покупаете?", "%s: $%d.%02d por accion, tienes %d. Cuantas compras?", "%s: hisse basi $%d.%02d, sizde %d. Kac tane aliyorsunuz?" },
+    { "%s: $%d.%02d po dionici, imate %d. Koliko prodajete (provizija 1%%)?", "%s: $%d.%02d per share, you own %d. How many are you selling (1%% commission)?", "%s: $%d.%02d за акцию, у вас %d. Сколько продаёте (комиссия 1%%)?", "%s: $%d.%02d por accion, tienes %d. Cuantas vendes (comision 1%%)?", "%s: hisse basi $%d.%02d, sizde %d. Kac tane satiyorsunuz (%%1 komisyon)?" },
+    { "Jos nema objava. Budite prvi!", "No posts yet. Be the first!", "Постов пока нет. Будьте первым!", "Aun no hay publicaciones. Se el primero!", "Henuz gonderi yok. Ilk siz olun!" },
+    { "LifeStalker", "LifeStalker", "LifeStalker", "LifeStalker", "LifeStalker" },
+    { "Objavi", "Post", "Опубликовать", "Publicar", "Paylas" },
+    { "Sto vam je na umu? (najvise %d znakova)", "What's on your mind? (max %d characters)", "О чём вы думаете? (макс. %d символов)", "Que estas pensando? (max %d caracteres)", "Aklinizda ne var? (en fazla %d karakter)" },
+    { "~b~%s  ~l~prije %d h   %s+%d~n~~l~%s", "~b~%s  ~l~%d h ago   %s+%d~n~~l~%s", "~b~%s  ~l~%d ч назад   %s+%d~n~~l~%s", "~b~%s  ~l~hace %d h   %s+%d~n~~l~%s", "~b~%s  ~l~%d sa once   %s+%d~n~~l~%s" },
+    { "~b~%s  ~l~prije %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d min ago   %s+%d~n~~l~%s", "~b~%s  ~l~%d мин назад   %s+%d~n~~l~%s", "~b~%s  ~l~hace %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d dk once   %s+%d~n~~l~%s" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
