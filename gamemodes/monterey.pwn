@@ -167,8 +167,6 @@ public OnGameModeInit()
     MapaDacoradiona();
     MapaChinatownUkloni(INVALID_PLAYER_ID);
     MapaChinatown();
-    MapaPdExtUkloni(INVALID_PLAYER_ID);
-    MapaPdExt();
     WilshirePdUkloni(INVALID_PLAYER_ID);
     WilshirePd();
     MapaBusTaxiUkloni(INVALID_PLAYER_ID);
@@ -307,8 +305,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
-#include "monterey/mape/mapa_chinatown.inc"
-#include "monterey/mape/mapa_pdext.inc"
+#include "monterey/mape/mapa_chinatown.inc" 
 #include "monterey/mape/mapa_pd.inc"
 #include "monterey/mape/wilshire_pd.inc"
 #include "monterey/mape/mapa_bus_taxi.inc"
