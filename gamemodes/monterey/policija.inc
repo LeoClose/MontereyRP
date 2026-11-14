@@ -8,7 +8,9 @@
 #define VUCA_HOD            1.2
 #define LISICE_PAD_MS       2500
 #define PD_VOZILO_DOMET     5.0
-#define VUCA_TELEPORT       4.0
+#define VUCA_TELEPORT       10.0
+#define VUCA_TRCI           3.0
+#define UBACI_MS            150
 #define TASER_DOMET         15.0
 #define TASER_MS            7000
 #define TASER_METAK         100
@@ -31,7 +33,7 @@
 
 static bool:gOnDuty[MAX_PLAYERS], gWanted[MAX_PLAYERS], gJailTime[MAX_PLAYERS];
 static bool:gCuffed[MAX_PLAYERS], bool:gTased[MAX_PLAYERS], bool:gTaser[MAX_PLAYERS];
-static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount, bool:gDragHoda[MAX_PLAYERS], gDragNakon[MAX_PLAYERS];
+static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount, gDragHoda[MAX_PLAYERS], gDragNakon[MAX_PLAYERS], bool:gPritvoren[MAX_PLAYERS];
 static gLockerUzeo[MAX_PLAYERS];
 static gTragOd[MAX_PLAYERS], gTragVrijeme[MAX_PLAYERS], Float:gTrag[MAX_PLAYERS][3], Float:gVani[MAX_PLAYERS][3], bool:gImaVani[MAX_PLAYERS];
 static gWantedSat[MAX_PLAYERS], gLocate[MAX_PLAYERS], gLocateRacun[MAX_PLAYERS], gLocateGen[MAX_PLAYERS];
@@ -270,7 +272,7 @@ StopDrag(target)
     gDragCount--;
     if (gDragHoda[target])
     {
-        gDragHoda[target] = false;
+        gDragHoda[target] = 0;
         ClearAnimations(target, SYNC_ALL);
         VratiLisice(target);
     }
@@ -291,6 +293,7 @@ PolicijaDisconnect(playerid, bool:izlaz)
     if (gDragging[playerid]) StopDrag(gDragging[playerid] - 1);
     StopDrag(playerid);
     gDragNakon[playerid] = 0;
+    gPritvoren[playerid] = false;
     gCuffed[playerid] = false;
     VratiOpremu(playerid, false);
     if (!izlaz) return;
@@ -317,17 +320,18 @@ public DragTick()
         {
             if (d > VUCA_HOD)
             {
+                new hod = d > VUCA_TRCI ? 2 : 1;
                 SetPlayerFacingAngle(t, atan2(tx - x, y - ty));
-                if (!gDragHoda[t])
+                if (gDragHoda[t] != hod)
                 {
-                    TogglePlayerControllable(t, true);
-                    ApplyAnimation(t, "PED", "WALK_civi", 4.1, true, true, true, false, 0, SYNC_ALL);
+                    if (!gDragHoda[t]) TogglePlayerControllable(t, true);
+                    ApplyAnimation(t, "PED", hod == 2 ? ("run_civi") : ("WALK_civi"), 4.1, true, true, true, false, 0, SYNC_ALL);
                 }
-                gDragHoda[t] = true;
+                gDragHoda[t] = hod;
             }
             else if (gDragHoda[t])
             {
-                gDragHoda[t] = false;
+                gDragHoda[t] = 0;
                 ClearAnimations(t, SYNC_ALL);
                 VratiLisice(t);
                 TogglePlayerControllable(t, false);
@@ -340,7 +344,7 @@ public DragTick()
         if (GetPlayerInterior(t) != GetPlayerInterior(i)) SetPlayerInterior(t, GetPlayerInterior(i));
         if (GetPlayerVirtualWorld(t) != GetPlayerVirtualWorld(i)) SetPlayerVirtualWorld(t, GetPlayerVirtualWorld(i));
         if (gDragHoda[t]) TogglePlayerControllable(t, false);
-        gDragHoda[t] = false;
+        gDragHoda[t] = 0;
         ClearAnimations(t, SYNC_ALL);
         VratiLisice(t);
         SetPlayerPos(t, x, y, z);
@@ -359,6 +363,11 @@ PolicijaStateChange(playerid, PLAYER_STATE:newstate)
     if (newstate == PLAYER_STATE_ONFOOT)
     {
         VratiLisice(playerid);
+        if (gPritvoren[playerid])
+        {
+            gPritvoren[playerid] = false;
+            if (!gTased[playerid]) TogglePlayerControllable(playerid, true);
+        }
         new p = gDragNakon[playerid] - 1;
         gDragNakon[playerid] = 0;
         if (p >= 0 && IsPlayerConnected(p) && gCuffed[playerid] && !gDragging[p] && !gDragBy[playerid] && GetPlayerState(p) == PLAYER_STATE_ONFOOT) PocniDrag(p, playerid);
@@ -369,9 +378,32 @@ PolicijaStateChange(playerid, PLAYER_STATE:newstate)
     for (new s = GetVehicleSeats(v) - 1; s >= 1; s--)
     {
         if (!SjedaloSlobodno(v, s)) continue;
-        PutPlayerInVehicle(t, v, s);
+        PolicijaUbaci(t, v, s);
         return;
     }
+}
+
+static PolicijaUbaci(t, v, sjedalo)
+{
+    SetPlayerSpecialAction(t, SPECIAL_ACTION_NONE);
+    ClearAnimations(t, SYNC_ALL);
+    TogglePlayerControllable(t, false);
+    gPritvoren[t] = true;
+    SetTimerEx("PolicijaUbaciKraj", UBACI_MS, false, "iiii", t, gAccountId[t], v, sjedalo);
+}
+
+forward PolicijaUbaciKraj(t, racun, v, sjedalo);
+public PolicijaUbaciKraj(t, racun, v, sjedalo)
+{
+    if (!IsPlayerConnected(t) || gAccountId[t] != racun || !gPritvoren[t] || !GetVehicleModel(v)) return;
+    if (!SjedaloSlobodno(v, sjedalo))
+    {
+        gPritvoren[t] = false;
+        VratiLisice(t);
+        TogglePlayerControllable(t, true);
+        return;
+    }
+    PutPlayerInVehicle(t, v, sjedalo);
 }
 
 bool:TaserPogodak(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hitid)
@@ -555,7 +587,7 @@ CMD:detain(playerid, params[])
     {
         if (!SjedaloSlobodno(v, s)) continue;
         if (gDragBy[target]) StopDrag(target);
-        PutPlayerInVehicle(target, v, s);
+        PolicijaUbaci(target, v, s);
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s smjesta %s u vozilo.", GetRPIme(playerid), GetRPIme(target), 1);
         return 1;
     }
@@ -571,6 +603,7 @@ CMD:dragout(playerid, params[])
     if (target == INVALID_PLAYER_ID) return 1;
     if (target == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to napraviti sami sebi."));
     if (!IsPlayerInAnyVehicle(target)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije u vozilu."));
+    if (gPritvoren[target]) TogglePlayerControllable(target, true);
     RemovePlayerFromVehicle(target);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s izvlaci %s iz vozila.", GetRPIme(playerid), GetRPIme(target), 1);
     if (gCuffed[target]) gDragNakon[target] = playerid + 1;
