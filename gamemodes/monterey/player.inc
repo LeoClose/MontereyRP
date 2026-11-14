@@ -48,6 +48,7 @@ public OnPlayerConnect(playerid)
 public OnPlayerDisconnect(playerid, reason)
 {
     SlucajDisconnect(playerid);
+    gPrenosZamrz[playerid] = 0;
     if (IsPlayerNPC(playerid)) return 1;
     TaksiPlayerLeft(playerid);
     KurvaDisconnect(playerid);

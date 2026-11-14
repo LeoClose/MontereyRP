@@ -12,14 +12,39 @@
 #include <streamer>
 #include <kolizija>
 
+new gPrenosZamrz[MAX_PLAYERS];
+
+forward PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z);
+public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z)
+{
+    if (gPrenosZamrz[playerid] != token) return;
+    gPrenosZamrz[playerid] = 0;
+    SetPlayerPos(playerid, x, y, z);
+    TogglePlayerControllable(playerid, true);
+}
+
 stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
 {
     new Float:px, Float:py, Float:pz;
     GetPlayerPos(playerid, px, py, pz);
-    if (VectorSize(x - px, y - py, z - pz) > 50.0) Streamer_UpdateEx(playerid, x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), STREAMER_TYPE_OBJECT, 1500, 0);
+    if (VectorSize(x - px, y - py, z - pz) <= 50.0) return SetPlayerPos(playerid, x, y, z);
+    Streamer_UpdateEx(playerid, x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), STREAMER_TYPE_OBJECT);
+    if (gPrenosZamrz[playerid] || IsPlayerControllable(playerid))
+    {
+        static token;
+        gPrenosZamrz[playerid] = ++token ? token : ++token;
+        TogglePlayerControllable(playerid, false);
+        SetTimerEx("PrenosOdmrzni", 2000, false, "ddfff", playerid, gPrenosZamrz[playerid], x, y, z);
+    }
     return SetPlayerPos(playerid, x, y, z);
 }
+stock ZamrzniIgraca(playerid, bool:moze)
+{
+    gPrenosZamrz[playerid] = 0;
+    return TogglePlayerControllable(playerid, moze);
+}
 #define SetPlayerPos PrenesiIgraca
+#define TogglePlayerControllable ZamrzniIgraca
 
 #pragma dynamic 32768
 
