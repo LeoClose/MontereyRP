@@ -136,6 +136,12 @@ public OnGameModeInit()
     MapaPdExt();
     WilshirePdUkloni(INVALID_PLAYER_ID);
     WilshirePd();
+    MapaBusTaxiUkloni(INVALID_PLAYER_ID);
+    MapaBusTaxi();
+    MapaDiamondCasino();
+    MapaCartierZlatara();
+    MapaCartierExtUkloni(INVALID_PLAYER_ID);
+    MapaCartierExt();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -260,6 +266,10 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_pdext.inc"
 #include "monterey/mape/mapa_pd.inc"
 #include "monterey/mape/wilshire_pd.inc"
+#include "monterey/mape/mapa_bus_taxi.inc"
+#include "monterey/mape/mapa_diamond_casino.inc"
+#include "monterey/mape/mapa_cartier_zlatara.inc"
+#include "monterey/mape/mapa_cartier_ext.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"
