@@ -24,7 +24,7 @@ RemoveBuildingForPlayer(playerid, 1527, 1448.229, -1755.900, 14.523, 0.250);
 //Objects////////////////////////////////////////////////////////////////////////////////////////////////////////
 MapaBusTaxi()
 {
-gMapaInt = -1;
+gMapaInt = 0;
 new STREAMER_TAG_OBJECT:tmpobjid;
 tmpobjid = CreateDynamicObjectEx(3997, 1479.339965, -1802.290039, 12.546895, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
 SetDynamicObjectMaterial(tmpobjid, 0, -1, "none", "none", 0xFFFFFFFF);

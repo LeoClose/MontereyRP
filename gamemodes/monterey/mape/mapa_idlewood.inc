@@ -25,7 +25,7 @@ MapaIdlewoodUkloni(playerid)
 
 MapaIdlewood()
 {
-    gMapaInt = -1;
+    gMapaInt = 0;
     new STREAMER_TAG_OBJECT:tmpobjid;
     tmpobjid = CreateDynamicObjectEx(5474, 1931.650024, -1577.569946, 12.359395, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, 19480, "signsurf", "sign", 0xFFFFFFFF);

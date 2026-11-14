@@ -1,6 +1,6 @@
 MapaDacoradiona()
 {
-    gMapaInt = -1;
+    gMapaInt = 0;
     new STREAMER_TAG_OBJECT:dacoradiona;
     dacoradiona = CreateDynamicObjectEx(19377, 1202.634521, -973.740173, 48.666572, 0.000000, 90.000000, 0.000000, 300.00);
     SetDynamicObjectMaterial(dacoradiona, 0, 10101, "2notherbuildsfe", "ws_rooftarmac1", 0xFFFFFFFF);

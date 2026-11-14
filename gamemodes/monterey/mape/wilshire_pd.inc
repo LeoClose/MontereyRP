@@ -30,7 +30,7 @@ RemoveBuildingForPlayer(playerid, 1635, 721.210, -1328.880, 25.109, 0.250);
 //Objects////////////////////////////////////////////////////////////////////////////////////////////////////////
 WilshirePd()
 {
-gMapaInt = -1;
+gMapaInt = 0;
 new STREAMER_TAG_OBJECT:tmpobjid;
 tmpobjid = CreateDynamicObjectEx(19536, 709.652099, -1358.542358, 12.541380, 0.000000, 0.000000, 0.000000, 300.00, 300.00); 
 SetDynamicObjectMaterial(tmpobjid, 0, 9514, "711_sfw", "ws_carpark2", 0xFFFFFFFF);

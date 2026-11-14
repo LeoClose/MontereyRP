@@ -20,7 +20,7 @@ RemoveBuildingForPlayer(playerid, 6207, 956.195, -1689.599, 12.796, 0.250);
 //Objects////////////////////////////////////////////////////////////////////////////////////////////////////////
 MapaCartierExt()
 {
-gMapaInt = -1;
+gMapaInt = 0;
 new STREAMER_TAG_OBJECT:tmpobjid;
 tmpobjid = CreateDynamicObjectEx(6203, 956.195007, -1689.599975, 12.796895, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
 SetDynamicObjectMaterial(tmpobjid, 0, 18757, "vcinteriors", "dts_elevator_carpet3", 0xFFFFFFFF);

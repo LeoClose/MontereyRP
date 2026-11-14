@@ -43,7 +43,7 @@ MapaChinatownUkloni(playerid)
 
 MapaChinatown()
 {
-    gMapaInt = -1;
+    gMapaInt = 0;
     new STREAMER_TAG_OBJECT:tmpobjid;
     tmpobjid = CreateDynamicObjectEx(8661, 2803.834716, -1861.110107, 10.073416, 0.000000, 0.000000, 87.900024, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, 9514, "711_sfw", "ws_carpark2", 0xFFFFFFFF);

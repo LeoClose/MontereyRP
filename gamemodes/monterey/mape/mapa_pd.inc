@@ -11,7 +11,7 @@
 //Objects////////////////////////////////////////////////////////////////////////////////////////////////////////
 MapaPD()
 {
-gMapaInt = -1;
+gMapaInt = PD_MAPA_INT;
 new STREAMER_TAG_OBJECT:tmpobjid;
 tmpobjid = CreateDynamicObjectEx(8661, 1290.455932, -1184.257812, -30.381870, 0.000000, 0.000000, 0.000000, 300.00, 300.00); 
 SetDynamicObjectMaterial(tmpobjid, 0, 3717, "sanclifbal1_lax", "whiteconc01", 0xFFFFFFFF);

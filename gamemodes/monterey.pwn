@@ -74,6 +74,7 @@ public OnGameModeInit()
     SetGameModeText("©M:RP by Leo and Krti");
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
     DisableInteriorEnterExits();
+    Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));

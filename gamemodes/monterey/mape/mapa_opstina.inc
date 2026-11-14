@@ -76,7 +76,7 @@ MapaOpstinaUkloni(playerid)
 
 MapaOpstina()
 {
-    gMapaInt = -1;
+    gMapaInt = 0;
     new STREAMER_TAG_OBJECT:tmpobjid;
     tmpobjid = CreateDynamicObjectEx(4590, 1779.969604, -1359.990356, 12.015728, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, 16093, "a51_ext", "ws_trans_concr", 0xFFFFFFFF);

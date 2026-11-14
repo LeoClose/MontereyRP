@@ -254,11 +254,15 @@ CMD:goto(playerid, params[])
     return 1;
 }
 
+#define PD_MAPA_INT         10
+#define KAZINO_MAPA_INT     2
+#define KAZINO_MAPA_SVIJET  9800
+
 CMD:pdint(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
     if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stisni Enter da izadjes iz vozila."));
-    SetPlayerInterior(playerid, 0);
+    SetPlayerInterior(playerid, PD_MAPA_INT);
     SetPlayerVirtualWorld(playerid, 0);
     SetPlayerPos(playerid, 1292.0, -1190.0, -28.8);
     SetCameraBehindPlayer(playerid);
