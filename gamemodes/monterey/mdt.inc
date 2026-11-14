@@ -171,8 +171,7 @@ static MdtDosje(playerid, racun, tekst[], size = sizeof (tekst))
 static MdtPocetna(playerid)
 {
     new tekst[256], d, m, g, sat, minuta, ime[MAX_ORG_NAME], rang[ORG_RANK_LEN] = "-";
-    getdate(g, m, d);
-    gettime(sat, minuta);
+    VrijemeLokalno(g, m, d, sat, minuta);
     GetOrgIme(gOrg[playerid], ime);
     if (gOrgRank[playerid][0]) strcopy(rang, gOrgRank[playerid]);
     MdtCisti(rang);
@@ -353,8 +352,8 @@ static MdtVozilo(playerid, const unos[])
 
 static MdtOtvori(playerid)
 {
-    new sat, minuta, vrijeme[8];
-    gettime(sat, minuta);
+    new sat, minuta, vrijeme[8], g, m, d;
+    VrijemeLokalno(g, m, d, sat, minuta);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMdtOtvoren[playerid] = true;
     gMdtBroj[playerid] = 0;

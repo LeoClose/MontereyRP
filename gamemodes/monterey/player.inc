@@ -113,6 +113,7 @@ public OnPlayerSpawn(playerid)
     RanjenSpawn(playerid);
     OdjecaSpawn(playerid);
     ZlataraSpawn(playerid);
+    VrijemeIgrac(playerid);
     RanjenBolnica(playerid);
     return 1;
 }

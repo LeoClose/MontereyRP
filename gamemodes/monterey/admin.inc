@@ -282,9 +282,14 @@ CMD:time(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
     new sat;
+    if (!params[0])
+    {
+        VrijemeRucno(-1);
+        return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrijeme je vraceno na automatsko (Zagreb)."));
+    }
     if (!AdminBrojParam(params, 23, sat))
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /time [sat 0-23]"));
-    SetWorldTime(sat);
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /time [sat 0-23] (bez broja = automatsko)"));
+    VrijemeRucno(sat);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrijeme na serveru postavljeno je na %02d:00."), sat);
 }
 

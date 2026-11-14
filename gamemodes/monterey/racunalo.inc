@@ -40,7 +40,7 @@ static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media"
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
 static const gDionicaPocetna[] = { 12000, 8000, 6000, 15000, 4000 };
 static gDionica[sizeof gDionicaIme], gSvijeca[sizeof gDionicaIme][SVIJECA][4], gSvijecaBroj[sizeof gDionicaIme], gTrenutna[sizeof gDionicaIme][4], gDionicaSat, gDionicaKorak;
-static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS], gLsPogled[MAX_PLAYERS], gLsCilj[MAX_PLAYERS], gLsOdabran[MAX_PLAYERS], gLsZadnje[MAX_PLAYERS], gLsAvatara[MAX_PLAYERS];
+static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcTrosak[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS], gLsPogled[MAX_PLAYERS], gLsCilj[MAX_PLAYERS], gLsOdabran[MAX_PLAYERS], gLsZadnje[MAX_PLAYERS], gLsAvatara[MAX_PLAYERS];
 static const gLsTab[][] = { "Objave", "Prijatelji", "Poruke", "Profil" };
 static PlayerText:gPcTd[MAX_PLAYERS][PC_TD], gPcBroj[MAX_PLAYERS], PlayerText:gPc[MAX_PLAYERS][PTD_IMENOVANI];
 static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker" };
@@ -87,7 +87,14 @@ InitRacunalo()
         gDionica[d] = gSvijecaBroj[d] ? gSvijeca[d][gSvijecaBroj[d] - 1][SV_C] : gDionicaPocetna[d];
         for (new k = 0; k < 4; k++) gTrenutna[d][k] = gDionica[d];
     }
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'pc_katalog'");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT cost FROM stock_holdings LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE stock_holdings ADD COLUMN cost INTEGER NOT NULL DEFAULT 0"));
+        for (new d = 0; d < sizeof gDionicaIme; d++) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET cost = shares * %d / 100 WHERE stock = %d", gDionica[d], d));
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'pc_katalog'");
     new bool:dodano = DB_GetRowCount(res) > 0;
     DB_FreeResultSet(res);
     if (dodano) return;
@@ -102,12 +109,14 @@ static PcKomada(playerid, d)
 
 static PcUcitajKomade(playerid)
 {
-    for (new d = 0; d < sizeof gDionicaIme; d++) gPcKomadaPamti[playerid][d] = 0;
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT stock, shares FROM stock_holdings WHERE account = %d", gAccountId[playerid]);
+    for (new d = 0; d < sizeof gDionicaIme; d++) gPcKomadaPamti[playerid][d] = gPcTrosak[playerid][d] = 0;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT stock, shares, cost FROM stock_holdings WHERE account = %d", gAccountId[playerid]);
     for (new i = 0, n = DB_GetRowCount(res); i < n; i++, DB_SelectNextRow(res))
     {
         new d = DB_GetFieldInt(res, 0);
-        if (d >= 0 && d < sizeof gDionicaIme) gPcKomadaPamti[playerid][d] = DB_GetFieldInt(res, 1);
+        if (d < 0 || d >= sizeof gDionicaIme) continue;
+        gPcKomadaPamti[playerid][d] = DB_GetFieldInt(res, 1);
+        gPcTrosak[playerid][d] = DB_GetFieldInt(res, 2);
     }
     DB_FreeResultSet(res);
 }
@@ -250,6 +259,13 @@ static PcGraf(playerid, bool:sve = true)
     PcSvijeca(playerid, n - 1, gTrenutna[d], najmanje, najvise);
     new tekst[160], pocetak = gSvijecaBroj[d] ? gSvijeca[d][prvi][SV_O] : gTrenutna[d][SV_O], promjena = pocetak ? (gDionica[d] - pocetak) * 1000 / pocetak : 0, apsolutno = promjena < 0 ? -promjena : promjena;
     format(tekst, sizeof tekst, T(playerid, "%s  ~l~$%d.%02d  %s%d.%d%%~l~   Imate: %d"), gDionicaIme[d], gDionica[d] / 100, gDionica[d] % 100, promjena >= 0 ? ("~g~+") : ("~r~-"), apsolutno / 10, apsolutno % 10, PcKomada(playerid, d));
+    new ima = PcKomada(playerid, d), trosak = gPcTrosak[playerid][d];
+    if (ima)
+    {
+        new dobit = DionicaProdaja(ima, gDionica[d]) - trosak, posto = trosak ? floatround(float(dobit) * 1000.0 / float(trosak)) : 0, red[64];
+        format(red, sizeof red, "   P/L: %s$%d (%s%d.%d%%)", dobit >= 0 ? ("~g~+") : ("~r~-"), dobit < 0 ? -dobit : dobit, dobit >= 0 ? ("+") : ("-"), (posto < 0 ? -posto : posto) / 10, (posto < 0 ? -posto : posto) % 10);
+        strcat(tekst, red);
+    }
     PcPostavi(playerid, PTD_SADRZAJ, tekst);
     new ukupno = gPcKolicina[playerid] * gDionica[d];
     format(tekst, sizeof tekst, T(playerid, "%d kom  ($%d.%02d)"), gPcKolicina[playerid], ukupno / 100, ukupno % 100);
@@ -475,6 +491,7 @@ static LsProfil(playerid)
     new lajkova = LsBroj("SELECT COUNT(*) FROM social_likes l JOIN social_posts p ON p.id = l.post WHERE p.account = %d", acc);
     format(tekst, sizeof tekst, T(playerid, "~b~%s~n~%s~n~~n~~l~Prijatelja: %d~n~Objava: %d~n~Svidjanja: %d"), ime, LsIgrac(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"), prijatelja, objava, lajkova);
     PcPostavi(playerid, PTD_LSINFO, tekst);
+    PcPostavi(playerid, PTD_SADRZAJ, "_");
     PlayerTextDrawSetPreviewModel(playerid, gPc[playerid][PTD_LSPROFIL], LsSkin(acc));
     PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSPROFIL]);
     for (new k = 4; k <= 6; k++) PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSPOKRIV + k]);
@@ -853,8 +870,7 @@ RacunaloTick()
 static PcOtvori(playerid)
 {
     new sat, minuta, d, m, g, vrijeme[8], datum[12];
-    gettime(sat, minuta);
-    getdate(g, m, d);
+    VrijemeLokalno(g, m, d, sat, minuta);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     format(datum, sizeof datum, "%02d.%02d.%d", d, m, g);
     gPcOtvoren[playerid] = true;
@@ -1053,15 +1069,17 @@ static PcDionicaTrgovina(playerid, bool:kupnja, n)
         new iznos = DionicaKupnja(n, cijena);
         if (ima + n > DIONICA_MAX_KOM) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najvise %d dionica po tvrtki."), DIONICA_MAX_KOM);
         if (!BankaPromijeni(playerid, -iznos)) return 1;
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO stock_holdings (account, stock, shares) VALUES (%d, %d, %d)", gAccountId[playerid], d, ima + n));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO stock_holdings (account, stock, shares, cost) VALUES (%d, %d, %d, %d)", gAccountId[playerid], d, ima + n, gPcTrosak[playerid][d] + iznos));
         gPcKomadaPamti[playerid][d] = ima + n;
+        gPcTrosak[playerid][d] += iznos;
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
     }
     if (n > ima) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko dionica."));
     new iznos = DionicaProdaja(n, cijena);
     if (!BankaPromijeni(playerid, iznos)) return 1;
     if (ima == n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM stock_holdings WHERE account = %d AND stock = %d", gAccountId[playerid], d));
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET shares = %d WHERE account = %d AND stock = %d", ima - n, gAccountId[playerid], d));
+    gPcTrosak[playerid][d] = ima == n ? 0 : gPcTrosak[playerid][d] - gPcTrosak[playerid][d] * n / ima;
+    if (ima != n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET shares = %d, cost = %d WHERE account = %d AND stock = %d", ima - n, gPcTrosak[playerid][d], gAccountId[playerid], d));
     gPcKomadaPamti[playerid][d] = ima - n;
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
 }

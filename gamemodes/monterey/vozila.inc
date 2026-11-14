@@ -487,11 +487,16 @@ static bool:MaricaBehind(v, &Float:x, &Float:y, &Float:z)
     return true;
 }
 
+UMarici(playerid)
+{
+    return gMaricaU[playerid] != 0;
+}
+
 MaricaReset(playerid)
 {
     if (!gMaricaU[playerid]) return;
     gMaricaU[playerid] = 0;
-    SetPlayerTime(playerid, GetWorldTime(), 0);
+    VrijemeIgrac(playerid);
 }
 
 static MaricaExit(playerid)

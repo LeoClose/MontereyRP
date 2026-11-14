@@ -189,6 +189,7 @@ public OnGameModeInit()
     InitBanka();
     InitRacunalo();
     InitZlatara();
+    InitVrijeme();
     InitOruzarnica();
     InitOdjeca();
     InitKuce();
@@ -240,6 +241,7 @@ public Sekunda()
     BankaTick();
     RacunaloTick();
     ZlataraTick();
+    VrijemeTick();
 }
 
 public OnGameModeExit()
@@ -271,6 +273,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/dialog.inc"
 #include "monterey/chat.inc"
 #include "monterey/tekst.inc"
+#include "monterey/vrijeme.inc"
 #include "monterey/steta.inc"
 #include "monterey/hod.inc"
 #include "monterey/org.inc"

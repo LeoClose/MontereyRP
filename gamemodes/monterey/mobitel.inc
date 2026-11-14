@@ -462,8 +462,8 @@ static MobitelPrikazi(playerid)
 
 static MobitelOtvori(playerid)
 {
-    new sat, minuta, vrijeme[8];
-    gettime(sat, minuta);
+    new sat, minuta, vrijeme[8], g, m, d;
+    VrijemeLokalno(g, m, d, sat, minuta);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMobitelOtvoren[playerid] = true;
     gMobitelURuci[playerid] = false;
