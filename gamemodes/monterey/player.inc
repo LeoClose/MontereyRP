@@ -218,7 +218,7 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Kurva: Y ili /kurva kod nje, truba iz vozila"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /motor (tipka 2), /svjetla, /prozor, /pojas, /zakljucaj, /prometna [id/ime]"));

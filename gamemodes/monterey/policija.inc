@@ -6,6 +6,7 @@
 #define VUCA_RAZMAK         1.0
 #define VUCA_MS             250
 #define VUCA_HOD            1.2
+#define PD_VOZILO_DOMET     5.0
 #define VUCA_TELEPORT       4.0
 #define TASER_DOMET         15.0
 #define TASER_MS            7000
@@ -29,7 +30,7 @@
 
 static bool:gOnDuty[MAX_PLAYERS], gWanted[MAX_PLAYERS], gJailTime[MAX_PLAYERS];
 static bool:gCuffed[MAX_PLAYERS], bool:gTased[MAX_PLAYERS], bool:gTaser[MAX_PLAYERS];
-static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount, bool:gDragHoda[MAX_PLAYERS];
+static gDragBy[MAX_PLAYERS], gDragging[MAX_PLAYERS], gDragCount, bool:gDragHoda[MAX_PLAYERS], gDragNakon[MAX_PLAYERS];
 static gLockerUzeo[MAX_PLAYERS];
 static gTragOd[MAX_PLAYERS], gTragVrijeme[MAX_PLAYERS], Float:gTrag[MAX_PLAYERS][3], Float:gVani[MAX_PLAYERS][3], bool:gImaVani[MAX_PLAYERS];
 static gWantedSat[MAX_PLAYERS], gLocate[MAX_PLAYERS], gLocateRacun[MAX_PLAYERS], gLocateGen[MAX_PLAYERS];
@@ -273,6 +274,7 @@ PolicijaDisconnect(playerid, bool:izlaz)
     gTased[playerid] = false;
     if (gDragging[playerid]) StopDrag(gDragging[playerid] - 1);
     StopDrag(playerid);
+    gDragNakon[playerid] = 0;
     gCuffed[playerid] = false;
     VratiOpremu(playerid, false);
     if (!izlaz) return;
@@ -300,7 +302,11 @@ public DragTick()
             if (d > VUCA_HOD)
             {
                 SetPlayerFacingAngle(t, atan2(tx - x, y - ty));
-                if (!gDragHoda[t]) ApplyAnimation(t, "PED", "WALK_civi", 4.1, true, true, true, false, 0, SYNC_ALL);
+                if (!gDragHoda[t])
+                {
+                    TogglePlayerControllable(t, true);
+                    ApplyAnimation(t, "PED", "WALK_civi", 4.1, true, true, true, false, 0, SYNC_ALL);
+                }
                 gDragHoda[t] = true;
             }
             else if (gDragHoda[t])
@@ -308,6 +314,7 @@ public DragTick()
                 gDragHoda[t] = false;
                 ClearAnimations(t, SYNC_ALL);
                 VratiLisice(t);
+                TogglePlayerControllable(t, false);
             }
             continue;
         }
@@ -316,6 +323,7 @@ public DragTick()
         y -= VUCA_RAZMAK * floatcos(a, degrees);
         if (GetPlayerInterior(t) != GetPlayerInterior(i)) SetPlayerInterior(t, GetPlayerInterior(i));
         if (GetPlayerVirtualWorld(t) != GetPlayerVirtualWorld(i)) SetPlayerVirtualWorld(t, GetPlayerVirtualWorld(i));
+        if (gDragHoda[t]) TogglePlayerControllable(t, false);
         gDragHoda[t] = false;
         ClearAnimations(t, SYNC_ALL);
         VratiLisice(t);
@@ -332,7 +340,13 @@ static bool:SjedaloSlobodno(v, sjedalo)
 
 PolicijaStateChange(playerid, PLAYER_STATE:newstate)
 {
-    if (newstate == PLAYER_STATE_ONFOOT) VratiLisice(playerid);
+    if (newstate == PLAYER_STATE_ONFOOT)
+    {
+        VratiLisice(playerid);
+        new p = gDragNakon[playerid] - 1;
+        gDragNakon[playerid] = 0;
+        if (p >= 0 && IsPlayerConnected(p) && gCuffed[playerid] && !gDragging[p] && !gDragBy[playerid] && GetPlayerState(p) == PLAYER_STATE_ONFOOT) PocniDrag(p, playerid);
+    }
     if ((newstate != PLAYER_STATE_DRIVER && newstate != PLAYER_STATE_PASSENGER) || !gDragging[playerid]) return;
     new t = gDragging[playerid] - 1, v = GetPlayerVehicleID(playerid);
     StopDrag(t);
@@ -481,11 +495,69 @@ CMD:drag(playerid, params[])
     if (target == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to napraviti sami sebi."));
     if (!gCuffed[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "%s nema lisice."), GetRPIme(target));
     if (gDragBy[target] || GetPlayerState(target) != PLAYER_STATE_ONFOOT || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac mora biti pjeske."));
+    PocniDrag(playerid, target);
+    return 1;
+}
+
+static PocniDrag(playerid, target)
+{
     gDragBy[target] = playerid + 1;
     gDragging[playerid] = target + 1;
     gDragCount++;
     TogglePlayerControllable(target, false);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s vuce %s.", GetRPIme(playerid), GetRPIme(target), 1);
+}
+
+static PolicijaVozilo(playerid)
+{
+    new najblize = 0, Float:naj = PD_VOZILO_DOMET, Float:x, Float:y, Float:z;
+    for (new i = 0; i < gVozilaCount; i++)
+    {
+        new v = gVozila[i];
+        if (GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid) || GetVehicleSeats(v) < 2) continue;
+        GetVehiclePos(v, x, y, z);
+        new Float:d = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        if (d >= naj) continue;
+        naj = d;
+        najblize = v;
+    }
+    return najblize;
+}
+
+CMD:detain(playerid, params[])
+{
+    if (!SluzbaProvjera(playerid, ORG_LSPD)) return 1;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti pjeske."));
+    new target = SluzbaTarget(playerid, params);
+    if (target == INVALID_PLAYER_ID) return 1;
+    if (target == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to napraviti sami sebi."));
+    if (!gCuffed[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "%s nema lisice."), GetRPIme(target));
+    if (GetPlayerState(target) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac mora biti pjeske."));
+    new v = PolicijaVozilo(playerid);
+    if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod vozila."));
+    for (new s = GetVehicleSeats(v) - 1; s >= 1; s--)
+    {
+        if (!SjedaloSlobodno(v, s)) continue;
+        if (gDragBy[target]) StopDrag(target);
+        PutPlayerInVehicle(target, v, s);
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s smjesta %s u vozilo.", GetRPIme(playerid), GetRPIme(target), 1);
+        return 1;
+    }
+    return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U vozilu nema slobodnog mjesta."));
+}
+
+CMD:dragout(playerid, params[])
+{
+    if (!SluzbaProvjera(playerid, ORG_LSPD)) return 1;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti pjeske."));
+    if (gDragging[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec nekoga vucete."));
+    new target = SluzbaTarget(playerid, params);
+    if (target == INVALID_PLAYER_ID) return 1;
+    if (target == playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to napraviti sami sebi."));
+    if (!IsPlayerInAnyVehicle(target)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije u vozilu."));
+    RemovePlayerFromVehicle(target);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s izvlaci %s iz vozila.", GetRPIme(playerid), GetRPIme(target), 1);
+    if (gCuffed[target]) gDragNakon[target] = playerid + 1;
     return 1;
 }
 

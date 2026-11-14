@@ -478,7 +478,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vozilo se krece.", "The vehicle is moving.", "Транспорт движется.", "El vehiculo esta en marcha.", "Arac hareket halinde." },
     { "Pomoc: Premium taksi nije dostupan dok vas policija trazi.", "Hint: The premium taxi is unavailable while the police want you.", "Подсказка: Премиум-такси недоступно, пока вас разыскивает полиция.", "Ayuda: El taxi premium no esta disponible mientras te busca la policia.", "Ipucu: Polis sizi ararken premium taksi kullanilamaz." },
     { "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)", "  Services: /duty, /heal and /aparat (fire and medical service)", "  Службы: /duty, /heal и /aparat (пожарные и скорая помощь)", "  Servicios: /duty, /heal y /aparat (bomberos y emergencias medicas)", "  Hizmetler: /duty, /heal ve /aparat (itfaiye ve acil saglik)" },
-    { "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /taser, /locker, /stop, /arrest" },
+    { "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest", "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest" },
     { "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu", "  /unjail [id/name] - release from jail, /unwanted [id/name] - remove wanted level", "  /unjail [id/имя] - освободить из тюрьмы, /unwanted [id/имя] - снять розыск", "  /unjail [id/nombre] - sacar de la carcel, /unwanted [id/nombre] - quitar busqueda", "  /unjail [id/isim] - hapisten cikar, /unwanted [id/isim] - aranmayi kaldir" },
     { "Predmet", "Item", "Предмет", "Objeto", "Esya" },
     { "Kolicina", "Amount", "Количество", "Cantidad", "Miktar" },
@@ -1488,7 +1488,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Objavi", "Post", "Опубликовать", "Publicar", "Paylas" },
     { "Sto vam je na umu? (najvise %d znakova)", "What's on your mind? (max %d characters)", "О чём вы думаете? (макс. %d символов)", "Que estas pensando? (max %d caracteres)", "Aklinizda ne var? (en fazla %d karakter)" },
     { "~b~%s  ~l~prije %d h   %s+%d~n~~l~%s", "~b~%s  ~l~%d h ago   %s+%d~n~~l~%s", "~b~%s  ~l~%d ч назад   %s+%d~n~~l~%s", "~b~%s  ~l~hace %d h   %s+%d~n~~l~%s", "~b~%s  ~l~%d sa once   %s+%d~n~~l~%s" },
-    { "~b~%s  ~l~prije %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d min ago   %s+%d~n~~l~%s", "~b~%s  ~l~%d мин назад   %s+%d~n~~l~%s", "~b~%s  ~l~hace %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d dk once   %s+%d~n~~l~%s" }
+    { "~b~%s  ~l~prije %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d min ago   %s+%d~n~~l~%s", "~b~%s  ~l~%d мин назад   %s+%d~n~~l~%s", "~b~%s  ~l~hace %d min   %s+%d~n~~l~%s", "~b~%s  ~l~%d dk once   %s+%d~n~~l~%s" },
+    { "U vozilu nema slobodnog mjesta.", "There's no free seat in the vehicle.", "В машине нет свободного места.", "No hay asiento libre en el vehiculo.", "Aracta bos koltuk yok." },
+    { "Vec nekoga vucete.", "You're already dragging someone.", "Вы уже кого-то тащите.", "Ya estas arrastrando a alguien.", "Zaten birini surukluyorsunuz." },
+    { "* %s smjesta %s u vozilo.", "* %s puts %s into the vehicle.", "* %s сажает %s в машину.", "* %s mete a %s en el vehiculo.", "* %s, %s adli kisiyi araca bindiriyor." },
+    { "* %s izvlaci %s iz vozila.", "* %s drags %s out of the vehicle.", "* %s вытаскивает %s из машины.", "* %s saca a %s del vehiculo.", "* %s, %s adli kisiyi aractan cikariyor." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

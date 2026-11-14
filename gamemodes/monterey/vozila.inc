@@ -369,7 +369,7 @@ CMD:trunkput(playerid, params[])
     gGepekPlayer[v] = t + 1;
     gInGepek[t] = v;
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s stavlja %s u prtljaznik.", GetRPIme(playerid), GetRPIme(t), 1);
-    BlackScreen(t, true);
+    BlackScreen(t, !GepekOtvoren(v));
     TogglePlayerSpectating(t, true);
     PlayerSpectateVehicle(t, v, SPECTATE_MODE_NORMAL);
     return 1;
@@ -1208,6 +1208,7 @@ VoziloTick()
     {
         if (!gUlogiran[i]) continue;
         if (gKradja[i]) KradjaKorak(i);
+        if (gInGepek[i]) BlackScreen(i, !GepekOtvoren(gInGepek[i]));
         if (GetPlayerState(i) == PLAYER_STATE_DRIVER) VoziloPotrosnja(i, GetPlayerVehicleID(i));
     }
 }
