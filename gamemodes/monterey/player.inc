@@ -4,7 +4,6 @@ public OnPlayerConnect(playerid)
     MapaIdlewoodUkloni(playerid);
     MapaIdlewoodFlatsUkloni(playerid);
     MapaChinatownUkloni(playerid);
-    MapaPdExtUkloni(playerid);
     WilshirePdUkloni(playerid);
     MapaBusTaxiUkloni(playerid);
     MapaCartierExtUkloni(playerid);
