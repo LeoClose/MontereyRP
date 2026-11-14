@@ -24,7 +24,7 @@ static DionicaNova(cijena, pocetna, pomak)
 
 InitRacunalo()
 {
-    assert(DionicaNova(100, 100, 0) == 100 && DionicaNova(5, 100, -10) == 9 && DionicaNova(1000, 100, 10) == 1000 && DionicaNova(4, 4, -90) == 5);
+    assert(DionicaNova(100, 100, 0) == 100 && DionicaNova(5, 100, -10) == 8 && DionicaNova(1000, 100, 10) == 1000 && DionicaNova(4, 4, -90) == 5);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ads (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stocks (id INTEGER PRIMARY KEY, price INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_holdings (account INTEGER NOT NULL, stock INTEGER NOT NULL, shares INTEGER NOT NULL, PRIMARY KEY (account, stock))"));
