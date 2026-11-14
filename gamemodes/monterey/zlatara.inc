@@ -25,7 +25,7 @@ enum E_ZLATARA { bool:zlIma, zlDb, Float:zlX, Float:zlY, Float:zlZ, Float:zlA, b
 enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:ppA, ppInt, ppSvijet, ppAktor, STREAMER_TAG_3D_TEXT_LABEL:ppTekst }
 
 static const Float:gZlataraUlaz[3] = { 1398.5, -40.0, 1002.1 };
-static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 } };
+static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 2500 }, { ITEM_ZLATNE_NAOCALE, 6000 } };
 
 static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC];
 static gZlato, gZlatoSat, gApZlatara[MAX_PLAYERS], gZlataraOdabir[MAX_PLAYERS][sizeof gZlataraRoba], gSatNosi[MAX_PLAYERS], gZlataraPoruka[MAX_PLAYERS];
@@ -59,7 +59,16 @@ InitZlatara()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS fences (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gold_price (id INTEGER PRIMARY KEY, price INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS jewelry_watch (account INTEGER PRIMARY KEY, item INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0, fit INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT price FROM gold_price WHERE id = 1");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT skin, sx, sy, sz FROM jewelry_watch LIMIT 1");
+    if (res) DB_FreeResultSet(res);
+    else
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN skin INTEGER NOT NULL DEFAULT -1"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sx REAL NOT NULL DEFAULT 1"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sy REAL NOT NULL DEFAULT 1"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sz REAL NOT NULL DEFAULT 1"));
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT price FROM gold_price WHERE id = 1");
     gZlato = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : ZLATO_POCETNA;
     DB_FreeResultSet(res);
     res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, Aktor, ax, ay, az, aa FROM jewelry_shops ORDER BY id LIMIT %d", ZLATARA_MAX);
@@ -235,6 +244,8 @@ DLG:zlatara_kupi(playerid, response, listitem)
     if (!GiveItem(playerid, item, 1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko.")), ZlataraKasa(playerid);
     DajNovac(playerid, -cijena);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), T(playerid, gItems[item][ITEM_NAME]), cijena);
+    if (item >= ITEM_SAT1 && item <= ITEM_SAT3 && gSatNosi[playerid] != item) return ZlataraSat(playerid, item);
+    if (item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) return OdjecaKapaPredmet(playerid, item);
     return ZlataraKasa(playerid);
 }
 
@@ -325,9 +336,39 @@ DLG:preprodavac(playerid, response)
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %d komada ukradenog nakita za $%d."), n, n * PREPRODAVAC_CIJENA);
 }
 
-static ZlataraSatPrikaci(playerid, item, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
+static ZlataraSatPrikaci(playerid, item, const Float:p[9])
 {
-    SetPlayerAttachedObject(playerid, SAT_SLOT, gItems[item][ITEM_MODEL], 5, x, y, z, rx, ry, rz);
+    SetPlayerAttachedObject(playerid, SAT_SLOT, gItems[item][ITEM_MODEL], 5, p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
+}
+
+static ZlataraSatZadano(playerid, Float:p[9])
+{
+    for (new i = 0; i < 9; i++) p[i] = i >= 6 ? 1.0 : 0.0;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*), AVG(x), AVG(y), AVG(z), AVG(rx), AVG(ry), AVG(rz), AVG(sx), AVG(sy), AVG(sz) FROM jewelry_watch WHERE fit = 1 AND skin = %d", GetPlayerSkin(playerid));
+    new izvor = DB_GetFieldInt(res, 0) ? 2 : 0;
+    if (!izvor)
+    {
+        DB_FreeResultSet(res);
+        res = DB_ExecuteQuery(gDB, "SELECT COUNT(*), AVG(x), AVG(y), AVG(z), AVG(rx), AVG(ry), AVG(rz), AVG(sx), AVG(sy), AVG(sz) FROM jewelry_watch WHERE fit = 1");
+        izvor = DB_GetFieldInt(res, 0) ? 1 : 0;
+    }
+    if (izvor) for (new i = 0; i < 9; i++) p[i] = DB_GetFieldFloat(res, i + 1);
+    DB_FreeResultSet(res);
+    return izvor;
+}
+
+static bool:ZlataraSatUcitaj(playerid, Float:p[9])
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, rx, ry, rz, sx, sy, sz, fit FROM jewelry_watch WHERE account = %d AND skin = %d", gAccountId[playerid], GetPlayerSkin(playerid));
+    new bool:ima = DB_GetRowCount(res) && DB_GetFieldInt(res, 9);
+    if (ima) for (new i = 0; i < 9; i++) p[i] = DB_GetFieldFloat(res, i);
+    DB_FreeResultSet(res);
+    return ima;
+}
+
+static ZlataraSatSpremi(playerid, const Float:p[9])
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE jewelry_watch SET x = %f, y = %f, z = %f, rx = %f, ry = %f, rz = %f, sx = %f, sy = %f, sz = %f, skin = %d, fit = 1 WHERE account = %d", p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], GetPlayerSkin(playerid), gAccountId[playerid]));
 }
 
 ZlataraSat(playerid, item)
@@ -339,32 +380,56 @@ ZlataraSat(playerid, item)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE jewelry_watch SET item = 0 WHERE account = %d", gAccountId[playerid]));
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Skinuli ste: %s."), T(playerid, gItems[item][ITEM_NAME]));
     }
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, rx, ry, rz, fit FROM jewelry_watch WHERE account = %d", gAccountId[playerid]);
-    new Float:p[6], bool:namjesteno = DB_GetRowCount(res) && DB_GetFieldInt(res, 6);
-    if (namjesteno) for (new i = 0; i < 6; i++) p[i] = DB_GetFieldFloat(res, i);
-    DB_FreeResultSet(res);
+    new Float:p[9];
     gSatNosi[playerid] = item;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO jewelry_watch (account) VALUES (%d)", gAccountId[playerid]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE jewelry_watch SET item = %d WHERE account = %d", item, gAccountId[playerid]));
-    ZlataraSatPrikaci(playerid, item, p[0], p[1], p[2], p[3], p[4], p[5]);
-    if (!namjesteno)
+    if (!ZlataraSatUcitaj(playerid, p))
     {
-        EditAttachedObject(playerid, SAT_SLOT);
-        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Namjestite sat na ruci i spremite."));
+        new izvor = ZlataraSatZadano(playerid, p);
+        if (izvor == 2)
+        {
+            ZlataraSatSpremi(playerid, p);
+            SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Sat je namjesten prema igracima s istim izgledom. Ako ne pase: /namjestisat"));
+        }
+        else
+        {
+            ZlataraSatPrikaci(playerid, item, p);
+            EditAttachedObject(playerid, SAT_SLOT);
+            SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Namjestite sat na ruci i spremite."));
+            return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stavili ste: %s."), T(playerid, gItems[item][ITEM_NAME]));
+        }
     }
+    ZlataraSatPrikaci(playerid, item, p);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stavili ste: %s."), T(playerid, gItems[item][ITEM_NAME]));
 }
 
-bool:ZlataraUredi(playerid, EDIT_RESPONSE:response, index, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
+CMD:namjestisat(playerid, params[])
+{
+    if (!gUlogiran[playerid] || !gSatNosi[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne nosite sat."));
+    EditAttachedObject(playerid, SAT_SLOT);
+    return SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Namjestite sat na ruci i spremite."));
+}
+
+CMD:fitwatch(playerid, params[]) return cmd_namjestisat(playerid, params);
+
+bool:ZlataraUredi(playerid, EDIT_RESPONSE:response, index, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz, Float:sx, Float:sy, Float:sz)
 {
     if (index != SAT_SLOT) return false;
     if (!gSatNosi[playerid]) return true;
     if (response == EDIT_RESPONSE_FINAL)
     {
-        x = x < -0.2 ? -0.2 : x > 0.2 ? 0.2 : x;
-        y = y < -0.2 ? -0.2 : y > 0.2 ? 0.2 : y;
-        z = z < -0.2 ? -0.2 : z > 0.2 ? 0.2 : z;
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE jewelry_watch SET x = %f, y = %f, z = %f, rx = %f, ry = %f, rz = %f, fit = 1 WHERE account = %d", x, y, z, rx, ry, rz, gAccountId[playerid]));
+        new Float:p[9];
+        p[0] = x < -0.2 ? -0.2 : x > 0.2 ? 0.2 : x;
+        p[1] = y < -0.2 ? -0.2 : y > 0.2 ? 0.2 : y;
+        p[2] = z < -0.2 ? -0.2 : z > 0.2 ? 0.2 : z;
+        p[3] = rx;
+        p[4] = ry;
+        p[5] = rz;
+        p[6] = sx < 0.5 ? 0.5 : sx > 1.5 ? 1.5 : sx;
+        p[7] = sy < 0.5 ? 0.5 : sy > 1.5 ? 1.5 : sy;
+        p[8] = sz < 0.5 ? 0.5 : sz > 1.5 ? 1.5 : sz;
+        ZlataraSatSpremi(playerid, p);
     }
     ZlataraSpawn(playerid);
     return true;
@@ -372,12 +437,17 @@ bool:ZlataraUredi(playerid, EDIT_RESPONSE:response, index, Float:x, Float:y, Flo
 
 ZlataraSpawn(playerid)
 {
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT item, x, y, z, rx, ry, rz FROM jewelry_watch WHERE account = %d", gAccountId[playerid]);
-    new item = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
-    gSatNosi[playerid] = item >= ITEM_SAT1 && item <= ITEM_SAT3 && gInv[playerid][item] ? item : 0;
-    if (gSatNosi[playerid]) ZlataraSatPrikaci(playerid, item, DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), DB_GetFieldFloat(res, 5), DB_GetFieldFloat(res, 6));
-    else RemovePlayerAttachedObject(playerid, SAT_SLOT);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT item FROM jewelry_watch WHERE account = %d", gAccountId[playerid]);
+    new item = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0, Float:p[9];
     DB_FreeResultSet(res);
+    gSatNosi[playerid] = item >= ITEM_SAT1 && item <= ITEM_SAT3 && gInv[playerid][item] ? item : 0;
+    if (!gSatNosi[playerid])
+    {
+        RemovePlayerAttachedObject(playerid, SAT_SLOT);
+        return;
+    }
+    if (!ZlataraSatUcitaj(playerid, p) && ZlataraSatZadano(playerid, p) == 2) ZlataraSatSpremi(playerid, p);
+    ZlataraSatPrikaci(playerid, item, p);
 }
 
 ZlataraPredmetNestao(playerid, item)

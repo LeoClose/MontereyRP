@@ -200,7 +200,7 @@ static OdjecaPrivjesak(playerid, i, model, Float:x, Float:y, Float:z, Float:rx, 
 {
     new slot = i ? ODJECA_SLOT_FRIZURA : ODJECA_SLOT_KAPA;
     OdjecaNaGlavi(x, y, z);
-    if (model) SetPlayerAttachedObject(playerid, slot, model, 2, x, y, z, rx, ry, rz);
+    if (model) SetPlayerAttachedObject(playerid, slot, model, 2, x, y, z, rx, ry, rz, 1.0, 1.0, 1.0, OdjecaBoja(model), OdjecaBoja(model));
     else RemovePlayerAttachedObject(playerid, slot);
 }
 
@@ -251,7 +251,16 @@ OdjecaPrijava(playerid)
 OdjecaPredmetModela(model)
 {
     for (new item = ITEM_NAOCALE1; item <= ITEM_KAPA3; item++) if (gItems[item][ITEM_MODEL] == model) return item;
+    if (model == gItems[ITEM_ZLATNE_NAOCALE][ITEM_MODEL]) return ITEM_ZLATNE_NAOCALE;
+    if (model == gItems[ITEM_SREBRNE_NAOCALE][ITEM_MODEL]) return ITEM_SREBRNE_NAOCALE;
     return -1;
+}
+
+static OdjecaBoja(model)
+{
+    if (model == gItems[ITEM_ZLATNE_NAOCALE][ITEM_MODEL]) return 0xFFD4AF37;
+    if (model == gItems[ITEM_SREBRNE_NAOCALE][ITEM_MODEL]) return 0xFFC0C0C0;
+    return 0;
 }
 
 static OdjecaNosiKapu(playerid, model)
@@ -488,7 +497,7 @@ OdjecaKasa(playerid)
 
 public OnPlayerEditAttachedObject(playerid, EDIT_RESPONSE:response, index, modelid, boneid, Float:fOffsetX, Float:fOffsetY, Float:fOffsetZ, Float:fRotX, Float:fRotY, Float:fRotZ, Float:fScaleX, Float:fScaleY, Float:fScaleZ)
 {
-    if (ZlataraUredi(playerid, response, index, fOffsetX, fOffsetY, fOffsetZ, fRotX, fRotY, fRotZ)) return 1;
+    if (ZlataraUredi(playerid, response, index, fOffsetX, fOffsetY, fOffsetZ, fRotX, fRotY, fRotZ, fScaleX, fScaleY, fScaleZ)) return 1;
     if (index != ODJECA_SLOT_KAPA && index != ODJECA_SLOT_FRIZURA) return 1;
     new i = index == ODJECA_SLOT_FRIZURA ? 1 : 0;
     if (response == EDIT_RESPONSE_FINAL && modelid == gOdjecaNosi[playerid][i][pkModel])

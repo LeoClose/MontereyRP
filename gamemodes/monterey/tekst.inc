@@ -1543,7 +1543,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zlatara se postavlja samo izvana.", "A jewellery store can only be placed outside.", "Ювелирный ставится только снаружи.", "La joyeria solo se coloca afuera.", "Kuyumcu sadece disarida yerlestirilir." },
     { "Zlatare", "Jewellery stores", "Ювелирные магазины", "Joyerias", "Kuyumcular" },
     { "{8AB4F8}+ Nova zlatara na mojoj poziciji", "{8AB4F8}+ New jewellery store at my position", "{8AB4F8}+ Новый ювелирный на моей позиции", "{8AB4F8}+ Nueva joyeria en mi posicion", "{8AB4F8}+ Konumuma yeni kuyumcu" },
-    { "{8AB4F8}+ Novi preprodavac na mojoj poziciji", "{8AB4F8}+ New fence at my position", "{8AB4F8}+ Новый скупщик на моей позиции", "{8AB4F8}+ Nuevo perista en mi posicion", "{8AB4F8}+ Konumuma yeni yatakci" }
+    { "{8AB4F8}+ Novi preprodavac na mojoj poziciji", "{8AB4F8}+ New fence at my position", "{8AB4F8}+ Новый скупщик на моей позиции", "{8AB4F8}+ Nuevo perista en mi posicion", "{8AB4F8}+ Konumuma yeni yatakci" },
+    { "Sat je namjesten prema igracima s istim izgledom. Ako ne pase: /namjestisat", "Your watch was fitted based on players with the same look. If it doesn't fit: /fitwatch", "Часы подогнаны по игрокам с таким же видом. Если не подходит: /fitwatch", "El reloj se ajusto segun jugadores con el mismo aspecto. Si no encaja: /fitwatch", "Saat ayni gorunume sahip oyunculara gore ayarlandi. Uymuyorsa: /fitwatch" },
+    { "Ne nosite sat.", "You're not wearing a watch.", "Вы не носите часы.", "No llevas reloj.", "Saat takmiyorsunuz." },
+    { "Zlatne naocale", "Gold glasses", "Золотые очки", "Gafas doradas", "Altin gozluk" },
+    { "Srebrne naocale", "Silver glasses", "Серебряные очки", "Gafas plateadas", "Gumus gozluk" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

@@ -97,7 +97,7 @@ enum
     ITEM_MUN_PISTOLJ, ITEM_MUN_SACMARICA, ITEM_MUN_SMG, ITEM_MUN_PUSKA,
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
-    ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO
+    ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -142,7 +142,9 @@ new const gItems[][E_ITEM] = {
     { "Zlatni lanac",           "kom", 5,   0,  -1, 19941 },
     { "Dijamantna ogrlica",     "kom", 3,   0,  -1, 19941 },
     { "Ukradeni nakit",         "kom", 50,  0,  -1, 19941 },
-    { "Zlatna poluga",          "kom", 100, 0,  -1, 19941 }
+    { "Zlatna poluga",          "kom", 100, 0,  -1, 19941 },
+    { "Zlatne naocale",         "kom", 3,   0,  -1, 19008 },
+    { "Srebrne naocale",        "kom", 3,   0,  -1, 19009 }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -197,7 +199,7 @@ bool:GiveItem(playerid, item, amount)
 static PredmetNestao(playerid, item)
 {
     if (item == ITEM_MOBITEL) MobitelZatvori(playerid);
-    else if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) OdjecaPredmetNestao(playerid, item);
+    else if ((item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) OdjecaPredmetNestao(playerid, item);
     else if (item >= ITEM_SAT1 && item <= ITEM_SAT3) ZlataraPredmetNestao(playerid, item);
 }
 
@@ -218,7 +220,7 @@ static KoristiItem(playerid, item)
     new Float:v;
     if (gItems[item][ITEM_WEAPON]) return IzvadiOruzje(playerid, item);
     if (item == ITEM_MOBITEL) return MobitelPrebaci(playerid);
-    if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) return OdjecaKapaPredmet(playerid, item);
+    if ((item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) return OdjecaKapaPredmet(playerid, item);
     if (item == ITEM_CRIJEVO) return VoziloIsprazni(playerid);
     if (item >= ITEM_SAT1 && item <= ITEM_SAT3) return ZlataraSat(playerid, item);
     if (item == ITEM_UKRADENI_NAKIT) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Ukradeni nakit prodajte preprodavacu."));
