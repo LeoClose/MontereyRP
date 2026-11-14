@@ -1472,14 +1472,17 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dionica", "Stock", "Акция", "Accion", "Hisse" },
     { "Promjena", "Change", "Изменение", "Cambio", "Degisim" },
     { "Imate", "Owned", "У вас", "Tienes", "Sizde" },
-    { "{8AB4F8}+ Objavi oglas ($%d)", "{8AB4F8}+ Post an ad ($%d)", "{8AB4F8}+ Подать объявление ($%d)", "{8AB4F8}+ Publicar anuncio ($%d)", "{8AB4F8}+ Ilan ver ($%d)" },
     { "Tekst oglasa (najvise %d znakova, cijena $%d s racuna):", "Ad text (max %d characters, costs $%d from your account):", "Текст объявления (макс. %d символов, стоимость $%d со счёта):", "Texto del anuncio (max %d caracteres, cuesta $%d de tu cuenta):", "Ilan metni (en fazla %d karakter, hesabinizdan $%d):" },
     { "[Oglas] %s (%s, tel. %s)", "[Ad] %s (%s, tel. %s)", "[Объявление] %s (%s, тел. %s)", "[Anuncio] %s (%s, tel. %s)", "[Ilan] %s (%s, tel. %s)" },
     { "%s: $%d po dionici, imate %d.~n~Unesite broj dionica (kupnja s racuna, prodaja uz %d%% provizije):", "%s: $%d per share, you own %d.~n~Enter the number of shares (bought from your account, sold with %d%% commission):", "%s: $%d за акцию, у вас %d.~n~Введите количество акций (покупка со счёта, продажа с комиссией %d%%):", "%s: $%d por accion, tienes %d.~n~Introduce el numero de acciones (compra desde la cuenta, venta con %d%% de comision):", "%s: hisse basi $%d, sizde %d.~n~Hisse sayisini girin (alim hesaptan, satis %%%d komisyonla):" },
     { "Kupili ste %d dionica (%s) za $%d.", "You bought %d shares (%s) for $%d.", "Вы купили %d акций (%s) за $%d.", "Compraste %d acciones (%s) por $%d.", "%d hisse (%s) aldiniz, $%d." },
     { "Prodali ste %d dionica (%s) za $%d.", "You sold %d shares (%s) for $%d.", "Вы продали %d акций (%s) за $%d.", "Vendiste %d acciones (%s) por $%d.", "%d hisse (%s) sattiniz, $%d." },
     { "Najvise %d dionica po tvrtki.", "Max %d shares per company.", "Максимум %d акций на компанию.", "Maximo %d acciones por empresa.", "Sirket basina en fazla %d hisse." },
-    { "Nemate toliko dionica.", "You don't have that many shares.", "У вас нет столько акций.", "No tienes tantas acciones.", "Bu kadar hisseniz yok." }
+    { "Nemate toliko dionica.", "You don't have that many shares.", "У вас нет столько акций.", "No tienes tantas acciones.", "Bu kadar hisseniz yok." },
+    { "~w~Dobrodosli, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Odaberite aplikaciju u izborniku lijevo.", "~w~Welcome, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Pick an app in the menu on the left.", "~w~Добро пожаловать, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Выберите приложение в меню слева.", "~w~Bienvenido, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Elige una aplicacion en el menu de la izquierda.", "~w~Hos geldiniz, ~b~~h~~h~%s~w~.~n~~n~%02d.%02d.%d  %02d:%02d~n~~n~Soldaki menuden bir uygulama secin." },
+    { "Nema oglasa.", "No ads.", "Объявлений нет.", "No hay anuncios.", "Ilan yok." },
+    { "Objavi ($%d)", "Post ($%d)", "Подать ($%d)", "Publicar ($%d)", "Ilan ver ($%d)" },
+    { "~b~~h~~h~Kliknite tvrtku za kupnju ili prodaju.", "~b~~h~~h~Click a company to buy or sell.", "~b~~h~~h~Нажмите на компанию, чтобы купить или продать.", "~b~~h~~h~Haz clic en una empresa para comprar o vender.", "~b~~h~~h~Alim veya satim icin bir sirkete tiklayin." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

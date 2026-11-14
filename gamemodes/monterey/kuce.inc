@@ -617,7 +617,8 @@ KucaSpawn(playerid)
 {
     if (!gKucaSpawn[playerid]) return;
     new k = KucaPoDb(gKucaSpawn[playerid]);
-    if (k != -1 && gKuca[k][kuVlasnik] && (gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k))) KucaUdi(playerid, k);
+    if (k == -1) return;
+    if (gKuca[k][kuVlasnik] && (gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k))) KucaUdi(playerid, k);
     else
     {
         gKucaSpawn[playerid] = 0;

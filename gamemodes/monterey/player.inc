@@ -63,6 +63,7 @@ public OnPlayerDisconnect(playerid, reason)
     LoginDisconnect(playerid);
     TuningDisconnect(playerid);
     KazinoDisconnect(playerid);
+    PcDisconnect(playerid);
     KucaDisconnect(playerid);
     MobitelDisconnect(playerid);
     SpremiSvoOruzje(playerid);
