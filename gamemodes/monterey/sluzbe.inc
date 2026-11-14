@@ -1220,6 +1220,7 @@ static SlucajPacijenta(playerid)
 RanjenPadni(playerid)
 {
     if (!gUlogiran[playerid] || ZatvorProvjera(playerid)) return 0;
+    if (gRanjenBolnica[playerid]) return 1;
     if (gRanjen[playerid] == RN_DOLJE)
     {
         gRanjen[playerid] = RN_CEKA;
@@ -1260,6 +1261,11 @@ RanjenSpawn(playerid)
 RanjenProvjeri(playerid, Float:zivot)
 {
     if (zivot > RANJEN_PRAG) return false;
+    if (gRanjenBolnica[playerid])
+    {
+        SetPlayerHealth(playerid, FLOAT_INFINITY);
+        return true;
+    }
     RanjenOdmah(playerid);
     return true;
 }
@@ -1388,6 +1394,7 @@ RanjenPrimijeni(playerid, bool:spasen)
     }
     SendClientMessage(playerid, COLOR_INFO, dozvola ? T(playerid, "Izgubili ste drogu.") : T(playerid, "Izgubili ste drogu i oruzje (nemate dozvolu za oruzje)."));
     gRanjenBolnica[playerid] = true;
+    SetPlayerHealth(playerid, FLOAT_INFINITY);
     TogglePlayerControllable(playerid, false);
     Fade(playerid, 0);
     SetTimerEx("RanjenUmri", FADE_SLOJEVA * FADE_KORAK_MS + BOLNICA_CRNO_MS, false, "ii", playerid, gAccountId[playerid]);
@@ -1404,6 +1411,7 @@ RanjenBolnica(playerid)
 {
     if (!gRanjenBolnica[playerid]) return;
     gRanjenBolnica[playerid] = false;
+    SetPlayerHealth(playerid, 100.0);
     new b = VectorSize(gRanjenPos[playerid][0] - gBolnice[0][0], gRanjenPos[playerid][1] - gBolnice[0][1], 0.0) <= VectorSize(gRanjenPos[playerid][0] - gBolnice[1][0], gRanjenPos[playerid][1] - gBolnice[1][1], 0.0) ? 0 : 1;
     SetPlayerInterior(playerid, 0);
     SetPlayerVirtualWorld(playerid, 0);
@@ -1453,7 +1461,7 @@ RanjenZavrsi(playerid, bool:spasen, ko = INVALID_PLAYER_ID)
 RanjenPogodak(playerid, BULLET_HIT_TYPE:hittype, hitid)
 {
     if (hittype != BULLET_HIT_TYPE_PLAYER || playerid == hitid || gRanjen[hitid] != RN_DOLJE || ++gRanjenPogoci[hitid] < RANJEN_POGODAKA) return;
-    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s dokrajcuje %s.", GetRPIme(playerid), GetRPIme(hitid), 1);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s ubija %s.", GetRPIme(playerid), GetRPIme(hitid), 1);
     RanjenZavrsi(hitid, false);
 }
 

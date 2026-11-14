@@ -371,7 +371,9 @@ static bool:BankaPosalji(playerid, racun, iznos)
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (!gUlogiran[i] || gAccountId[i] != racun) continue;
-        SendClientMessage(i, COLOR_INFO, T(i, "Na vas racun je stiglo $%d od %s."), iznos, GetRPIme(playerid));
+        new poruka[144];
+        format(poruka, sizeof poruka, T(i, "Na vas racun je stiglo $%d od %s."), iznos, GetRPIme(playerid));
+        MobitelBankaSms(i, poruka);
     }
     return true;
 }
@@ -384,7 +386,7 @@ BankaTick()
     new sad = gettime();
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
-        new stanje, stednja, kredit, rata, rok;
+        new stanje, stednja, kredit, rata, rok, poruka[144];
         if (!gUlogiran[i] || !BankaUcitaj(gAccountId[i], stanje, stednja, kredit, rata, rok)) continue;
         new DBResult:res = DB_ExecuteQuery(gDB, "SELECT savings_tick FROM bank_accounts WHERE account = %d", gAccountId[i]);
         new tick = DB_GetFieldInt(res, 0);
@@ -393,7 +395,11 @@ BankaTick()
         {
             new kamata = BankaKamata(stednja);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET savings = savings + %d, savings_tick = %d WHERE account = %d", kamata, tick + BANKA_DAN, gAccountId[i]));
-            if (kamata) SendClientMessage(i, COLOR_INFO, T(i, "Banka: kamata na stednju $%d."), kamata);
+            if (kamata)
+            {
+                format(poruka, sizeof poruka, T(i, "Kamata na vasu stednju: $%d."), kamata);
+                MobitelBankaSms(i, poruka);
+            }
         }
         if (!kredit || sad < rok) continue;
         new placa = rata < kredit ? rata : kredit, sRacuna = stanje < placa ? stanje : placa, gotovina = placa - sRacuna;
@@ -401,12 +407,14 @@ BankaTick()
         {
             new kazna = kredit * BANKA_KAZNA / 100;
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET loan = loan + %d, loan_due = %d WHERE account = %d", kazna, rok + BANKA_DAN, gAccountId[i]));
-            SendClientMessage(i, COLOR_ERROR, T(i, "Banka: nemate za ratu kredita ($%d). Zatezna kamata $%d."), placa, kazna);
+            format(poruka, sizeof poruka, T(i, "Nemate dovoljno za ratu kredita ($%d). Zaracunata je zatezna kamata $%d."), placa, kazna);
+            MobitelBankaSms(i, poruka);
             continue;
         }
         if (gotovina) DajNovac(i, -gotovina);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, loan = loan - %d, loan_due = %d WHERE account = %d", sRacuna, placa, rok + BANKA_DAN, gAccountId[i]));
-        SendClientMessage(i, COLOR_INFO, T(i, "Banka: placena rata kredita $%d, preostalo $%d."), placa, kredit - placa);
+        format(poruka, sizeof poruka, T(i, "Naplacena je rata kredita $%d. Preostali dug: $%d."), placa, kredit - placa);
+        MobitelBankaSms(i, poruka);
     }
 }
 
@@ -567,7 +575,9 @@ DLG:banka_unos(playerid, response, const inputtext[])
             if (n > BANKA_KREDIT_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najveci kredit je $%d."), BANKA_KREDIT_MAX);
             new dug = BankaDug(n);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d, loan = %d, loan_rate = %d, loan_due = %d WHERE account = %d", n, dug, BankaRata(dug), gettime() + BANKA_DAN, racun));
-            SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kredit odobren: $%d na racun. Dug $%d, rata $%d svaka 24 h."), n, dug, BankaRata(dug));
+            new poruka[144];
+            format(poruka, sizeof poruka, T(playerid, "Kredit odobren: $%d na racun. Dug $%d, rata $%d svaka 24 h."), n, dug, BankaRata(dug));
+            MobitelBankaSms(playerid, poruka);
         }
         case BA_OTPLATI: if (!BankaOtplati(playerid, n)) return 1;
     }

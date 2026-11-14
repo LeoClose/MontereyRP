@@ -9,6 +9,7 @@
 #define MOBITEL_BROJ        13
 #define MOBITEL_TAKSI_BROJ  "555"
 #define MOBITEL_MEHANICAR_BROJ "556"
+#define MOBITEL_BANKA_BROJ  "557"
 #define MOBITEL_SLOT        9
 #define MOBITEL_MODEL       18868
 #define MOBITEL_ULAZ_MS     3000
@@ -109,7 +110,7 @@ static bool:MobitelBrojZauzet(const broj[], racun = 0)
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM phone_numbers WHERE number = '%q' AND account != %d", broj, racun);
     new bool:zauzet = DB_GetRowCount(res) > 0;
     DB_FreeResultSet(res);
-    return zauzet || !strcmp(broj, MOBITEL_TAKSI_BROJ) || !strcmp(broj, MOBITEL_MEHANICAR_BROJ);
+    return zauzet || !strcmp(broj, MOBITEL_TAKSI_BROJ) || !strcmp(broj, MOBITEL_MEHANICAR_BROJ) || !strcmp(broj, MOBITEL_BANKA_BROJ);
 }
 
 static MobitelGenerirajBroj(broj[], velicina = sizeof broj)
@@ -263,6 +264,7 @@ static MobitelImeIzImenika(playerid, const broj[], ime[], velicina)
     }
     if (!strcmp(broj, MOBITEL_TAKSI_BROJ)) strcopy(ime, T(playerid, "Taksi sluzba"), velicina);
     else if (!strcmp(broj, MOBITEL_MEHANICAR_BROJ)) strcopy(ime, T(playerid, "Mehanicar"), velicina);
+    else if (!strcmp(broj, MOBITEL_BANKA_BROJ)) strcopy(ime, T(playerid, "Banka"), velicina);
     else strcopy(ime, broj, velicina);
 }
 
@@ -716,6 +718,13 @@ MobitelMehanicarSms(racun, const tekst[], const model[])
     for (new i = 0; i < MAX_PLAYERS; i++)
         if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == racun) format(poruka, sizeof poruka, T(i, tekst), model);
     MobitelPrimiPoruku(racun, MOBITEL_MEHANICAR_BROJ, poruka);
+}
+
+MobitelBankaSms(playerid, const tekst[])
+{
+    if (!gUlogiran[playerid]) return;
+    if (!gInv[playerid][ITEM_MOBITEL]) SendClientMessage(playerid, COLOR_INFO, "%s", tekst);
+    MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_BANKA_BROJ, tekst);
 }
 
 MobitelTaksiSms(playerid, const tekst[])

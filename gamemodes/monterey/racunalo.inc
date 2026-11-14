@@ -13,7 +13,14 @@
 #define DIONICA_KORAK_S     10
 #define DIONICA_KORAKA      6
 #define SVIJECA             20
-#define PC_TD               110
+#define PC_TD               130
+#define LS_PAUZA            5
+#define LS_RED_Y            42.0
+#define LS_RED_H            22.0
+#define LS_SLOT_X           151.0
+#define LS_AV_S             80.0
+#define LS_PR_X             175.0
+#define LS_PR_S             150.0
 #define PC_X                120.0
 #define PC_Y                80.0
 #define GRAF_X              90.0
@@ -21,17 +28,20 @@
 #define GRAF_H              96.0
 #define GRAF_SIRINA         14.0
 
-enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA }
+enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA, PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME }
+enum { LS_FEED, LS_OBJAVA, LS_PRIJATELJI, LS_PORUKE, LS_RAZGOVOR, LS_PROFIL }
+enum { LS_NISTA, LS_POSLAO, LS_PRIMIO, LS_PRIJATELJ }
 enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER }
 enum { SV_O, SV_H, SV_L, SV_C }
 enum { PTD_START, PTD_TRAKA, PTD_PROZOR, PTD_NASLOV = PTD_PROZOR + 3, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 2, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 5, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 5, PTD_IMENOVANI = PTD_APPIME + 5 }
+    PTD_AKCIJA = PTD_APP + 5, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 5, PTD_LSTAB = PTD_APPIME + 5, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_IMENOVANI = PTD_LSINFO + 1 }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
 static const gDionicaPocetna[] = { 12000, 8000, 6000, 15000, 4000 };
 static gDionica[sizeof gDionicaIme], gSvijeca[sizeof gDionicaIme][SVIJECA][4], gSvijecaBroj[sizeof gDionicaIme], gTrenutna[sizeof gDionicaIme][4], gDionicaSat, gDionicaKorak;
-static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS];
+static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS], gLsPogled[MAX_PLAYERS], gLsCilj[MAX_PLAYERS], gLsOdabran[MAX_PLAYERS], gLsZadnje[MAX_PLAYERS], gLsAvatara[MAX_PLAYERS];
+static const gLsTab[][] = { "Objave", "Prijatelji", "Poruke", "Profil" };
 static PlayerText:gPcTd[MAX_PLAYERS][PC_TD], gPcBroj[MAX_PLAYERS], PlayerText:gPc[MAX_PLAYERS][PTD_IMENOVANI];
 static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker" };
 static const gPcIkona[][] = { "", "$", "@", "%", "L" };
@@ -63,6 +73,11 @@ InitRacunalo()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_candles (id INTEGER PRIMARY KEY AUTOINCREMENT, stock INTEGER NOT NULL, o INTEGER NOT NULL, h INTEGER NOT NULL, l INTEGER NOT NULL, c INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_likes (post INTEGER NOT NULL, account INTEGER NOT NULL, PRIMARY KEY (post, account))"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_accounts (account INTEGER PRIMARY KEY, created INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) SELECT DISTINCT owner, %d FROM furniture WHERE model = %d", gettime(), RACUNALO_MODEL));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_friends (a INTEGER NOT NULL, b INTEGER NOT NULL, accepted INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, PRIMARY KEY (a, b))"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_comments (id INTEGER PRIMARY KEY AUTOINCREMENT, post INTEGER NOT NULL, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER NOT NULL, receiver INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0)"));
     for (new d = 0; d < sizeof gDionicaIme; d++)
     {
         new DBResult:res = DB_ExecuteQuery(gDB, "SELECT o, h, l, c FROM (SELECT id, o, h, l, c FROM stock_candles WHERE stock = %d ORDER BY id DESC LIMIT %d) ORDER BY id", d, SVIJECA);
@@ -136,6 +151,18 @@ static PlayerText:PcGumb(playerid, Float:x, Float:y, Float:w, boja, const tekst[
     return td;
 }
 
+static PlayerText:PcModel(playerid, Float:x, Float:y, Float:w, Float:h)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, PC_X + x, PC_Y + y, "_");
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_MODEL_PREVIEW);
+    PlayerTextDrawTextSize(playerid, td, w, h);
+    PlayerTextDrawBackgroundColour(playerid, td, 0xE4E6EBFF);
+    PlayerTextDrawSetPreviewModel(playerid, td, DEFAULT_SKIN);
+    PlayerTextDrawSetPreviewRot(playerid, td, 0.0, 0.0, 0.0, 1.0);
+    gPcTd[playerid][gPcBroj[playerid]++] = td;
+    return td;
+}
+
 static PlayerText:PcRed(playerid, Float:x, Float:y, Float:w)
 {
     new PlayerText:td = PcTekst(playerid, x, y, "_", 0x202020FF, 0.16, 0.8, TEXT_DRAW_FONT_1);
@@ -169,10 +196,11 @@ static PcStart(playerid, bool:otvori)
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
         if (12.0 + float(i - 1) * 50.0 + 42.0 < 164.0) continue;
-        for (new k = PTD_APP; k <= PTD_APPIME; k += 5)
+        new const dijelovi[] = { PTD_APP, PTD_APPZNAK, PTD_APPIME };
+        for (new k = 0; k < sizeof dijelovi; k++)
         {
-            if (otvori) PlayerTextDrawHide(playerid, gPc[playerid][k + i]);
-            else PlayerTextDrawShow(playerid, gPc[playerid][k + i]);
+            if (otvori) PlayerTextDrawHide(playerid, gPc[playerid][dijelovi[k] + i]);
+            else PlayerTextDrawShow(playerid, gPc[playerid][dijelovi[k] + i]);
         }
     }
     for (new i = PTD_START_PANEL; i <= PTD_UGASI; i++)
@@ -235,33 +263,487 @@ static PcGraf(playerid, bool:sve = true)
     }
 }
 
-static PcLifeStalker(playerid)
+static LsIgrac(acc)
 {
-    new red[256], tekst[OBJAVA_LEN + 1], ime[MAX_PLAYER_NAME + 1], sad = gettime();
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.id, p.text, replace(a.name, '_', ' '), p.created, (SELECT COUNT(*) FROM social_likes WHERE post = p.id), (SELECT COUNT(*) FROM social_likes WHERE post = p.id AND account = %d) FROM social_posts p JOIN accounts a ON a.id = p.account ORDER BY p.id DESC LIMIT %d", gAccountId[playerid], OBJAVA_REDOVA);
-    new n = DB_GetRowCount(res);
-    for (new r = 0; r < OBJAVA_REDOVA; r++)
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == acc) return i;
+    return INVALID_PLAYER_ID;
+}
+
+static LsSkin(acc)
+{
+    new i = LsIgrac(acc);
+    if (i != INVALID_PLAYER_ID) return GetPlayerSkin(i);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT skin FROM player_style WHERE account = %d", acc), skin = DEFAULT_SKIN;
+    if (DB_GetRowCount(res) && DB_GetFieldInt(res, 0) >= 0) skin = DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    return skin;
+}
+
+static LsIme(acc, ime[], len)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT replace(name, '_', ' ') FROM accounts WHERE id = %d", acc);
+    ime[0] = 0;
+    if (DB_GetRowCount(res)) DB_GetFieldString(res, 0, ime, len);
+    DB_FreeResultSet(res);
+    PcCisti(ime);
+}
+
+static LsRacun(const unos[])
+{
+    new ime[MAX_PLAYER_NAME + 1];
+    strcat(ime, unos);
+    for (new i = 0; ime[i]; i++) if (ime[i] == ' ') ime[i] = '_';
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT a.id FROM accounts a JOIN social_accounts s ON s.account = a.id WHERE a.name = '%q'", ime), acc = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    DB_FreeResultSet(res);
+    return acc;
+}
+
+static LsOdnos(a, b)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT a, accepted FROM social_friends WHERE (a = %d AND b = %d) OR (a = %d AND b = %d)", a, b, b, a), o = LS_NISTA;
+    if (DB_GetRowCount(res)) o = DB_GetFieldInt(res, 1) ? LS_PRIJATELJ : DB_GetFieldInt(res, 0) == a ? LS_POSLAO : LS_PRIMIO;
+    DB_FreeResultSet(res);
+    return o;
+}
+
+static LsBroj(const upit[], acc)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, upit, acc, acc), n = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    DB_FreeResultSet(res);
+    return n;
+}
+
+static LsPrije(playerid, vrijeme, out[], len)
+{
+    new m = (gettime() - vrijeme) / 60;
+    if (m < 60) format(out, len, T(playerid, "prije %d min"), m);
+    else if (m < 1440) format(out, len, T(playerid, "prije %d h"), m / 60);
+    else format(out, len, T(playerid, "prije %d d"), m / 1440);
+}
+
+static LsRed(playerid, r, acc, podatak, const tekst[])
+{
+    gPcObjava[playerid][r] = podatak;
+    PcPostavi(playerid, PTD_OBJAVA + r, tekst);
+    PlayerTextDrawSetPreviewModel(playerid, gPc[playerid][PTD_LSAVATAR + r], LsSkin(acc));
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSAVATAR + r]);
+    gLsAvatara[playerid] = r + 1;
+}
+
+static LsObjave(playerid, const uvjet[], acc, od)
+{
+    new red[256], tekst[OBJAVA_LEN + 1], ime[MAX_PLAYER_NAME + 1], vrijeme[24], upit[512];
+    format(upit, sizeof upit, "SELECT p.id, p.account, p.text, replace(a.name, '_', ' '), p.created, (SELECT COUNT(*) FROM social_likes WHERE post = p.id), (SELECT COUNT(*) FROM social_comments WHERE post = p.id) FROM social_posts p JOIN accounts a ON a.id = p.account %s ORDER BY p.id DESC LIMIT %d", uvjet, OBJAVA_REDOVA - od);
+    new DBResult:res = DB_ExecuteQuery(gDB, upit, acc), n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
     {
-        if (r >= n)
-        {
-            gPcObjava[playerid][r] = 0;
-            PlayerTextDrawHide(playerid, gPc[playerid][PTD_OBJAVA + r]);
-            continue;
-        }
-        new prije = (sad - DB_GetFieldInt(res, 3)) / 60, lajkova = DB_GetFieldInt(res, 4), moj = DB_GetFieldInt(res, 5);
-        gPcObjava[playerid][r] = DB_GetFieldInt(res, 0);
+        DB_GetFieldString(res, 2, tekst, sizeof tekst);
+        DB_GetFieldString(res, 3, ime, sizeof ime);
+        PcCisti(tekst);
+        PcCisti(ime);
+        LsPrije(playerid, DB_GetFieldInt(res, 4), vrijeme, sizeof vrijeme);
+        format(red, sizeof red, T(playerid, "~b~%s  ~l~%s   ~r~+%d  ~l~%d komentara~n~~l~%s"), ime, vrijeme, DB_GetFieldInt(res, 5), DB_GetFieldInt(res, 6), tekst);
+        LsRed(playerid, od + r, DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 0), red);
+    }
+    DB_FreeResultSet(res);
+    return n;
+}
+
+static LsAkcije(playerid, const prva[], const druga[] = "")
+{
+    PcPostavi(playerid, PTD_AKCIJA, prva, prva[0] != 0);
+    PcPostavi(playerid, PTD_AKCIJA + 1, druga, druga[0] != 0);
+}
+
+static LsFeed(playerid)
+{
+    new n = LsObjave(playerid, "", 0, 0);
+    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nema objava. Budite prvi!"));
+    LsAkcije(playerid, T(playerid, "Objavi"));
+}
+
+static LsObjava(playerid)
+{
+    new post = gLsCilj[playerid], red[256], tekst[OBJAVA_LEN + 1], ime[MAX_PLAYER_NAME + 1], vrijeme[24];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.account, p.text, replace(a.name, '_', ' '), p.created, (SELECT COUNT(*) FROM social_likes WHERE post = p.id), (SELECT COUNT(*) FROM social_likes WHERE post = p.id AND account = %d) FROM social_posts p JOIN accounts a ON a.id = p.account WHERE p.id = %d", gAccountId[playerid], post);
+    if (!DB_GetRowCount(res))
+    {
+        DB_FreeResultSet(res);
+        gLsPogled[playerid] = LS_FEED;
+        LsFeed(playerid);
+        return 1;
+    }
+    new autor = DB_GetFieldInt(res, 0), bool:svida = DB_GetFieldInt(res, 5) > 0;
+    DB_GetFieldString(res, 1, tekst, sizeof tekst);
+    DB_GetFieldString(res, 2, ime, sizeof ime);
+    PcCisti(tekst);
+    PcCisti(ime);
+    LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
+    format(red, sizeof red, T(playerid, "~b~%s  ~l~%s   ~r~+%d~n~~l~%s"), ime, vrijeme, DB_GetFieldInt(res, 4), tekst);
+    DB_FreeResultSet(res);
+    LsRed(playerid, 0, autor, autor, red);
+    res = DB_ExecuteQuery(gDB, "SELECT account, text, name, created FROM (SELECT c.id, c.account, c.text, replace(a.name, '_', ' ') AS name, c.created FROM social_comments c JOIN accounts a ON a.id = c.account WHERE c.post = %d ORDER BY c.id DESC LIMIT %d) ORDER BY id", post, OBJAVA_REDOVA - 1);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
         DB_GetFieldString(res, 1, tekst, sizeof tekst);
         DB_GetFieldString(res, 2, ime, sizeof ime);
         PcCisti(tekst);
         PcCisti(ime);
-        if (prije < 60) format(red, sizeof red, T(playerid, "~b~%s  ~l~prije %d min   %s+%d~n~~l~%s"), ime, prije, moj ? ("~r~") : ("~l~"), lajkova, tekst);
-        else format(red, sizeof red, T(playerid, "~b~%s  ~l~prije %d h   %s+%d~n~~l~%s"), ime, prije / 60, moj ? ("~r~") : ("~l~"), lajkova, tekst);
-        PcPostavi(playerid, PTD_OBJAVA + r, red);
-        DB_SelectNextRow(res);
+        LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
+        format(red, sizeof red, "~p~%s  ~l~%s~n~~l~%s", ime, vrijeme, tekst);
+        LsRed(playerid, r + 1, DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 0), red);
     }
     DB_FreeResultSet(res);
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nema objava. Budite prvi!"));
-    PcPostavi(playerid, PTD_AKCIJA, T(playerid, "Objavi"));
+    PcPostavi(playerid, PTD_SADRZAJ, "_");
+    LsAkcije(playerid, svida ? T(playerid, "Ne svidja mi se") : T(playerid, "Svidja mi se"), T(playerid, "Komentiraj"));
+    return 1;
+}
+
+static LsPrijatelji(playerid)
+{
+    new me = gAccountId[playerid], red[160], ime[MAX_PLAYER_NAME + 1];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x.acc, x.k, replace(a.name, '_', ' ') FROM (SELECT a AS acc, 0 AS k FROM social_friends WHERE b = %d AND accepted = 0 UNION ALL SELECT CASE WHEN a = %d THEN b ELSE a END, 1 FROM social_friends WHERE (a = %d OR b = %d) AND accepted = 1) x JOIN accounts a ON a.id = x.acc ORDER BY x.k LIMIT %d", me, me, me, me, OBJAVA_REDOVA);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new acc = DB_GetFieldInt(res, 0), bool:zahtjev = DB_GetFieldInt(res, 1) == 0;
+        DB_GetFieldString(res, 2, ime, sizeof ime);
+        PcCisti(ime);
+        if (zahtjev) format(red, sizeof red, T(playerid, "~b~%s~n~~r~Zeli vas za prijatelja%s"), ime, gLsOdabran[playerid] == acc ? (" <") : (""));
+        else format(red, sizeof red, "~b~%s~n~%s", ime, LsIgrac(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
+        LsRed(playerid, r, acc, zahtjev ? -acc : acc, red);
+    }
+    DB_FreeResultSet(res);
+    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nemate prijatelja."));
+    if (gLsOdabran[playerid]) LsAkcije(playerid, T(playerid, "Prihvati"), T(playerid, "Odbij"));
+    else LsAkcije(playerid, T(playerid, "Dodaj prijatelja"));
+}
+
+static LsPoruke(playerid)
+{
+    new me = gAccountId[playerid], red[256], ime[MAX_PLAYER_NAME + 1], tekst[48], vrijeme[24], nove[24];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT m.partner, replace(a.name, '_', ' '), substr(msg.text, 1, 44), msg.created, (SELECT COUNT(*) FROM social_messages WHERE sender = m.partner AND receiver = %d AND seen = 0) FROM (SELECT CASE WHEN sender = %d THEN receiver ELSE sender END AS partner, MAX(id) AS zadnja FROM social_messages WHERE sender = %d OR receiver = %d GROUP BY partner) m JOIN social_messages msg ON msg.id = m.zadnja JOIN accounts a ON a.id = m.partner ORDER BY m.zadnja DESC LIMIT %d", me, me, me, me, OBJAVA_REDOVA);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new acc = DB_GetFieldInt(res, 0), broj = DB_GetFieldInt(res, 4);
+        DB_GetFieldString(res, 1, ime, sizeof ime);
+        DB_GetFieldString(res, 2, tekst, sizeof tekst);
+        PcCisti(ime);
+        PcCisti(tekst);
+        LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
+        nove[0] = 0;
+        if (broj) format(nove, sizeof nove, T(playerid, "~r~%d novih"), broj);
+        format(red, sizeof red, "~b~%s  ~l~%s  %s~n~~l~%s", ime, vrijeme, nove, tekst);
+        LsRed(playerid, r, acc, acc, red);
+    }
+    DB_FreeResultSet(res);
+    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nemate poruka."));
+    LsAkcije(playerid, T(playerid, "Nova poruka"));
+}
+
+static LsRazgovor(playerid)
+{
+    new me = gAccountId[playerid], p = gLsCilj[playerid], red[256], tekst[OBJAVA_LEN + 1], ja[MAX_PLAYER_NAME + 1], on[MAX_PLAYER_NAME + 1], vrijeme[24];
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE social_messages SET seen = 1 WHERE sender = %d AND receiver = %d AND seen = 0", p, me));
+    LsIme(me, ja, sizeof ja);
+    LsIme(p, on, sizeof on);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT sender, text, created FROM (SELECT id, sender, text, created FROM social_messages WHERE (sender = %d AND receiver = %d) OR (sender = %d AND receiver = %d) ORDER BY id DESC LIMIT %d) ORDER BY id", me, p, p, me, OBJAVA_REDOVA);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new od = DB_GetFieldInt(res, 0);
+        DB_GetFieldString(res, 1, tekst, sizeof tekst);
+        PcCisti(tekst);
+        LsPrije(playerid, DB_GetFieldInt(res, 2), vrijeme, sizeof vrijeme);
+        format(red, sizeof red, "%s%s  ~l~%s~n~~l~%s", od == me ? ("~g~") : ("~b~"), od == me ? ja : on, vrijeme, tekst);
+        LsRed(playerid, r, od, 0, red);
+    }
+    DB_FreeResultSet(res);
+    format(red, sizeof red, T(playerid, "Razgovor s: %s~n~~n~Jos nema poruka."), on);
+    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : red);
+    LsAkcije(playerid, T(playerid, "Posalji"), T(playerid, "Profil"));
+}
+
+static LsProfil(playerid)
+{
+    new acc = gLsCilj[playerid], me = gAccountId[playerid], ime[MAX_PLAYER_NAME + 1], tekst[256];
+    LsIme(acc, ime, sizeof ime);
+    new prijatelja = LsBroj("SELECT COUNT(*) FROM social_friends WHERE (a = %d OR b = %d) AND accepted = 1", acc);
+    new objava = LsBroj("SELECT COUNT(*) FROM social_posts WHERE account = %d", acc);
+    new lajkova = LsBroj("SELECT COUNT(*) FROM social_likes l JOIN social_posts p ON p.id = l.post WHERE p.account = %d", acc);
+    format(tekst, sizeof tekst, T(playerid, "~b~%s~n~%s~n~~n~~l~Prijatelja: %d~n~Objava: %d~n~Svidjanja: %d"), ime, LsIgrac(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"), prijatelja, objava, lajkova);
+    PcPostavi(playerid, PTD_LSINFO, tekst);
+    PlayerTextDrawSetPreviewModel(playerid, gPc[playerid][PTD_LSPROFIL], LsSkin(acc));
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSPROFIL]);
+    for (new k = 4; k <= 6; k++) PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSPOKRIV + k]);
+    LsObjave(playerid, "WHERE p.account = %d", acc, OBJAVA_REDOVA - 3);
+    for (new k = OBJAVA_REDOVA - 3; k < OBJAVA_REDOVA; k++) PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSAVATAR + k]);
+    gLsAvatara[playerid] = OBJAVA_REDOVA;
+    if (acc == me)
+    {
+        LsAkcije(playerid, T(playerid, "Objavi"));
+        return 1;
+    }
+    switch (LsOdnos(me, acc))
+    {
+        case LS_PRIJATELJ: LsAkcije(playerid, T(playerid, "Poruka"), T(playerid, "Ukloni prijatelja"));
+        case LS_POSLAO: LsAkcije(playerid, T(playerid, "Poruka"), T(playerid, "Zahtjev poslan"));
+        case LS_PRIMIO: LsAkcije(playerid, T(playerid, "Poruka"), T(playerid, "Prihvati"));
+        default: LsAkcije(playerid, T(playerid, "Poruka"), T(playerid, "Dodaj prijatelja"));
+    }
+    return 1;
+}
+
+static bool:LsImaRacun(playerid)
+{
+    new me = gAccountId[playerid], DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM furniture WHERE owner = %d AND model = %d LIMIT 1", me, RACUNALO_MODEL);
+    new bool:vlasnik = DB_GetRowCount(res) > 0;
+    DB_FreeResultSet(res);
+    if (vlasnik) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) VALUES (%d, %d)", me, gettime()));
+    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM social_accounts WHERE account = %d", me);
+    new bool:ima = DB_GetRowCount(res) > 0;
+    DB_FreeResultSet(res);
+    return ima;
+}
+
+static PcLifeStalker(playerid)
+{
+    new me = gAccountId[playerid], tekst[32];
+    for (new r = 0; r < OBJAVA_REDOVA; r++)
+    {
+        gPcObjava[playerid][r] = 0;
+        PlayerTextDrawHide(playerid, gPc[playerid][PTD_OBJAVA + r]);
+        PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSAVATAR + r]);
+    }
+    PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSPROFIL]);
+    PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSINFO]);
+    for (new k = 0; k < 8; k++)
+    {
+        if (k < 4) PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSPOKRIV + k]);
+        else PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSPOKRIV + k]);
+    }
+    gLsAvatara[playerid] = 0;
+    PlayerTextDrawSetPos(playerid, gPc[playerid][PTD_SADRZAJ], PC_X + LS_SLOT_X + 46.0, PC_Y + 46.0);
+    if (!LsImaRacun(playerid))
+    {
+        for (new k = 0; k < sizeof gLsTab; k++) PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSTAB + k]);
+        PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "LifeStalker racun imaju samo~n~vlasnici racunala.~n~~n~Kupite racunalo u trgovini~n~namjestaja."));
+        LsAkcije(playerid, "");
+        return;
+    }
+    new zahtjeva = LsBroj("SELECT COUNT(*) FROM social_friends WHERE b = %d AND accepted = 0", me);
+    new poruka = LsBroj("SELECT COUNT(*) FROM social_messages WHERE receiver = %d AND seen = 0", me);
+    new aktivan = gLsPogled[playerid] == LS_OBJAVA ? 0 : gLsPogled[playerid] == LS_RAZGOVOR ? 2 : gLsPogled[playerid] == LS_PRIJATELJI ? 1 : gLsPogled[playerid] == LS_PORUKE ? 2 : gLsPogled[playerid] == LS_PROFIL ? 3 : 0;
+    for (new k = 0; k < sizeof gLsTab; k++)
+    {
+        new broj = k == 1 ? zahtjeva : k == 2 ? poruka : 0;
+        if (broj) format(tekst, sizeof tekst, "%s (%d)", T(playerid, gLsTab[k]), broj);
+        else format(tekst, sizeof tekst, "%s", T(playerid, gLsTab[k]));
+        PlayerTextDrawBoxColour(playerid, gPc[playerid][PTD_LSTAB + k], k == aktivan ? 0xE91E63FF : 0xEEEEEEFF);
+        PlayerTextDrawColour(playerid, gPc[playerid][PTD_LSTAB + k], k == aktivan ? 0xFFFFFFFF : 0x202020FF);
+        PcPostavi(playerid, PTD_LSTAB + k, tekst);
+    }
+    switch (gLsPogled[playerid])
+    {
+        case LS_OBJAVA: LsObjava(playerid);
+        case LS_PRIJATELJI: LsPrijatelji(playerid);
+        case LS_PORUKE: LsPoruke(playerid);
+        case LS_RAZGOVOR: LsRazgovor(playerid);
+        case LS_PROFIL: LsProfil(playerid);
+        default: LsFeed(playerid);
+    }
+    new n = gLsAvatara[playerid];
+    if (n >= OBJAVA_REDOVA) return;
+    new PlayerText:pokriv = gPc[playerid][PTD_LSPOKRIV + 7];
+    PlayerTextDrawSetPos(playerid, pokriv, PC_X + 140.0, PC_Y + LS_RED_Y + float(n) * LS_RED_H - 1.0);
+    PlayerTextDrawTextSize(playerid, pokriv, 52.0, 207.0 - LS_RED_Y - float(n) * LS_RED_H);
+    PlayerTextDrawShow(playerid, pokriv);
+}
+
+
+static LsOtvori(playerid, pogled, cilj = 0)
+{
+    gLsPogled[playerid] = pogled;
+    gLsCilj[playerid] = cilj;
+    gLsOdabran[playerid] = 0;
+    PcLifeStalker(playerid);
+    return 1;
+}
+
+static bool:LsPauza(playerid)
+{
+    new sad = gettime();
+    if (sad - gLsZadnje[playerid] < LS_PAUZA)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte jos %d s."), LS_PAUZA - (sad - gLsZadnje[playerid]));
+        return true;
+    }
+    gLsZadnje[playerid] = sad;
+    return false;
+}
+
+static LsZahtjev(playerid, acc)
+{
+    new me = gAccountId[playerid];
+    if (!acc || acc == me) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Korisnik nije pronadjen."));
+    switch (LsOdnos(me, acc))
+    {
+        case LS_PRIJATELJ: return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec ste prijatelji."));
+        case LS_POSLAO: return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Zahtjev je vec poslan."));
+        case LS_PRIMIO: return LsPrihvati(playerid, acc);
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_friends (a, b, created) VALUES (%d, %d, %d)", me, acc, gettime()));
+    new t = LsIgrac(acc);
+    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s vam je poslao zahtjev za prijateljstvo."), GetRPIme(playerid));
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zahtjev za prijateljstvo poslan."));
+}
+
+static LsPrihvati(playerid, acc)
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE social_friends SET accepted = 1 WHERE a = %d AND b = %d", acc, gAccountId[playerid]));
+    new t = LsIgrac(acc);
+    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je prihvatio vas zahtjev za prijateljstvo."), GetRPIme(playerid));
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sada ste prijatelji."));
+}
+
+static LsUkloni(playerid, acc)
+{
+    new me = gAccountId[playerid];
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_friends WHERE (a = %d AND b = %d) OR (a = %d AND b = %d)", me, acc, acc, me));
+}
+
+static LsKlik(playerid, PlayerText:td)
+{
+    for (new k = 0; k < sizeof gLsTab; k++)
+    {
+        if (td != gPc[playerid][PTD_LSTAB + k]) continue;
+        return LsOtvori(playerid, k == 1 ? LS_PRIJATELJI : k == 2 ? LS_PORUKE : k == 3 ? LS_PROFIL : LS_FEED, k == 3 ? gAccountId[playerid] : 0);
+    }
+    for (new r = 0; r < OBJAVA_REDOVA; r++)
+    {
+        new v = gPcObjava[playerid][r];
+        if (td != gPc[playerid][PTD_OBJAVA + r] || !v) continue;
+        switch (gLsPogled[playerid])
+        {
+            case LS_FEED: return LsOtvori(playerid, LS_OBJAVA, v);
+            case LS_PROFIL: return LsOtvori(playerid, LS_OBJAVA, v);
+            case LS_OBJAVA: return LsOtvori(playerid, LS_PROFIL, v);
+            case LS_PORUKE: return LsOtvori(playerid, LS_RAZGOVOR, v);
+            case LS_PRIJATELJI:
+            {
+                if (v > 0) return LsOtvori(playerid, LS_PROFIL, v);
+                gLsOdabran[playerid] = gLsOdabran[playerid] == -v ? 0 : -v;
+                PcLifeStalker(playerid);
+                return 1;
+            }
+        }
+        return 1;
+    }
+    for (new i = 0; i < 2; i++)
+    {
+        if (td != gPc[playerid][PTD_AKCIJA + i]) continue;
+        new tekst[160], cilj = gLsCilj[playerid];
+        switch (gLsPogled[playerid])
+        {
+            case LS_FEED: if (!i) LsUnosObjave(playerid);
+            case LS_OBJAVA:
+            {
+                if (i)
+                {
+                    format(tekst, sizeof tekst, T(playerid, "Vas komentar (najvise %d znakova):"), OBJAVA_LEN);
+                    return PcUnos(playerid, PC_KOMENTAR, tekst);
+                }
+                new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM social_likes WHERE post = %d AND account = %d", cilj, gAccountId[playerid]);
+                new bool:ima = DB_GetRowCount(res) > 0;
+                DB_FreeResultSet(res);
+                if (ima) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_likes WHERE post = %d AND account = %d", cilj, gAccountId[playerid]));
+                else DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_likes (post, account) VALUES (%d, %d)", cilj, gAccountId[playerid]));
+                PcLifeStalker(playerid);
+            }
+            case LS_PRIJATELJI:
+            {
+                new acc = gLsOdabran[playerid];
+                if (!acc) return PcUnos(playerid, PC_PRIJATELJ, T(playerid, "Unesite ime i prezime korisnika:"));
+                if (i) LsUkloni(playerid, acc);
+                else LsPrihvati(playerid, acc);
+                gLsOdabran[playerid] = 0;
+                PcLifeStalker(playerid);
+            }
+            case LS_PORUKE: if (!i) return PcUnos(playerid, PC_PORUKA_KOME, T(playerid, "Kome saljete poruku? (ime i prezime)"));
+            case LS_RAZGOVOR:
+            {
+                if (i) return LsOtvori(playerid, LS_PROFIL, cilj);
+                format(tekst, sizeof tekst, T(playerid, "Vasa poruka (najvise %d znakova):"), OBJAVA_LEN);
+                return PcUnos(playerid, PC_PORUKA, tekst);
+            }
+            case LS_PROFIL:
+            {
+                if (cilj == gAccountId[playerid])
+                {
+                    if (!i) LsUnosObjave(playerid);
+                    return 1;
+                }
+                if (!i) return LsOtvori(playerid, LS_RAZGOVOR, cilj);
+                switch (LsOdnos(gAccountId[playerid], cilj))
+                {
+                    case LS_PRIJATELJ: LsUkloni(playerid, cilj);
+                    case LS_POSLAO: return 1;
+                    default: LsZahtjev(playerid, cilj);
+                }
+                PcLifeStalker(playerid);
+            }
+        }
+        return 1;
+    }
+    return 0;
+}
+
+static LsUnosObjave(playerid)
+{
+    new tekst[96];
+    format(tekst, sizeof tekst, T(playerid, "Sto vam je na umu? (najvise %d znakova)"), OBJAVA_LEN);
+    return PcUnos(playerid, PC_OBJAVA, tekst);
+}
+
+static LsUnos(playerid, akcija, const inputtext[])
+{
+    new tekst[OBJAVA_LEN + 1], me = gAccountId[playerid], sad = gettime();
+    switch (akcija)
+    {
+        case PC_PRIJATELJ:
+        {
+            LsZahtjev(playerid, LsRacun(inputtext));
+            return 1;
+        }
+        case PC_PORUKA_KOME:
+        {
+            new acc = LsRacun(inputtext);
+            if (!acc || acc == me) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Korisnik nije pronadjen."));
+            gLsPogled[playerid] = LS_RAZGOVOR;
+            gLsCilj[playerid] = acc;
+            return 1;
+        }
+    }
+    strcat(tekst, inputtext);
+    RemoveBoje(tekst);
+    if (!tekst[0] || LsPauza(playerid)) return 1;
+    if (akcija == PC_KOMENTAR)
+    {
+        new post = gLsCilj[playerid], DBResult:res = DB_ExecuteQuery(gDB, "SELECT account FROM social_posts WHERE id = %d", post), autor = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+        DB_FreeResultSet(res);
+        if (!autor) return 1;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_comments (post, account, text, created) VALUES (%d, %d, '%q', %d)", post, me, tekst, sad));
+        new t = LsIgrac(autor);
+        if (autor != me && t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je komentirao vasu objavu."), GetRPIme(playerid));
+        return 1;
+    }
+    new p = gLsCilj[playerid];
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_messages (sender, receiver, text, created) VALUES (%d, %d, '%q', %d)", me, p, tekst, sad));
+    new t = LsIgrac(p);
+    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] Nova poruka od %s: %s"), GetRPIme(playerid), tekst);
+    return 1;
 }
 
 static PcEkran(playerid, ekran)
@@ -274,6 +756,8 @@ static PcEkran(playerid, ekran)
     PcSakrij(playerid, PTD_GRAF, 1 + SVIJECA * 2);
     PcSakrij(playerid, PTD_OBJAVA, OBJAVA_REDOVA);
     PcSakrij(playerid, PTD_KOL, 3);
+    PcSakrij(playerid, PTD_LSTAB, 4);
+    PcSakrij(playerid, PTD_LSAVATAR, PTD_IMENOVANI - PTD_LSAVATAR);
     if (ekran == PCE_POCETNA)
     {
         for (new i = PTD_PROZOR; i <= PTD_SADRZAJ; i++) PlayerTextDrawHide(playerid, gPc[playerid][i]);
@@ -376,6 +860,8 @@ static PcOtvori(playerid)
     gPcOtvoren[playerid] = true;
     gPcBroj[playerid] = 0;
     gPcKolicina[playerid] = 1;
+    gLsPogled[playerid] = LS_FEED;
+    gLsOdabran[playerid] = 0;
     PcUcitajKomade(playerid);
     PcKutija(playerid, 0.0, 0.0, 400.0, 248.0, 0x111111FF);
     PcKutija(playerid, 180.0, 248.0, 40.0, 8.0, 0x222222FF);
@@ -410,7 +896,19 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_GRAF] = PcKutija(playerid, GRAF_X - 2.0, GRAF_Y - 4.0, SVIJECA * GRAF_SIRINA + 4.0, GRAF_H + 8.0, 0xF5F5F5FF);
     for (new i = 0; i < SVIJECA; i++) gPc[playerid][PTD_TIJELO + i] = PcKutija(playerid, GRAF_X, GRAF_Y, 1.0, 1.0, 0x00000000);
     for (new i = 0; i < SVIJECA; i++) gPc[playerid][PTD_FITILJ + i] = PcKutija(playerid, GRAF_X, GRAF_Y, 1.0, 1.0, 0x00000000);
-    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_OBJAVA + r] = PcRed(playerid, 86.0, 42.0 + float(r) * 24.0, 288.0);
+    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_LSAVATAR + r] = PcModel(playerid, LS_SLOT_X - LS_AV_S / 2.0, LS_RED_Y + float(r) * LS_RED_H - 1.0, LS_AV_S, LS_AV_S);
+    gPc[playerid][PTD_LSPROFIL] = PcModel(playerid, LS_PR_X - LS_PR_S / 2.0, 40.0, LS_PR_S, LS_PR_S);
+    gPc[playerid][PTD_LSPOKRIV] = PcKutija(playerid, 80.0, 36.0, 60.0, 170.0, 0xE91E63FF);
+    gPc[playerid][PTD_LSPOKRIV + 1] = PcKutija(playerid, 100.0, 206.0, 100.0, 3.0, 0x07355CFF);
+    gPc[playerid][PTD_LSPOKRIV + 2] = PcKutija(playerid, 100.0, 209.0, 100.0, 15.0, 0x0B4F8AFF);
+    gPc[playerid][PTD_LSPOKRIV + 3] = PcKutija(playerid, 100.0, 224.0, 100.0, 20.0, 0x0D141BFF);
+    gPc[playerid][PTD_LSPOKRIV + 4] = PcKutija(playerid, 140.0, 36.0, LS_PR_X - 25.0 - 140.0, 170.0, 0xFFFFFFFF);
+    gPc[playerid][PTD_LSPOKRIV + 5] = PcKutija(playerid, LS_PR_X + 25.0, 36.0, LS_PR_S / 2.0 - 25.0, 60.0, 0xFFFFFFFF);
+    gPc[playerid][PTD_LSPOKRIV + 6] = PcKutija(playerid, 140.0, 96.0, LS_PR_X + LS_PR_S / 2.0 - 140.0, 110.0, 0xFFFFFFFF);
+    gPc[playerid][PTD_LSPOKRIV + 7] = PcKutija(playerid, 140.0, 36.0, 52.0, 170.0, 0xFFFFFFFF);
+    gPc[playerid][PTD_LSINFO] = PcTekst(playerid, LS_PR_X + 32.0, 46.0, "_", 0x202020FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
+    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_OBJAVA + r] = PcRed(playerid, LS_SLOT_X + 10.0, LS_RED_Y + float(r) * LS_RED_H, 374.0 - LS_SLOT_X - 10.0);
+    for (new k = 0; k < sizeof gLsTab; k++) gPc[playerid][PTD_LSTAB + k] = PcGumb(playerid, 110.0, 46.0 + float(k) * 22.0, 56.0, 0xEEEEEEFF, "_", 0x202020FF);
     gPc[playerid][PTD_KOL] = PcGumb(playerid, 168.0, 174.0, 14.0, 0x0078D4FF, "~<~");
     gPc[playerid][PTD_KOL + 1] = PcGumb(playerid, 230.0, 174.0, 100.0, 0xDDDDDDFF, "_", 0x202020FF);
     gPc[playerid][PTD_KOL + 2] = PcGumb(playerid, 292.0, 174.0, 14.0, 0x0078D4FF, "~>~");
@@ -522,17 +1020,7 @@ PcKlik(playerid, PlayerText:td)
         format(tekst, sizeof tekst, T(playerid, "Koliko dionica? (1-%d)"), DIONICA_MAX_KOM);
         return PcUnos(playerid, PC_KOLICINA, tekst);
     }
-    for (new r = 0; r < OBJAVA_REDOVA; r++)
-    {
-        if (td != gPc[playerid][PTD_OBJAVA + r] || !gPcObjava[playerid][r]) continue;
-        new post = gPcObjava[playerid][r], DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM social_likes WHERE post = %d AND account = %d", post, gAccountId[playerid]);
-        new bool:ima = DB_GetRowCount(res) > 0;
-        DB_FreeResultSet(res);
-        if (ima) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_likes WHERE post = %d AND account = %d", post, gAccountId[playerid]));
-        else DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_likes (post, account) VALUES (%d, %d)", post, gAccountId[playerid]));
-        PcLifeStalker(playerid);
-        return 1;
-    }
+    if (gPcEkran[playerid] == PCE_LIFESTALKER && LsKlik(playerid, td)) return 1;
     for (new i = 0; i < 2; i++)
     {
         if (td != gPc[playerid][PTD_AKCIJA + i]) continue;
@@ -549,11 +1037,6 @@ PcKlik(playerid, PlayerText:td)
             {
                 PcDionicaTrgovina(playerid, i == 0, gPcKolicina[playerid]);
                 PcGraf(playerid, false);
-            }
-            case PCE_LIFESTALKER:
-            {
-                format(tekst, sizeof tekst, T(playerid, "Sto vam je na umu? (najvise %d znakova)"), OBJAVA_LEN);
-                PcUnos(playerid, PC_OBJAVA, tekst);
             }
         }
         return 1;
@@ -600,6 +1083,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
             new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 5 ? strval(inputtext) : 0;
             if (n >= 1 && n <= DIONICA_MAX_KOM) gPcKolicina[playerid] = n;
         }
+        case PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME: LsUnos(playerid, gPcAkcija[playerid], inputtext);
         case PC_OBJAVA:
         {
             new tekst[OBJAVA_LEN + 1], sad = gettime();

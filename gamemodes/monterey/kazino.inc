@@ -44,7 +44,7 @@ enum E_KAZINO { bool:kzIma, kzDb, kzTip, Float:kzX, Float:kzY, Float:kzZ, Float:
 enum E_BJ { bjRuke, bjAktivna, bjDilerKarte[BJ_KARATA], bjDilerN, bool:bjOsiguranje, bjOsigUlog, bool:bjPrvi, bool:bjPredao, bool:bjAsovi }
 
 static gKaz[KAZINO_MAX][E_KAZINO], gKr[KAZINO_MAX][E_KR];
-static const Float:gKazinoUnutra[4] = { 1502.5, 961.75, -32.6, 270.0 };
+static const Float:gKazinoUnutra[4] = { 1514.4, 961.75, -33.0, 270.0 };
 static gKu[KAZINO_ULAZA][E_KZULAZ], gKuIgrac[MAX_PLAYERS];
 static gApKazino[MAX_PLAYERS], gKzBlagajna[MAX_PLAYERS], bool:gKzBira[MAX_PLAYERS], gKzNovi[MAX_PLAYERS];
 static PlayerText:gKzTd[MAX_PLAYERS][KZ_TD], gKzTdN[MAX_PLAYERS], bool:gKzOtvoren[MAX_PLAYERS], bool:gKzIgra[MAX_PLAYERS], gKzStol[MAX_PLAYERS], gKzTip[MAX_PLAYERS], gKzUlog[MAX_PLAYERS], gKzRunda[MAX_PLAYERS];
