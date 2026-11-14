@@ -1549,7 +1549,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Nista ne nosite na glavi.", "You are not wearing anything on your head.", "У вас ничего нет на голове.", "No llevas nada en la cabeza.", "Basinizda bir sey takmiyorsunuz." },
     { "Ne nosite sat.", "You're not wearing a watch.", "Вы не носите часы.", "No llevas reloj.", "Saat takmiyorsunuz." },
     { "Zlatne naocale", "Gold glasses", "Золотые очки", "Gafas doradas", "Altin gozluk" },
-    { "Srebrne naocale", "Silver glasses", "Серебряные очки", "Gafas plateadas", "Gumus gozluk" }
+    { "Srebrne naocale", "Silver glasses", "Серебряные очки", "Gafas plateadas", "Gumus gozluk" },
+    { "%d kom  ($%d.%02d)", "%d pcs  ($%d.%02d)", "%d шт.  ($%d.%02d)", "%d uds.  ($%d.%02d)", "%d adet  ($%d.%02d)" },
+    { "Koliko dionica? (1-%d)", "How many shares? (1-%d)", "Сколько акций? (1-%d)", "Cuantas acciones? (1-%d)", "Kac hisse? (1-%d)" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

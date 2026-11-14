@@ -27,7 +27,7 @@ enum E_ZLATARA { bool:zlIma, zlDb, Float:zlX, Float:zlY, Float:zlZ, Float:zlA, b
     STREAMER_TAG_PICKUP:zlPickup, STREAMER_TAG_PICKUP:zlPickupU, STREAMER_TAG_3D_TEXT_LABEL:zlTekst, STREAMER_TAG_3D_TEXT_LABEL:zlTekstU, STREAMER_TAG_3D_TEXT_LABEL:zlTekstA }
 enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:ppA, ppInt, ppSvijet, ppAktor, STREAMER_TAG_3D_TEXT_LABEL:ppTekst }
 
-static const Float:gZlataraUlaz[3] = { 1398.5, -40.0, 1002.1 };
+static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
 static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 2500 }, { ITEM_ZLATNE_NAOCALE, 6000 } };
 
 static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC];
@@ -180,6 +180,7 @@ ZlataraUlaz(playerid)
         SetPlayerInterior(playerid, ZLATARA_INT);
         SetPlayerVirtualWorld(playerid, ZLATARA_SVIJET + s);
         SetPlayerPos(playerid, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2]);
+        SetPlayerFacingAngle(playerid, 90.0);
         SetCameraBehindPlayer(playerid);
         if (gZl[s][zlImaAktor]) AktorKaze(playerid, gZl[s][zlAktor], "Zlatar", "Dobro dosli, slobodno razgledajte.");
         return 1;
