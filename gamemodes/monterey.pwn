@@ -12,6 +12,15 @@
 #include <streamer>
 #include <kolizija>
 
+stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
+{
+    new Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    if (VectorSize(x - px, y - py, z - pz) > 50.0) Streamer_UpdateEx(playerid, x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), STREAMER_TYPE_OBJECT, 1500, 0);
+    return SetPlayerPos(playerid, x, y, z);
+}
+#define SetPlayerPos PrenesiIgraca
+
 #pragma dynamic 32768
 
 new Text:Ime;
@@ -74,7 +83,7 @@ public OnGameModeInit()
     SetGameModeText("©M:RP by Leo and Krti");
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
     DisableInteriorEnterExits();
-    Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 900);
+    Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 960);
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));
@@ -254,6 +263,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kazino.inc"
 #include "monterey/banka.inc"
 #include "monterey/racunalo.inc"
+#include "monterey/fit_tablica.inc"
 #include "monterey/zlatara.inc"
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"

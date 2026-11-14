@@ -196,11 +196,20 @@ static OdjecaNaGlavi(&Float:x, &Float:y, &Float:z)
     z = z < -0.06 ? -0.06 : z > 0.06 ? 0.06 : z;
 }
 
+static OdjecaNaocaleFit(playerid, model, Float:p[9])
+{
+    new skin = GetPlayerSkin(playerid);
+    if (skin < 0 || skin > 311 || model < 19006 || model > 19035) return false;
+    for (new k = 0; k < 9; k++) p[k] = model <= 19021 ? gFitNaoA[skin][k] : gFitNaoB[skin][k];
+    return true;
+}
+
 static OdjecaPrivjesak(playerid, i, model, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
-    new slot = i ? ODJECA_SLOT_FRIZURA : ODJECA_SLOT_KAPA;
+    new slot = i ? ODJECA_SLOT_FRIZURA : ODJECA_SLOT_KAPA, Float:p[9], Float:sy = 1.0;
     OdjecaNaGlavi(x, y, z);
-    if (model) SetPlayerAttachedObject(playerid, slot, model, 2, x, y, z, rx, ry, rz, 1.0, 1.0, 1.0, OdjecaBoja(model), OdjecaBoja(model));
+    if (OdjecaNaocaleFit(playerid, model, p)) sy = p[7];
+    if (model) SetPlayerAttachedObject(playerid, slot, model, 2, x, y, z, rx, ry, rz, 1.0, sy, 1.0, OdjecaBoja(model), OdjecaBoja(model));
     else RemovePlayerAttachedObject(playerid, slot);
 }
 
@@ -272,6 +281,16 @@ static OdjecaNosiKapu(playerid, model)
     gOdjecaNosi[playerid][0][pkRx] = 0.0;
     gOdjecaNosi[playerid][0][pkRy] = 0.0;
     gOdjecaNosi[playerid][0][pkRz] = 0.0;
+    new Float:p[9], bool:auto = OdjecaNaocaleFit(playerid, model, p) != 0;
+    if (auto)
+    {
+        gOdjecaNosi[playerid][0][pkX] = p[0];
+        gOdjecaNosi[playerid][0][pkY] = p[1];
+        gOdjecaNosi[playerid][0][pkZ] = p[2];
+        gOdjecaNosi[playerid][0][pkRx] = p[3];
+        gOdjecaNosi[playerid][0][pkRy] = p[4];
+        gOdjecaNosi[playerid][0][pkRz] = p[5];
+    }
     if (model)
     {
         new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, rx, ry, rz FROM headwear_fit WHERE account = %d AND model = %d", gAccountId[playerid], model);
@@ -284,6 +303,14 @@ static OdjecaNosiKapu(playerid, model)
             gOdjecaNosi[playerid][0][pkRy] = DB_GetFieldFloat(res, 4);
             gOdjecaNosi[playerid][0][pkRz] = DB_GetFieldFloat(res, 5);
         }
+        else if (auto)
+        {
+            DB_FreeResultSet(res);
+            OdjecaSpremi(playerid);
+            OdjecaObuci(playerid);
+            SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Naocale su namjestene prema vasem izgledu. Ako ne pasu: /namjestinaocale"));
+            return;
+        }
         DB_FreeResultSet(res);
     }
     OdjecaSpremi(playerid);
@@ -292,6 +319,15 @@ static OdjecaNosiKapu(playerid, model)
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Namjestite ga i spremite (ikona diskete)."));
     EditAttachedObject(playerid, ODJECA_SLOT_KAPA);
 }
+
+CMD:namjestinaocale(playerid, params[])
+{
+    if (!gUlogiran[playerid] || !gOdjecaNosi[playerid][0][pkModel]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nista ne nosite na glavi."));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Namjestite ga i spremite (ikona diskete)."));
+    return EditAttachedObject(playerid, ODJECA_SLOT_KAPA);
+}
+
+CMD:fitglasses(playerid, params[]) return cmd_namjestinaocale(playerid, params);
 
 OdjecaKapaPredmet(playerid, item)
 {

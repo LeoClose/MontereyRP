@@ -1544,7 +1544,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zlatare", "Jewellery stores", "Ювелирные магазины", "Joyerias", "Kuyumcular" },
     { "{8AB4F8}+ Nova zlatara na mojoj poziciji", "{8AB4F8}+ New jewellery store at my position", "{8AB4F8}+ Новый ювелирный на моей позиции", "{8AB4F8}+ Nueva joyeria en mi posicion", "{8AB4F8}+ Konumuma yeni kuyumcu" },
     { "{8AB4F8}+ Novi preprodavac na mojoj poziciji", "{8AB4F8}+ New fence at my position", "{8AB4F8}+ Новый скупщик на моей позиции", "{8AB4F8}+ Nuevo perista en mi posicion", "{8AB4F8}+ Konumuma yeni yatakci" },
-    { "Sat je namjesten prema igracima s istim izgledom. Ako ne pase: /namjestisat", "Your watch was fitted based on players with the same look. If it doesn't fit: /fitwatch", "Часы подогнаны по игрокам с таким же видом. Если не подходит: /fitwatch", "El reloj se ajusto segun jugadores con el mismo aspecto. Si no encaja: /fitwatch", "Saat ayni gorunume sahip oyunculara gore ayarlandi. Uymuyorsa: /fitwatch" },
+    { "Sat je namjesten prema vasem izgledu. Ako ne pase: /namjestisat", "Your watch was fitted to your look. If it doesn't fit: /fitwatch", "Часы подогнаны под ваш вид. Если не подходит: /fitwatch", "El reloj se ajusto a tu aspecto. Si no encaja: /fitwatch", "Saat gorunumunuze gore ayarlandi. Uymuyorsa: /fitwatch" },
+    { "Naocale su namjestene prema vasem izgledu. Ako ne pasu: /namjestinaocale", "Your glasses were fitted to your look. If they don't fit: /fitglasses", "Очки подогнаны под ваш вид. Если не подходят: /fitglasses", "Las gafas se ajustaron a tu aspecto. Si no encajan: /fitglasses", "Gozlukler gorunumunuze gore ayarlandi. Uymuyorsa: /fitglasses" },
+    { "Nista ne nosite na glavi.", "You are not wearing anything on your head.", "У вас ничего нет на голове.", "No llevas nada en la cabeza.", "Basinizda bir sey takmiyorsunuz." },
     { "Ne nosite sat.", "You're not wearing a watch.", "Вы не носите часы.", "No llevas reloj.", "Saat takmiyorsunuz." },
     { "Zlatne naocale", "Gold glasses", "Золотые очки", "Gafas doradas", "Altin gozluk" },
     { "Srebrne naocale", "Silver glasses", "Серебряные очки", "Gafas plateadas", "Gumus gozluk" }

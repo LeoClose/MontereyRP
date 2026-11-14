@@ -256,7 +256,6 @@ CMD:goto(playerid, params[])
 
 #define PD_MAPA_INT         10
 #define KAZINO_MAPA_INT     2
-#define KAZINO_MAPA_SVIJET  9800
 
 CMD:pdint(playerid, params[])
 {

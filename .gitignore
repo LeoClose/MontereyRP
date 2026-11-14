@@ -4,7 +4,8 @@ omp-server.exe
 *.dll
 components/
 plugins/
-models/
+models/*
+!models/nakit/
 npcmodes/*
 !npcmodes/recordings/
 npcmodes/recordings/*

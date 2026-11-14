@@ -143,8 +143,8 @@ new const gItems[][E_ITEM] = {
     { "Dijamantna ogrlica",     "kom", 3,   0,  -1, 19941 },
     { "Ukradeni nakit",         "kom", 50,  0,  -1, 19941 },
     { "Zlatna poluga",          "kom", 100, 0,  -1, 19941 },
-    { "Zlatne naocale",         "kom", 3,   0,  -1, 19008 },
-    { "Srebrne naocale",        "kom", 3,   0,  -1, 19009 }
+    { "Zlatne naocale",         "kom", 3,   0,  -1, 19017 },
+    { "Srebrne naocale",        "kom", 3,   0,  -1, 19023 }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -200,7 +200,7 @@ static PredmetNestao(playerid, item)
 {
     if (item == ITEM_MOBITEL) MobitelZatvori(playerid);
     else if ((item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) OdjecaPredmetNestao(playerid, item);
-    else if (item >= ITEM_SAT1 && item <= ITEM_SAT3) ZlataraPredmetNestao(playerid, item);
+    else if ((item >= ITEM_SAT1 && item <= ITEM_SAT3) || item == ITEM_LANAC || item == ITEM_OGRLICA) ZlataraPredmetNestao(playerid, item);
 }
 
 static InventarCheck()
@@ -223,6 +223,7 @@ static KoristiItem(playerid, item)
     if ((item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) return OdjecaKapaPredmet(playerid, item);
     if (item == ITEM_CRIJEVO) return VoziloIsprazni(playerid);
     if (item >= ITEM_SAT1 && item <= ITEM_SAT3) return ZlataraSat(playerid, item);
+    if (item == ITEM_LANAC || item == ITEM_OGRLICA) return ZlataraOgrlica(playerid, item);
     if (item == ITEM_UKRADENI_NAKIT) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Ukradeni nakit prodajte preprodavacu."));
     if (item >= ITEM_PRSTEN && item <= ITEM_ZLATO) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Nakit i zlato prodajete u zlatari."));
     if (item == ITEM_KARTICA) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Karticu koristite u banci i na mobitelu (Internet, Banka)."));
