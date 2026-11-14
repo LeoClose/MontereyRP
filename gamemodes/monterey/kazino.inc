@@ -1,4 +1,6 @@
 #define KAZINO_MAX          32
+#define KAZINO_ULAZA        8
+#define KAZINO_SVIJET       9800
 #define KAZINO_DOMET        2.5
 #define KAZINO_SKIN         171
 #define KAZINO_SKIN_BLAGAJNA 172
@@ -37,10 +39,13 @@ enum { KR_NEMA, KR_CEKA, KR_LETI }
 enum E_KR { krFaza, krKraj, krT, krM, krCrash, krPobjednik, krZadnji, krToken, krKonj[5] }
 enum { KTD_STAZA = TTD_POLJE + 5, KTD_CILJ, KTD_KONJ }
 
+enum E_KZULAZ { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, Float:kuA, STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
 enum E_KAZINO { bool:kzIma, kzDb, kzTip, Float:kzX, Float:kzY, Float:kzZ, Float:kzA, kzInt, kzSvijet, kzAktor, STREAMER_TAG_3D_TEXT_LABEL:kzTekst }
 enum E_BJ { bjRuke, bjAktivna, bjDilerKarte[BJ_KARATA], bjDilerN, bool:bjOsiguranje, bjOsigUlog, bool:bjPrvi, bool:bjPredao, bool:bjAsovi }
 
 static gKaz[KAZINO_MAX][E_KAZINO], gKr[KAZINO_MAX][E_KR];
+static const Float:gKazinoUnutra[4] = { 1502.5, 961.75, -32.6, 270.0 };
+static gKu[KAZINO_ULAZA][E_KZULAZ], gKuIgrac[MAX_PLAYERS];
 static gApKazino[MAX_PLAYERS], gKzBlagajna[MAX_PLAYERS], bool:gKzBira[MAX_PLAYERS], gKzNovi[MAX_PLAYERS];
 static PlayerText:gKzTd[MAX_PLAYERS][KZ_TD], gKzTdN[MAX_PLAYERS], bool:gKzOtvoren[MAX_PLAYERS], bool:gKzIgra[MAX_PLAYERS], gKzStol[MAX_PLAYERS], gKzTip[MAX_PLAYERS], gKzUlog[MAX_PLAYERS], gKzRunda[MAX_PLAYERS];
 static gBj[MAX_PLAYERS][E_BJ], gBjKarte[MAX_PLAYERS][BJ_RUKE][BJ_KARATA], gBjN[MAX_PLAYERS][BJ_RUKE], gBjUlog[MAX_PLAYERS][BJ_RUKE];
@@ -87,6 +92,20 @@ static bool:BacBankerVuce(b, p3)
 
 InitKazino()
 {
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS casino_entrances (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
+    new DBResult:ulazi = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM casino_entrances ORDER BY id LIMIT %d", KAZINO_ULAZA);
+    for (new u = 0, n = DB_GetRowCount(ulazi); u < n; u++, DB_SelectNextRow(ulazi))
+    {
+        gKu[u][kuDb] = DB_GetFieldInt(ulazi, 0);
+        gKu[u][kuX] = DB_GetFieldFloat(ulazi, 1);
+        gKu[u][kuY] = DB_GetFieldFloat(ulazi, 2);
+        gKu[u][kuZ] = DB_GetFieldFloat(ulazi, 3);
+        gKu[u][kuA] = DB_GetFieldFloat(ulazi, 4);
+        KazinoUlazStvori(u);
+    }
+    DB_FreeResultSet(ulazi);
+    CreateDynamicPickup(HQ_PICKUP, 1, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2], KAZINO_SVIJET, KAZINO_MAPA_INT);
+    CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, KAZINO_SVIJET, KAZINO_MAPA_INT);
     new k1[] = { 0, 25 }, k2[] = { 13, 39, 8 }, k3[] = { 9, 18, 45 };
     assert(BjVrijednost(k1, 2) == 21 && BjVrijednost(k2, 3) == 21 && BjVrijednost(k3, 3) == 23);
     new r1[] = { 0, 9, 10, 11, 12 }, r2[] = { 0, 1, 2, 3, 17 }, r3[] = { 10, 23, 4, 5, 7 }, r4[] = { 1, 14, 27, 4, 17 }, r5[] = { 9, 22, 2, 16, 30 }, r6[] = { 5, 18, 7, 20, 32 };
@@ -112,6 +131,47 @@ InitKazino()
         DB_SelectNextRow(res);
     }
     DB_FreeResultSet(res);
+}
+
+static KazinoUlazStvori(u)
+{
+    gKu[u][kuIma] = true;
+    gKu[u][kuPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 0, 0);
+    gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino\n[Y]", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+}
+
+KazinoUlaz(playerid)
+{
+    if (GetPlayerVirtualWorld(playerid) == KAZINO_SVIJET && GetPlayerInterior(playerid) == KAZINO_MAPA_INT)
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, 2.0, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2])) return 0;
+        new u = gKuIgrac[playerid];
+        if (u < 0 || u >= KAZINO_ULAZA || !gKu[u][kuIma])
+        {
+            u = 0;
+            while (u < KAZINO_ULAZA && !gKu[u][kuIma]) u++;
+        }
+        if (u == KAZINO_ULAZA) return 0;
+        SetPlayerInterior(playerid, 0);
+        SetPlayerVirtualWorld(playerid, 0);
+        SetPlayerPos(playerid, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ]);
+        SetPlayerFacingAngle(playerid, gKu[u][kuA] + 180.0);
+        SetCameraBehindPlayer(playerid);
+        return 1;
+    }
+    if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return 0;
+    for (new u = 0; u < KAZINO_ULAZA; u++)
+    {
+        if (!gKu[u][kuIma] || !IsPlayerInRangeOfPoint(playerid, 2.0, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ])) continue;
+        gKuIgrac[playerid] = u;
+        SetPlayerInterior(playerid, KAZINO_MAPA_INT);
+        SetPlayerVirtualWorld(playerid, KAZINO_SVIJET);
+        SetPlayerPos(playerid, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2]);
+        SetPlayerFacingAngle(playerid, gKazinoUnutra[3]);
+        SetCameraBehindPlayer(playerid);
+        return 1;
+    }
+    return 0;
 }
 
 static bool:KzRundaIgra(tip)
@@ -1624,6 +1684,13 @@ ShowKazino(playerid)
 {
     new list[1024], row[96], len = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Nova igra na mojoj poziciji"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Novi ulaz u kazino na mojoj poziciji"));
+    for (new u = 0; u < KAZINO_ULAZA; u++)
+    {
+        if (!gKu[u][kuIma]) continue;
+        format(row, sizeof row, T(playerid, "[%d] Ulaz u kazino - %s"), gKu[u][kuDb], CestaZona(gKu[u][kuX], gKu[u][kuY]));
+        DodajStupac(list, len, row);
+    }
     for (new k = 0; k < KAZINO_MAX; k++)
     {
         if (!gKaz[k][kzIma]) continue;
@@ -1659,7 +1726,14 @@ DLG:apanel_kazino(playerid, response, listitem)
         for (new i = 0; i < sizeof gKzIme; i++) DodajStupac(list, len, T(playerid, gKzIme[i]));
         return PrikaziDialog(playerid, DLG_APANEL_KAZINO_TIP, DIALOG_STYLE_LIST, T(playerid, "Kazino"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
     }
-    new n = listitem;
+    if (listitem == 1) return KazinoUlazNovi(playerid);
+    new n = listitem - 1;
+    for (new u = 0; u < KAZINO_ULAZA; u++)
+    {
+        if (!gKu[u][kuIma] || --n) continue;
+        gApKazino[playerid] = -1 - u;
+        return PrikaziDialog(playerid, DLG_APANEL_KAZINO_BRISI, DIALOG_STYLE_MSGBOX, T(playerid, "Kazino"), T(playerid, "Obrisati ovaj ulaz?"), T(playerid, "Obrisi"), T(playerid, "Natrag"));
+    }
     for (new k = 0; k < KAZINO_MAX; k++)
     {
         if (!gKaz[k][kzIma] || --n) continue;
@@ -1676,8 +1750,43 @@ DLG:apanel_kazino_tip(playerid, response, listitem)
     return ShowKazino(playerid);
 }
 
+static KazinoUlazNovi(playerid)
+{
+    if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ulaz se postavlja samo izvana."));
+        return ShowKazino(playerid);
+    }
+    new u = 0;
+    while (u < KAZINO_ULAZA && gKu[u][kuIma]) u++;
+    if (u == KAZINO_ULAZA)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj ulaza."));
+        return ShowKazino(playerid);
+    }
+    GetPlayerPos(playerid, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ]);
+    GetPlayerFacingAngle(playerid, gKu[u][kuA]);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO casino_entrances (x, y, z, a) VALUES (%f, %f, %f, %f)", gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], gKu[u][kuA]));
+    gKu[u][kuDb] = ZadnjiId();
+    KazinoUlazStvori(u);
+    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ulaz u kazino postavljen."));
+    return ShowKazino(playerid);
+}
+
 DLG:apanel_kazino_brisi(playerid, response)
 {
+    if (gApKazino[playerid] < 0)
+    {
+        new u = -1 - gApKazino[playerid];
+        if (!response || !gKu[u][kuIma]) return ShowKazino(playerid);
+        if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+        DestroyDynamicPickup(gKu[u][kuPickup]);
+        DestroyDynamic3DTextLabel(gKu[u][kuTekst]);
+        gKu[u][kuIma] = false;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM casino_entrances WHERE id = %d", gKu[u][kuDb]));
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ulaz obrisan."));
+        return ShowKazino(playerid);
+    }
     new k = gApKazino[playerid];
     if (!response || !gKaz[k][kzIma]) return ShowKazino(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;

@@ -741,6 +741,7 @@ bool:HqUlazIzlaz(playerid)
     if (OruzarnicaUlaz(playerid)) return true;
     if (BankaUlaz(playerid)) return true;
     if (ZlataraUlaz(playerid)) return true;
+    if (KazinoUlaz(playerid)) return true;
     if (NamjestajUlaz(playerid)) return true;
     if (OdjecaUlaz(playerid)) return true;
     if (OpstinaUlaz(playerid)) return true;

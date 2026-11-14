@@ -1551,7 +1551,13 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zlatne naocale", "Gold glasses", "Золотые очки", "Gafas doradas", "Altin gozluk" },
     { "Srebrne naocale", "Silver glasses", "Серебряные очки", "Gafas plateadas", "Gumus gozluk" },
     { "%d kom  ($%d.%02d)", "%d pcs  ($%d.%02d)", "%d шт.  ($%d.%02d)", "%d uds.  ($%d.%02d)", "%d adet  ($%d.%02d)" },
-    { "Koliko dionica? (1-%d)", "How many shares? (1-%d)", "Сколько акций? (1-%d)", "Cuantas acciones? (1-%d)", "Kac hisse? (1-%d)" }
+    { "Koliko dionica? (1-%d)", "How many shares? (1-%d)", "Сколько акций? (1-%d)", "Cuantas acciones? (1-%d)", "Kac hisse? (1-%d)" },
+    { "{8AB4F8}+ Novi ulaz u kazino na mojoj poziciji", "{8AB4F8}+ New casino entrance at my position", "{8AB4F8}+ Новый вход в казино на моей позиции", "{8AB4F8}+ Nueva entrada al casino en mi posicion", "{8AB4F8}+ Konumuma yeni kumarhane girisi" },
+    { "[%d] Ulaz u kazino - %s", "[%d] Casino entrance - %s", "[%d] Вход в казино - %s", "[%d] Entrada al casino - %s", "[%d] Kumarhane girisi - %s" },
+    { "Obrisati ovaj ulaz?", "Delete this entrance?", "Удалить этот вход?", "Eliminar esta entrada?", "Bu giris silinsin mi?" },
+    { "Ulaz obrisan.", "Entrance deleted.", "Вход удалён.", "Entrada eliminada.", "Giris silindi." },
+    { "Dosegnut je maksimalan broj ulaza.", "Maximum number of entrances reached.", "Достигнуто максимальное число входов.", "Se alcanzo el maximo de entradas.", "Maksimum giris sayisina ulasildi." },
+    { "Ulaz u kazino postavljen.", "Casino entrance placed.", "Вход в казино установлен.", "Entrada al casino colocada.", "Kumarhane girisi yerlestirildi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
