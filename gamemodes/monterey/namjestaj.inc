@@ -32,7 +32,7 @@ static const gNamjestajZadano[][E_NAM_ZADANO] = {
     { 1704, 600, "Fotelja" }, { 1708, 600, "Fotelja 2" }, { 1754, 800, "Kozna fotelja" }, { 1714, 400, "Uredska stolica" },
     { 1720, 200, "Stolica" }, { 2115, 700, "Kuhinjski stol" }, { 1433, 300, "Stolic" }, { 1742, 900, "Polica za knjige" },
     { 1741, 500, "Ormaric" }, { 1748, 800, "Televizor" }, { 1752, 1500, "Veliki televizor" }, { 2131, 1000, "Hladnjak" },
-    { 948, 150, "Biljka" }, { 2069, 250, "Lampa" }
+    { 948, 150, "Biljka" }, { 2069, 250, "Lampa" }, { 2190, 2500, "Racunalo" }
 };
 
 #assert sizeof gNamjestajZadano <= NAMJESTAJ_ROBA
@@ -106,6 +106,18 @@ static NamjestajPostaviObjekt(db, model, kuca, interijer, Float:x, Float:y, Floa
         return i;
     }
     return -1;
+}
+
+NamjestajModelBlizu(playerid, model, Float:domet)
+{
+    new svijet = GetPlayerVirtualWorld(playerid), Float:x, Float:y, Float:z;
+    for (new i = 0; i < NAMJESTAJ_OBJEKATA; i++)
+    {
+        if (!gNamObjDb[i] || Streamer_GetIntData(STREAMER_TYPE_OBJECT, gNamObj[i], E_STREAMER_MODEL_ID) != model || !Streamer_IsInArrayData(STREAMER_TYPE_OBJECT, gNamObj[i], E_STREAMER_WORLD_ID, svijet)) continue;
+        GetDynamicObjectPos(gNamObj[i], x, y, z);
+        if (IsPlayerInRangeOfPoint(playerid, domet, x, y, z)) return 1;
+    }
+    return 0;
 }
 
 static NamjestajSlot(db)

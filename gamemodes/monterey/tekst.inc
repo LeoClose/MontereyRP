@@ -1461,7 +1461,25 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pljacka banke je propala.", "The bank robbery failed.", "Ограбление банка провалилось.", "El robo al banco ha fracasado.", "Banka soygunu basarisiz oldu." },
     { "Pljacka uspjela! Vas dio: $%d.", "Robbery successful! Your cut: $%d.", "Ограбление удалось! Ваша доля: $%d.", "Robo exitoso! Tu parte: $%d.", "Soygun basarili! Payiniz: $%d." },
     { "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.", "You can only draw weapons in a bank with at least 4 members of your organisation.", "Оружие в банке можно достать только вместе с минимум 4 членами организации.", "Solo puedes sacar armas en el banco con al menos 4 miembros de tu organizacion.", "Bankada silah ancak orgutunuzden en az 4 kisiyle cekilebilir." },
-    { "Informacije", "Information", "Информация", "Informacion", "Bilgiler" }
+    { "Informacije", "Information", "Информация", "Informacion", "Bilgiler" },
+    { "Racunalo", "Computer", "Компьютер", "Ordenador", "Bilgisayar" },
+    { "Ugasi", "Shut down", "Выключить", "Apagar", "Kapat" },
+    { "* %s pali racunalo.", "* %s turns on the computer.", "* %s включает компьютер.", "* %s enciende el ordenador.", "* %s bilgisayari aciyor." },
+    { "Niste kod racunala.", "You're not at a computer.", "Вы не у компьютера.", "No estas junto a un ordenador.", "Bilgisayarin yaninda degilsiniz." },
+    { "Internet bankarstvo", "Online banking", "Интернет-банк", "Banca en linea", "Internet bankaciligi" },
+    { "Oglasnik", "Classifieds", "Объявления", "Anuncios", "Ilanlar" },
+    { "Dionice", "Stocks", "Акции", "Acciones", "Hisseler" },
+    { "Dionica", "Stock", "Акция", "Accion", "Hisse" },
+    { "Promjena", "Change", "Изменение", "Cambio", "Degisim" },
+    { "Imate", "Owned", "У вас", "Tienes", "Sizde" },
+    { "{8AB4F8}+ Objavi oglas ($%d)", "{8AB4F8}+ Post an ad ($%d)", "{8AB4F8}+ Подать объявление ($%d)", "{8AB4F8}+ Publicar anuncio ($%d)", "{8AB4F8}+ Ilan ver ($%d)" },
+    { "Tekst oglasa (najvise %d znakova, cijena $%d s racuna):", "Ad text (max %d characters, costs $%d from your account):", "Текст объявления (макс. %d символов, стоимость $%d со счёта):", "Texto del anuncio (max %d caracteres, cuesta $%d de tu cuenta):", "Ilan metni (en fazla %d karakter, hesabinizdan $%d):" },
+    { "[Oglas] %s (%s, tel. %s)", "[Ad] %s (%s, tel. %s)", "[Объявление] %s (%s, тел. %s)", "[Anuncio] %s (%s, tel. %s)", "[Ilan] %s (%s, tel. %s)" },
+    { "%s: $%d po dionici, imate %d.~n~Unesite broj dionica (kupnja s racuna, prodaja uz %d%% provizije):", "%s: $%d per share, you own %d.~n~Enter the number of shares (bought from your account, sold with %d%% commission):", "%s: $%d за акцию, у вас %d.~n~Введите количество акций (покупка со счёта, продажа с комиссией %d%%):", "%s: $%d por accion, tienes %d.~n~Introduce el numero de acciones (compra desde la cuenta, venta con %d%% de comision):", "%s: hisse basi $%d, sizde %d.~n~Hisse sayisini girin (alim hesaptan, satis %%%d komisyonla):" },
+    { "Kupili ste %d dionica (%s) za $%d.", "You bought %d shares (%s) for $%d.", "Вы купили %d акций (%s) за $%d.", "Compraste %d acciones (%s) por $%d.", "%d hisse (%s) aldiniz, $%d." },
+    { "Prodali ste %d dionica (%s) za $%d.", "You sold %d shares (%s) for $%d.", "Вы продали %d акций (%s) за $%d.", "Vendiste %d acciones (%s) por $%d.", "%d hisse (%s) sattiniz, $%d." },
+    { "Najvise %d dionica po tvrtki.", "Max %d shares per company.", "Максимум %d акций на компанию.", "Maximo %d acciones por empresa.", "Sirket basina en fazla %d hisse." },
+    { "Nemate toliko dionica.", "You don't have that many shares.", "У вас нет столько акций.", "No tienes tantas acciones.", "Bu kadar hisseniz yok." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

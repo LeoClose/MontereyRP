@@ -468,6 +468,57 @@ DLG:banka(playerid, response, listitem)
     return PrikaziDialog(playerid, DLG_BANKA_UNOS, DIALOG_STYLE_INPUT, T(playerid, "Banka"), body, T(playerid, "Potvrdi"), T(playerid, "Natrag"));
 }
 
+bool:BankaPosaljiUnos(playerid, const unos[])
+{
+    new idx = 0, p1[32], p2[16];
+    if (!SljedeciParam(unos, idx, p1) || !SljedeciParam(unos, idx, p2) || !ProvjeriBroj(p2) || strlen(p2) > 9)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Unesite: [id/ime primatelja] [iznos]"));
+        return false;
+    }
+    new t = FindPlayer(p1), primatelj = 0;
+    if (t != INVALID_PLAYER_ID && gUlogiran[t]) primatelj = gAccountId[t];
+    else
+    {
+        for (new i = 0; p1[i]; i++) if (p1[i] == ' ') p1[i] = '_';
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM accounts WHERE name = '%q' COLLATE NOCASE", p1);
+        if (DB_GetRowCount(res)) primatelj = DB_GetFieldInt(res, 0);
+        DB_FreeResultSet(res);
+    }
+    return BankaPosalji(playerid, primatelj, strval(p2));
+}
+
+bool:BankaOtplati(playerid, n)
+{
+    new stanje, stednja, kredit, rata, rok;
+    if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok) || !kredit) return false;
+    if (n > kredit) n = kredit;
+    if (n <= 0 || stanje < n)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko novca na racunu."));
+        return false;
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, loan = loan - %d WHERE account = %d", n, n, gAccountId[playerid]));
+    return true;
+}
+
+bool:BankaPromijeni(playerid, iznos)
+{
+    new stanje, stednja, kredit, rata, rok;
+    if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate bankovni racun."));
+        return false;
+    }
+    if (stanje + iznos < 0)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko novca na racunu."));
+        return false;
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, gAccountId[playerid]));
+    return true;
+}
+
 DLG:banka_info(playerid)
 {
     return BankaKasa(playerid);
@@ -477,21 +528,11 @@ DLG:banka_unos(playerid, response, const inputtext[])
 {
     if (BankaIgraca(playerid) == -1) return 1;
     if (!response) return BankaKasa(playerid);
-    new a = gBankaOdabir[playerid], racun = gAccountId[playerid], stanje, stednja, kredit, rata, rok, idx = 0, p1[32], p2[16];
+    new a = gBankaOdabir[playerid], racun = gAccountId[playerid], stanje, stednja, kredit, rata, rok;
     if (!BankaUcitaj(racun, stanje, stednja, kredit, rata, rok)) return 1;
     if (a == BA_POSALJI)
     {
-        if (!SljedeciParam(inputtext, idx, p1) || !SljedeciParam(inputtext, idx, p2) || !ProvjeriBroj(p2) || strlen(p2) > 9) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Unesite: [id/ime primatelja] [iznos]"));
-        new t = FindPlayer(p1), primatelj = 0;
-        if (t != INVALID_PLAYER_ID && gUlogiran[t]) primatelj = gAccountId[t];
-        else
-        {
-            for (new i = 0; p1[i]; i++) if (p1[i] == ' ') p1[i] = '_';
-            new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM accounts WHERE name = '%q' COLLATE NOCASE", p1);
-            if (DB_GetRowCount(res)) primatelj = DB_GetFieldInt(res, 0);
-            DB_FreeResultSet(res);
-        }
-        BankaPosalji(playerid, primatelj, strval(p2));
+        BankaPosaljiUnos(playerid, inputtext);
         return BankaKasa(playerid);
     }
     new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 9 ? strval(inputtext) : 0;
@@ -528,12 +569,7 @@ DLG:banka_unos(playerid, response, const inputtext[])
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d, loan = %d, loan_rate = %d, loan_due = %d WHERE account = %d", n, dug, BankaRata(dug), gettime() + BANKA_DAN, racun));
             SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kredit odobren: $%d na racun. Dug $%d, rata $%d svaka 24 h."), n, dug, BankaRata(dug));
         }
-        case BA_OTPLATI:
-        {
-            if (n > kredit) n = kredit;
-            if (stanje < n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko novca na racunu."));
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, loan = loan - %d WHERE account = %d", n, n, racun));
-        }
+        case BA_OTPLATI: if (!BankaOtplati(playerid, n)) return 1;
     }
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Transakcija uspjesna."));
     return BankaKasa(playerid);
