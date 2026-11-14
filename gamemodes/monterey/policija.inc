@@ -6,6 +6,7 @@
 #define VUCA_RAZMAK         1.0
 #define VUCA_MS             250
 #define VUCA_HOD            1.2
+#define LISICE_PAD_MS       2500
 #define PD_VOZILO_DOMET     5.0
 #define VUCA_TELEPORT       4.0
 #define TASER_DOMET         15.0
@@ -86,6 +87,21 @@ ZatvorProvjera(playerid)
 ImaLisice(playerid)
 {
     return gCuffed[playerid];
+}
+
+PolicijaKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (!gCuffed[playerid] || gDragBy[playerid] || !(newkeys & KEY_JUMP) || (oldkeys & KEY_JUMP) || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    ApplyAnimation(playerid, "PED", "KO_skid_front", 4.1, false, true, true, true, 0, SYNC_ALL);
+    SetTimerEx("LisiceUstani", LISICE_PAD_MS, false, "ii", playerid, gAccountId[playerid]);
+}
+
+forward LisiceUstani(playerid, racun);
+public LisiceUstani(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || !gCuffed[playerid] || gDragBy[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    ClearAnimations(playerid, SYNC_ALL);
+    VratiLisice(playerid);
 }
 
 VratiLisice(playerid)

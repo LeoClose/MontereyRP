@@ -149,6 +149,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     AnimKey(playerid, newkeys, oldkeys);
     VoziloKey(playerid, newkeys, oldkeys);
     KurvaPotrubiKey(playerid, newkeys, oldkeys);
+    PolicijaKey(playerid, newkeys, oldkeys);
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) Interakcija(playerid);
     return 1;
 }
