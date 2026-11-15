@@ -228,20 +228,12 @@ GarazaParkiraj(playerid, v)
 
 static GarazaUdi(playerid, g)
 {
-    SetPlayerInterior(playerid, GARAZA_INT);
-    SetPlayerVirtualWorld(playerid, GarazaSvijet(gGaraza[g][gaDb]));
-    SetPlayerPos(playerid, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2]);
-    SetPlayerFacingAngle(playerid, gGarazaUlaz[3]);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, GARAZA_INT, GarazaSvijet(gGaraza[g][gaDb]), gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2], gGarazaUlaz[3]);
 }
 
 static GarazaVani(playerid, g)
 {
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ]);
-    SetPlayerFacingAngle(playerid, gGaraza[g][gaA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], gGaraza[g][gaA] + 180.0);
 }
 
 static GarazaIsprazni(g)

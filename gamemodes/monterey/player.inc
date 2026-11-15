@@ -102,11 +102,7 @@ public OnPlayerSpawn(playerid)
     LoginSpawn(playerid);
     StetaSpawn(playerid);
     SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
-    SetPlayerFacingAngle(playerid, SPAWN_A);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     AnimPreload(playerid);
     PolicijaSpawn(playerid);
     GepekSpawn(playerid);

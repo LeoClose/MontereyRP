@@ -197,11 +197,7 @@ static NamjestajIgraca(playerid)
 static NamjestajVani(playerid, s)
 {
     NamjestajZatvori(playerid);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ]);
-    SetPlayerFacingAngle(playerid, gNam[s][nmA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ], gNam[s][nmA] + 180.0);
 }
 
 NamjestajUlaz(playerid)
@@ -219,10 +215,7 @@ NamjestajUlaz(playerid)
     {
         if (!gNam[s][nmIma] || !IsPlayerInRangeOfPoint(playerid, NAMJESTAJ_DOMET, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ])) continue;
         new i = gNam[s][nmInt];
-        SetPlayerInterior(playerid, gNamjestajInt[i][niInt]);
-        SetPlayerVirtualWorld(playerid, NAMJESTAJ_SVIJET + s);
-        SetPlayerPos(playerid, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, gNamjestajInt[i][niInt], NAMJESTAJ_SVIJET + s, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ]);
         if (gNam[s][nmImaAktor]) AktorKaze(playerid, gNam[s][nmAktor], "Prodavac", "Dobrodosli. Namjestaj mozete pogledati na blagajni.");
         return 1;
     }

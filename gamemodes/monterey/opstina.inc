@@ -150,11 +150,7 @@ static VrataStvori()
 
 static OpstinaUnutra(playerid)
 {
-    SetPlayerInterior(playerid, gVrata[vrInt]);
-    SetPlayerVirtualWorld(playerid, OPSTINA_SVIJET);
-    SetPlayerPos(playerid, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz]);
-    SetPlayerFacingAngle(playerid, gVrata[vrIa]);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, gVrata[vrInt], OPSTINA_SVIJET, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz], gVrata[vrIa]);
 }
 
 OpstinaUlaz(playerid)
@@ -163,11 +159,7 @@ OpstinaUlaz(playerid)
     if (GetPlayerVirtualWorld(playerid) == OPSTINA_SVIJET && GetPlayerInterior(playerid) == gVrata[vrInt])
     {
         if (!IsPlayerInRangeOfPoint(playerid, OPSTINA_VRATA_DOMET, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz])) return 0;
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-        SetPlayerPos(playerid, gVrata[vrX], gVrata[vrY], gVrata[vrZ]);
-        SetPlayerFacingAngle(playerid, gVrata[vrA] + 180.0);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, 0, 0, gVrata[vrX], gVrata[vrY], gVrata[vrZ], gVrata[vrA] + 180.0);
         return 1;
     }
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, OPSTINA_VRATA_DOMET, gVrata[vrX], gVrata[vrY], gVrata[vrZ])) return 0;

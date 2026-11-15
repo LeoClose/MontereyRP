@@ -509,9 +509,7 @@ static MaricaExit(playerid)
         y = gMaricaIzlaz[playerid][1];
         z = gMaricaIzlaz[playerid][2];
     }
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, x, y, z);
+    PrebaciIgraca(playerid, 0, 0, x, y, z);
     new Float:a;
     GetVehicleZAngle(gPrikolicaVuce[gMaricaU[playerid]] ? gPrikolicaVuce[gMaricaU[playerid]] : gMaricaU[playerid], a);
     SetPlayerFacingAngle(playerid, GetVehicleModel(gMaricaU[playerid]) == PRIKOLICA_MODEL ? a - 90.0 * PRIKOLICA_STRANA : a + 180.0);
@@ -538,10 +536,7 @@ static UdjiUMaricu(playerid, v)
     }
     GetPlayerPos(playerid, gMaricaIzlaz[playerid][0], gMaricaIzlaz[playerid][1], gMaricaIzlaz[playerid][2]);
     gMaricaU[playerid] = v;
-    SetPlayerInterior(playerid, unutra);
-    SetPlayerVirtualWorld(playerid, svijet);
-    SetPlayerPos(playerid, x, y, z);
-    SetPlayerFacingAngle(playerid, 180.0);
+    PrebaciIgraca(playerid, unutra, svijet, x, y, z, 180.0);
     SetPlayerTime(playerid, 0, 0);
     SetCameraBehindPlayer(playerid);
     Streamer_UpdateEx(playerid, x, y, z, svijet, unutra, STREAMER_TYPE_OBJECT, 1000);
@@ -648,16 +643,6 @@ MaricaKey(playerid, KEY:newkeys, KEY:oldkeys)
         if (ImaLisice(playerid) && VectorSize(vx, vy, vz) > 0.02) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo se krece."));
         else MaricaExit(playerid);
     }
-}
-
-CMD:maricatest(playerid, params[])
-{
-    if (!gAdmin[playerid]) return 0;
-    MaricaReset(playerid);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, -1704.5363, 18.5412, 3.5547);
-    return 1;
 }
 
 #define HELI_LSPD           7

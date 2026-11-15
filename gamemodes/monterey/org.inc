@@ -135,13 +135,6 @@ PosaljiSvima(color, const msg[], const a[] = "", const b[] = "", const c[] = "",
         if (IsPlayerConnected(i) && gUlogiran[i]) SendClientMessage(i, color, T(i, msg), a, b, c, d);
 }
 
-UlogiranProvjera(acc)
-{
-    for (new i = 0; i < MAX_PLAYERS; i++)
-        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == acc) return i;
-    return INVALID_PLAYER_ID;
-}
-
 bool:ClanInfo(org, acc, name[MAX_PLAYER_NAME + 1], rank[ORG_RANK_LEN], &perms)
 {
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT name, org_rank, org_perms FROM accounts WHERE id = %d AND org = %d", acc, org);
@@ -165,7 +158,7 @@ IzbaciClana(playerid, acc)
     if (!ClanInfo(gOrg[playerid], acc, name, rank, perms)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije u vasoj organizaciji."));
     if (perms & PERM_LEADER) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Lidera moze maknuti samo admin."));
     PosaljiOrg(gOrg[playerid], "%s je izbacio %s iz organizacije.", GetRPIme(playerid), name);
-    new t = UlogiranProvjera(acc);
+    new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID) { OcistiClana(t); SetPlayerSkin(t, DEFAULT_SKIN); }
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org = 0, org_rank = '', org_perms = 0, org_skin = -1 WHERE id = %d", acc));
     return 1;
@@ -180,7 +173,7 @@ PostaviRank(playerid, acc, const input[])
     RemoveBoje(rank);
     if (!rank[0]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Naziv ranka ne smije biti prazan."));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org_rank = '%q' WHERE id = %d", rank, acc));
-    new t = UlogiranProvjera(acc);
+    new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID)
     {
         strcopy(gOrgRank[t], rank, ORG_RANK_LEN);
@@ -266,7 +259,7 @@ DLG:org_zaduzenja(playerid, response, listitem)
     }
     perms ^= 1 << listitem;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org_perms = %d WHERE id = %d", perms, acc));
-    new t = UlogiranProvjera(acc);
+    new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID)
     {
         gOrgPerms[t] = perms;
@@ -713,11 +706,7 @@ bool:HqUlazIzlaz(playerid)
         if (!org) continue;
         if (svijet == HQ_SVIJET + org && IsPlayerInRangeOfPoint(playerid, HQ_DOMET, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz]))
         {
-            SetPlayerInterior(playerid, 0);
-            SetPlayerVirtualWorld(playerid, 0);
-            SetPlayerPos(playerid, gHq[i][hX], gHq[i][hY], gHq[i][hZ]);
-            SetPlayerFacingAngle(playerid, gHq[i][hA] + 180.0);
-            SetCameraBehindPlayer(playerid);
+            PrebaciIgraca(playerid, 0, 0, gHq[i][hX], gHq[i][hY], gHq[i][hZ], gHq[i][hA] + 180.0);
             return true;
         }
         if (svijet || GetPlayerInterior(playerid) || !IsPlayerInRangeOfPoint(playerid, HQ_DOMET, gHq[i][hX], gHq[i][hY], gHq[i][hZ])) continue;
@@ -731,10 +720,7 @@ bool:HqUlazIzlaz(playerid)
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Trazeni ste i ne mozete uci u HQ."));
             return true;
         }
-        SetPlayerInterior(playerid, gHq[i][hInt]);
-        SetPlayerVirtualWorld(playerid, HQ_SVIJET + org);
-        SetPlayerPos(playerid, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, gHq[i][hInt], HQ_SVIJET + org, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz]);
         return true;
     }
     if (TrgovinaUlaz(playerid)) return true;

@@ -122,11 +122,7 @@ static BankaIgraca(playerid)
 
 static BankaVani(playerid, s)
 {
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ]);
-    SetPlayerFacingAngle(playerid, gBanka[s][bkA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], gBanka[s][bkA] + 180.0);
 }
 
 static BankaCuvarStvori(s, c)
@@ -295,10 +291,7 @@ BankaUlaz(playerid)
     for (s = 0; s < BANKA_MAX; s++)
     {
         if (!gBanka[s][bkIma] || !IsPlayerInRangeOfPoint(playerid, BANKA_DOMET, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ])) continue;
-        SetPlayerInterior(playerid, gBanka[s][bkInt]);
-        SetPlayerVirtualWorld(playerid, BANKA_SVIJET + s);
-        SetPlayerPos(playerid, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, gBanka[s][bkInt], BANKA_SVIJET + s, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz]);
         if (gBanka[s][bkImaAktor]) AktorKaze(playerid, gBanka[s][bkAktor], "Sluzbenik", "Dobar dan, izvolite na salter.");
         return 1;
     }
@@ -368,9 +361,9 @@ static bool:BankaPosalji(playerid, racun, iznos)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d WHERE account = %d", iznos, gAccountId[playerid]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, racun));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Poslali ste $%d."), iznos);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    new i = IgracRacuna(racun);
+    if (i != INVALID_PLAYER_ID)
     {
-        if (!gUlogiran[i] || gAccountId[i] != racun) continue;
         new poruka[144];
         format(poruka, sizeof poruka, T(i, "Na vas racun je stiglo $%d od %s."), iznos, GetRPIme(playerid));
         MobitelBankaSms(i, poruka);

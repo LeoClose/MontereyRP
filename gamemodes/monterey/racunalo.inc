@@ -182,11 +182,6 @@ static PlayerText:PcRed(playerid, Float:x, Float:y, Float:w)
     return td;
 }
 
-static PcCisti(tekst[])
-{
-    for (new i = 0; tekst[i]; i++) if (tekst[i] == '~') tekst[i] = '-';
-}
-
 static PcPostavi(playerid, dio, const tekst[], bool:vidljivo = true)
 {
     PlayerTextDrawSetString(playerid, gPc[playerid][dio], tekst[0] ? tekst : "_");
@@ -279,15 +274,9 @@ static PcGraf(playerid, bool:sve = true)
     }
 }
 
-static LsIgrac(acc)
-{
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == acc) return i;
-    return INVALID_PLAYER_ID;
-}
-
 static LsSkin(acc)
 {
-    new i = LsIgrac(acc);
+    new i = IgracRacuna(acc);
     if (i != INVALID_PLAYER_ID) return GetPlayerSkin(i);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT skin FROM player_style WHERE account = %d", acc), skin = DEFAULT_SKIN;
     if (DB_GetRowCount(res) && DB_GetFieldInt(res, 0) >= 0) skin = DB_GetFieldInt(res, 0);
@@ -301,7 +290,7 @@ static LsIme(acc, ime[], len)
     ime[0] = 0;
     if (DB_GetRowCount(res)) DB_GetFieldString(res, 0, ime, len);
     DB_FreeResultSet(res);
-    PcCisti(ime);
+    TdCisti(ime);
 }
 
 static LsRacun(const unos[])
@@ -355,8 +344,8 @@ static LsObjave(playerid, const uvjet[], acc, od)
     {
         DB_GetFieldString(res, 2, tekst, sizeof tekst);
         DB_GetFieldString(res, 3, ime, sizeof ime);
-        PcCisti(tekst);
-        PcCisti(ime);
+        TdCisti(tekst);
+        TdCisti(ime);
         LsPrije(playerid, DB_GetFieldInt(res, 4), vrijeme, sizeof vrijeme);
         format(red, sizeof red, T(playerid, "~b~%s  ~l~%s   ~r~+%d  ~l~%d komentara~n~~l~%s"), ime, vrijeme, DB_GetFieldInt(res, 5), DB_GetFieldInt(res, 6), tekst);
         LsRed(playerid, od + r, DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 0), red);
@@ -392,8 +381,8 @@ static LsObjava(playerid)
     new autor = DB_GetFieldInt(res, 0), bool:svida = DB_GetFieldInt(res, 5) > 0;
     DB_GetFieldString(res, 1, tekst, sizeof tekst);
     DB_GetFieldString(res, 2, ime, sizeof ime);
-    PcCisti(tekst);
-    PcCisti(ime);
+    TdCisti(tekst);
+    TdCisti(ime);
     LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
     format(red, sizeof red, T(playerid, "~b~%s  ~l~%s   ~r~+%d~n~~l~%s"), ime, vrijeme, DB_GetFieldInt(res, 4), tekst);
     DB_FreeResultSet(res);
@@ -404,8 +393,8 @@ static LsObjava(playerid)
     {
         DB_GetFieldString(res, 1, tekst, sizeof tekst);
         DB_GetFieldString(res, 2, ime, sizeof ime);
-        PcCisti(tekst);
-        PcCisti(ime);
+        TdCisti(tekst);
+        TdCisti(ime);
         LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
         format(red, sizeof red, "~p~%s  ~l~%s~n~~l~%s", ime, vrijeme, tekst);
         LsRed(playerid, r + 1, DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 0), red);
@@ -425,9 +414,9 @@ static LsPrijatelji(playerid)
     {
         new acc = DB_GetFieldInt(res, 0), bool:zahtjev = DB_GetFieldInt(res, 1) == 0;
         DB_GetFieldString(res, 2, ime, sizeof ime);
-        PcCisti(ime);
+        TdCisti(ime);
         if (zahtjev) format(red, sizeof red, T(playerid, "~b~%s~n~~r~Zeli vas za prijatelja%s"), ime, gLsOdabran[playerid] == acc ? (" <") : (""));
-        else format(red, sizeof red, "~b~%s~n~%s", ime, LsIgrac(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
+        else format(red, sizeof red, "~b~%s~n~%s", ime, IgracRacuna(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
         LsRed(playerid, r, acc, zahtjev ? -acc : acc, red);
     }
     DB_FreeResultSet(res);
@@ -446,8 +435,8 @@ static LsPoruke(playerid)
         new acc = DB_GetFieldInt(res, 0), broj = DB_GetFieldInt(res, 4);
         DB_GetFieldString(res, 1, ime, sizeof ime);
         DB_GetFieldString(res, 2, tekst, sizeof tekst);
-        PcCisti(ime);
-        PcCisti(tekst);
+        TdCisti(ime);
+        TdCisti(tekst);
         LsPrije(playerid, DB_GetFieldInt(res, 3), vrijeme, sizeof vrijeme);
         nove[0] = 0;
         if (broj) format(nove, sizeof nove, T(playerid, "~r~%d novih"), broj);
@@ -471,7 +460,7 @@ static LsRazgovor(playerid)
     {
         new od = DB_GetFieldInt(res, 0);
         DB_GetFieldString(res, 1, tekst, sizeof tekst);
-        PcCisti(tekst);
+        TdCisti(tekst);
         LsPrije(playerid, DB_GetFieldInt(res, 2), vrijeme, sizeof vrijeme);
         format(red, sizeof red, "%s%s  ~l~%s~n~~l~%s", od == me ? ("~g~") : ("~b~"), od == me ? ja : on, vrijeme, tekst);
         LsRed(playerid, r, od, 0, red);
@@ -489,7 +478,7 @@ static LsProfil(playerid)
     new prijatelja = LsBroj("SELECT COUNT(*) FROM social_friends WHERE (a = %d OR b = %d) AND accepted = 1", acc);
     new objava = LsBroj("SELECT COUNT(*) FROM social_posts WHERE account = %d", acc);
     new lajkova = LsBroj("SELECT COUNT(*) FROM social_likes l JOIN social_posts p ON p.id = l.post WHERE p.account = %d", acc);
-    format(tekst, sizeof tekst, T(playerid, "~b~%s~n~%s~n~~n~~l~Prijatelja: %d~n~Objava: %d~n~Svidjanja: %d"), ime, LsIgrac(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"), prijatelja, objava, lajkova);
+    format(tekst, sizeof tekst, T(playerid, "~b~%s~n~%s~n~~n~~l~Prijatelja: %d~n~Objava: %d~n~Svidjanja: %d"), ime, IgracRacuna(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"), prijatelja, objava, lajkova);
     PcPostavi(playerid, PTD_LSINFO, tekst);
     PcPostavi(playerid, PTD_SADRZAJ, "_");
     PlayerTextDrawSetPreviewModel(playerid, gPc[playerid][PTD_LSPROFIL], LsSkin(acc));
@@ -612,7 +601,7 @@ static LsZahtjev(playerid, acc)
         case LS_PRIMIO: return LsPrihvati(playerid, acc);
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_friends (a, b, created) VALUES (%d, %d, %d)", me, acc, gettime()));
-    new t = LsIgrac(acc);
+    new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s vam je poslao zahtjev za prijateljstvo."), GetRPIme(playerid));
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zahtjev za prijateljstvo poslan."));
 }
@@ -620,7 +609,7 @@ static LsZahtjev(playerid, acc)
 static LsPrihvati(playerid, acc)
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE social_friends SET accepted = 1 WHERE a = %d AND b = %d", acc, gAccountId[playerid]));
-    new t = LsIgrac(acc);
+    new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je prihvatio vas zahtjev za prijateljstvo."), GetRPIme(playerid));
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sada ste prijatelji."));
 }
@@ -752,13 +741,13 @@ static LsUnos(playerid, akcija, const inputtext[])
         DB_FreeResultSet(res);
         if (!autor) return 1;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_comments (post, account, text, created) VALUES (%d, %d, '%q', %d)", post, me, tekst, sad));
-        new t = LsIgrac(autor);
+        new t = IgracRacuna(autor);
         if (autor != me && t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je komentirao vasu objavu."), GetRPIme(playerid));
         return 1;
     }
     new p = gLsCilj[playerid];
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_messages (sender, receiver, text, created) VALUES (%d, %d, '%q', %d)", me, p, tekst, sad));
-    new t = LsIgrac(p);
+    new t = IgracRacuna(p);
     if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] Nova poruka od %s: %s"), GetRPIme(playerid), tekst);
     return 1;
 }
@@ -808,8 +797,8 @@ static PcEkran(playerid, ekran)
                 DB_GetFieldString(res, 0, oglas, sizeof oglas);
                 DB_GetFieldString(res, 1, ime, sizeof ime);
                 DB_GetFieldString(res, 2, broj, sizeof broj);
-                PcCisti(oglas);
-                PcCisti(ime);
+                TdCisti(oglas);
+                TdCisti(ime);
                 format(red, sizeof red, "%s~n~~b~   %s, %s~l~~n~", oglas, ime, broj);
                 strcat(tekst, red);
             }

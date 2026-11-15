@@ -44,6 +44,15 @@ stock ZamrzniIgraca(playerid, bool:moze)
     return TogglePlayerControllable(playerid, moze);
 }
 #define SetPlayerPos PrenesiIgraca
+
+stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
+{
+    SetPlayerInterior(playerid, interijer);
+    SetPlayerVirtualWorld(playerid, svijet);
+    SetPlayerPos(playerid, x, y, z);
+    if (kut > -1000.0) SetPlayerFacingAngle(playerid, kut);
+    SetCameraBehindPlayer(playerid);
+}
 #define TogglePlayerControllable ZamrzniIgraca
 
 #pragma dynamic 32768
@@ -471,12 +480,6 @@ stock ShowHud(playerid)
 {
     TextDrawShowForPlayer(playerid, Ime);
     TextDrawShowForPlayer(playerid, ImeRp);
-}
-
-stock HideHud(playerid)
-{
-    TextDrawHideForPlayer(playerid, Ime);
-    TextDrawHideForPlayer(playerid, ImeRp);
 }
 
 forward KickajIgraca(playerid);

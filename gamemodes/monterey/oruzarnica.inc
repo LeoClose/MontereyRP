@@ -118,11 +118,7 @@ static OruzarnicaIgraca(playerid)
 static OruzarnicaVani(playerid, s)
 {
     OruzarnicaZatvori(playerid);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ]);
-    SetPlayerFacingAngle(playerid, gOruz[s][orA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ], gOruz[s][orA] + 180.0);
 }
 
 OruzarnicaUlaz(playerid)
@@ -140,10 +136,7 @@ OruzarnicaUlaz(playerid)
     {
         if (!gOruz[s][orIma] || !IsPlayerInRangeOfPoint(playerid, ORUZARNICA_DOMET, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ])) continue;
         new i = gOruz[s][orInt];
-        SetPlayerInterior(playerid, gOruzarnicaInt[i][oiInt]);
-        SetPlayerVirtualWorld(playerid, ORUZARNICA_SVIJET + s);
-        SetPlayerPos(playerid, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, gOruzarnicaInt[i][oiInt], ORUZARNICA_SVIJET + s, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ]);
         if (gOruz[s][orImaAktor]) AktorKaze(playerid, gOruz[s][orAktor], "Prodavac", "Dobrodosli. Oruzje i municiju prodajem na pultu.");
         return 1;
     }

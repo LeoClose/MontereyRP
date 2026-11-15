@@ -219,18 +219,12 @@ static bool:KucaStanar(playerid, k)
 static KucaUdi(playerid, k)
 {
     new i = gKuca[k][kuInt];
-    SetPlayerInterior(playerid, gKucaInt[i][kiInt]);
-    SetPlayerVirtualWorld(playerid, KUCA_SVIJET + gKuca[k][kuDb]);
-    SetPlayerPos(playerid, gKucaInt[i][kiX], gKucaInt[i][kiY], gKucaInt[i][kiZ]);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, gKucaInt[i][kiInt], KUCA_SVIJET + gKuca[k][kuDb], gKucaInt[i][kiX], gKucaInt[i][kiY], gKucaInt[i][kiZ]);
 }
 
 static KucaVani(playerid, k)
 {
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ]);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ]);
 }
 
 static KucaIsprazni(k)
@@ -246,9 +240,9 @@ static KucaMakniSpawn(db)
 
 static KucaIsplati(racun, iznos)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    new i = IgracRacuna(racun);
+    if (i != INVALID_PLAYER_ID)
     {
-        if (!IsPlayerConnected(i) || !gUlogiran[i] || gAccountId[i] != racun) continue;
         DajNovac(i, iznos);
         return;
     }

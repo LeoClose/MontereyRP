@@ -247,9 +247,7 @@ CMD:goto(playerid, params[])
     new target = FindPlayer(p1);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
     GetPlayerPos(target, x, y, z);
-    SetPlayerInterior(playerid, GetPlayerInterior(target));
-    SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(target));
-    SetPlayerPos(playerid, x + 1.0, y, z + 0.5);
+    PrebaciIgraca(playerid, GetPlayerInterior(target), GetPlayerVirtualWorld(target), x + 1.0, y, z + 0.5);
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste do igraca %s."), GetRPIme(target));
     return 1;
 }
@@ -261,10 +259,7 @@ CMD:pdint(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
     if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stisni Enter da izadjes iz vozila."));
-    SetPlayerInterior(playerid, PD_MAPA_INT);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, 1292.0, -1190.0, -28.8);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, PD_MAPA_INT, 0, 1292.0, -1190.0, -28.8);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste u PD enterijer."));
 }
 

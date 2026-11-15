@@ -701,22 +701,19 @@ MobitelPrimiPoruku(racun, const broj[], const tekst[])
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO phone_messages (account, sender, text, sent) VALUES (%d, '%q', '%q', %d)", racun, broj, tekst, gettime()));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM phone_messages WHERE account = %d AND id NOT IN (SELECT id FROM phone_messages WHERE account = %d ORDER BY id DESC LIMIT %d)", racun, racun, MOBITEL_PORUKA_MAX));
-    for (new i = 0; i < MAX_PLAYERS; i++)
-    {
-        if (!IsPlayerConnected(i) || IsPlayerNPC(i) || !gUlogiran[i] || gAccountId[i] != racun) continue;
-        new ime[MOBITEL_IME];
-        MobitelImeBroja(i, broj, ime);
-        MobitelSms(i, ime, tekst);
-        return;
-    }
+    new i = IgracRacuna(racun);
+    if (i == INVALID_PLAYER_ID) return;
+    new ime[MOBITEL_IME];
+    MobitelImeBroja(i, broj, ime);
+    MobitelSms(i, ime, tekst);
 }
 
 MobitelMehanicarSms(racun, const tekst[], const model[])
 {
     new poruka[MOBITEL_PORUKA_LEN];
     format(poruka, sizeof poruka, tekst, model);
-    for (new i = 0; i < MAX_PLAYERS; i++)
-        if (IsPlayerConnected(i) && gUlogiran[i] && gAccountId[i] == racun) format(poruka, sizeof poruka, T(i, tekst), model);
+    new i = IgracRacuna(racun);
+    if (i != INVALID_PLAYER_ID) format(poruka, sizeof poruka, T(i, tekst), model);
     MobitelPrimiPoruku(racun, MOBITEL_MEHANICAR_BROJ, poruka);
 }
 

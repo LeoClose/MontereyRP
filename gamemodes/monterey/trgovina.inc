@@ -82,11 +82,7 @@ static TrgovinaIgraca(playerid)
 
 static TrgovinaVani(playerid, s)
 {
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ]);
-    SetPlayerFacingAngle(playerid, gTrg[s][tgA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ], gTrg[s][tgA] + 180.0);
 }
 
 TrgovinaUlaz(playerid)
@@ -102,10 +98,7 @@ TrgovinaUlaz(playerid)
     for (s = 0; s < TRGOVINA_MAX; s++)
     {
         if (!gTrg[s][tgIma] || !IsPlayerInRangeOfPoint(playerid, TRGOVINA_DOMET, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ])) continue;
-        SetPlayerInterior(playerid, TRGOVINA_INT);
-        SetPlayerVirtualWorld(playerid, TRGOVINA_SVIJET + s);
-        SetPlayerPos(playerid, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, TRGOVINA_INT, TRGOVINA_SVIJET + s, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2]);
         if (gTrg[s][tgImaAktor]) AktorKaze(playerid, gTrg[s][tgAktor], "Prodavac", "Dobar dan! Ako trebate nesto, tu sam na kasi.");
         return 1;
     }

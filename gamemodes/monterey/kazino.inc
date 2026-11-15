@@ -152,11 +152,7 @@ KazinoUlaz(playerid)
             while (u < KAZINO_ULAZA && !gKu[u][kuIma]) u++;
         }
         if (u == KAZINO_ULAZA) return 0;
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-        SetPlayerPos(playerid, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ]);
-        SetPlayerFacingAngle(playerid, gKu[u][kuA] + 180.0);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, 0, 0, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], gKu[u][kuA] + 180.0);
         return 1;
     }
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return 0;
@@ -164,11 +160,7 @@ KazinoUlaz(playerid)
     {
         if (!gKu[u][kuIma] || !IsPlayerInRangeOfPoint(playerid, 2.0, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ])) continue;
         gKuIgrac[playerid] = u;
-        SetPlayerInterior(playerid, KAZINO_MAPA_INT);
-        SetPlayerVirtualWorld(playerid, KAZINO_SVIJET);
-        SetPlayerPos(playerid, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2]);
-        SetPlayerFacingAngle(playerid, gKazinoUnutra[3]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, KAZINO_MAPA_INT, KAZINO_SVIJET, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2], gKazinoUnutra[3]);
         return 1;
     }
     return 0;

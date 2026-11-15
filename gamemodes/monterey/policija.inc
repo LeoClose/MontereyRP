@@ -144,20 +144,14 @@ static SaveJail(playerid)
 
 static IgracUCeliju(playerid)
 {
-    SetPlayerInterior(playerid, ZATVOR_INT);
-    SetPlayerVirtualWorld(playerid, ZATVOR_SVIJET);
-    SetPlayerPos(playerid, ZATVOR_POS);
-    SetPlayerFacingAngle(playerid, ZATVOR_A);
+    PrebaciIgraca(playerid, ZATVOR_INT, ZATVOR_SVIJET, ZATVOR_POS, ZATVOR_A);
 }
 
 static OslobodiIzZatvora(playerid)
 {
     gJailTime[playerid] = 0;
     SaveJail(playerid);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, ZATVOR_POS);
-    SetPlayerFacingAngle(playerid, ZATVOR_A);
+    PrebaciIgraca(playerid, 0, 0, ZATVOR_POS, ZATVOR_A);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pusteni ste iz zatvora."));
 }
 
@@ -389,21 +383,28 @@ static PolicijaUbaci(t, v, sjedalo)
     ClearAnimations(t, SYNC_ALL);
     TogglePlayerControllable(t, false);
     gPritvoren[t] = true;
-    SetTimerEx("PolicijaUbaciKraj", UBACI_MS, false, "iiii", t, gAccountId[t], v, sjedalo);
+    SetTimerEx("PolicijaUbaciKraj", UBACI_MS, false, "iiiii", t, gAccountId[t], v, sjedalo, 0);
 }
 
-forward PolicijaUbaciKraj(t, racun, v, sjedalo);
-public PolicijaUbaciKraj(t, racun, v, sjedalo)
+Pritvoren(playerid)
 {
-    if (!IsPlayerConnected(t) || gAccountId[t] != racun || !gPritvoren[t] || !GetVehicleModel(v)) return;
-    if (!SjedaloSlobodno(v, sjedalo))
+    return gPritvoren[playerid];
+}
+
+forward PolicijaUbaciKraj(t, racun, v, sjedalo, pokusaj);
+public PolicijaUbaciKraj(t, racun, v, sjedalo, pokusaj)
+{
+    if (!IsPlayerConnected(t) || gAccountId[t] != racun || !gPritvoren[t] || !GetVehicleModel(v) || IsPlayerInVehicle(t, v)) return;
+    if (pokusaj >= 4 || (!pokusaj && !SjedaloSlobodno(v, sjedalo)))
     {
         gPritvoren[t] = false;
         VratiLisice(t);
         TogglePlayerControllable(t, true);
         return;
     }
+    SetPlayerSpecialAction(t, SPECIAL_ACTION_NONE);
     PutPlayerInVehicle(t, v, sjedalo);
+    SetTimerEx("PolicijaUbaciKraj", 400, false, "iiiii", t, racun, v, sjedalo, pokusaj + 1);
 }
 
 bool:TaserPogodak(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hitid)

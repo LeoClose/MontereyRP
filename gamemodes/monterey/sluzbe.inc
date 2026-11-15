@@ -1184,9 +1184,7 @@ public MehanicarGotov(s)
 CMD:radionica(playerid, params[])
 {
     if (!gAdmin[playerid]) return 0;
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, RADIONICA_X, RADIONICA_Y, RADIONICA_Z);
+    PrebaciIgraca(playerid, 0, 0, RADIONICA_X, RADIONICA_Y, RADIONICA_Z);
     return 1;
 }
 
@@ -1413,11 +1411,7 @@ RanjenBolnica(playerid)
     gRanjenBolnica[playerid] = false;
     SetPlayerHealth(playerid, 100.0);
     new b = VectorSize(gRanjenPos[playerid][0] - gBolnice[0][0], gRanjenPos[playerid][1] - gBolnice[0][1], 0.0) <= VectorSize(gRanjenPos[playerid][0] - gBolnice[1][0], gRanjenPos[playerid][1] - gBolnice[1][1], 0.0) ? 0 : 1;
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gBolnice[b][0], gBolnice[b][1], gBolnice[b][2]);
-    SetPlayerFacingAngle(playerid, gBolnice[b][3]);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gBolnice[b][0], gBolnice[b][1], gBolnice[b][2], gBolnice[b][3]);
     TogglePlayerControllable(playerid, true);
     Fade(playerid, FADE_SLOJEVA + 1);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Probudili ste se u bolnici."));
@@ -1441,11 +1435,7 @@ forward BolnicaPrebaci(playerid, racun);
 public BolnicaPrebaci(playerid, racun)
 {
     if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, SPAWN_X, SPAWN_Y, SPAWN_Z);
-    SetPlayerFacingAngle(playerid, SPAWN_A);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     KucaSpawn(playerid);
     TogglePlayerControllable(playerid, true);
     Fade(playerid, FADE_SLOJEVA + 1);

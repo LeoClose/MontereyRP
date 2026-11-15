@@ -374,9 +374,7 @@ static SalonOtvori(playerid, s)
 {
     gUSalonu[playerid] = s;
     gSalonIdx[playerid] = 0;
-    SetPlayerInterior(playerid, SALON_INT);
-    SetPlayerVirtualWorld(playerid, SALON_SVIJET + playerid);
-    SetPlayerPos(playerid, gSalonKamera[0], gSalonKamera[1], gSalonAuto[2]);
+    PrebaciIgraca(playerid, SALON_INT, SALON_SVIJET + playerid, gSalonKamera[0], gSalonKamera[1], gSalonAuto[2]);
     TogglePlayerControllable(playerid, false);
     SetPlayerCameraPos(playerid, gSalonKamera[0], gSalonKamera[1], gSalonKamera[2]);
     SetPlayerCameraLookAt(playerid, gSalonAuto[0], gSalonAuto[1], gSalonAuto[2]);
@@ -413,10 +411,7 @@ static SalonZatvori(playerid, bool:vani = true)
     for (new i = 0; i < SALON_TD; i++) PlayerTextDrawDestroy(playerid, gSalonTd[playerid][i]);
     CancelSelectTextDraw(playerid);
     if (!vani) return;
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ]);
-    SetPlayerFacingAngle(playerid, gSalon[s][slA] + 180.0);
+    PrebaciIgraca(playerid, 0, 0, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ], gSalon[s][slA] + 180.0);
     TogglePlayerControllable(playerid, true);
     SetCameraBehindPlayer(playerid);
 }

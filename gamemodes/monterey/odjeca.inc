@@ -155,11 +155,7 @@ static OdjecaIgraca(playerid)
 static OdjecaVani(playerid, s)
 {
     OdjecaZatvori(playerid);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ]);
-    SetPlayerFacingAngle(playerid, gOdj[s][odA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ], gOdj[s][odA] + 180.0);
 }
 
 OdjecaUlaz(playerid)
@@ -177,10 +173,7 @@ OdjecaUlaz(playerid)
     {
         if (!gOdj[s][odIma] || !IsPlayerInRangeOfPoint(playerid, ODJECA_DOMET, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ])) continue;
         new t = gOdj[s][odTip];
-        SetPlayerInterior(playerid, gOdjecaInterijer[t]);
-        SetPlayerVirtualWorld(playerid, ODJECA_SVIJET + s);
-        SetPlayerPos(playerid, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2]);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, gOdjecaInterijer[t], ODJECA_SVIJET + s, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2]);
         if (!gOdj[s][odImaAktor]) return 1;
         if (t == ODJ_FRIZER) AktorKaze(playerid, gOdj[s][odAktor], "Frizer", "Dobar dan! Sjednite, odmah cu vas.");
         else AktorKaze(playerid, gOdj[s][odAktor], "Prodavacica", "Dobar dan! Slobodno pogledajte, kabina je spremna.");

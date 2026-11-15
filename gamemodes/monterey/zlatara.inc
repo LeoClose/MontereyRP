@@ -157,11 +157,7 @@ static ZlataraIgraca(playerid)
 
 static ZlataraVani(playerid, s)
 {
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    SetPlayerPos(playerid, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ]);
-    SetPlayerFacingAngle(playerid, gZl[s][zlA] + 180.0);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], gZl[s][zlA] + 180.0);
 }
 
 ZlataraUlaz(playerid)
@@ -177,11 +173,7 @@ ZlataraUlaz(playerid)
     for (s = 0; s < ZLATARA_MAX; s++)
     {
         if (!gZl[s][zlIma] || !IsPlayerInRangeOfPoint(playerid, ZLATARA_DOMET, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ])) continue;
-        SetPlayerInterior(playerid, ZLATARA_INT);
-        SetPlayerVirtualWorld(playerid, ZLATARA_SVIJET + s);
-        SetPlayerPos(playerid, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2]);
-        SetPlayerFacingAngle(playerid, 90.0);
-        SetCameraBehindPlayer(playerid);
+        PrebaciIgraca(playerid, ZLATARA_INT, ZLATARA_SVIJET + s, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2], 90.0);
         if (gZl[s][zlImaAktor]) AktorKaze(playerid, gZl[s][zlAktor], "Zlatar", "Dobro dosli, slobodno razgledajte.");
         return 1;
     }

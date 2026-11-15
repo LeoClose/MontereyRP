@@ -804,7 +804,7 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
     MobitelEnterVehicle(playerid);
     if (VlakEnter(playerid, vehicleid)) return 1;
-    if (ImaLisice(playerid))
+    if (ImaLisice(playerid) && !Pritvoren(playerid))
     {
         ClearAnimations(playerid);
         VratiLisice(playerid);

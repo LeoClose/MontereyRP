@@ -27,11 +27,6 @@ MdtZapis(racun, tip, const razlog[], policajac)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO police_records (account, type, reason, officer, created) VALUES (%d, %d, '%q', '%q', %d)", racun, tip, razlog, GetRPIme(policajac), gettime()));
 }
 
-static MdtCisti(tekst[])
-{
-    for (new i = 0; tekst[i]; i++) if (tekst[i] == '~') tekst[i] = '-';
-}
-
 static PlayerText:MdtKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
     new PlayerText:td = CreatePlayerTextDraw(playerid, MDT_X + x, MDT_Y + y, "LD_SPAC:white");
@@ -157,7 +152,7 @@ static MdtDosje(playerid, racun, tekst[], size = sizeof (tekst))
         DB_GetFieldString(res, 0, kada, sizeof kada);
         DB_GetFieldString(res, 2, razlog, sizeof razlog);
         DB_GetFieldString(res, 3, policajac, sizeof policajac);
-        MdtCisti(razlog);
+        TdCisti(razlog);
         if (!DB_GetFieldInt(res, 4)) strcat(razlog, T(playerid, " ~r~neplaceno"));
         format(red, sizeof red, "~w~%s  %s%s  ~w~%s  ~b~~h~~h~(%s)~n~", kada, tip == ZAPIS_POTJERNICA ? ("~r~") : tip == ZAPIS_UHICENJE ? ("~y~") : ("~b~~h~~h~"),
             T(playerid, tip == ZAPIS_POTJERNICA ? ("Potjernica") : tip == ZAPIS_UHICENJE ? ("Uhicenje") : ("Kazna")), razlog, policajac);
@@ -174,8 +169,8 @@ static MdtPocetna(playerid)
     VrijemeLokalno(g, m, d, sat, minuta);
     GetOrgIme(gOrg[playerid], ime);
     if (gOrgRank[playerid][0]) strcopy(rang, gOrgRank[playerid]);
-    MdtCisti(rang);
-    MdtCisti(ime);
+    TdCisti(rang);
+    TdCisti(ime);
     MdtEkran(playerid, MDT_POCETNA, T(playerid, "POCETNA"));
     format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s", T(playerid, "Policajac"), T(playerid, "Rang"), T(playerid, "Jedinica"), T(playerid, "Datum"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
@@ -201,7 +196,7 @@ static MdtPotjernice(playerid)
         new ime[MAX_PLAYER_NAME + 1], razlog[64];
         DB_GetFieldString(res, 0, ime, sizeof ime);
         DB_GetFieldString(res, 2, razlog, sizeof razlog);
-        MdtCisti(razlog);
+        TdCisti(razlog);
         format(red, sizeof red, "~r~%d  ~w~%s  ~b~~h~~h~%s~n~", DB_GetFieldInt(res, 1), ime, razlog);
         strcat(tekst, red);
     }
@@ -234,8 +229,7 @@ static MdtOsoba(playerid, const unos[])
 
 static MdtOsobaRacun(playerid, racun)
 {
-    new target = INVALID_PLAYER_ID;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (racun && gUlogiran[i] && gAccountId[i] == racun) target = i;
+    new target = racun ? IgracRacuna(racun) : INVALID_PLAYER_ID;
     MdtEkran(playerid, MDT_OSOBA, T(playerid, "OSOBA"));
     if (!racun)
     {
@@ -248,8 +242,8 @@ static MdtOsobaRacun(playerid, racun)
     DB_GetFieldString(res, 2, broj, sizeof broj);
     new wanted = DB_GetFieldInt(res, 1), zatvor = DB_GetFieldInt(res, 3), skin = DB_GetFieldInt(res, 4), vozacka = DB_GetFieldInt(res, 5), oruzje = DB_GetFieldInt(res, 6);
     DB_FreeResultSet(res);
-    MdtCisti(ime);
-    MdtCisti(broj);
+    TdCisti(ime);
+    TdCisti(broj);
     MdtFoto(playerid, target != INVALID_PLAYER_ID ? GetPlayerSkin(target) : skin < 0 ? 0 : skin);
     format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s~n~%s~n~%s", T(playerid, "Ime"), T(playerid, "Telefon"), T(playerid, "Vozacka dozvola"), T(playerid, "Dozvola za oruzje"), T(playerid, "Zadnja lokacija"), T(playerid, "Kuca"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
@@ -321,7 +315,7 @@ static MdtVozilo(playerid, const unos[])
     new tekst[MDT_TEKST], vlasnik[MAX_ORG_NAME], tablica[12], racun = VlasnikVozila(v), model = GetVehicleModel(v), wanted = 0;
     if (!VlasnikIme(v, vlasnik) && !GetOrgIme(gOrgVehOrg[v], vlasnik)) strcat(vlasnik, T(playerid, "Grad Los Santos"));
     VoziloTablica(v, tablica);
-    MdtCisti(vlasnik);
+    TdCisti(vlasnik);
     MdtFoto(playerid, model, true);
     format(tekst, sizeof tekst, "%s~n~%s~n~%s~n~%s", T(playerid, "Tablice"), T(playerid, "Model"), T(playerid, "Vlasnik"), T(playerid, "Registrirano"));
     MdtPostavi(playerid, MTD_NAZIVI, tekst);
@@ -517,9 +511,9 @@ DLG:mdt_potjernica(playerid, response, const inputtext[])
 {
     if (!gMdtOtvoren[playerid]) return 1;
     SelectTextDraw(playerid, 0x5B8DBFFF);
-    new racun = gMdtPotjernica[playerid], t = INVALID_PLAYER_ID;
+    new racun = gMdtPotjernica[playerid];
     if (!racun || racun == gAccountId[playerid]) return 1;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == racun) t = i;
+    new t = IgracRacuna(racun);
     if (response && inputtext[0])
     {
         new p[160];

@@ -18,6 +18,17 @@ GetRPIme(playerid)
     return name;
 }
 
+TdCisti(tekst[])
+{
+    for (new i = 0; tekst[i]; i++) if (tekst[i] == '~') tekst[i] = '-';
+}
+
+IgracRacuna(racun)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == racun) return i;
+    return INVALID_PLAYER_ID;
+}
+
 RemoveBoje(text[])
 {
     for (new i = 0; text[i]; i++) if (text[i] == '{' || text[i] == '}') text[i] = '|';
