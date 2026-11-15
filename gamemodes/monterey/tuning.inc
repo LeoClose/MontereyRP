@@ -36,9 +36,8 @@
 #define TUNING_ISKRE_FX_Z   1.611
 #define TUNING_ISKRE_KRECE  0.03
 #define TUNING_ISKRE_OBJEKT 18702
-#define PS_MIRUJE_MS        800
-#define PS_PROVJERA_MS      200
 #define PS_VANI             5.0
+#define TUNING_INT          1
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_POMOC, TTD_RED }
@@ -496,7 +495,8 @@ static const Float:gPs[][8] = {
     { 491.103, -1747.55, 492.717, -1735.77, 481.972, -1746.3, 9.45516, 17.565 },
     { 715.806, -462.403, 724.293, -462.403, 715.806, -447.29, 14.9635, 21.4398 }
 };
-static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], gPsMiruje[MAX_PLAYERS], gPsToken[MAX_PLAYERS];
+static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], Float:gTunPovratak[MAX_PLAYERS][4];
+static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
 static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS];
@@ -577,7 +577,6 @@ static PsSnimi(playerid, v)
 static PsVrati(playerid, v)
 {
     gPsU[playerid] = 0;
-    gPsToken[playerid]++;
     if (!GetVehicleModel(v)) return;
     SetVehicleHealth(v, gPsZdravlje[playerid]);
     UpdateVehicleDamageStatus(v, VEHICLE_PANEL_STATUS:gPsStete[playerid][0], VEHICLE_DOOR_STATUS:gPsStete[playerid][1], VEHICLE_LIGHT_STATUS:gPsStete[playerid][2], VEHICLE_TIRE_STATUS:gPsStete[playerid][3]);
@@ -600,9 +599,10 @@ public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
         new v = GetPlayerVehicleID(playerid);
         PsSnimi(playerid, v);
         gPsU[playerid] = k + 1;
-        gPsMiruje[playerid] = 0;
-        if (VlasnikDb(v) && VlasnikVozila(v) == gAccountId[playerid]) SetTimerEx("PsProvjeri", PS_PROVJERA_MS, false, "iii", playerid, gAccountId[playerid], ++gPsToken[playerid]);
-        else SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila."));
+        if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
+        new Float:x, Float:y;
+        PsVani(playerid, x, y);
+        TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2], gPsUlaz[playerid][3] + 180.0);
         return 1;
     }
     return 1;
@@ -614,23 +614,6 @@ public OnPlayerLeaveDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
     if (k < 0 || areaid != gPsZona[k] || gTunU[playerid] != -1) return 1;
     PsVrati(playerid, GetPlayerVehicleID(playerid));
     return 1;
-}
-
-forward PsProvjeri(playerid, racun, token);
-public PsProvjeri(playerid, racun, token)
-{
-    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPsToken[playerid] != token || !gPsU[playerid] || gTunU[playerid] != -1 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return;
-    new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
-    GetVehicleVelocity(v, vx, vy, vz);
-    gPsMiruje[playerid] = VectorSize(vx, vy, vz) < 0.02 ? gPsMiruje[playerid] + PS_PROVJERA_MS : 0;
-    if (gPsMiruje[playerid] < PS_MIRUJE_MS)
-    {
-        SetTimerEx("PsProvjeri", PS_PROVJERA_MS, false, "iii", playerid, racun, token);
-        return;
-    }
-    new Float:x, Float:y;
-    PsVani(playerid, x, y);
-    TuningOtvori(playerid, TUNING_MAX + gPsU[playerid] - 1, x, y, gPsUlaz[playerid][2], gPsUlaz[playerid][3]);
 }
 
 static TuningStvori(g)
@@ -1217,11 +1200,17 @@ static TuningOtvori(playerid, g, Float:px, Float:py, Float:pz, Float:pa)
     gTunU[playerid] = g;
     gTunV[playerid] = v;
     gTunTdBroj[playerid] = 0;
-    SetVehiclePos(v, px, py, pz);
-    SetVehicleZAngle(v, pa);
+    gTunPovratak[playerid][0] = px;
+    gTunPovratak[playerid][1] = py;
+    gTunPovratak[playerid][2] = pz;
+    gTunPovratak[playerid][3] = pa;
     SetVehicleVelocity(v, 0.0, 0.0, 0.0);
     SetVehicleVirtualWorld(v, TUNING_SVIJET + playerid);
+    LinkVehicleToInterior(v, TUNING_INT);
     SetPlayerVirtualWorld(playerid, TUNING_SVIJET + playerid);
+    SetPlayerInterior(playerid, TUNING_INT);
+    SetVehiclePos(v, gTunUnutra[0], gTunUnutra[1], gTunUnutra[2]);
+    SetVehicleZAngle(v, gTunUnutra[3]);
     PutPlayerInVehicle(playerid, v, 0);
     new e, l, a, d, bn, bt, o;
     GetVehicleParamsEx(v, e, l, a, d, bn, bt, o);
@@ -1281,16 +1270,16 @@ TuningZatvori(playerid, bool:uVozilo = true)
     GetVehicleParamsEx(v, e, l, a, d, bn, bt, o);
     SetVehicleParamsEx(v, gTunMotorRadi[playerid], l, a, d, bn, bt, o);
     SetVehicleVirtualWorld(v, 0);
+    LinkVehicleToInterior(v, 0);
+    SetVehiclePos(v, gTunPovratak[playerid][0], gTunPovratak[playerid][1], gTunPovratak[playerid][2]);
+    SetVehicleZAngle(v, gTunPovratak[playerid][3]);
+    if (g >= TUNING_MAX) gPsU[playerid] = 0;
     if (!IsPlayerConnected(playerid)) return;
     SetPlayerVirtualWorld(playerid, 0);
+    SetPlayerInterior(playerid, 0);
     if (uVozilo) PutPlayerInVehicle(playerid, v, 0);
+    else SetPlayerPos(playerid, gTunPovratak[playerid][0] + 2.0, gTunPovratak[playerid][1], gTunPovratak[playerid][2]);
     SetCameraBehindPlayer(playerid);
-    if (g < TUNING_MAX) return;
-    new Float:x, Float:y;
-    PsVani(playerid, x, y);
-    SetVehiclePos(v, x, y, gPsUlaz[playerid][2]);
-    SetVehicleZAngle(v, gPsUlaz[playerid][3] + 180.0);
-    PsVrati(playerid, v);
 }
 
 TuningStateChange(playerid, PLAYER_STATE:oldstate)
