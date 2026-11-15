@@ -20,7 +20,7 @@ GetRPIme(playerid)
 
 STREAMER_TAG_MAP_ICON:MapaIkona(Float:x, Float:y, Float:z, tip)
 {
-    return CreateDynamicMapIcon(x, y, z, tip, 0, 0, 0, -1, 3000.0, MAPICON_GLOBAL);
+    return CreateDynamicMapIcon(x, y, z, tip, 0, 0, 0, -1, 3000.0, MAPICON_LOCAL);
 }
 
 TdCisti(tekst[])

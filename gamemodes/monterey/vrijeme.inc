@@ -49,7 +49,7 @@ static VrijemeSunce(&izlazak, &zalazak)
     new Float:n = float(lokalno / 86400 - VrijemeDani(g, 1, 1) + 1), Float:b = 360.0 / 365.0 * (n - 81.0);
     new Float:dekl = 23.44 * floatsin(b, degrees), Float:eot = 9.87 * floatsin(2.0 * b, degrees) - 7.53 * floatcos(b, degrees) - 1.5 * floatsin(b, degrees);
     new Float:cosh = (floatsin(-0.833, degrees) - floatsin(VRIJEME_SIRINA, degrees) * floatsin(dekl, degrees)) / (floatcos(VRIJEME_SIRINA, degrees) * floatcos(dekl, degrees));
-    new Float:h = acos(cosh < -1.0 ? -1.0 : cosh > 1.0 ? 1.0 : cosh) * 180.0 / 3.14159265, Float:podne = 720.0 - 4.0 * VRIJEME_DUZINA - eot + float(VrijemePomak(ts) / 60);
+    new Float:h = acos(cosh < -1.0 ? -1.0 : cosh > 1.0 ? 1.0 : cosh), Float:podne = 720.0 - 4.0 * VRIJEME_DUZINA - eot + float(VrijemePomak(ts) / 60);
     izlazak = floatround(podne - 4.0 * h);
     zalazak = floatround(podne + 4.0 * h);
 }
@@ -120,6 +120,9 @@ InitVrijeme()
     VrijemeDatum(20771, g, m, d);
     assert(g == 2026 && m == 11 && d == 14);
     assert(VrijemePomak(VrijemeDani(2026, 7, 1) * 86400) == 7200 && VrijemePomak(VrijemeDani(2026, 11, 14) * 86400) == 3600);
+    new izlazak, zalazak;
+    VrijemeSunce(izlazak, zalazak);
+    assert(izlazak > 4 * 60 && izlazak < 9 * 60 && zalazak > 15 * 60 && zalazak < 22 * 60);
     assert(VrijemeIgra(16 * 60 + 20, 7 * 60 + 10, 16 * 60 + 20) == 20 * 60 && VrijemeIgra(7 * 60 + 10, 7 * 60 + 10, 16 * 60 + 20) == 6 * 60 + 30);
     VrijemeOsvjezi();
 }
