@@ -21,7 +21,7 @@
 #define BANKA_WANTED        3
 
 enum E_BANKA { bool:bkIma, bkDb, bkInt, Float:bkX, Float:bkY, Float:bkZ, Float:bkA, Float:bkIx, Float:bkIy, Float:bkIz, bkPljacka, bkPljackaKraj, bkPljackano, bool:bkImaAktor, Float:bkAx, Float:bkAy, Float:bkAz, Float:bkAa, bkAktor,
-    STREAMER_TAG_PICKUP:bkPickup, STREAMER_TAG_PICKUP:bkPickupU, STREAMER_TAG_3D_TEXT_LABEL:bkTekst, STREAMER_TAG_3D_TEXT_LABEL:bkTekstU, STREAMER_TAG_3D_TEXT_LABEL:bkTekstA }
+    STREAMER_TAG_PICKUP:bkPickup, STREAMER_TAG_PICKUP:bkPickupU, STREAMER_TAG_3D_TEXT_LABEL:bkTekst, STREAMER_TAG_3D_TEXT_LABEL:bkTekstU, STREAMER_TAG_3D_TEXT_LABEL:bkTekstA, STREAMER_TAG_MAP_ICON:bkIkona }
 
 enum E_BANKA_INT { biIme[24], biInt, Float:biX, Float:biY, Float:biZ }
 static const gBankaInt[][E_BANKA_INT] = {
@@ -91,6 +91,7 @@ static BankaStvori(s)
     new svijet = BANKA_SVIJET + s;
     gBanka[s][bkIma] = true;
     gBanka[s][bkPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], 0, 0);
+    gBanka[s][bkIkona] = MapaIkona(gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], 52);
     gBanka[s][bkTekst] = CreateDynamic3DTextLabel("Banka\n[Y]", COLOR_ORG, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gBanka[s][bkPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz], svijet, gBanka[s][bkInt]);
     gBanka[s][bkTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
@@ -650,6 +651,7 @@ static BankaObrisi(s)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_guards WHERE bank = %d", gBanka[s][bkDb]));
     BankaMakniAktor(s);
     DestroyDynamicPickup(gBanka[s][bkPickup]);
+    DestroyDynamicMapIcon(gBanka[s][bkIkona]);
     DestroyDynamicPickup(gBanka[s][bkPickupU]);
     DestroyDynamic3DTextLabel(gBanka[s][bkTekst]);
     DestroyDynamic3DTextLabel(gBanka[s][bkTekstU]);
@@ -686,6 +688,7 @@ DLG:apanel_banka_meni(playerid, response, listitem)
         for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
         BankaMakniAktor(s);
         DestroyDynamicPickup(gBanka[s][bkPickup]);
+        DestroyDynamicMapIcon(gBanka[s][bkIkona]);
         DestroyDynamicPickup(gBanka[s][bkPickupU]);
         DestroyDynamic3DTextLabel(gBanka[s][bkTekst]);
         DestroyDynamic3DTextLabel(gBanka[s][bkTekstU]);

@@ -18,7 +18,7 @@ static gOpVozila[MAX_PLAYERS][VLASNISTVO_MAX], gOpOdabrano[MAX_PLAYERS];
 static gPonuda[MAX_PLAYERS][E_PONUDA];
 
 enum E_VRATA { bool:vrIma, Float:vrX, Float:vrY, Float:vrZ, Float:vrA, vrInt, Float:vrIx, Float:vrIy, Float:vrIz, Float:vrIa,
-    STREAMER_TAG_PICKUP:vrPickup, STREAMER_TAG_PICKUP:vrPickupU, STREAMER_TAG_3D_TEXT_LABEL:vrTekst, STREAMER_TAG_3D_TEXT_LABEL:vrTekstU }
+    STREAMER_TAG_PICKUP:vrPickup, STREAMER_TAG_PICKUP:vrPickupU, STREAMER_TAG_3D_TEXT_LABEL:vrTekst, STREAMER_TAG_3D_TEXT_LABEL:vrTekstU, STREAMER_TAG_MAP_ICON:vrIkona }
 static gVrata[E_VRATA];
 static Float:gApUlaz[MAX_PLAYERS][4];
 enum E_OPINT { oiIme[32], oiInt, Float:oiX, Float:oiY, Float:oiZ, Float:oiA }
@@ -137,12 +137,14 @@ static VrataStvori()
     if (gVrata[vrIma])
     {
         DestroyDynamicPickup(gVrata[vrPickup]);
+        DestroyDynamicMapIcon(gVrata[vrIkona]);
         DestroyDynamicPickup(gVrata[vrPickupU]);
         DestroyDynamic3DTextLabel(gVrata[vrTekst]);
         DestroyDynamic3DTextLabel(gVrata[vrTekstU]);
     }
     gVrata[vrIma] = true;
     gVrata[vrPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrX], gVrata[vrY], gVrata[vrZ], 0, 0);
+    gVrata[vrIkona] = MapaIkona(gVrata[vrX], gVrata[vrY], gVrata[vrZ], 53);
     gVrata[vrTekst] = CreateDynamic3DTextLabel("Opstina\n[Y]", COLOR_ORG, gVrata[vrX], gVrata[vrY], gVrata[vrZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gVrata[vrPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz], OPSTINA_SVIJET, gVrata[vrInt]);
     gVrata[vrTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, OPSTINA_SVIJET, gVrata[vrInt]);

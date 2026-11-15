@@ -551,7 +551,7 @@ OrgUkloniVozilo(playerid)
 #define ORG_TAKSI           6
 #define ORG_MEHANICAR       7
 
-enum E_HQ { hOrg, hPickup, hPickupU, Text3D:hLabel, Text3D:hLabelU, hInt, Float:hX, Float:hY, Float:hZ, Float:hA, Float:hIx, Float:hIy, Float:hIz }
+enum E_HQ { hOrg, hPickup, hPickupU, Text3D:hLabel, Text3D:hLabelU, hInt, Float:hX, Float:hY, Float:hZ, Float:hA, Float:hIx, Float:hIy, Float:hIz, STREAMER_TAG_MAP_ICON:hIkona }
 static gHq[MAX_HQ][E_HQ];
 static gHqOrg[MAX_PLAYERS];
 
@@ -584,6 +584,7 @@ static KreirajHq(i)
     GetOrgIme(gHq[i][hOrg], ime);
     format(natpis, sizeof natpis, "%s HQ\n[Y]", ime);
     gHq[i][hPickup] = CreatePickup(HQ_PICKUP, 1, gHq[i][hX], gHq[i][hY], gHq[i][hZ], 0);
+    gHq[i][hIkona] = GetOrgTip(gHq[i][hOrg]) == ORG_LSPD ? MapaIkona(gHq[i][hX], gHq[i][hY], gHq[i][hZ], 30) : STREAMER_TAG_MAP_ICON:0;
     gHq[i][hLabel] = Create3DTextLabel(natpis, COLOR_ORG, gHq[i][hX], gHq[i][hY], gHq[i][hZ] + 0.5, 15.0, 0);
     gHq[i][hPickupU] = CreatePickup(HQ_PICKUP, 1, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz], svijet);
     gHq[i][hLabelU] = Create3DTextLabel("[Y]", COLOR_ORG, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz] + 0.5, 15.0, svijet);
@@ -592,6 +593,7 @@ static KreirajHq(i)
 static UkloniHq(i)
 {
     DestroyPickup(gHq[i][hPickup]);
+    if (gHq[i][hIkona]) DestroyDynamicMapIcon(gHq[i][hIkona]);
     DestroyPickup(gHq[i][hPickupU]);
     Delete3DTextLabel(gHq[i][hLabel]);
     Delete3DTextLabel(gHq[i][hLabelU]);

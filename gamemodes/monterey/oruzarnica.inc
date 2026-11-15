@@ -9,7 +9,7 @@
 #define ORUZARNICA_KATALOG      0
 
 enum E_ORUZARNICA { bool:orIma, orDb, orInt, Float:orX, Float:orY, Float:orZ, Float:orA, bool:orImaAktor, Float:orAx, Float:orAy, Float:orAz, Float:orAa, orAktor,
-    STREAMER_TAG_PICKUP:orPickup, STREAMER_TAG_PICKUP:orPickupU, STREAMER_TAG_3D_TEXT_LABEL:orTekst, STREAMER_TAG_3D_TEXT_LABEL:orTekstU, STREAMER_TAG_3D_TEXT_LABEL:orTekstA }
+    STREAMER_TAG_PICKUP:orPickup, STREAMER_TAG_PICKUP:orPickupU, STREAMER_TAG_3D_TEXT_LABEL:orTekst, STREAMER_TAG_3D_TEXT_LABEL:orTekstU, STREAMER_TAG_3D_TEXT_LABEL:orTekstA, STREAMER_TAG_MAP_ICON:orIkona }
 
 enum E_ORUZ_INT { oiIme[16], oiInt, Float:oiX, Float:oiY, Float:oiZ }
 static const gOruzarnicaInt[][E_ORUZ_INT] = {
@@ -87,6 +87,7 @@ static OruzarnicaStvori(s)
     new svijet = ORUZARNICA_SVIJET + s, i = gOruz[s][orInt];
     gOruz[s][orIma] = true;
     gOruz[s][orPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ], 0, 0);
+    gOruz[s][orIkona] = MapaIkona(gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ], 6);
     gOruz[s][orTekst] = CreateDynamic3DTextLabel("Oruzarnica\n[Y]", COLOR_ORG, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gOruz[s][orPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ], svijet, gOruzarnicaInt[i][oiInt]);
     gOruz[s][orTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[i][oiInt]);
@@ -288,6 +289,7 @@ static OruzarnicaObrisi(s)
     for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && OruzarnicaIgraca(i) == s) OruzarnicaVani(i, s);
     OruzarnicaMakniAktor(s);
     DestroyDynamicPickup(gOruz[s][orPickup]);
+    DestroyDynamicMapIcon(gOruz[s][orIkona]);
     DestroyDynamicPickup(gOruz[s][orPickupU]);
     DestroyDynamic3DTextLabel(gOruz[s][orTekst]);
     DestroyDynamic3DTextLabel(gOruz[s][orTekstU]);

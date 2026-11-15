@@ -18,6 +18,11 @@ GetRPIme(playerid)
     return name;
 }
 
+STREAMER_TAG_MAP_ICON:MapaIkona(Float:x, Float:y, Float:z, tip)
+{
+    return CreateDynamicMapIcon(x, y, z, tip, 0, 0, 0, -1, 3000.0, MAPICON_GLOBAL);
+}
+
 TdCisti(tekst[])
 {
     for (new i = 0; tekst[i]; i++) if (tekst[i] == '~') tekst[i] = '-';

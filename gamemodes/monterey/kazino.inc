@@ -39,7 +39,7 @@ enum { KR_NEMA, KR_CEKA, KR_LETI }
 enum E_KR { krFaza, krKraj, krT, krM, krCrash, krPobjednik, krZadnji, krToken, krKonj[5] }
 enum { KTD_STAZA = TTD_POLJE + 5, KTD_CILJ, KTD_KONJ }
 
-enum E_KZULAZ { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, Float:kuA, STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
+enum E_KZULAZ { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, Float:kuA, STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst, STREAMER_TAG_MAP_ICON:kuIkona }
 enum E_KAZINO { bool:kzIma, kzDb, kzTip, Float:kzX, Float:kzY, Float:kzZ, Float:kzA, kzInt, kzSvijet, kzAktor, STREAMER_TAG_3D_TEXT_LABEL:kzTekst }
 enum E_BJ { bjRuke, bjAktivna, bjDilerKarte[BJ_KARATA], bjDilerN, bool:bjOsiguranje, bjOsigUlog, bool:bjPrvi, bool:bjPredao, bool:bjAsovi }
 
@@ -137,6 +137,7 @@ static KazinoUlazStvori(u)
 {
     gKu[u][kuIma] = true;
     gKu[u][kuPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 0, 0);
+    gKu[u][kuIkona] = MapaIkona(gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 25);
     gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino\n[Y]", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 }
 
@@ -1773,6 +1774,7 @@ DLG:apanel_kazino_brisi(playerid, response)
         if (!response || !gKu[u][kuIma]) return ShowKazino(playerid);
         if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
         DestroyDynamicPickup(gKu[u][kuPickup]);
+        DestroyDynamicMapIcon(gKu[u][kuIkona]);
         DestroyDynamic3DTextLabel(gKu[u][kuTekst]);
         gKu[u][kuIma] = false;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM casino_entrances WHERE id = %d", gKu[u][kuDb]));

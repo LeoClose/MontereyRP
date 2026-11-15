@@ -24,7 +24,7 @@
 #define MODEL_OGRLICA           -2101
 
 enum E_ZLATARA { bool:zlIma, zlDb, Float:zlX, Float:zlY, Float:zlZ, Float:zlA, bool:zlImaAktor, Float:zlAx, Float:zlAy, Float:zlAz, Float:zlAa, zlAktor, zlPljacka, zlPljackaKraj, zlPljackano,
-    STREAMER_TAG_PICKUP:zlPickup, STREAMER_TAG_PICKUP:zlPickupU, STREAMER_TAG_3D_TEXT_LABEL:zlTekst, STREAMER_TAG_3D_TEXT_LABEL:zlTekstU, STREAMER_TAG_3D_TEXT_LABEL:zlTekstA }
+    STREAMER_TAG_PICKUP:zlPickup, STREAMER_TAG_PICKUP:zlPickupU, STREAMER_TAG_3D_TEXT_LABEL:zlTekst, STREAMER_TAG_3D_TEXT_LABEL:zlTekstU, STREAMER_TAG_3D_TEXT_LABEL:zlTekstA, STREAMER_TAG_MAP_ICON:zlIkona }
 enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:ppA, ppInt, ppSvijet, ppAktor, STREAMER_TAG_3D_TEXT_LABEL:ppTekst }
 
 static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
@@ -117,6 +117,7 @@ static ZlataraStvori(s)
     gZl[s][zlIma] = true;
     gZl[s][zlPljacka] = 0;
     gZl[s][zlPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 0, 0);
+    gZl[s][zlIkona] = MapaIkona(gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 21);
     gZl[s][zlTekst] = CreateDynamic3DTextLabel("Zlatara\n[Y]", COLOR_ORG, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gZl[s][zlPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2], svijet, ZLATARA_INT);
     gZl[s][zlTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
@@ -640,6 +641,7 @@ DLG:apanel_zlatara_meni(playerid, response, listitem)
     for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && ZlataraIgraca(i) == s) ZlataraVani(i, s);
     ZlataraMakniAktor(s);
     DestroyDynamicPickup(gZl[s][zlPickup]);
+    DestroyDynamicMapIcon(gZl[s][zlIkona]);
     DestroyDynamicPickup(gZl[s][zlPickupU]);
     DestroyDynamic3DTextLabel(gZl[s][zlTekst]);
     DestroyDynamic3DTextLabel(gZl[s][zlTekstU]);

@@ -36,7 +36,7 @@
 #define TUNING_ISKRE_FX_Z   1.611
 #define TUNING_ISKRE_KRECE  0.03
 #define TUNING_ISKRE_OBJEKT 18702
-#define PS_VANI             5.0
+#define PS_VANI             9.0
 #define TUNING_INT          1
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
@@ -556,7 +556,7 @@ InitTuning()
         t[6] = gPs[k][4];
         t[7] = gPs[k][5];
         gPsZona[k] = CreateDynamicPolygon(t, gPs[k][6] - 1.0, gPs[k][7], sizeof t, 0, 0);
-        CreateDynamicMapIcon((t[0] + t[4]) / 2.0, (t[1] + t[5]) / 2.0, gPs[k][6], 27, 0, 0, 0);
+        MapaIkona((t[0] + t[4]) / 2.0, (t[1] + t[5]) / 2.0, gPs[k][6], 27);
     }
 }
 
@@ -602,7 +602,7 @@ public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
         if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
         new Float:x, Float:y;
         PsVani(playerid, x, y);
-        TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2], gPsUlaz[playerid][3] + 180.0);
+        TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2] + 0.5, gPsUlaz[playerid][3] + 180.0);
         return 1;
     }
     return 1;
@@ -620,7 +620,7 @@ static TuningStvori(g)
 {
     gTuning[g][tgIma] = true;
     gTuning[g][tgTekst] = CreateDynamic3DTextLabel("Tuning\n[Y]", COLOR_ORG, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ] + 0.8, 25.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
-    gTuning[g][tgIkona] = CreateDynamicMapIcon(gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ], 27, 0, 0, 0);
+    gTuning[g][tgIkona] = MapaIkona(gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ], 27);
 }
 
 TuningMotor(v)
