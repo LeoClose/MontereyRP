@@ -1791,3 +1791,14 @@ DLG:apanel_kazino_brisi(playerid, response)
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Igra obrisana."));
     return ShowKazino(playerid);
 }
+
+KazinoLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= KAZINO_ULAZA) return -1;
+    if (!gKu[i][kuIma]) return 0;
+    x = gKu[i][kuX];
+    y = gKu[i][kuY];
+    z = gKu[i][kuZ];
+    a = gKu[i][kuA];
+    return 1;
+}

@@ -245,3 +245,14 @@ DLG:apanel_trgovina_meni(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Trgovina obrisana."));
     return ShowTrgovine(playerid);
 }
+
+TrgovinaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= TRGOVINA_MAX) return -1;
+    if (!gTrg[i][tgIma]) return 0;
+    x = gTrg[i][tgX];
+    y = gTrg[i][tgY];
+    z = gTrg[i][tgZ];
+    a = gTrg[i][tgA];
+    return 1;
+}

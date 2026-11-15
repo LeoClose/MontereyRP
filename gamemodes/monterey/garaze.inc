@@ -467,3 +467,14 @@ DLG:apanel_garaza_brisi(playerid, response)
     }
     return ShowGarazeAdmin(playerid);
 }
+
+GarazaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= GARAZA_MAX) return -1;
+    if (!gGaraza[i][gaIma]) return 0;
+    x = gGaraza[i][gaX];
+    y = gGaraza[i][gaY];
+    z = gGaraza[i][gaZ];
+    a = gGaraza[i][gaA];
+    return 1;
+}

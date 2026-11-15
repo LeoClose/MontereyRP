@@ -636,3 +636,14 @@ DLG:apanel_namjestaj_unos(playerid, response, const inputtext[])
     }
     return ShowNamjestajKatalog(playerid);
 }
+
+NamjestajLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= NAMJESTAJ_MAX) return -1;
+    if (!gNam[i][nmIma]) return 0;
+    x = gNam[i][nmX];
+    y = gNam[i][nmY];
+    z = gNam[i][nmZ];
+    a = gNam[i][nmA];
+    return 1;
+}

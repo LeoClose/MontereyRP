@@ -1578,7 +1578,12 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Nemate dovoljno za ratu kredita ($%d). Zaracunata je zatezna kamata $%d.", "You can't cover your loan instalment ($%d). A late fee of $%d has been charged.", "Недостаточно средств для платежа по кредиту ($%d). Начислена пеня $%d.", "No tienes suficiente para la cuota del prestamo ($%d). Se cobro un recargo de $%d.", "Kredi taksitiniz icin yeterli paraniz yok ($%d). $%d gecikme faizi eklendi." },
     { "Naplacena je rata kredita $%d. Preostali dug: $%d.", "Loan instalment of $%d charged. Remaining debt: $%d.", "Списан платёж по кредиту $%d. Остаток долга: $%d.", "Se cobro la cuota del prestamo de $%d. Deuda restante: $%d.", "$%d kredi taksiti tahsil edildi. Kalan borc: $%d." },
     { "Vrijeme je vraceno na automatsko (Zagreb).", "Time set back to automatic (Zagreb).", "Время возвращено в автоматический режим (Загреб).", "Hora devuelta a automatico (Zagreb).", "Saat otomatige dondu (Zagreb)." },
-    { "Koristenje: /time [sat 0-23] (bez broja = automatsko)", "Usage: /time [hour 0-23] (no number = automatic)", "Использование: /time [час 0-23] (без числа = авто)", "Uso: /time [hora 0-23] (sin numero = automatico)", "Kullanim: /time [saat 0-23] (sayi yok = otomatik)" }
+    { "Koristenje: /time [sat 0-23] (bez broja = automatsko)", "Usage: /time [hour 0-23] (no number = automatic)", "Использование: /time [час 0-23] (без числа = авто)", "Uso: /time [hora 0-23] (sin numero = automatico)", "Kullanim: /time [saat 0-23] (sayi yok = otomatik)" },
+    { "Lokacije", "Locations", "Локации", "Ubicaciones", "Konumlar" },
+    { "<< Prethodna strana", "<< Previous page", "<< Предыдущая страница", "<< Pagina anterior", "<< Onceki sayfa" },
+    { "Sljedeca strana >>", "Next page >>", "Следующая страница >>", "Pagina siguiente >>", "Sonraki sayfa >>" },
+    { "Nema lokacija u ovoj kategoriji.", "There are no locations in this category.", "В этой категории нет локаций.", "No hay ubicaciones en esta categoria.", "Bu kategoride konum yok." },
+    { "Teleportirani ste do lokacije: %s.", "Teleported to location: %s.", "Вы телепортированы к локации: %s.", "Teletransportado a la ubicacion: %s.", "Konuma isinlandiniz: %s." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

@@ -1623,3 +1623,14 @@ DLG:apanel_tuning_brisi(playerid, response)
     }
     return ShowTuningAdmin(playerid);
 }
+
+TuningLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= TUNING_MAX) return -1;
+    if (!gTuning[i][tgIma]) return 0;
+    x = gTuning[i][tgX];
+    y = gTuning[i][tgY];
+    z = gTuning[i][tgZ];
+    a = gTuning[i][tgA];
+    return 1;
+}

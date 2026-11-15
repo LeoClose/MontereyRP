@@ -402,3 +402,14 @@ DLG:apanel_oruzarnica_unos(playerid, response, const inputtext[])
     }
     return ShowOruzarnicaKatalog(playerid);
 }
+
+OruzarnicaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= ORUZARNICA_MAX) return -1;
+    if (!gOruz[i][orIma]) return 0;
+    x = gOruz[i][orX];
+    y = gOruz[i][orY];
+    z = gOruz[i][orZ];
+    a = gOruz[i][orA];
+    return 1;
+}

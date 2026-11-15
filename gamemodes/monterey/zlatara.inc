@@ -650,3 +650,14 @@ DLG:apanel_zlatara_meni(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Zlatara obrisana."));
     return ShowZlatare(playerid);
 }
+
+ZlataraLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= ZLATARA_MAX) return -1;
+    if (!gZl[i][zlIma]) return 0;
+    x = gZl[i][zlX];
+    y = gZl[i][zlY];
+    z = gZl[i][zlZ];
+    a = gZl[i][zlA];
+    return 1;
+}

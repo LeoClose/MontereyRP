@@ -718,3 +718,14 @@ DLG:apanel_odjeca_unos(playerid, response, const inputtext[])
     }
     return ShowOdjecaKatalog(playerid);
 }
+
+OdjecaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= ODJECA_MAX) return -1;
+    if (!gOdj[i][odIma]) return 0;
+    x = gOdj[i][odX];
+    y = gOdj[i][odY];
+    z = gOdj[i][odZ];
+    a = gOdj[i][odA];
+    return 1;
+}

@@ -432,3 +432,14 @@ DLG:apanel_opstina(playerid, response, listitem)
     }
     return ShowOpstinaAdmin(playerid);
 }
+
+OpstinaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= 1) return -1;
+    if (!gVrata[vrIma]) return 0;
+    x = gVrata[vrX];
+    y = gVrata[vrY];
+    z = gVrata[vrZ];
+    a = gVrata[vrA];
+    return 1;
+}

@@ -333,6 +333,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"
+#include "monterey/lokacije.inc"
 #include "monterey/login.inc"
 #include "monterey/registracija.inc"
 #include "monterey/stats.inc"

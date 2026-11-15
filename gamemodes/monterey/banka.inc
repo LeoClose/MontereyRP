@@ -727,3 +727,14 @@ DLG:apanel_banka_meni(playerid, response, listitem)
     }
     return ShowBanke(playerid);
 }
+
+BankaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= BANKA_MAX) return -1;
+    if (!gBanka[i][bkIma]) return 0;
+    x = gBanka[i][bkX];
+    y = gBanka[i][bkY];
+    z = gBanka[i][bkZ];
+    a = gBanka[i][bkA];
+    return 1;
+}

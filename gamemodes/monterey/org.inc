@@ -752,3 +752,14 @@ GetOrgTip(org)
     DB_FreeResultSet(res);
     return tip;
 }
+
+OrgLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= MAX_HQ) return -1;
+    if (!gHq[i][hOrg]) return 0;
+    x = gHq[i][hX];
+    y = gHq[i][hY];
+    z = gHq[i][hZ];
+    a = gHq[i][hA];
+    return gHq[i][hOrg];
+}

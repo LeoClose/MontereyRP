@@ -660,3 +660,14 @@ DLG:opstina_kuca_potvrda(playerid, response)
     DajNovac(playerid, iznos);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste kucu za $%d."), iznos);
 }
+
+KucaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= KUCA_MAX) return -1;
+    if (!gKuca[i][kuIma]) return 0;
+    x = gKuca[i][kuX];
+    y = gKuca[i][kuY];
+    z = gKuca[i][kuZ];
+    a = -1000.0;
+    return 1;
+}

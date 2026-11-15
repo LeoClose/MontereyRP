@@ -635,3 +635,14 @@ DLG:apanel_salon_ukloni(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s je uklonjen iz ponude."), gImenaVozila[model - 400]);
     return SalonPonudaPopis(playerid);
 }
+
+SalonLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= SALON_MAX) return -1;
+    if (!gSalon[i][slIma]) return 0;
+    x = gSalon[i][slX];
+    y = gSalon[i][slY];
+    z = gSalon[i][slZ];
+    a = gSalon[i][slA];
+    return 1;
+}
