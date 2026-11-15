@@ -10,6 +10,8 @@ public OnPlayerConnect(playerid)
     MapaCartierExtUkloni(playerid);
     MapaCentralBankUkloni(playerid);
     MapaCasinoExtUkloni(playerid);
+    MapaMainStreetUkloni(playerid);
+    MapaJeffersonFlatsUkloni(playerid);
     if (IsPlayerNPC(playerid)) return 1;
     new ljudi = 0;
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) ljudi++;

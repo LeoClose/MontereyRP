@@ -188,6 +188,11 @@ public OnGameModeInit()
     MapaCentralBank();
     MapaCasinoExtUkloni(INVALID_PLAYER_ID);
     MapaCasinoExt();
+    MapaMainStreetUkloni(INVALID_PLAYER_ID);
+    MapaMainStreet();
+    MapaMarketSt();
+    MapaJeffersonFlatsUkloni(INVALID_PLAYER_ID);
+    MapaJeffersonFlats();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -328,6 +333,9 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_cartier_ext.inc"
 #include "monterey/mape/mapa_central_bank.inc"
 #include "monterey/mape/mapa_casino_ext.inc"
+#include "monterey/mape/mapa_main_street.inc"
+#include "monterey/mape/mapa_market_st.inc"
+#include "monterey/mape/mapa_jefferson_flats.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"
