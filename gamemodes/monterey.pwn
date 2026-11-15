@@ -175,6 +175,10 @@ public OnGameModeInit()
     MapaCartierZlatara();
     MapaCartierExtUkloni(INVALID_PLAYER_ID);
     MapaCartierExt();
+    MapaCentralBankUkloni(INVALID_PLAYER_ID);
+    MapaCentralBank();
+    MapaCasinoExtUkloni(INVALID_PLAYER_ID);
+    MapaCasinoExt();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -312,6 +316,8 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_diamond_casino.inc"
 #include "monterey/mape/mapa_cartier_zlatara.inc"
 #include "monterey/mape/mapa_cartier_ext.inc"
+#include "monterey/mape/mapa_central_bank.inc"
+#include "monterey/mape/mapa_casino_ext.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"
