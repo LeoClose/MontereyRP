@@ -9,7 +9,7 @@
 #define ORUZARNICA_KATALOG      0
 
 enum E_ORUZARNICA { bool:orIma, orDb, orInt, Float:orX, Float:orY, Float:orZ, Float:orA, bool:orImaAktor, Float:orAx, Float:orAy, Float:orAz, Float:orAa, orAktor,
-    STREAMER_TAG_PICKUP:orPickup, STREAMER_TAG_PICKUP:orPickupU, STREAMER_TAG_3D_TEXT_LABEL:orTekst, STREAMER_TAG_3D_TEXT_LABEL:orTekstU, STREAMER_TAG_3D_TEXT_LABEL:orTekstA, STREAMER_TAG_MAP_ICON:orIkona }
+    STREAMER_TAG_PICKUP:orPickup, STREAMER_TAG_PICKUP:orPickupU, STREAMER_TAG_3D_TEXT_LABEL:orTekst, STREAMER_TAG_3D_TEXT_LABEL:orTekstU, STREAMER_TAG_3D_TEXT_LABEL:orTekstA, orIkona }
 
 enum E_ORUZ_INT { oiIme[16], oiInt, Float:oiX, Float:oiY, Float:oiZ }
 static const gOruzarnicaInt[][E_ORUZ_INT] = {
@@ -289,7 +289,7 @@ static OruzarnicaObrisi(s)
     for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && OruzarnicaIgraca(i) == s) OruzarnicaVani(i, s);
     OruzarnicaMakniAktor(s);
     DestroyDynamicPickup(gOruz[s][orPickup]);
-    DestroyDynamicMapIcon(gOruz[s][orIkona]);
+    MapaIkonaMakni(gOruz[s][orIkona]);
     DestroyDynamicPickup(gOruz[s][orPickupU]);
     DestroyDynamic3DTextLabel(gOruz[s][orTekst]);
     DestroyDynamic3DTextLabel(gOruz[s][orTekstU]);

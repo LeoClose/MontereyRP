@@ -24,7 +24,7 @@
 #define MODEL_OGRLICA           -2101
 
 enum E_ZLATARA { bool:zlIma, zlDb, Float:zlX, Float:zlY, Float:zlZ, Float:zlA, bool:zlImaAktor, Float:zlAx, Float:zlAy, Float:zlAz, Float:zlAa, zlAktor, zlPljacka, zlPljackaKraj, zlPljackano,
-    STREAMER_TAG_PICKUP:zlPickup, STREAMER_TAG_PICKUP:zlPickupU, STREAMER_TAG_3D_TEXT_LABEL:zlTekst, STREAMER_TAG_3D_TEXT_LABEL:zlTekstU, STREAMER_TAG_3D_TEXT_LABEL:zlTekstA, STREAMER_TAG_MAP_ICON:zlIkona }
+    STREAMER_TAG_PICKUP:zlPickup, STREAMER_TAG_PICKUP:zlPickupU, STREAMER_TAG_3D_TEXT_LABEL:zlTekst, STREAMER_TAG_3D_TEXT_LABEL:zlTekstU, STREAMER_TAG_3D_TEXT_LABEL:zlTekstA, zlIkona }
 enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:ppA, ppInt, ppSvijet, ppAktor, STREAMER_TAG_3D_TEXT_LABEL:ppTekst }
 
 static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
@@ -641,7 +641,7 @@ DLG:apanel_zlatara_meni(playerid, response, listitem)
     for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && ZlataraIgraca(i) == s) ZlataraVani(i, s);
     ZlataraMakniAktor(s);
     DestroyDynamicPickup(gZl[s][zlPickup]);
-    DestroyDynamicMapIcon(gZl[s][zlIkona]);
+    MapaIkonaMakni(gZl[s][zlIkona]);
     DestroyDynamicPickup(gZl[s][zlPickupU]);
     DestroyDynamic3DTextLabel(gZl[s][zlTekst]);
     DestroyDynamic3DTextLabel(gZl[s][zlTekstU]);

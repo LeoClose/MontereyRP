@@ -1,5 +1,6 @@
 public OnPlayerConnect(playerid)
 {
+    IkoneIgracu(playerid);
     MapaOpstinaUkloni(playerid);
     MapaIdlewoodUkloni(playerid);
     MapaIdlewoodFlatsUkloni(playerid);
@@ -181,6 +182,7 @@ public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hi
 
 public OnPlayerUpdate(playerid)
 {
+    IkoneUpdate(playerid);
     RanjenUpdate(playerid);
     MobitelUpdate(playerid);
     VoziloUpdate(playerid);

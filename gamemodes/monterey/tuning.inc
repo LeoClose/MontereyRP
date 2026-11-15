@@ -41,7 +41,7 @@
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_POMOC, TTD_RED }
-enum E_TUNING { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_MAP_ICON:tgIkona }
+enum E_TUNING { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, tgIkona }
 
 static const gTuningDio[][] = { "Spojler", "Hauba", "Krov", "Pragovi", "Svjetla", "Nitro", "Auspuh", "Felge", "Stereo", "Hidraulika", "Prednji branik", "Straznji branik", "Desni ventil", "Lijevi ventil" };
 static const gTuningDioCijena[] = { 1500, 1200, 1000, 1200, 400, 0, 800, 2000, 500, 3000, 1500, 1500, 600, 600 };
@@ -1616,7 +1616,7 @@ DLG:apanel_tuning_brisi(playerid, response)
     {
         for (new i = 0; i < MAX_PLAYERS; i++) if (gTunU[i] == g) TuningZatvori(i);
         DestroyDynamic3DTextLabel(gTuning[g][tgTekst]);
-        DestroyDynamicMapIcon(gTuning[g][tgIkona]);
+        MapaIkonaMakni(gTuning[g][tgIkona]);
         gTuning[g][tgIma] = false;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM tuning_garages WHERE id = %d", gTuning[g][tgDb]));
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Tuning garaza obrisana."));

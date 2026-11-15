@@ -18,9 +18,68 @@ GetRPIme(playerid)
     return name;
 }
 
-STREAMER_TAG_MAP_ICON:MapaIkona(Float:x, Float:y, Float:z, tip)
+#define IKONA_MAX           99
+#define IKONA_PAUZA_MS      1000
+
+static Float:gIkona[IKONA_MAX][3], gIkonaTip[IKONA_MAX], bool:gIkonaGlobalno[MAX_PLAYERS], gIkonaUpdate[MAX_PLAYERS];
+
+static IkonaPostavi(playerid, k)
 {
-    return CreateDynamicMapIcon(x, y, z, tip, 0, 0, 0, -1, 3000.0, MAPICON_LOCAL);
+    if (gIkonaTip[k]) SetPlayerMapIcon(playerid, k, gIkona[k][0], gIkona[k][1], gIkona[k][2], gIkonaTip[k], 0, gIkonaGlobalno[playerid] ? MAPICON_GLOBAL : MAPICON_LOCAL);
+    else RemovePlayerMapIcon(playerid, k);
+}
+
+static IkonaSvima(k)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) IkonaPostavi(i, k);
+}
+
+MapaIkona(Float:x, Float:y, Float:z, tip)
+{
+    for (new k = 0; k < IKONA_MAX; k++)
+    {
+        if (gIkonaTip[k]) continue;
+        gIkona[k][0] = x;
+        gIkona[k][1] = y;
+        gIkona[k][2] = z;
+        gIkonaTip[k] = tip;
+        IkonaSvima(k);
+        return k + 1;
+    }
+    return 0;
+}
+
+MapaIkonaMakni(id)
+{
+    if (id < 1 || id > IKONA_MAX) return;
+    gIkonaTip[id - 1] = 0;
+    IkonaSvima(id - 1);
+}
+
+IkoneIgracu(playerid)
+{
+    gIkonaGlobalno[playerid] = false;
+    gIkonaUpdate[playerid] = GetTickCount();
+    for (new k = 0; k < IKONA_MAX; k++) if (gIkonaTip[k]) IkonaPostavi(playerid, k);
+}
+
+IkoneUpdate(playerid)
+{
+    gIkonaUpdate[playerid] = GetTickCount();
+    if (!gIkonaGlobalno[playerid]) return;
+    gIkonaGlobalno[playerid] = false;
+    for (new k = 0; k < IKONA_MAX; k++) if (gIkonaTip[k]) IkonaPostavi(playerid, k);
+}
+
+IkoneTick()
+{
+    new sad = GetTickCount();
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!IsPlayerConnected(i) || IsPlayerNPC(i) || gIkonaGlobalno[i] || sad - gIkonaUpdate[i] < IKONA_PAUZA_MS) continue;
+        gIkonaGlobalno[i] = true;
+        for (new k = 0; k < IKONA_MAX; k++) if (gIkonaTip[k]) IkonaPostavi(i, k);
+    }
 }
 
 TdCisti(tekst[])

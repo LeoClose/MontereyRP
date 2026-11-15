@@ -253,6 +253,7 @@ public Sekunda()
     RacunaloTick();
     ZlataraTick();
     VrijemeTick();
+    IkoneTick();
 }
 
 public OnGameModeExit()
