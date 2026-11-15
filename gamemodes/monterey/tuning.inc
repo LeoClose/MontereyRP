@@ -36,6 +36,9 @@
 #define TUNING_ISKRE_FX_Z   1.611
 #define TUNING_ISKRE_KRECE  0.03
 #define TUNING_ISKRE_OBJEKT 18702
+#define PS_MIRUJE_MS        800
+#define PS_PROVJERA_MS      200
+#define PS_VANI             5.0
 
 enum { TK_POPRAVAK, TK_BOJA1, TK_BOJA2, TK_PAINTJOB, TK_MOTOR, TK_NEON, TK_OKLOP, TK_REZERVOAR, TK_TRUBA, TK_ISKRE, TK_ZATAMNJENJE, TK_NATPIS, TK_DIO }
 enum { TTD_PODNASLOV, TTD_BROJAC, TTD_KUPI, TTD_NATRAG, TTD_NOVAC, TTD_POMOC, TTD_RED }
@@ -487,6 +490,13 @@ static const gTuningNatpisArgb[] = { 0xFFFFFFFF, 0xFFE02020, 0xFF2080FF, 0xFF20D
 static const Float:gTuningPogled[][3] = { { -4.5, 5.0, 1.6 }, { 0.0, -6.5, 1.6 }, { -4.5, 0.0, 0.5 }, { 0.0, -3.5, 4.5 }, { 0.0, 6.5, 1.4 }, { 0.0, -0.3, 5.5 } };
 
 static gTuning[TUNING_MAX][E_TUNING];
+static const Float:gPs[][8] = {
+    { 2056.6, -1835.9, 2071.3, -1835.9, 2056.6, -1826.97, 12.5443, 18.5443 },
+    { 1021.81, -1018.71, 1021.81, -1029.53, 1027.93, -1018.71, 30.9081, 36.9081 },
+    { 491.103, -1747.55, 492.717, -1735.77, 481.972, -1746.3, 9.45516, 17.565 },
+    { 715.806, -462.403, 724.293, -462.403, 715.806, -447.29, 14.9635, 21.4398 }
+};
+static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], gPsMiruje[MAX_PLAYERS], gPsToken[MAX_PLAYERS];
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
 static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS];
@@ -534,6 +544,93 @@ InitTuning()
     }
     DB_FreeResultSet(res);
     for (new i = 0; i < MAX_PLAYERS; i++) gTunU[i] = -1;
+    for (new k = 0; k < sizeof gPs; k++)
+    {
+        new Float:t[8];
+        t[0] = gPs[k][0];
+        t[1] = gPs[k][1];
+        t[2] = gPs[k][2];
+        t[3] = gPs[k][3];
+        t[4] = gPs[k][2] + gPs[k][4] - gPs[k][0];
+        t[5] = gPs[k][3] + gPs[k][5] - gPs[k][1];
+        t[6] = gPs[k][4];
+        t[7] = gPs[k][5];
+        gPsZona[k] = CreateDynamicPolygon(t, gPs[k][6] - 1.0, gPs[k][7], sizeof t, 0, 0);
+        CreateDynamicMapIcon((t[0] + t[4]) / 2.0, (t[1] + t[5]) / 2.0, gPs[k][6], 27, 0, 0, 0);
+    }
+}
+
+static PsSnimi(playerid, v)
+{
+    new VEHICLE_PANEL_STATUS:a, VEHICLE_DOOR_STATUS:b, VEHICLE_LIGHT_STATUS:c, VEHICLE_TIRE_STATUS:d;
+    GetVehicleHealth(v, gPsZdravlje[playerid]);
+    GetVehicleDamageStatus(v, a, b, c, d);
+    gPsStete[playerid][0] = _:a;
+    gPsStete[playerid][1] = _:b;
+    gPsStete[playerid][2] = _:c;
+    gPsStete[playerid][3] = _:d;
+    GetVehicleColours(v, gPsBoja[playerid][0], gPsBoja[playerid][1]);
+    GetVehiclePos(v, gPsUlaz[playerid][0], gPsUlaz[playerid][1], gPsUlaz[playerid][2]);
+    GetVehicleZAngle(v, gPsUlaz[playerid][3]);
+}
+
+static PsVrati(playerid, v)
+{
+    gPsU[playerid] = 0;
+    gPsToken[playerid]++;
+    if (!GetVehicleModel(v)) return;
+    SetVehicleHealth(v, gPsZdravlje[playerid]);
+    UpdateVehicleDamageStatus(v, VEHICLE_PANEL_STATUS:gPsStete[playerid][0], VEHICLE_DOOR_STATUS:gPsStete[playerid][1], VEHICLE_LIGHT_STATUS:gPsStete[playerid][2], VEHICLE_TIRE_STATUS:gPsStete[playerid][3]);
+    ChangeVehicleColours(v, gPsBoja[playerid][0], gPsBoja[playerid][1]);
+    if (IsPlayerConnected(playerid)) PostaviNovac(playerid, gNovac[playerid], false);
+}
+
+static PsVani(playerid, &Float:x, &Float:y)
+{
+    x = gPsUlaz[playerid][0] - PS_VANI * floatsin(-gPsUlaz[playerid][3], degrees);
+    y = gPsUlaz[playerid][1] - PS_VANI * floatcos(-gPsUlaz[playerid][3], degrees);
+}
+
+public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
+{
+    if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER || gTunU[playerid] != -1 || gPsU[playerid]) return 1;
+    for (new k = 0; k < sizeof gPs; k++)
+    {
+        if (areaid != gPsZona[k]) continue;
+        new v = GetPlayerVehicleID(playerid);
+        PsSnimi(playerid, v);
+        gPsU[playerid] = k + 1;
+        gPsMiruje[playerid] = 0;
+        if (VlasnikDb(v) && VlasnikVozila(v) == gAccountId[playerid]) SetTimerEx("PsProvjeri", PS_PROVJERA_MS, false, "iii", playerid, gAccountId[playerid], ++gPsToken[playerid]);
+        else SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila."));
+        return 1;
+    }
+    return 1;
+}
+
+public OnPlayerLeaveDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
+{
+    new k = gPsU[playerid] - 1;
+    if (k < 0 || areaid != gPsZona[k] || gTunU[playerid] != -1) return 1;
+    PsVrati(playerid, GetPlayerVehicleID(playerid));
+    return 1;
+}
+
+forward PsProvjeri(playerid, racun, token);
+public PsProvjeri(playerid, racun, token)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPsToken[playerid] != token || !gPsU[playerid] || gTunU[playerid] != -1 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return;
+    new v = GetPlayerVehicleID(playerid), Float:vx, Float:vy, Float:vz;
+    GetVehicleVelocity(v, vx, vy, vz);
+    gPsMiruje[playerid] = VectorSize(vx, vy, vz) < 0.02 ? gPsMiruje[playerid] + PS_PROVJERA_MS : 0;
+    if (gPsMiruje[playerid] < PS_MIRUJE_MS)
+    {
+        SetTimerEx("PsProvjeri", PS_PROVJERA_MS, false, "iii", playerid, racun, token);
+        return;
+    }
+    new Float:x, Float:y;
+    PsVani(playerid, x, y);
+    TuningOtvori(playerid, TUNING_MAX + gPsU[playerid] - 1, x, y, gPsUlaz[playerid][2], gPsUlaz[playerid][3]);
 }
 
 static TuningStvori(g)
@@ -1111,7 +1208,7 @@ static TuningIzbornik(playerid)
     gTunKatBroj[playerid] = n;
 }
 
-static TuningOtvori(playerid, g)
+static TuningOtvori(playerid, g, Float:px, Float:py, Float:pz, Float:pa)
 {
     new v = GetPlayerVehicleID(playerid);
     MobitelZatvori(playerid);
@@ -1120,8 +1217,8 @@ static TuningOtvori(playerid, g)
     gTunU[playerid] = g;
     gTunV[playerid] = v;
     gTunTdBroj[playerid] = 0;
-    SetVehiclePos(v, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ]);
-    SetVehicleZAngle(v, gTuning[g][tgA]);
+    SetVehiclePos(v, px, py, pz);
+    SetVehicleZAngle(v, pa);
     SetVehicleVelocity(v, 0.0, 0.0, 0.0);
     SetVehicleVirtualWorld(v, TUNING_SVIJET + playerid);
     SetPlayerVirtualWorld(playerid, TUNING_SVIJET + playerid);
@@ -1188,6 +1285,12 @@ TuningZatvori(playerid, bool:uVozilo = true)
     SetPlayerVirtualWorld(playerid, 0);
     if (uVozilo) PutPlayerInVehicle(playerid, v, 0);
     SetCameraBehindPlayer(playerid);
+    if (g < TUNING_MAX) return;
+    new Float:x, Float:y;
+    PsVani(playerid, x, y);
+    SetVehiclePos(v, x, y, gPsUlaz[playerid][2]);
+    SetVehicleZAngle(v, gPsUlaz[playerid][3] + 180.0);
+    PsVrati(playerid, v);
 }
 
 TuningStateChange(playerid, PLAYER_STATE:oldstate)
@@ -1455,7 +1558,7 @@ TuningUlaz(playerid)
         if (!gTuning[g][tgIma] || !IsPlayerInRangeOfPoint(playerid, TUNING_DOMET, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ])) continue;
         new v = GetPlayerVehicleID(playerid);
         if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
-        TuningOtvori(playerid, g);
+        TuningOtvori(playerid, g, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ], gTuning[g][tgA]);
         return 1;
     }
     return 0;
