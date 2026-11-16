@@ -344,6 +344,11 @@ static MdtVozilo(playerid, const unos[])
     return 1;
 }
 
+MdtSat(const vrijeme[])
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gMdtOtvoren[i]) PlayerTextDrawSetString(i, gMdt[i][MTD_SAT], vrijeme);
+}
+
 static MdtOtvori(playerid)
 {
     new sat, minuta, vrijeme[8], g, m, d;

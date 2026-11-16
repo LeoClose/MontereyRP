@@ -13,7 +13,8 @@
 #define DIONICA_KORAK_S     10
 #define DIONICA_KORAKA      6
 #define SVIJECA             20
-#define PC_TD               175
+#define PC_TD               185
+#define PC_OBAVIJEST_MS     6000
 #define KLAD_RED            4
 #define KLAD_NAVY           0x0E2A47FF
 #define KLAD_NAVY2          0x16406BFF
@@ -50,7 +51,7 @@ enum { KT_BOK, KT_LISTIC, KT_TAB, KT_KAT = KT_TAB + 3, KT_LIGA = KT_KAT + 5, KT_
 enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA }
 enum { SV_O, SV_H, SV_L, SV_C }
 enum { PTD_START, PTD_TRAKA, PTD_PROZOR, PTD_NASLOV = PTD_PROZOR + 3, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 2, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 6, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_IMENOVANI = PTD_KLAD + KLAD_TD }
+    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 6, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_IMENOVANI }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
@@ -63,7 +64,7 @@ static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "L
 static const gPcIkona[][] = { "", "$", "@", "%", "L", "K" };
 static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF, 0xE91E63FF, 0x00897BFF };
 static gKladPar[MAX_PLAYERS][KLAD_PAROVA][16], gKladTip[MAX_PLAYERS][KLAD_PAROVA], gKladKoefPar[MAX_PLAYERS][KLAD_PAROVA], gKladN[MAX_PLAYERS], gKladStr[MAX_PLAYERS], bool:gKladIma[MAX_PLAYERS], gKladRed[MAX_PLAYERS][KLAD_RED][16], gKladSat;
-static gKladLiga[MAX_PLAYERS] = { -1, ... }, gKladMecId[MAX_PLAYERS][16], gKladMecLin[MAX_PLAYERS][3], gKladLin[MAX_PLAYERS][KLAD_PAROVA], gKladTab[MAX_PLAYERS], gKladKat[MAX_PLAYERS], gKladUlog[MAX_PLAYERS], gKladDetalj[MAX_PLAYERS], gKladRedKoef[MAX_PLAYERS][KLAD_RED][3], gKladRedIme[MAX_PLAYERS][KLAD_RED][24], gKladParIme[MAX_PLAYERS][KLAD_PAROVA][24], gKladRedListic[MAX_PLAYERS][KLAD_RED];
+static gPcObavijestDo[MAX_PLAYERS], gKladLiga[MAX_PLAYERS] = { -1, ... }, gKladMecId[MAX_PLAYERS][16], gKladMecLin[MAX_PLAYERS][3], gKladLin[MAX_PLAYERS][KLAD_PAROVA], gKladTab[MAX_PLAYERS], gKladKat[MAX_PLAYERS], gKladUlog[MAX_PLAYERS], gKladDetalj[MAX_PLAYERS], gKladRedKoef[MAX_PLAYERS][KLAD_RED][3], gKladRedIme[MAX_PLAYERS][KLAD_RED][24], gKladParIme[MAX_PLAYERS][KLAD_PAROVA][24], gKladRedListic[MAX_PLAYERS][KLAD_RED];
 static const gKladTabovi[][] = { "Ponuda", "U igri", "Zavrseni" };
 static const gKladKategorije[][] = { "Sve", "Nogomet", "Kosarka", "Hokej", "Am. nogomet" };
 static const gKladKatSql[][] = { "1", "league IN ('EPL','LaLiga','SerieA','Bundes','Ligue1','UCL','UEL')", "league = 'NBA'", "league = 'NHL'", "league = 'NFL'" };
@@ -778,13 +779,29 @@ static LsUnos(playerid, akcija, const inputtext[])
         if (!autor) return 1;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_comments (post, account, text, created) VALUES (%d, %d, '%q', %d)", post, me, tekst, sad));
         new t = IgracRacuna(autor);
-        if (autor != me && t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je komentirao vasu objavu."), GetRPIme(playerid));
+        if (autor != me && t != INVALID_PLAYER_ID)
+        {
+            new obavijest[144];
+            format(obavijest, sizeof obavijest, T(t, "~p~LifeStalker~n~~w~%s je komentirao vasu objavu."), GetRPIme(playerid));
+            PcObavijest(t, obavijest);
+        }
         return 1;
     }
     new p = gLsCilj[playerid];
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_messages (sender, receiver, text, created) VALUES (%d, %d, '%q', %d)", me, p, tekst, sad));
     new t = IgracRacuna(p);
-    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] Nova poruka od %s: %s"), GetRPIme(playerid), tekst);
+    if (t == INVALID_PLAYER_ID || !gPcOtvoren[t]) return 1;
+    if (gPcEkran[t] == PCE_LIFESTALKER && gLsPogled[t] == LS_RAZGOVOR && gLsCilj[t] == me)
+    {
+        PcEkran(t, PCE_LIFESTALKER);
+        return 1;
+    }
+    new obavijest[200], kratko[48];
+    strcat(kratko, tekst);
+    TdCisti(kratko);
+    format(obavijest, sizeof obavijest, T(t, "~p~LifeStalker~n~~w~Nova poruka od %s:~n~%s"), GetRPIme(playerid), kratko);
+    PcObavijest(t, obavijest);
+    if (gPcEkran[t] == PCE_LIFESTALKER && gLsPogled[t] == LS_PORUKE) PcEkran(t, PCE_LIFESTALKER);
     return 1;
 }
 
@@ -870,6 +887,14 @@ static PcEkran(playerid, ekran)
 
 RacunaloTick()
 {
+    new sad = GetTickCount();
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!gPcOtvoren[i] || !gPcObavijestDo[i] || sad - gPcObavijestDo[i] < 0) continue;
+        gPcObavijestDo[i] = 0;
+        PlayerTextDrawHide(i, gPc[i][PTD_OBAVIJEST]);
+        PlayerTextDrawHide(i, gPc[i][PTD_OBAVIJEST_TEKST]);
+    }
     if (++gKladSat >= KLAD_PROVJERA_S)
     {
         gKladSat = 0;
@@ -938,8 +963,8 @@ static PcOtvori(playerid)
     for (new i = 0; i < 4; i++) PcKutija(playerid, 10.0 + float(i % 2) * 7.0, 228.0 + float(i / 2) * 7.0, 5.5, 5.5, 0x4FC3F7FF);
     gPc[playerid][PTD_TRAKA] = PcGumb(playerid, 70.0, 229.0, 70.0, 0xFFFFFF22);
     PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_TRAKA], false);
-    PcTekst(playerid, 390.0, 226.0, vrijeme, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
-    PcTekst(playerid, 390.0, 234.0, datum, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+    gPc[playerid][PTD_SAT] = PcTekst(playerid, 390.0, 226.0, vrijeme, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+    gPc[playerid][PTD_DATUM] = PcTekst(playerid, 390.0, 234.0, datum, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
     gPc[playerid][PTD_PROZOR] = PcKutija(playerid, 83.0, 23.0, 300.0, 186.0, 0x00000055);
     gPc[playerid][PTD_PROZOR + 1] = PcKutija(playerid, 80.0, 20.0, 300.0, 186.0, 0xFFFFFFFF);
     gPc[playerid][PTD_PROZOR + 2] = PcKutija(playerid, 80.0, 20.0, 300.0, 16.0, 0xF0F0F0FF);
@@ -972,8 +997,32 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_START_PANEL + 1] = PcTekst(playerid, 12.0, 170.0, GetRPIme(playerid), 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
     gPc[playerid][PTD_UGASI] = PcGumb(playerid, 69.0, 204.0, 110.0, 0x2C3746FF, T(playerid, "Ugasi"));
     for (new i = 0; i < gPcBroj[playerid]; i++) PlayerTextDrawShow(playerid, gPcTd[playerid][i]);
+    gPc[playerid][PTD_OBAVIJEST] = PcKutija(playerid, 262.0, 190.0, 130.0, 30.0, 0x1B2430F2);
+    gPc[playerid][PTD_OBAVIJEST_TEKST] = PcTekst(playerid, 267.0, 193.0, "_", 0xFFFFFFFF, 0.14, 0.7, TEXT_DRAW_FONT_1);
+    PlayerTextDrawTextSize(playerid, gPc[playerid][PTD_OBAVIJEST_TEKST], PC_X + 388.0, 0.0);
+    gPcObavijestDo[playerid] = 0;
     PcEkran(playerid, PCE_POCETNA);
     SelectTextDraw(playerid, 0x4FC3F7FF);
+}
+
+RacunaloSat(const vrijeme[], const datum[])
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (!gPcOtvoren[i]) continue;
+        PlayerTextDrawSetString(i, gPc[i][PTD_SAT], vrijeme);
+        PlayerTextDrawSetString(i, gPc[i][PTD_DATUM], datum);
+    }
+}
+
+static PcObavijest(playerid, const tekst[])
+{
+    if (!gPcOtvoren[playerid]) return;
+    PlayerTextDrawSetString(playerid, gPc[playerid][PTD_OBAVIJEST_TEKST], tekst);
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_OBAVIJEST]);
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_OBAVIJEST_TEKST]);
+    PlayerPlaySound(playerid, 1054, 0.0, 0.0, 0.0);
+    gPcObavijestDo[playerid] = GetTickCount() + PC_OBAVIJEST_MS;
 }
 
 PcZatvori(playerid)

@@ -1557,10 +1557,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zahtjev je vec poslan.", "Request already sent.", "Запрос уже отправлен.", "Solicitud ya enviada.", "Istek zaten gonderildi." },
     { "Zahtjev poslan", "Request sent", "Запрос отправлен", "Solicitud enviada", "Istek gonderildi" },
     { "Zahtjev za prijateljstvo poslan.", "Friend request sent.", "Запрос в друзья отправлен.", "Solicitud de amistad enviada.", "Arkadaslik istegi gonderildi." },
-    { "[LifeStalker] %s je komentirao vasu objavu.", "[LifeStalker] %s commented on your post.", "[LifeStalker] %s прокомментировал ваш пост.", "[LifeStalker] %s comento tu publicacion.", "[LifeStalker] %s gonderinize yorum yapti." },
     { "[LifeStalker] %s je prihvatio vas zahtjev za prijateljstvo.", "[LifeStalker] %s accepted your friend request.", "[LifeStalker] %s принял ваш запрос в друзья.", "[LifeStalker] %s acepto tu solicitud de amistad.", "[LifeStalker] %s arkadaslik isteginizi kabul etti." },
     { "[LifeStalker] %s vam je poslao zahtjev za prijateljstvo.", "[LifeStalker] %s sent you a friend request.", "[LifeStalker] %s отправил вам запрос в друзья.", "[LifeStalker] %s te envio una solicitud de amistad.", "[LifeStalker] %s size arkadaslik istegi gonderdi." },
-    { "[LifeStalker] Nova poruka od %s: %s", "[LifeStalker] New message from %s: %s", "[LifeStalker] Новое сообщение от %s: %s", "[LifeStalker] Nuevo mensaje de %s: %s", "[LifeStalker] %s kisisinden yeni mesaj: %s" },
     { "prije %d d", "%d d ago", "%d дн. назад", "hace %d d", "%d g once" },
     { "prije %d h", "%d h ago", "%d ч назад", "hace %d h", "%d sa once" },
     { "prije %d min", "%d min ago", "%d мин назад", "hace %d min", "%d dk once" },
@@ -1686,7 +1684,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Manje  %s", "Under  %s", "Меньше  %s", "Menos  %s", "Alt  %s" },
     { "Hendikep (domacin %s)", "Handicap (home %s)", "Фора (хозяева %s)", "Handicap (local %s)", "Handikap (ev sahibi %s)" },
     { "Dom", "Home", "Хоз.", "Local", "Ev" },
-    { "Gost", "Away", "Гост.", "Visit.", "Dep." }
+    { "Gost", "Away", "Гост.", "Visit.", "Dep." },
+    { "~p~LifeStalker~n~~w~%s je komentirao vasu objavu.", "~p~LifeStalker~n~~w~%s commented on your post.", "~p~LifeStalker~n~~w~%s прокомментировал вашу запись.", "~p~LifeStalker~n~~w~%s comento tu publicacion.", "~p~LifeStalker~n~~w~%s gonderinize yorum yapti." },
+    { "~p~LifeStalker~n~~w~Nova poruka od %s:~n~%s", "~p~LifeStalker~n~~w~New message from %s:~n~%s", "~p~LifeStalker~n~~w~Новое сообщение от %s:~n~%s", "~p~LifeStalker~n~~w~Nuevo mensaje de %s:~n~%s", "~p~LifeStalker~n~~w~%s yeni mesaj:~n~%s" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

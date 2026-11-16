@@ -75,7 +75,7 @@ static const gMobitelJezici[BROJ_JEZIKA][] = { "Hrvatski", "English", "Russkiy",
 
 static PlayerText:gMobitelTd[MAX_PLAYERS][MOBITEL_TD], gMobitelBroj[MAX_PLAYERS];
 static PlayerText:gMobitelNaslov[MAX_PLAYERS], PlayerText:gMobitelOznaka[MAX_PLAYERS], PlayerText:gMobitelStavke[MAX_PLAYERS][MOBITEL_REDOVA];
-static bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
+static PlayerText:gMobitelSatTd[MAX_PLAYERS], bool:gMobitelOtvoren[MAX_PLAYERS], bool:gMobitelURuci[MAX_PLAYERS], gMobitelEkran[MAX_PLAYERS], gMobitelOdabir[MAX_PLAYERS], gMobitelUlaz[MAX_PLAYERS], KEY:gMobitelStareTipke[MAX_PLAYERS], gMobitelStaroGore[MAX_PLAYERS], gMobitelStaraStrana[MAX_PLAYERS], gMobitelAnim[MAX_PLAYERS], gMobitelAnimOd[MAX_PLAYERS], bool:gMobitelPoziv[MAX_PLAYERS], gMobitelSugovornik[MAX_PLAYERS][MOBITEL_IME];
 static PlayerText:gMobitelLijevo[MAX_PLAYERS], PlayerText:gMobitelDesno[MAX_PLAYERS], bool:gMobitelDolje[MAX_PLAYERS];
 static gMobitelMoj[MAX_PLAYERS][MOBITEL_BROJ], gMobitelKamera[MAX_PLAYERS], Text:gMobitelBljesak, Float:gMobitelKut[MAX_PLAYERS], Float:gMobitelNagib[MAX_PLAYERS];
 static gMobitelDrugi[MAX_PLAYERS], bool:gMobitelSpojen[MAX_PLAYERS], bool:gMobitelZvucnik[MAX_PLAYERS], gMobitelObavijest[MAX_PLAYERS], gMobitelPoruka[MAX_PLAYERS][MOBITEL_PORUKA_LEN];
@@ -492,7 +492,7 @@ static MobitelOtvori(playerid)
     MobitelKutija(playerid, 9.0, 17.0, 102.0, 106.0, 0x000000FF);
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 100.0, 0xDCE4ECFF);
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 11.0, 0x2E4A68FF);
-    MobitelTekst(playerid, 105.0, 21.0, vrijeme, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_ALIGN_RIGHT);
+    gMobitelSatTd[playerid] = MobitelTekst(playerid, 105.0, 21.0, vrijeme, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_ALIGN_RIGHT);
     MobitelTekst(playerid, 15.0, 21.0, "LS", 0xFFFFFFFF, 0.18, 0.85);
     gMobitelNaslov[playerid] = MobitelTekst(playerid, 60.0, 34.0, "_", 0x2E4A68FF, 0.24, 1.1, TEXT_DRAW_ALIGN_CENTER);
     gMobitelOznaka[playerid] = MobitelKutija(playerid, 15.0, MOBITEL_STAVKA_Y, 90.0, MOBITEL_STAVKA_H, 0x5B8DBFFF);
@@ -517,6 +517,11 @@ static MobitelOtvori(playerid)
     assert(gMobitelBroj[playerid] <= MOBITEL_TD);
     for (new i = 0; i < gMobitelBroj[playerid]; i++) PlayerTextDrawShow(playerid, gMobitelTd[playerid][i]);
     MobitelPrikazi(playerid);
+}
+
+MobitelSat(const vrijeme[])
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gMobitelOtvoren[i]) PlayerTextDrawSetString(i, gMobitelSatTd[i], vrijeme);
 }
 
 MobitelZatvori(playerid)

@@ -267,6 +267,7 @@ public Sekunda()
     IkoneTick();
     PlacaTick();
     KaficTick();
+    SatTick();
     AvionAtcTick();
 }
 

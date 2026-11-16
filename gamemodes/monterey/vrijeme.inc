@@ -34,6 +34,20 @@ static VrijemePomak(ts)
     return ljeto ? 7200 : 3600;
 }
 
+SatTick()
+{
+    static zadnja = -1;
+    new g, m, d, sat, minuta, vrijeme[8], datum[12];
+    VrijemeLokalno(g, m, d, sat, minuta);
+    if (minuta == zadnja) return;
+    zadnja = minuta;
+    format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
+    format(datum, sizeof datum, "%02d.%02d.%d", d, m, g);
+    RacunaloSat(vrijeme, datum);
+    MobitelSat(vrijeme);
+    MdtSat(vrijeme);
+}
+
 VrijemeLokalno(&g, &m, &d, &sat, &minuta)
 {
     VrijemeTs(gettime(), g, m, d, sat, minuta);
