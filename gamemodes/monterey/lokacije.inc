@@ -5,7 +5,7 @@
 static const gLokKat[][] = { "Organizacije", "Kazino", "Banke", "Zlatare", "Oruzarnice", "Trgovine", "Odjeca", "Namjestaj", "Saloni", "Tuning garaze", "Opstina", "Kuce", "Garaze" };
 static gLokOdabrana[MAX_PLAYERS], gLokStrana[MAX_PLAYERS], gLokRed[MAX_PLAYERS][LOK_STRANA + 2], gLokBroj[MAX_PLAYERS];
 
-static LokacijaUzmi(kat, i, &Float:x, &Float:y, &Float:z, &Float:a)
+LokacijaUzmi(kat, i, &Float:x, &Float:y, &Float:z, &Float:a)
 {
     switch (kat)
     {

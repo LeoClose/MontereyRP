@@ -528,6 +528,7 @@ DLG:taksi_poziv(playerid, response)
 
 public OnPlayerEnterCheckpoint(playerid)
 {
+    if (DostavaCheckpoint(playerid)) return 1;
     if (!gTaksiVozac[playerid]) return MobitelGpsStigao(playerid);
     gTaksiVozac[playerid] = false;
     DisablePlayerCheckpoint(playerid);
@@ -541,7 +542,8 @@ static TaksiNpcPoziv(playerid, bool:telefon)
     new cilj = CestaNajbliza(x, y, z, d);
     new s = -1, sekundi, duljina = -1;
     if (gPremium[playerid] && GetWanted(playerid)) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Premium taksi nije dostupan dok vas policija trazi."));
-    if (gPremium[playerid] && !GetWanted(playerid))
+    else if (gPremium[playerid] && NaPoslu(playerid)) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Premium taksi nije dostupan dok radite."));
+    if (gPremium[playerid] && !GetWanted(playerid) && !NaPoslu(playerid))
     {
         s = TAKSI_FLOTA;
         while (s < TAKSI_SLOTOVA && gTaksi[s][tStanje] != TX_SLOBODAN) s++;

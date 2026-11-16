@@ -68,6 +68,7 @@ public OnPlayerDisconnect(playerid, reason)
     OdjecaDisconnect(playerid);
     LoginDisconnect(playerid);
     TuningDisconnect(playerid);
+    DostavaDisconnect(playerid);
     KazinoDisconnect(playerid);
     PcDisconnect(playerid);
     ZlataraDisconnect(playerid);

@@ -2,6 +2,7 @@
 #define OPSTINA_SKIN        141
 #define IME_CIJENA          5000
 #define IME_MIN             5
+#define BLAGAJNA_POCETNA    1000000
 #define IME_MAX             20
 #define OPSTINA_SVIJET      8000
 #define OPSTINA_VRATA_DOMET 2.0
@@ -52,7 +53,7 @@ InitOpstina()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS fines (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, amount INTEGER NOT NULL, reason TEXT NOT NULL, officer TEXT NOT NULL, created INTEGER NOT NULL, paid INTEGER NOT NULL DEFAULT 0)"));
 
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT amount FROM city_budget WHERE id = 1");
-    gBlagajna = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    gBlagajna = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : BLAGAJNA_POCETNA;
     DB_FreeResultSet(res);
 
     res = DB_ExecuteQuery(gDB, "SELECT slot, x, y, z, a, interior, world FROM city_hall");
@@ -232,10 +233,17 @@ static bool:SalterBlizu(playerid, s)
         && IsPlayerInRangeOfPoint(playerid, OPSTINA_DOMET, gSalter[s][stX], gSalter[s][stY], gSalter[s][stZ]);
 }
 
-static BlagajnaDodaj(iznos)
+BlagajnaDodaj(iznos)
 {
     gBlagajna += iznos;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO city_budget (id, amount) VALUES (1, %d)", gBlagajna));
+}
+
+BlagajnaIsplati(iznos)
+{
+    if (iznos > gBlagajna) iznos = gBlagajna;
+    if (iznos > 0) BlagajnaDodaj(-iznos);
+    return iznos;
 }
 
 KaznaDodaj(target, policajac, iznos, const razlog[])
@@ -254,12 +262,12 @@ OpstinaSalter(playerid)
 
 // kazne i promjena imena
 
-static ShowUprava(playerid)
+ShowUprava(playerid)
 {
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*), COALESCE(SUM(amount), 0) FROM fines WHERE account = %d AND paid = 0", gAccountId[playerid]);
     new broj = DB_GetFieldInt(res, 0), ukupno = DB_GetFieldInt(res, 1), list[160];
     DB_FreeResultSet(res);
-    format(list, sizeof list, T(playerid, "Plati kazne (%d, ukupno $%d)\nPromjena imena ($%d)\nProdaja kuce"), broj, ukupno, IME_CIJENA);
+    format(list, sizeof list, T(playerid, "Plati kazne (%d, ukupno $%d)\nPromjena imena ($%d)\nProdaja kuce\nZaposlenje"), broj, ukupno, IME_CIJENA);
     return PrikaziDialog(playerid, DLG_OPSTINA, DIALOG_STYLE_LIST, T(playerid, "Opstina"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -290,6 +298,7 @@ DLG:opstina(playerid, response, listitem)
     if (!response || !SalterBlizu(playerid, SALTER_UPRAVA)) return 1;
     if (listitem == 0) return ShowKazne(playerid);
     if (listitem == 2) return KucaProdajaPopis(playerid);
+    if (listitem == 3) return PlacaPoslovi(playerid);
     new body[192];
     format(body, sizeof body, T(playerid, "Promjena imena kosta $%d.\nUnesite novo ime u obliku Ime_Prezime:"), IME_CIJENA);
     return PrikaziDialog(playerid, DLG_OPSTINA_IME, DIALOG_STYLE_INPUT, T(playerid, "Promjena imena"), body, T(playerid, "Promijeni"), T(playerid, "Natrag"));

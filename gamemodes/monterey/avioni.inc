@@ -1,4 +1,9 @@
-#define AVION_SLOTOVA       7
+#define AVION_JAVNI         7
+#define AVION_ATC_SLOTOVA   4
+#define AVION_ATC_MAX       4
+#define AVION_SLOTOVA       (AVION_JAVNI + AVION_ATC_SLOTOVA * AVION_ATC_MAX)
+#define AVION_INSTANCI      (AVION_ATC_MAX + 1)
+#define AVION_ATC_SVIJET    9700
 #define AVION_PARKIRANO     4
 #define AVION_STAJALISTA    11
 #define AVION_SKIN          61
@@ -8,6 +13,10 @@
 #define AVION_PARK_MAX_MS   150000
 #define AVION_PAUZA_MIN_MS  30000
 #define AVION_PAUZA_MAX_MS  150000
+#define ATC_PARK_MIN_MS     15000
+#define ATC_PARK_MAX_MS     40000
+#define ATC_PAUZA_MIN_MS    5000
+#define ATC_PAUZA_MAX_MS    20000
 
 #define SEG_ULAZ            10
 #define SEG_ULAZ_HANGAR     16
@@ -20,6 +29,14 @@
 #define AK_SREDNJI          1
 #define AK_MALI             2
 
+#define ATC_ROK_S           120
+#define ATC_RULANJE         1
+#define ATC_GURANJE         2
+#define ATC_POLIJETANJE     3
+#define ATC_TD_X            448.0
+#define ATC_TD_Y            150.0
+#define ATC_TD_RED          16.0
+
 enum
 {
     AF_NISTA,
@@ -29,7 +46,8 @@ enum
     AF_PARKIRAN,
     AF_IZLAZ,
     AF_ODLAZAK,
-    AF_PRELET
+    AF_PRELET,
+    AF_CEKA_POLIJETANJE
 }
 
 enum E_AVION_SEG { asSeg, asModel, Float:asX, Float:asY, Float:asZ, Float:asA }
@@ -251,9 +269,33 @@ static const gAvionStaj[][E_AVION_STAJ] = {
 };
 
 static const gAvionModeli[] = { 577, 592, 519, 553, 519, 553, 593, 511, 513, 512, 476 };
+static const gAtcZahtjevi[][] = { "", "rulanje do parkinga", "guranje i rulanje", "polijetanje" };
+static const gAtcStanja[][] = { "slobodno", "na prilazu", "ceka rulanje", "rula do parkinga", "parkiran", "guranje i rulanje", "polijece", "prelijece", "ceka polijetanje" };
 
 static gAvionNpc[AVION_SLOTOVA], gAvionVozilo[AVION_SLOTOVA], gAvionModel[AVION_SLOTOVA], gAvionFaza[AVION_SLOTOVA], gAvionStajaliste[AVION_SLOTOVA], gAvionRuta[AVION_SLOTOVA], gAvionToken[AVION_SLOTOVA], gNpcAvion[MAX_PLAYERS];
-static gAvionJuzna, gAvionSjeverna, gAvionZauzeto[AVION_STAJALISTA];
+static bool:gAvionOdobreno[AVION_SLOTOVA], gAvionZahtjev[AVION_SLOTOVA], gAvionZahtjevOd[AVION_SLOTOVA];
+static gInstVlasnik[AVION_INSTANCI], gInstJuzna[AVION_INSTANCI], gInstSjeverna[AVION_INSTANCI], gInstZauzeto[AVION_INSTANCI][AVION_STAJALISTA], gInstOdobreno[AVION_INSTANCI];
+static gAtcInst[MAX_PLAYERS], PlayerText:gAtcTd[MAX_PLAYERS][AVION_ATC_SLOTOVA + 3];
+
+static AvionInst(i)
+{
+    return i < AVION_JAVNI ? 0 : 1 + (i - AVION_JAVNI) / AVION_ATC_SLOTOVA;
+}
+
+static AvionPrvi(k)
+{
+    return k ? AVION_JAVNI + (k - 1) * AVION_ATC_SLOTOVA : 0;
+}
+
+static AvionZadnji(k)
+{
+    return k ? AvionPrvi(k) + AVION_ATC_SLOTOVA : AVION_JAVNI;
+}
+
+static bool:AvionInstAktivna(k)
+{
+    return !k || gInstVlasnik[k] != 0;
+}
 
 static AvionKlasa(model)
 {
@@ -277,10 +319,10 @@ static AvionStajIndeks(model, s)
     return -1;
 }
 
-static AvionSlobodnoStajaliste(model)
+static AvionSlobodnoStajaliste(k, model)
 {
     new slobodna[AVION_STAJALISTA], n = 0;
-    for (new s = 0; s < AVION_STAJALISTA; s++) if (!gAvionZauzeto[s] && AvionStajIndeks(model, s) != -1) slobodna[n++] = s;
+    for (new s = 0; s < AVION_STAJALISTA; s++) if (!gInstZauzeto[k][s] && AvionStajIndeks(model, s) != -1) slobodna[n++] = s;
     return n ? slobodna[random(n)] : -1;
 }
 
@@ -292,10 +334,10 @@ static AvionSegUlaz(i)
 
 static AvionPusti(i)
 {
-    new id = i + 1;
-    if (gAvionJuzna == id) gAvionJuzna = 0;
-    if (gAvionSjeverna == id) gAvionSjeverna = 0;
-    for (new s = 0; s < AVION_STAJALISTA; s++) if (gAvionZauzeto[s] == id) gAvionZauzeto[s] = 0;
+    new id = i + 1, k = AvionInst(i);
+    if (gInstJuzna[k] == id) gInstJuzna[k] = 0;
+    if (gInstSjeverna[k] == id) gInstSjeverna[k] = 0;
+    for (new s = 0; s < AVION_STAJALISTA; s++) if (gInstZauzeto[k][s] == id) gInstZauzeto[k][s] = 0;
 }
 
 static AvionCekaj(i, ms)
@@ -303,12 +345,22 @@ static AvionCekaj(i, ms)
     SetTimerEx("AvionKorak", ms, false, "ii", i, gAvionToken[i]);
 }
 
+static AvionParkVrijeme(i)
+{
+    return AvionInst(i) ? ATC_PARK_MIN_MS + random(ATC_PARK_MAX_MS - ATC_PARK_MIN_MS) : AVION_PARK_MIN_MS + random(AVION_PARK_MAX_MS - AVION_PARK_MIN_MS);
+}
+
+static AvionPauza(i)
+{
+    return AvionInst(i) ? ATC_PAUZA_MIN_MS + random(ATC_PAUZA_MAX_MS - ATC_PAUZA_MIN_MS) : AVION_PAUZA_MIN_MS + random(AVION_PAUZA_MAX_MS - AVION_PAUZA_MIN_MS);
+}
+
 InitAvioni()
 {
-    for (new i = 0; i < AVION_SLOTOVA; i++)
+    for (new i = 0; i < AVION_JAVNI; i++)
     {
         gAvionToken[i]++;
-        if (i < AVION_PARKIRANO) SetTimerEx("AvionParkirani", 5000 + i * 3000, false, "i", i);
+        if (i < AVION_PARKIRANO) SetTimerEx("AvionParkirani", 5000 + i * 3000, false, "ii", i, gAvionToken[i]);
         else AvionCekaj(i, 20000 + random(AVION_PAUZA_MAX_MS));
     }
 }
@@ -325,6 +377,8 @@ static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a)
         NPC_Destroy(npc);
         return false;
     }
+    new k = AvionInst(i);
+    SetVehicleVirtualWorld(v, k ? AVION_ATC_SVIJET + k : 0);
     gAvionNpc[i] = npc;
     gAvionVozilo[i] = v;
     gAvionModel[i] = model;
@@ -333,63 +387,73 @@ static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a)
     return true;
 }
 
-forward AvionParkirani(i);
-public AvionParkirani(i)
+forward AvionParkirani(i, token);
+public AvionParkirani(i, token)
 {
-    new model = gAvionModeli[random(sizeof gAvionModeli)], s = AvionSlobodnoStajaliste(model), k = s < 0 ? -1 : AvionStajIndeks(model, s);
-    if (k < 0 || !AvionStvori(i, model, gAvionStaj[k][asjX], gAvionStaj[k][asjY], gAvionStaj[k][asjZ], gAvionStaj[k][asjA]))
+    new k = AvionInst(i);
+    if (token != gAvionToken[i] || !AvionInstAktivna(k)) return;
+    new model = gAvionModeli[random(sizeof gAvionModeli)], s = AvionSlobodnoStajaliste(k, model), j = s < 0 ? -1 : AvionStajIndeks(model, s);
+    if (j < 0 || !AvionStvori(i, model, gAvionStaj[j][asjX], gAvionStaj[j][asjY], gAvionStaj[j][asjZ], gAvionStaj[j][asjA]))
     {
-        AvionCekaj(i, AVION_PAUZA_MIN_MS);
+        AvionCekaj(i, AvionPauza(i));
         return;
     }
-    gAvionZauzeto[s] = i + 1;
+    gInstZauzeto[k][s] = i + 1;
     gAvionStajaliste[i] = s;
     gAvionFaza[i] = AF_PARKIRAN;
 }
 
 static AvionNovi(i)
 {
-    new model = gAvionModeli[random(sizeof gAvionModeli)], s = AvionSlobodnoStajaliste(model);
-    if (AvionKlasa(model) == AK_MALI && (s < 0 || random(4) == 0))
+    new k = AvionInst(i), model = gAvionModeli[random(sizeof gAvionModeli)], s = AvionSlobodnoStajaliste(k, model);
+    if (AvionKlasa(model) == AK_MALI && (s < 0 || (!k && random(4) == 0)))
     {
-        new k = AvionSegIndeks(SEG_PRELET + random(2), model);
-        if (k < 0 || !AvionStvori(i, model, gAvionSeg[k][asX], gAvionSeg[k][asY], gAvionSeg[k][asZ], gAvionSeg[k][asA]))
+        new j = AvionSegIndeks(SEG_PRELET + random(2), model);
+        if (j < 0 || !AvionStvori(i, model, gAvionSeg[j][asX], gAvionSeg[j][asY], gAvionSeg[j][asZ], gAvionSeg[j][asA]))
         {
-            AvionCekaj(i, AVION_PAUZA_MIN_MS);
+            AvionCekaj(i, AvionPauza(i));
             return;
         }
-        gAvionRuta[i] = gAvionSeg[k][asSeg];
+        gAvionRuta[i] = gAvionSeg[j][asSeg];
         gAvionFaza[i] = AF_PRELET;
         return;
     }
-    if (gAvionJuzna || s < 0)
+    if (gInstJuzna[k] || s < 0)
     {
         AvionCekaj(i, AVION_POKUSAJ_MS * 5);
         return;
     }
-    new k = AvionSegIndeks(random(3), model);
-    if (k < 0 || !AvionStvori(i, model, gAvionSeg[k][asX], gAvionSeg[k][asY], gAvionSeg[k][asZ], gAvionSeg[k][asA]))
+    new j = AvionSegIndeks(random(3), model);
+    if (j < 0 || !AvionStvori(i, model, gAvionSeg[j][asX], gAvionSeg[j][asY], gAvionSeg[j][asZ], gAvionSeg[j][asA]))
     {
-        AvionCekaj(i, AVION_PAUZA_MIN_MS);
+        AvionCekaj(i, AvionPauza(i));
         return;
     }
-    gAvionJuzna = i + 1;
-    gAvionZauzeto[s] = i + 1;
+    gInstJuzna[k] = i + 1;
+    gInstZauzeto[k][s] = i + 1;
     gAvionStajaliste[i] = s;
-    gAvionRuta[i] = gAvionSeg[k][asSeg];
+    gAvionRuta[i] = gAvionSeg[j][asSeg];
     gAvionFaza[i] = AF_DOLAZAK;
 }
 
-static AvionKraj(i)
+static AvionUgasi(i)
 {
     AvionPusti(i);
+    gAvionZahtjev[i] = 0;
+    gAvionOdobreno[i] = false;
     gAvionToken[i]++;
+    gAvionFaza[i] = AF_NISTA;
+    if (!gAvionVozilo[i]) return;
     gNpcAvion[gAvionNpc[i]] = 0;
     NPC_Destroy(gAvionNpc[i]);
     DestroyVehicle(gAvionVozilo[i]);
     gAvionVozilo[i] = 0;
-    gAvionFaza[i] = AF_NISTA;
-    AvionCekaj(i, AVION_PAUZA_MIN_MS + random(AVION_PAUZA_MAX_MS - AVION_PAUZA_MIN_MS));
+}
+
+static AvionKraj(i)
+{
+    AvionUgasi(i);
+    if (AvionInstAktivna(AvionInst(i))) AvionCekaj(i, AvionPauza(i));
 }
 
 static AvionSnimka(i, seg)
@@ -399,48 +463,224 @@ static AvionSnimka(i, seg)
     if (!NPC_StartPlayback(gAvionNpc[i], ime)) AvionKraj(i);
 }
 
+static AvionIme(model, ime[], size = sizeof (ime))
+{
+    switch (model)
+    {
+        case 577: format(ime, size, "AT-400");
+        case 592: format(ime, size, "Andromada");
+        case 519: format(ime, size, "Shamal");
+        case 553: format(ime, size, "Nevada");
+        case 593: format(ime, size, "Dodo");
+        case 511: format(ime, size, "Beagle");
+        case 513: format(ime, size, "Stuntplane");
+        case 512: format(ime, size, "Cropduster");
+        default: format(ime, size, "Rustler");
+    }
+}
+
+static bool:AvionDozvola(i, zahtjev)
+{
+    new k = AvionInst(i);
+    if (!k || gAvionOdobreno[i] || (gAvionZahtjev[i] && gettime() - gAvionZahtjevOd[i] > ATC_ROK_S))
+    {
+        gAvionOdobreno[i] = false;
+        gAvionZahtjev[i] = 0;
+        return true;
+    }
+    if (!gAvionZahtjev[i])
+    {
+        gAvionZahtjev[i] = zahtjev;
+        gAvionZahtjevOd[i] = gettime();
+        PlayerPlaySound(gInstVlasnik[k] - 1, 1058, 0.0, 0.0, 0.0);
+    }
+    return false;
+}
+
+AtcNaSmjeni(playerid)
+{
+    return gAtcInst[playerid] ? 1 : 0;
+}
+
+static PlayerText:AtcTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:vel)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_1);
+    PlayerTextDrawLetterSize(playerid, td, vel, vel * 4.0);
+    PlayerTextDrawColour(playerid, td, boja);
+    PlayerTextDrawSetShadow(playerid, td, 0);
+    PlayerTextDrawSetOutline(playerid, td, 1);
+    PlayerTextDrawBackgroundColour(playerid, td, 0x000000AA);
+    return td;
+}
+
+static AtcTdOsvjezi(playerid)
+{
+    new k = gAtcInst[playerid], red[96], ime[16];
+    for (new r = 0; r < AVION_ATC_SLOTOVA; r++)
+    {
+        new i = AvionPrvi(k) + r;
+        if (!gAvionVozilo[i]) format(red, sizeof red, "%d. %s", i + 1, T(playerid, gAtcStanja[0]));
+        else
+        {
+            AvionIme(gAvionModel[i], ime);
+            if (gAvionZahtjev[i]) format(red, sizeof red, "~y~%d. %s: %s ~g~[%s]", i + 1, ime, T(playerid, gAtcZahtjevi[gAvionZahtjev[i]]), T(playerid, "ODOBRI"));
+            else format(red, sizeof red, "%d. %s: %s", i + 1, ime, T(playerid, gAtcStanja[gAvionFaza[i]]));
+        }
+        PlayerTextDrawSetString(playerid, gAtcTd[playerid][2 + r], red);
+    }
+    format(red, sizeof red, T(playerid, "Odobreno: %d~n~/toranj - kursor, ESC - kamera"), gInstOdobreno[k]);
+    PlayerTextDrawSetString(playerid, gAtcTd[playerid][2 + AVION_ATC_SLOTOVA], red);
+}
+
+static AtcTdPokazi(playerid)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, ATC_TD_X - 4.0, ATC_TD_Y - 4.0, "LD_SPAC:white");
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawTextSize(playerid, td, 192.0, 28.0 + ATC_TD_RED * AVION_ATC_SLOTOVA + 26.0);
+    PlayerTextDrawColour(playerid, td, 0x0B1A2ACC);
+    gAtcTd[playerid][0] = td;
+    gAtcTd[playerid][1] = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y, T(playerid, "Kontrolni toranj"), 0x5B8DBFFF, 0.3);
+    for (new r = 0; r < AVION_ATC_SLOTOVA; r++)
+    {
+        td = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y + 22.0 + ATC_TD_RED * r, "_", 0xDDDDDDFF, 0.22);
+        PlayerTextDrawTextSize(playerid, td, ATC_TD_X + 186.0, ATC_TD_RED - 2.0);
+        PlayerTextDrawSetSelectable(playerid, td, true);
+        gAtcTd[playerid][2 + r] = td;
+    }
+    gAtcTd[playerid][2 + AVION_ATC_SLOTOVA] = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y + 26.0 + ATC_TD_RED * AVION_ATC_SLOTOVA, "_", 0xAAAAAAFF, 0.2);
+    for (new t = 0; t < sizeof gAtcTd[]; t++) PlayerTextDrawShow(playerid, gAtcTd[playerid][t]);
+    AtcTdOsvjezi(playerid);
+}
+
+static AtcTdSakrij(playerid)
+{
+    for (new t = 0; t < sizeof gAtcTd[]; t++) PlayerTextDrawDestroy(playerid, gAtcTd[playerid][t]);
+    CancelSelectTextDraw(playerid);
+}
+
+AvionAtcTick()
+{
+    for (new k = 1; k < AVION_INSTANCI; k++) if (gInstVlasnik[k]) AtcTdOsvjezi(gInstVlasnik[k] - 1);
+}
+
+bool:AtcPocni(playerid)
+{
+    new k = 1;
+    while (k < AVION_INSTANCI && gInstVlasnik[k]) k++;
+    if (k == AVION_INSTANCI) return false;
+    gInstVlasnik[k] = playerid + 1;
+    gInstJuzna[k] = 0;
+    gInstSjeverna[k] = 0;
+    gInstOdobreno[k] = 0;
+    for (new s = 0; s < AVION_STAJALISTA; s++) gInstZauzeto[k][s] = 0;
+    gAtcInst[playerid] = k;
+    SetPlayerVirtualWorld(playerid, AVION_ATC_SVIJET + k);
+    for (new i = AvionPrvi(k), n = 0; i < AvionZadnji(k); i++, n++)
+    {
+        AvionUgasi(i);
+        if (n < 2) SetTimerEx("AvionParkirani", 2000 + n * 2000, false, "ii", i, gAvionToken[i]);
+        else AvionCekaj(i, 5000 + n * 8000);
+    }
+    AtcTdPokazi(playerid);
+    return true;
+}
+
+AtcKraj(playerid)
+{
+    new k = gAtcInst[playerid];
+    if (!k) return;
+    gAtcInst[playerid] = 0;
+    gInstVlasnik[k] = 0;
+    for (new i = AvionPrvi(k); i < AvionZadnji(k); i++) AvionUgasi(i);
+    if (!IsPlayerConnected(playerid)) return;
+    SetPlayerVirtualWorld(playerid, 0);
+    AtcTdSakrij(playerid);
+}
+
+bool:AtcKlik(playerid, PlayerText:td)
+{
+    new k = gAtcInst[playerid];
+    if (!k) return false;
+    for (new r = 0; r < AVION_ATC_SLOTOVA; r++)
+    {
+        if (td != gAtcTd[playerid][2 + r]) continue;
+        new i = AvionPrvi(k) + r;
+        if (!gAvionVozilo[i] || !gAvionZahtjev[i]) return true;
+        gAvionOdobreno[i] = true;
+        gInstOdobreno[k]++;
+        AtcZarada(playerid);
+        PlayerPlaySound(playerid, 1083, 0.0, 0.0, 0.0);
+        AvionKorak(i, gAvionToken[i]);
+        AtcTdOsvjezi(playerid);
+        return true;
+    }
+    return false;
+}
+
+CMD:toranj(playerid, params[])
+{
+    if (!AtcNaSmjeni(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste na smjeni u kontrolnom tornju."));
+    SelectTextDraw(playerid, 0x5B8DBFFF);
+    return 1;
+}
+
+CMD:atc(playerid, params[]) return cmd_toranj(playerid, params);
+
 forward AvionKorak(i, token);
 public AvionKorak(i, token)
 {
-    if (token != gAvionToken[i]) return;
+    new k = AvionInst(i);
+    if (token != gAvionToken[i] || !AvionInstAktivna(k)) return;
     new id = i + 1, bool:mali = AvionKlasa(gAvionModel[i]) == AK_MALI;
     switch (gAvionFaza[i])
     {
         case AF_NISTA: AvionNovi(i);
         case AF_CEKA_ULAZ:
         {
-            if (!mali && gAvionSjeverna)
+            if ((!mali && gInstSjeverna[k]) || !AvionDozvola(i, ATC_RULANJE))
             {
                 AvionCekaj(i, AVION_POKUSAJ_MS);
                 return;
             }
             if (!mali)
             {
-                gAvionSjeverna = id;
-                gAvionJuzna = 0;
+                gInstSjeverna[k] = id;
+                gInstJuzna[k] = 0;
             }
             gAvionFaza[i] = AF_ULAZ;
             AvionSnimka(i, AvionSegUlaz(i));
         }
         case AF_PARKIRAN:
         {
-            if (gAvionJuzna || (!mali && gAvionSjeverna))
+            if (gInstJuzna[k] || (!mali && gInstSjeverna[k]) || !AvionDozvola(i, mali ? ATC_POLIJETANJE : ATC_GURANJE))
             {
                 AvionCekaj(i, AVION_POKUSAJ_MS);
                 return;
             }
-            gAvionJuzna = id;
+            gInstJuzna[k] = id;
             if (mali)
             {
-                gAvionZauzeto[gAvionStajaliste[i]] = 0;
+                gInstZauzeto[k][gAvionStajaliste[i]] = 0;
                 gAvionFaza[i] = AF_ODLAZAK;
                 AvionSnimka(i, SEG_ODLAZAK_HANGAR + (gAvionStajaliste[i] - 6) * 3 + random(3));
                 SetTimerEx("AvionPistaSlobodna", AVION_PISTA_MS, false, "ii", i, gAvionToken[i]);
                 return;
             }
-            gAvionSjeverna = id;
+            gInstSjeverna[k] = id;
             gAvionFaza[i] = AF_IZLAZ;
             AvionSnimka(i, SEG_IZLAZ + gAvionStajaliste[i]);
+        }
+        case AF_CEKA_POLIJETANJE:
+        {
+            if (!AvionDozvola(i, ATC_POLIJETANJE))
+            {
+                AvionCekaj(i, AVION_POKUSAJ_MS);
+                return;
+            }
+            gAvionFaza[i] = AF_ODLAZAK;
+            AvionSnimka(i, SEG_ODLAZAK + random(3));
+            SetTimerEx("AvionPistaSlobodna", AVION_PISTA_MS, false, "ii", i, gAvionToken[i]);
         }
     }
 }
@@ -448,15 +688,18 @@ public AvionKorak(i, token)
 forward AvionPistaSlobodna(i, token);
 public AvionPistaSlobodna(i, token)
 {
-    if (token == gAvionToken[i] && gAvionJuzna == i + 1) gAvionJuzna = 0;
+    new k = AvionInst(i);
+    if (token == gAvionToken[i] && gInstJuzna[k] == i + 1) gInstJuzna[k] = 0;
 }
 
 AvionSpawn(npcid)
 {
     new i = gNpcAvion[npcid] - 1;
     if (i < 0) return;
+    new k = AvionInst(i);
     NPC_SetSkin(npcid, AVION_SKIN);
     NPC_SetInvulnerable(npcid, true);
+    NPC_SetVirtualWorld(npcid, k ? AVION_ATC_SVIJET + k : 0);
     SetVehicleParamsEx(gAvionVozilo[i], 1, 1, 0, 0, 0, 0, 0);
     NPC_PutInVehicle(npcid, gAvionVozilo[i], 0);
     SetTimerEx("AvionKreni", 1000, false, "ii", i, gAvionToken[i]);
@@ -466,15 +709,15 @@ forward AvionKreni(i, token);
 public AvionKreni(i, token)
 {
     if (token != gAvionToken[i] || !gAvionVozilo[i]) return;
-    if (gAvionFaza[i] == AF_PARKIRAN) AvionCekaj(i, AVION_PARK_MIN_MS + random(AVION_PARK_MAX_MS - AVION_PARK_MIN_MS));
+    if (gAvionFaza[i] == AF_PARKIRAN) AvionCekaj(i, AvionParkVrijeme(i));
     else AvionSnimka(i, gAvionRuta[i]);
 }
-
 
 AvionPlaybackEnd(npcid)
 {
     new i = gNpcAvion[npcid] - 1;
     if (i < 0) return 0;
+    new k = AvionInst(i);
     switch (gAvionFaza[i])
     {
         case AF_DOLAZAK:
@@ -484,18 +727,17 @@ AvionPlaybackEnd(npcid)
         }
         case AF_ULAZ:
         {
-            if (gAvionSjeverna == i + 1) gAvionSjeverna = 0;
-            if (gAvionJuzna == i + 1) gAvionJuzna = 0;
+            if (gInstSjeverna[k] == i + 1) gInstSjeverna[k] = 0;
+            if (gInstJuzna[k] == i + 1) gInstJuzna[k] = 0;
             gAvionFaza[i] = AF_PARKIRAN;
-            AvionCekaj(i, AVION_PARK_MIN_MS + random(AVION_PARK_MAX_MS - AVION_PARK_MIN_MS));
+            AvionCekaj(i, AvionParkVrijeme(i));
         }
         case AF_IZLAZ:
         {
-            gAvionSjeverna = 0;
-            gAvionZauzeto[gAvionStajaliste[i]] = 0;
-            gAvionFaza[i] = AF_ODLAZAK;
-            AvionSnimka(i, SEG_ODLAZAK + random(3));
-            SetTimerEx("AvionPistaSlobodna", AVION_PISTA_MS, false, "ii", i, gAvionToken[i]);
+            gInstSjeverna[k] = 0;
+            gInstZauzeto[k][gAvionStajaliste[i]] = 0;
+            gAvionFaza[i] = AF_CEKA_POLIJETANJE;
+            AvionKorak(i, gAvionToken[i]);
         }
         default: AvionKraj(i);
     }

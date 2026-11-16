@@ -504,6 +504,14 @@ bool:BankaOtplati(playerid, n)
     return true;
 }
 
+bool:BankaUplati(racun, iznos)
+{
+    new stanje, stednja, kredit, rata, rok;
+    if (!BankaUcitaj(racun, stanje, stednja, kredit, rata, rok) || stanje + iznos < 0) return false;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, racun));
+    return true;
+}
+
 bool:BankaPromijeni(playerid, iznos)
 {
     new stanje, stednja, kredit, rata, rok;

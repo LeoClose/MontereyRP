@@ -442,6 +442,7 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_POSTAVKE) PlayerTextDrawSetString(playerid, td, T(playerid, "Jezik"));
         else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, td, gMobitelJezici[s]);
         else if (ekran == MOBITEL_KAMERA) PlayerTextDrawSetString(playerid, td, T(playerid, s ? ("Selfie") : ("Fotoaparat")));
+        else if (ekran == MOBITEL_INTERNET && s == 0 && HranaAktivna(playerid)) PlayerTextDrawSetString(playerid, td, T(playerid, "Otkazi narudzbu"));
         else if (ekran == MOBITEL_INTERNET) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelInternet[s]));
         else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelGrupe[s]));
         else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelLokIme[playerid][s]));
@@ -900,7 +901,7 @@ static MobitelOdaberi(playerid)
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
     else if (ekran == MOBITEL_INTERNET)
     {
-        if (odabir == 0) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Poslovi ce uskoro biti dostupni."));
+        if (odabir == 0) HranaNarudzba(playerid);
         else if (odabir == 2)
         {
             if (!gInv[playerid][ITEM_KARTICA]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate bankovnu karticu."));

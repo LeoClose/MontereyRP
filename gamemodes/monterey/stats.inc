@@ -12,7 +12,9 @@ InitStats()
 {
     return StatsEnsureColumn("level", "INTEGER NOT NULL DEFAULT 1")
         && StatsEnsureColumn("respekti", "INTEGER NOT NULL DEFAULT 0")
-        && StatsEnsureColumn("playtime", "INTEGER NOT NULL DEFAULT 0");
+        && StatsEnsureColumn("playtime", "INTEGER NOT NULL DEFAULT 0")
+        && StatsEnsureColumn("job", "INTEGER NOT NULL DEFAULT 0")
+        && StatsEnsureColumn("payday_earn", "INTEGER NOT NULL DEFAULT 0");
 }
 
 static StatsEnsureColumn(const name[], const definition[])
@@ -70,6 +72,7 @@ StatsLoad(playerid)
     gStatsRespekti[playerid] = DB_GetFieldInt(res, 1);
     gStatsPlaytime[playerid] = DB_GetFieldInt(res, 2);
     DB_FreeResultSet(res);
+    PlacaUcitaj(playerid);
 
     if (gStatsLevel[playerid] < 1) gStatsLevel[playerid] = 1;
     if (gStatsRespekti[playerid] < 0) gStatsRespekti[playerid] = 0;
@@ -100,6 +103,7 @@ StatsUpdate(playerid)
     gStatsPlaytime[playerid] += elapsed;
     gStatsUnsaved[playerid] += elapsed;
     gStatsRespekti[playerid] += gStatsPlaytime[playerid] / 3600 - sati;
+    if (gStatsPlaytime[playerid] / 3600 > sati) Placa(playerid);
     new potrebno = StatsPotrebno(gStatsLevel[playerid]);
     while (gStatsRespekti[playerid] >= potrebno)
     {

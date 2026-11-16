@@ -220,6 +220,7 @@ public OnGameModeInit()
     InitHeli();
     InitVlakovi();
     InitAvioni();
+    InitPlaca();
     InitHod();
     SetTimer("Sekunda", 1000, true);
 
@@ -262,6 +263,8 @@ public Sekunda()
     ZlataraTick();
     VrijemeTick();
     IkoneTick();
+    PlacaTick();
+    AvionAtcTick();
 }
 
 public OnGameModeExit()
@@ -347,6 +350,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"
 #include "monterey/lokacije.inc"
+#include "monterey/placa.inc"
 #include "monterey/login.inc"
 #include "monterey/registracija.inc"
 #include "monterey/stats.inc"
