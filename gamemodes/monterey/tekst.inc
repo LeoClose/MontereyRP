@@ -1628,7 +1628,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Za dostavu hrane potreban vam je bankovni racun.", "You need a bank account for food delivery.", "Для доставки еды нужен банковский счёт.", "Necesitas una cuenta bancaria para entregar comida.", "Yemek teslimati icin banka hesabi gerekir." },
     { "Uplata za dostavu hrane: $%d.", "Food delivery payment: $%d.", "Оплата за доставку еды: $%d.", "Pago por entrega de comida: $%d.", "Yemek teslimati odemesi: $%d." },
     { "Hrana je dostavljena. $%d je uplaceno na vas racun.", "Food delivered. $%d was paid into your bank account.", "Еда доставлена. $%d зачислено на ваш счёт.", "Comida entregada. Se ingresaron $%d en tu cuenta.", "Yemek teslim edildi. Hesabiniza $%d yatirildi." },
-    { "Dostava zavrsena. Dobili ste $%d na ruke.", "Delivery done. You got $%d in cash.", "Доставка выполнена. Вы получили $%d наличными.", "Entrega hecha. Recibiste $%d en efectivo.", "Teslimat tamam. Elden $%d aldiniz." }
+    { "Dostava zavrsena. Dobili ste $%d na ruke.", "Delivery done. You got $%d in cash.", "Доставка выполнена. Вы получили $%d наличными.", "Entrega hecha. Recibiste $%d en efectivo.", "Teslimat tamam. Elden $%d aldiniz." },
+    { "Brod je vec u plovidbi.", "The ship is already sailing.", "Корабль уже в пути.", "El barco ya esta navegando.", "Gemi zaten seyirde." },
+    { "Brod isplovljava iz luke.", "The ship is leaving the port.", "Корабль выходит из порта.", "El barco sale del puerto.", "Gemi limandan ayriliyor." },
+    { "Brod uplovljava u luku.", "The ship is sailing into the port.", "Корабль входит в порт.", "El barco entra en el puerto.", "Gemi limana giriyor." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
