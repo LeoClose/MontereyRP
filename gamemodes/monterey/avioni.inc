@@ -380,11 +380,23 @@ static AvionNovi(i)
     gAvionFaza[i] = AF_DOLAZAK;
 }
 
+static AvionKraj(i)
+{
+    AvionPusti(i);
+    gAvionToken[i]++;
+    gNpcAvion[gAvionNpc[i]] = 0;
+    NPC_Destroy(gAvionNpc[i]);
+    DestroyVehicle(gAvionVozilo[i]);
+    gAvionVozilo[i] = 0;
+    gAvionFaza[i] = AF_NISTA;
+    AvionCekaj(i, AVION_PAUZA_MIN_MS + random(AVION_PAUZA_MAX_MS - AVION_PAUZA_MIN_MS));
+}
+
 static AvionSnimka(i, seg)
 {
     new ime[16];
     format(ime, sizeof ime, "av_%d_%d", seg, gAvionModel[i]);
-    NPC_StartPlayback(gAvionNpc[i], ime);
+    if (!NPC_StartPlayback(gAvionNpc[i], ime)) AvionKraj(i);
 }
 
 forward AvionKorak(i, token);
@@ -458,17 +470,6 @@ public AvionKreni(i, token)
     else AvionSnimka(i, gAvionRuta[i]);
 }
 
-static AvionKraj(i)
-{
-    AvionPusti(i);
-    gAvionToken[i]++;
-    gNpcAvion[gAvionNpc[i]] = 0;
-    NPC_Destroy(gAvionNpc[i]);
-    DestroyVehicle(gAvionVozilo[i]);
-    gAvionVozilo[i] = 0;
-    gAvionFaza[i] = AF_NISTA;
-    AvionCekaj(i, AVION_PAUZA_MIN_MS + random(AVION_PAUZA_MAX_MS - AVION_PAUZA_MIN_MS));
-}
 
 AvionPlaybackEnd(npcid)
 {
