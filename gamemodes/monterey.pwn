@@ -193,6 +193,8 @@ public OnGameModeInit()
     MapaMarketSt();
     MapaJeffersonFlatsUkloni(INVALID_PLAYER_ID);
     MapaJeffersonFlats();
+    MapaMontereyPeakUkloni(INVALID_PLAYER_ID);
+    MapaMontereyPeak();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -217,6 +219,7 @@ public OnGameModeInit()
     InitOpstina();
     InitHeli();
     InitVlakovi();
+    InitAvioni();
     InitHod();
     SetTimer("Sekunda", 1000, true);
 
@@ -304,6 +307,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/sluzbe.inc"
 #include "monterey/vozila.inc"
 #include "monterey/vlakovi.inc"
+#include "monterey/avioni.inc"
 #include "monterey/trgovina.inc"
 #include "monterey/kazino.inc"
 #include "monterey/banka.inc"
@@ -336,6 +340,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_main_street.inc"
 #include "monterey/mape/mapa_market_st.inc"
 #include "monterey/mape/mapa_jefferson_flats.inc"
+#include "monterey/mape/mapa_monterey_peak.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/mdt.inc"

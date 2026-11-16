@@ -1,23 +1,27 @@
-#define VLAK_BROJ           2
+#define VLAK_BROJ           1
 #define VLAK_MODEL          538
 #define VLAK_VAGON          570
 #define VLAK_SKIN           7
 #define VLAK_START_MS       5000
 #define VLAK_RAZMAK_MS      300000
-#define VLAK_PAUZA_MS       600000
+#define VLAK_PAUZA_MS       480000
 #define VLAK_IZVAN_LS_MS    60000
 #define VLAK_LS_MIN_X       44.6
 #define VLAK_LS_MAX_Y       -768.0
 
 // Vlak krece s Unity stanice, prolazi Market i odlazi prema SF-u gdje nestaje
-static const Float:gVlakStart[4] = { 1700.7551, -1953.6531, 14.8756, 190.0 };
+static const Float:gVlakStart[4] = { 1691.72, -1953.636, 14.876, 90.0 };
 static const gVlakZapis[][] = { "TRAIN_UNITY_TO_MARKET", "TRAIN_MARKET_TO_CRANBERRY" };
 
-static gVlakNpc[VLAK_BROJ], gVlakVozilo[VLAK_BROJ], gVlakDio[VLAK_BROJ], gVlakIzvan[VLAK_BROJ], gNpcVlak[MAX_PLAYERS];
+static bool:gVlakAktivan[VLAK_BROJ], gVlakNpc[VLAK_BROJ], gVlakVozilo[VLAK_BROJ], gVlakDio[VLAK_BROJ], gVlakIzvan[VLAK_BROJ], gNpcVlak[MAX_PLAYERS];
 
 InitVlakovi()
 {
-    for (new i = 0; i < VLAK_BROJ; i++) SetTimerEx("VlakStvori", VLAK_START_MS + i * VLAK_RAZMAK_MS, false, "i", i);
+    for (new i = 0; i < VLAK_BROJ; i++)
+    {
+        gVlakVozilo[i] = AddStaticVehicle(VLAK_MODEL, gVlakStart[0], gVlakStart[1], gVlakStart[2], gVlakStart[3], -1, -1);
+        SetTimerEx("VlakStvori", VLAK_START_MS + i * VLAK_RAZMAK_MS, false, "i", i);
+    }
 }
 
 forward VlakStvori(i);
@@ -26,15 +30,14 @@ public VlakStvori(i)
     new name[MAX_PLAYER_NAME + 1];
     format(name, sizeof name, "Strojovoda_%d", i);
     new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return;
-    new v = CreateVehicle(VLAK_MODEL, gVlakStart[0], gVlakStart[1], gVlakStart[2], gVlakStart[3], -1, -1, -1);
-    if (v == INVALID_VEHICLE_ID)
+    if (npc == INVALID_PLAYER_ID || gVlakVozilo[i] == INVALID_VEHICLE_ID)
     {
-        NPC_Destroy(npc);
+        if (npc != INVALID_PLAYER_ID) NPC_Destroy(npc);
+        SetTimerEx("VlakStvori", VLAK_PAUZA_MS, false, "i", i);
         return;
     }
     gVlakNpc[i] = npc;
-    gVlakVozilo[i] = v;
+    gVlakAktivan[i] = true;
     gVlakDio[i] = 0;
     gVlakIzvan[i] = 0;
     gNpcVlak[npc] = i + 1;
@@ -54,15 +57,14 @@ VlakSpawn(npcid)
 forward VlakVozi(i);
 public VlakVozi(i)
 {
-    if (gVlakVozilo[i]) NPC_StartPlayback(gVlakNpc[i], gVlakZapis[gVlakDio[i]]);
+    if (gVlakAktivan[i]) NPC_StartPlayback(gVlakNpc[i], gVlakZapis[gVlakDio[i]]);
 }
 
 static VlakNestani(i)
 {
     gNpcVlak[gVlakNpc[i]] = 0;
     NPC_Destroy(gVlakNpc[i]);
-    DestroyVehicle(gVlakVozilo[i]);
-    gVlakVozilo[i] = 0;
+    gVlakAktivan[i] = false;
     SetTimerEx("VlakStvori", VLAK_PAUZA_MS, false, "i", i);
 }
 
@@ -80,7 +82,7 @@ VlakTick()
     new Float:x, Float:y, Float:z, sad = GetTickCount();
     for (new i = 0; i < VLAK_BROJ; i++)
     {
-        if (!gVlakVozilo[i]) continue;
+        if (!gVlakAktivan[i]) continue;
         NPC_GetPos(gVlakNpc[i], x, y, z);
         if (x > VLAK_LS_MIN_X && y < VLAK_LS_MAX_Y) gVlakIzvan[i] = 0;
         else if (!gVlakIzvan[i]) gVlakIzvan[i] = sad;

@@ -214,6 +214,7 @@ public OnNPCSpawn(npcid)
         SlucajSpawn(npcid);
         HeliSpawn(npcid);
         VlakSpawn(npcid);
+        AvionSpawn(npcid);
         BankaSpawn(npcid);
         return 1;
     }

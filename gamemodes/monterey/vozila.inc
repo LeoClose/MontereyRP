@@ -724,7 +724,7 @@ public HeliLeti(i)
 public OnNPCPlaybackEnd(npcid, recordid)
 {
     if (gNpcHeli[npcid]) HeliLeti(gNpcHeli[npcid] - 1);
-    else VlakPlaybackEnd(npcid);
+    else if (!AvionPlaybackEnd(npcid)) VlakPlaybackEnd(npcid);
     return 1;
 }
 
@@ -1048,7 +1048,7 @@ public OnVehicleSpawn(vehicleid)
 
 public OnVehicleDeath(vehicleid, killerid)
 {
-    if (HeliMrtav(vehicleid)) return 1;
+    if (HeliMrtav(vehicleid) || AvionMrtav(vehicleid)) return 1;
     new s = TaksiPoVozilu(vehicleid);
     KickFromGepek(vehicleid);
     if (s != -1) TaksiPrekini(s);

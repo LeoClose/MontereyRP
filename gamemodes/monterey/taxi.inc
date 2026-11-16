@@ -803,7 +803,7 @@ public OnNPCFinishMove(npcid)
 public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
     MobitelEnterVehicle(playerid);
-    if (VlakEnter(playerid, vehicleid)) return 1;
+    if (VlakEnter(playerid, vehicleid) || AvionEnter(playerid, vehicleid)) return 1;
     if (ImaLisice(playerid) && !Pritvoren(playerid))
     {
         ClearAnimations(playerid);
