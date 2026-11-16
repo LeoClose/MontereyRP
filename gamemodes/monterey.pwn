@@ -99,10 +99,10 @@ bool:DestroyVozilo(v)
 #define HASH_ROUNDS         1000
 #define MAX_LOGIN_ATTEMPTS  3
 
-#define SPAWN_X     2486.0
-#define SPAWN_Y     -1666.0
-#define SPAWN_Z     13.5
-#define SPAWN_A     90.0
+#define SPAWN_X     484.0
+#define SPAWN_Y     -1499.5
+#define SPAWN_Z     20.6
+#define SPAWN_A     270.0
 #define DEFAULT_SKIN  271
 
 new DB:gDB;
@@ -193,6 +193,8 @@ public OnGameModeInit()
     MapaMarketSt();
     MapaJeffersonFlatsUkloni(INVALID_PLAYER_ID);
     MapaJeffersonFlats();
+    MapaSpawnUkloni(INVALID_PLAYER_ID);
+    MapaSpawn();
     MapaMontereyPeakUkloni(INVALID_PLAYER_ID);
     BrodUkloni(INVALID_PLAYER_ID);
     MapaMontereyPeak();
@@ -208,6 +210,8 @@ public OnGameModeInit()
     InitBanka();
     InitRacunalo();
     InitKafic();
+    InitBilijar();
+    InitKosarka();
     InitZlatara();
     InitVrijeme();
     InitOruzarnica();
@@ -267,6 +271,8 @@ public Sekunda()
     IkoneTick();
     PlacaTick();
     KaficTick();
+    BilijarTick();
+    KosTick();
     SatTick();
     AvionAtcTick();
 }
@@ -320,6 +326,8 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/banka.inc"
 #include "monterey/racunalo.inc"
 #include "monterey/kafic.inc"
+#include "monterey/bilijar.inc"
+#include "monterey/kosarka.inc"
 #include "monterey/fit_tablica.inc"
 #include "monterey/zlatara.inc"
 #include "monterey/oruzarnica.inc"
@@ -348,6 +356,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_main_street.inc"
 #include "monterey/mape/mapa_market_st.inc"
 #include "monterey/mape/mapa_jefferson_flats.inc"
+#include "monterey/mape/mapa_spawn.inc"
 #include "monterey/mape/mapa_monterey_peak.inc"
 #include "monterey/brod.inc"
 #include "monterey/teritorij.inc"
