@@ -85,7 +85,7 @@
         "player_timeout": 10000,
         "port": 7777,
         "public_addr": "",
-        "stream_radius": 300.0,
+        "stream_radius": 600.0,
         "stream_rate": 1000,
         "time_sync_rate": 30000,
         "use_lan_mode": false,
