@@ -13,7 +13,16 @@
 #define DIONICA_KORAK_S     10
 #define DIONICA_KORAKA      6
 #define SVIJECA             20
-#define PC_TD               130
+#define PC_TD               140
+#define KLAD_RED            6
+#define KLAD_PAROVA         8
+#define KLAD_MIN_ULOG       10
+#define KLAD_MAX_ULOG       10000
+#define KLAD_MAX_KOEF       100000
+#define KLAD_MAX_DOBITAK    1000000
+#define KLAD_ZATVARA_S      60
+#define KLAD_OBRACUN        40
+#define KLAD_PROVJERA_S     60
 #define LS_PAUZA            5
 #define LS_RED_Y            42.0
 #define LS_RED_H            22.0
@@ -31,10 +40,10 @@
 enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA, PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME }
 enum { LS_FEED, LS_OBJAVA, LS_PRIJATELJI, LS_PORUKE, LS_RAZGOVOR, LS_PROFIL }
 enum { LS_NISTA, LS_POSLAO, LS_PRIMIO, LS_PRIJATELJ }
-enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER }
+enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA }
 enum { SV_O, SV_H, SV_L, SV_C }
 enum { PTD_START, PTD_TRAKA, PTD_PROZOR, PTD_NASLOV = PTD_PROZOR + 3, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 2, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 5, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 5, PTD_LSTAB = PTD_APPIME + 5, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_IMENOVANI = PTD_LSINFO + 1 }
+    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPZNAK = PTD_KOL + 3, PTD_APPIME = PTD_APPZNAK + 6, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_IMENOVANI = PTD_KLAD + KLAD_RED }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
@@ -43,9 +52,10 @@ static gDionica[sizeof gDionicaIme], gSvijeca[sizeof gDionicaIme][SVIJECA][4], g
 static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcTrosak[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS], gLsPogled[MAX_PLAYERS], gLsCilj[MAX_PLAYERS], gLsOdabran[MAX_PLAYERS], gLsZadnje[MAX_PLAYERS], gLsAvatara[MAX_PLAYERS];
 static const gLsTab[][] = { "Objave", "Prijatelji", "Poruke", "Profil" };
 static PlayerText:gPcTd[MAX_PLAYERS][PC_TD], gPcBroj[MAX_PLAYERS], PlayerText:gPc[MAX_PLAYERS][PTD_IMENOVANI];
-static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker" };
-static const gPcIkona[][] = { "", "$", "@", "%", "L" };
-static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF, 0xE91E63FF };
+static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker", "Kladionica" };
+static const gPcIkona[][] = { "", "$", "@", "%", "L", "K" };
+static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF, 0xE91E63FF, 0x00897BFF };
+static gKladPar[MAX_PLAYERS][KLAD_PAROVA][16], gKladTip[MAX_PLAYERS][KLAD_PAROVA], gKladKoefPar[MAX_PLAYERS][KLAD_PAROVA], gKladN[MAX_PLAYERS], gKladStr[MAX_PLAYERS], bool:gKladIma[MAX_PLAYERS], gKladRed[MAX_PLAYERS][KLAD_RED][16], gKladOdabran[MAX_PLAYERS][16], gKladOpcija[MAX_PLAYERS][5], gKladSat;
 
 static DionicaNova(cijena, pocetna, pomak)
 {
@@ -68,6 +78,9 @@ InitRacunalo()
 {
     assert(DionicaNova(10000, 10000, 0) == 10000 && DionicaNova(10000, 10000, 10) == 10100 && DionicaNova(500, 10000, -15) == 539 && DionicaNova(100000, 10000, 15) == 100000 && DionicaNova(500, 500, -15) == 500);
     assert(DionicaKupnja(3, 12345) == 371 && DionicaProdaja(3, 12345) == 367 && DionicaKupnja(DIONICA_MAX_KOM, 150000) == 15000000);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_events (id TEXT PRIMARY KEY, league TEXT NOT NULL, home TEXT NOT NULL, away TEXT NOT NULL, start INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, result INTEGER NOT NULL DEFAULT 0, odd1 INTEGER NOT NULL DEFAULT 0, oddx INTEGER NOT NULL DEFAULT 0, odd2 INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_slips (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, stake INTEGER NOT NULL, odds INTEGER NOT NULL, payout INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, settled INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_legs (slip INTEGER NOT NULL, event TEXT NOT NULL, pick INTEGER NOT NULL, odd INTEGER NOT NULL, PRIMARY KEY (slip, event))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ads (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_holdings (account INTEGER NOT NULL, stock INTEGER NOT NULL, shares INTEGER NOT NULL, PRIMARY KEY (account, stock))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_candles (id INTEGER PRIMARY KEY AUTOINCREMENT, stock INTEGER NOT NULL, o INTEGER NOT NULL, h INTEGER NOT NULL, l INTEGER NOT NULL, c INTEGER NOT NULL)"));
@@ -123,7 +136,7 @@ static PcUcitajKomade(playerid)
 
 static bool:PcBlizu(playerid)
 {
-    return gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && NamjestajModelBlizu(playerid, RACUNALO_MODEL, RACUNALO_DOMET) != 0;
+    return gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && (NamjestajModelBlizu(playerid, RACUNALO_MODEL, RACUNALO_DOMET) != 0 || KaficRacunalo(playerid) != 0);
 }
 
 static PlayerText:PcKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
@@ -199,7 +212,7 @@ static PcStart(playerid, bool:otvori)
     gPcStart[playerid] = otvori;
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        if (12.0 + float(i - 1) * 50.0 + 42.0 < 164.0) continue;
+        if (12.0 + float((i - 1) % 4) * 50.0 + 42.0 < 164.0) continue;
         new const dijelovi[] = { PTD_APP, PTD_APPZNAK, PTD_APPIME };
         for (new k = 0; k < sizeof dijelovi; k++)
         {
@@ -763,7 +776,8 @@ static PcEkran(playerid, ekran)
     PcSakrij(playerid, PTD_OBJAVA, OBJAVA_REDOVA);
     PcSakrij(playerid, PTD_KOL, 3);
     PcSakrij(playerid, PTD_LSTAB, 4);
-    PcSakrij(playerid, PTD_LSAVATAR, PTD_IMENOVANI - PTD_LSAVATAR);
+    PcSakrij(playerid, PTD_LSAVATAR, PTD_KLAD - PTD_LSAVATAR);
+    PcSakrij(playerid, PTD_KLAD, KLAD_RED);
     if (ekran == PCE_POCETNA)
     {
         for (new i = PTD_PROZOR; i <= PTD_SADRZAJ; i++) PlayerTextDrawHide(playerid, gPc[playerid][i]);
@@ -822,12 +836,22 @@ static PcEkran(playerid, ekran)
             PcLifeStalker(playerid);
             return;
         }
+        case PCE_KLADIONICA:
+        {
+            KladEkran(playerid);
+            return;
+        }
     }
     PcPostavi(playerid, PTD_SADRZAJ, tekst);
 }
 
 RacunaloTick()
 {
+    if (++gKladSat >= KLAD_PROVJERA_S)
+    {
+        gKladSat = 0;
+        KladObracun();
+    }
     if (++gDionicaSat < DIONICA_KORAK_S) return;
     gDionicaSat = 0;
     new bool:zatvori = ++gDionicaKorak >= DIONICA_KORAKA;
@@ -876,11 +900,11 @@ static PcOtvori(playerid)
     PcKutija(playerid, 4.0, 4.0, 392.0, 50.0, 0x1A7BC8FF);
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        new Float:y = 12.0 + float(i - 1) * 50.0;
-        gPc[playerid][PTD_APP + i] = PcKutija(playerid, 16.0, y, 30.0, 30.0, gPcIkonaBoja[i]);
+        new Float:y = 12.0 + float((i - 1) % 4) * 50.0, Float:x = 16.0 + float((i - 1) / 4) * 50.0;
+        gPc[playerid][PTD_APP + i] = PcKutija(playerid, x, y, 30.0, 30.0, gPcIkonaBoja[i]);
         PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_APP + i], true);
-        gPc[playerid][PTD_APPZNAK + i] = PcTekst(playerid, 31.0, y + 7.0, gPcIkona[i], 0xFFFFFFFF, 0.42, 1.7, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
-        new PlayerText:ime = gPc[playerid][PTD_APPIME + i] = PcTekst(playerid, 31.0, y + 32.0, T(playerid, gPcAplikacije[i]), 0xFFFFFFFF, 0.15, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+        gPc[playerid][PTD_APPZNAK + i] = PcTekst(playerid, x + 15.0, y + 7.0, gPcIkona[i], 0xFFFFFFFF, 0.42, 1.7, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+        new PlayerText:ime = gPc[playerid][PTD_APPIME + i] = PcTekst(playerid, x + 15.0, y + 32.0, T(playerid, gPcAplikacije[i]), 0xFFFFFFFF, 0.15, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
         PlayerTextDrawSetShadow(playerid, ime, 1);
     }
     PcKutija(playerid, 4.0, 224.0, 392.0, 20.0, 0x0D141CF2);
@@ -912,6 +936,7 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_LSPOKRIV + 6] = PcKutija(playerid, 140.0, 96.0, LS_PR_X + LS_PR_S / 2.0 - 140.0, 110.0, 0xFFFFFFFF);
     gPc[playerid][PTD_LSPOKRIV + 7] = PcKutija(playerid, 140.0, 36.0, 52.0, 170.0, 0xFFFFFFFF);
     gPc[playerid][PTD_LSINFO] = PcTekst(playerid, LS_PR_X + 32.0, 46.0, "_", 0x202020FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
+    for (new r = 0; r < KLAD_RED; r++) gPc[playerid][PTD_KLAD + r] = PcRed(playerid, 88.0, 56.0 + float(r) * 18.0, 286.0);
     for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_OBJAVA + r] = PcRed(playerid, LS_SLOT_X + 10.0, LS_RED_Y + float(r) * LS_RED_H, 374.0 - LS_SLOT_X - 10.0);
     for (new k = 0; k < sizeof gLsTab; k++) gPc[playerid][PTD_LSTAB + k] = PcGumb(playerid, 110.0, 46.0 + float(k) * 22.0, 56.0, 0xEEEEEEFF, "_", 0x202020FF);
     gPc[playerid][PTD_KOL] = PcGumb(playerid, 168.0, 174.0, 14.0, 0x0078D4FF, "~<~");
@@ -935,6 +960,13 @@ PcZatvori(playerid)
     CancelSelectTextDraw(playerid);
 }
 
+RacunaloKaficIstek(playerid)
+{
+    if (!gPcOtvoren[playerid] || NamjestajModelBlizu(playerid, RACUNALO_MODEL, RACUNALO_DOMET)) return 0;
+    PcZatvori(playerid);
+    return 1;
+}
+
 PcDisconnect(playerid)
 {
     gPcOtvoren[playerid] = false;
@@ -949,7 +981,7 @@ CMD:computer(playerid, params[])
         PcZatvori(playerid);
         return 1;
     }
-    if (!PcBlizu(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod racunala."));
+    if (!PcBlizu(playerid)) return SendClientMessage(playerid, COLOR_ERROR, KaficRacunalo(playerid, false) ? T(playerid, "Platite vrijeme na blagajni internet kafica.") : T(playerid, "Niste kod racunala."));
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali racunalo.", GetRPIme(playerid), "", 1);
     PcOtvori(playerid);
     return 1;
@@ -1012,6 +1044,20 @@ PcKlik(playerid, PlayerText:td)
         PcGraf(playerid);
         return 1;
     }
+    if (gPcEkran[playerid] == PCE_KLADIONICA)
+    {
+        if (td == gPc[playerid][PTD_KOL] && gKladStr[playerid] > 0) gKladStr[playerid]--;
+        else if (td == gPc[playerid][PTD_KOL + 2] && gKladIma[playerid]) gKladStr[playerid]++;
+        else if (td == gPc[playerid][PTD_AKCIJA]) return KladUplata(playerid);
+        else if (td == gPc[playerid][PTD_AKCIJA + 1]) return KladListici(playerid);
+        else
+        {
+            for (new r = 0; r < KLAD_RED; r++) if (td == gPc[playerid][PTD_KLAD + r]) return KladPar(playerid, gKladRed[playerid][r]);
+            return 1;
+        }
+        PcEkran(playerid, PCE_KLADIONICA);
+        return 1;
+    }
     if (td == gPc[playerid][PTD_KOL] || td == gPc[playerid][PTD_KOL + 2])
     {
         new n = gPcKolicina[playerid] + (td == gPc[playerid][PTD_KOL] ? -1 : 1);
@@ -1071,6 +1117,276 @@ static PcDionicaTrgovina(playerid, bool:kupnja, n)
     if (ima != n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET shares = %d, cost = %d WHERE account = %d AND stock = %d", ima - n, gPcTrosak[playerid][d], gAccountId[playerid], d));
     gPcKomadaPamti[playerid][d] = ima - n;
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
+}
+
+static KladKoef(o, out[], size)
+{
+    if (o > 0) format(out, size, "%d.%02d", o / 100, o % 100);
+    else format(out, size, "-");
+}
+
+static KladNaListicu(playerid, const id[])
+{
+    for (new k = 0; k < gKladN[playerid]; k++) if (!strcmp(gKladPar[playerid][k], id)) return k;
+    return -1;
+}
+
+static KladUkupno(playerid)
+{
+    new koef = 100;
+    for (new k = 0; k < gKladN[playerid]; k++) koef = koef * gKladKoefPar[playerid][k] / 100;
+    return koef > KLAD_MAX_KOEF ? KLAD_MAX_KOEF : koef;
+}
+
+static KladEkran(playerid)
+{
+    new red[180], liga[12], dom[32], gost[32], g, m, d, sat, minuta, k1[12], kx[12], k2[12], tekst[96];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, league, home, away, start, odd1, oddx, odd2 FROM bet_events WHERE status = 0 AND start > %d AND odd1 > 0 AND odd2 > 0 ORDER BY start, id LIMIT %d OFFSET %d", gettime() + KLAD_ZATVARA_S, KLAD_RED + 1, gKladStr[playerid] * KLAD_RED);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < KLAD_RED && r < n; r++, DB_SelectNextRow(res))
+    {
+        DB_GetFieldString(res, 0, gKladRed[playerid][r], 16);
+        DB_GetFieldString(res, 1, liga, sizeof liga);
+        DB_GetFieldString(res, 2, dom, sizeof dom);
+        DB_GetFieldString(res, 3, gost, sizeof gost);
+        dom[14] = gost[14] = EOS;
+        TdCisti(dom);
+        TdCisti(gost);
+        VrijemeTs(DB_GetFieldInt(res, 4), g, m, d, sat, minuta);
+        KladKoef(DB_GetFieldInt(res, 5), k1, sizeof k1);
+        KladKoef(DB_GetFieldInt(res, 6), kx, sizeof kx);
+        KladKoef(DB_GetFieldInt(res, 7), k2, sizeof k2);
+        format(red, sizeof red, "%s%s ~l~%02d.%02d. %02d:%02d  %s - %s   ~g~%s  %s  %s", KladNaListicu(playerid, gKladRed[playerid][r]) != -1 ? ("~r~> ~b~") : ("~b~"), liga, d, m, sat, minuta, dom, gost, k1, kx, k2);
+        PcPostavi(playerid, PTD_KLAD + r, red);
+    }
+    DB_FreeResultSet(res);
+    gKladIma[playerid] = n > KLAD_RED;
+    new ukupno = KladUkupno(playerid);
+    if (!n && !gKladStr[playerid]) format(tekst, sizeof tekst, T(playerid, "Trenutno nema dostupnih utakmica."));
+    else format(tekst, sizeof tekst, T(playerid, "Listic: %d parova, koeficijent %d.%02d"), gKladN[playerid], ukupno / 100, ukupno % 100);
+    PcPostavi(playerid, PTD_SADRZAJ, tekst);
+    format(tekst, sizeof tekst, T(playerid, "Str. %d"), gKladStr[playerid] + 1);
+    PcPostavi(playerid, PTD_KOL + 1, tekst);
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_KOL]);
+    PlayerTextDrawShow(playerid, gPc[playerid][PTD_KOL + 2]);
+    PcPostavi(playerid, PTD_AKCIJA, T(playerid, "Uplati listic"));
+    PcPostavi(playerid, PTD_AKCIJA + 1, T(playerid, "Moji listici"));
+}
+
+static KladPar(playerid, const id[])
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT home, away, odd1, oddx, odd2 FROM bet_events WHERE id = '%q' AND status = 0 AND start > %d", id, gettime() + KLAD_ZATVARA_S);
+    if (!DB_GetRowCount(res))
+    {
+        DB_FreeResultSet(res);
+        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ova utakmica vise nije dostupna."));
+    }
+    new dom[32], gost[32], o[3], k[3][12], list[256], red[80], n = 0;
+    DB_GetFieldString(res, 0, dom, sizeof dom);
+    DB_GetFieldString(res, 1, gost, sizeof gost);
+    for (new i = 0; i < 3; i++) o[i] = DB_GetFieldInt(res, 2 + i);
+    DB_FreeResultSet(res);
+    for (new i = 0; i < 3; i++) KladKoef(o[i], k[i], 12);
+    strcopy(gKladOdabran[playerid], id, 16);
+    format(red, sizeof red, "1: %s (%s)", dom, k[0]);
+    DodajStupac(list, n, red);
+    gKladOpcija[playerid][0] = 1;
+    new c = 1;
+    if (o[1] > 0)
+    {
+        format(red, sizeof red, T(playerid, "X: Nerijeseno (%s)"), k[1]);
+        DodajStupac(list, n, red);
+        gKladOpcija[playerid][c++] = 2;
+    }
+    format(red, sizeof red, "2: %s (%s)", gost, k[2]);
+    DodajStupac(list, n, red);
+    gKladOpcija[playerid][c++] = 3;
+    if (KladNaListicu(playerid, id) != -1)
+    {
+        DodajStupac(list, n, T(playerid, "Ukloni s listica"));
+        gKladOpcija[playerid][c++] = 0;
+    }
+    gKladOpcija[playerid][c] = -1;
+    format(red, sizeof red, "%s - %s", dom, gost);
+    return PrikaziDialog(playerid, DLG_KLAD_PAR, DIALOG_STYLE_LIST, red, list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
+}
+
+DLG:klad_par(playerid, response, listitem)
+{
+    if (!gPcOtvoren[playerid]) return 1;
+    if (!response || listitem < 0 || listitem > 3 || gKladOpcija[playerid][listitem] == -1) return PcNatrag(playerid);
+    new tip = gKladOpcija[playerid][listitem], k = KladNaListicu(playerid, gKladOdabran[playerid]);
+    if (!tip)
+    {
+        if (k != -1)
+        {
+            gKladN[playerid]--;
+            strcopy(gKladPar[playerid][k], gKladPar[playerid][gKladN[playerid]], 16);
+            gKladTip[playerid][k] = gKladTip[playerid][gKladN[playerid]];
+            gKladKoefPar[playerid][k] = gKladKoefPar[playerid][gKladN[playerid]];
+        }
+        return PcNatrag(playerid);
+    }
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT CASE %d WHEN 1 THEN odd1 WHEN 2 THEN oddx ELSE odd2 END FROM bet_events WHERE id = '%q' AND status = 0", tip, gKladOdabran[playerid]);
+    new koef = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    DB_FreeResultSet(res);
+    if (koef <= 100) return PcNatrag(playerid);
+    if (k == -1)
+    {
+        if (gKladN[playerid] >= KLAD_PAROVA)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Na listicu moze biti najvise %d parova."), KLAD_PAROVA);
+            return PcNatrag(playerid);
+        }
+        k = gKladN[playerid]++;
+        strcopy(gKladPar[playerid][k], gKladOdabran[playerid], 16);
+    }
+    gKladTip[playerid][k] = tip;
+    gKladKoefPar[playerid][k] = koef;
+    return PcNatrag(playerid);
+}
+
+static KladUplata(playerid)
+{
+    if (!gKladN[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Listic je prazan. Odaberite utakmice."));
+    new tekst[900], red[96], dom[32], gost[32], k[12], ukupno = KladUkupno(playerid);
+    for (new i = 0; i < gKladN[playerid]; i++)
+    {
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT home, away FROM bet_events WHERE id = '%q'", gKladPar[playerid][i]);
+        if (DB_GetRowCount(res))
+        {
+            DB_GetFieldString(res, 0, dom, sizeof dom);
+            DB_GetFieldString(res, 1, gost, sizeof gost);
+            KladKoef(gKladKoefPar[playerid][i], k, sizeof k);
+            format(red, sizeof red, "%s - %s: %s (%s)\n", dom, gost, gKladTip[playerid][i] == 1 ? ("1") : gKladTip[playerid][i] == 2 ? ("X") : ("2"), k);
+            strcat(tekst, red);
+        }
+        DB_FreeResultSet(res);
+    }
+    format(red, sizeof red, T(playerid, "\nKoeficijent: %d.%02d\nUnesite ulog s bankovnog racuna ($%d - $%d):"), ukupno / 100, ukupno % 100, KLAD_MIN_ULOG, KLAD_MAX_ULOG);
+    strcat(tekst, red);
+    return PrikaziDialog(playerid, DLG_KLAD_ULOG, DIALOG_STYLE_INPUT, T(playerid, "Kladionica"), tekst, T(playerid, "Uplati"), T(playerid, "Natrag"));
+}
+
+DLG:klad_ulog(playerid, response, const inputtext[])
+{
+    if (!gPcOtvoren[playerid]) return 1;
+    if (!response || !PcBlizu(playerid)) return PcNatrag(playerid);
+    new ulog = ProvjeriBroj(inputtext) && strlen(inputtext) <= 6 ? strval(inputtext) : 0;
+    if (ulog < KLAD_MIN_ULOG || ulog > KLAD_MAX_ULOG)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ulog mora biti izmedu $%d i $%d."), KLAD_MIN_ULOG, KLAD_MAX_ULOG);
+        return PcNatrag(playerid);
+    }
+    new koef = 100;
+    for (new i = 0; i < gKladN[playerid]; i++)
+    {
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT CASE %d WHEN 1 THEN odd1 WHEN 2 THEN oddx ELSE odd2 END FROM bet_events WHERE id = '%q' AND status = 0 AND start > %d", gKladTip[playerid][i], gKladPar[playerid][i], gettime() + KLAD_ZATVARA_S);
+        new o = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+        DB_FreeResultSet(res);
+        if (o <= 100)
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Jedna od utakmica je vec pocela. Uklonite je s listica."));
+            return PcNatrag(playerid);
+        }
+        gKladKoefPar[playerid][i] = o;
+        koef = koef * o / 100;
+    }
+    if (koef > KLAD_MAX_KOEF) koef = KLAD_MAX_KOEF;
+    new dobitak = ulog * (koef / 100) + ulog * (koef % 100) / 100;
+    if (dobitak > KLAD_MAX_DOBITAK) dobitak = KLAD_MAX_DOBITAK;
+    if (!BankaPromijeni(playerid, -ulog)) return PcNatrag(playerid);
+    BlagajnaDodaj(ulog);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_slips (account, stake, odds, payout, status, created) VALUES (%d, %d, %d, %d, 0, %d)", gAccountId[playerid], ulog, koef, dobitak, gettime()));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
+    new listic = DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    for (new i = 0; i < gKladN[playerid]; i++)
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_legs (slip, event, pick, odd) VALUES (%d, '%q', %d, %d)", listic, gKladPar[playerid][i], gKladTip[playerid][i], gKladKoefPar[playerid][i]));
+    gKladN[playerid] = 0;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Listic #%d uplacen: ulog $%d, moguci dobitak $%d."), listic, ulog, dobitak);
+    return PcNatrag(playerid);
+}
+
+static KladListici(playerid)
+{
+    new tekst[1024], red[128], status[24];
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT s.id, s.stake, s.odds, s.payout, s.status, (SELECT COUNT(*) FROM bet_legs WHERE slip = s.id), (SELECT COUNT(*) FROM bet_legs l JOIN bet_events e ON e.id = l.event WHERE l.slip = s.id AND (e.status = 3 OR (e.status = 2 AND e.result = l.pick))) FROM bet_slips s WHERE s.account = %d ORDER BY s.id DESC LIMIT 10", gAccountId[playerid]);
+    new n = DB_GetRowCount(res);
+    for (new i = 0; i < n; i++, DB_SelectNextRow(res))
+    {
+        switch (DB_GetFieldInt(res, 4))
+        {
+            case 1: format(status, sizeof status, "{4CAF50}%s", T(playerid, "DOBITNI"));
+            case 2: format(status, sizeof status, "{E53935}%s", T(playerid, "GUBITNI"));
+            default: format(status, sizeof status, "{FFC107}%s", T(playerid, "U TIJEKU"));
+        }
+        new koef = DB_GetFieldInt(res, 2);
+        format(red, sizeof red, T(playerid, "{FFFFFF}#%d  %d/%d pogodaka  koef. %d.%02d  ulog $%d  dobitak $%d  %s\n"), DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 6), DB_GetFieldInt(res, 5), koef / 100, koef % 100, DB_GetFieldInt(res, 1), DB_GetFieldInt(res, 3), status);
+        strcat(tekst, red);
+    }
+    DB_FreeResultSet(res);
+    if (!n) strcat(tekst, T(playerid, "Nemate uplacenih listica."));
+    return PrikaziDialog(playerid, DLG_KLAD_LISTICI, DIALOG_STYLE_MSGBOX, T(playerid, "Moji listici"), tekst, T(playerid, "Natrag"));
+}
+
+DLG:klad_listici(playerid)
+{
+    return PcNatrag(playerid);
+}
+
+static KladPoruka(racun, const hr[], listic, iznos)
+{
+    new poruka[144], i = IgracRacuna(racun);
+    if (i == INVALID_PLAYER_ID) format(poruka, sizeof poruka, hr, listic, iznos);
+    else format(poruka, sizeof poruka, T(i, hr), listic, iznos);
+    MobitelBankaRacun(racun, poruka);
+}
+
+static KladObracun()
+{
+    new id[KLAD_OBRACUN], racun[KLAD_OBRACUN], iznos[KLAD_OBRACUN], n, sad = gettime();
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT s.id, s.account, s.stake FROM bet_slips s WHERE s.status = 0 AND EXISTS (SELECT 1 FROM bet_legs l JOIN bet_events e ON e.id = l.event WHERE l.slip = s.id AND e.status = 2 AND e.result != l.pick) LIMIT %d", KLAD_OBRACUN);
+    n = DB_GetRowCount(res);
+    for (new i = 0; i < n; i++, DB_SelectNextRow(res))
+    {
+        id[i] = DB_GetFieldInt(res, 0);
+        racun[i] = DB_GetFieldInt(res, 1);
+        iznos[i] = DB_GetFieldInt(res, 2);
+    }
+    DB_FreeResultSet(res);
+    for (new i = 0; i < n; i++)
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bet_slips SET status = 2, settled = %d WHERE id = %d", sad, id[i]));
+        KladPoruka(racun[i], "Listic #%d je gubitni (ulog $%d).", id[i], iznos[i]);
+    }
+    res = DB_ExecuteQuery(gDB, "SELECT s.id, s.account, s.stake FROM bet_slips s WHERE s.status = 0 AND NOT EXISTS (SELECT 1 FROM bet_legs l LEFT JOIN bet_events e ON e.id = l.event WHERE l.slip = s.id AND NOT (IFNULL(e.status, 3) = 3 OR (e.status = 2 AND e.result = l.pick))) LIMIT %d", KLAD_OBRACUN);
+    n = DB_GetRowCount(res);
+    for (new i = 0; i < n; i++, DB_SelectNextRow(res))
+    {
+        id[i] = DB_GetFieldInt(res, 0);
+        racun[i] = DB_GetFieldInt(res, 1);
+        iznos[i] = DB_GetFieldInt(res, 2);
+    }
+    DB_FreeResultSet(res);
+    for (new i = 0; i < n; i++)
+    {
+        new koef = 100;
+        res = DB_ExecuteQuery(gDB, "SELECT l.odd FROM bet_legs l JOIN bet_events e ON e.id = l.event WHERE l.slip = %d AND e.status = 2", id[i]);
+        for (new k = 0, nk = DB_GetRowCount(res); k < nk; k++, DB_SelectNextRow(res)) koef = koef * DB_GetFieldInt(res, 0) / 100;
+        DB_FreeResultSet(res);
+        if (koef > KLAD_MAX_KOEF) koef = KLAD_MAX_KOEF;
+        new dobitak = iznos[i] * (koef / 100) + iznos[i] * (koef % 100) / 100;
+        if (dobitak > KLAD_MAX_DOBITAK) dobitak = KLAD_MAX_DOBITAK;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bet_slips SET status = 1, payout = %d, settled = %d WHERE id = %d", dobitak, sad, id[i]));
+        BlagajnaDodaj(-dobitak);
+        if (!BankaUplati(racun[i], dobitak))
+        {
+            new p = IgracRacuna(racun[i]);
+            if (p == INVALID_PLAYER_ID || !DajNovac(p, dobitak)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", dobitak, racun[i]));
+        }
+        KladPoruka(racun[i], "Listic #%d je dobitni! Isplaceno $%d na vas racun.", id[i], dobitak);
+    }
 }
 
 DLG:pc_unos(playerid, response, const inputtext[])

@@ -729,6 +729,11 @@ MobitelBankaSms(playerid, const tekst[])
     MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_BANKA_BROJ, tekst);
 }
 
+MobitelBankaRacun(racun, const tekst[])
+{
+    MobitelPrimiPoruku(racun, MOBITEL_BANKA_BROJ, tekst);
+}
+
 MobitelTaksiSms(playerid, const tekst[])
 {
     if (gUlogiran[playerid]) MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_TAKSI_BROJ, tekst);

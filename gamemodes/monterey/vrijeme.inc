@@ -36,7 +36,12 @@ static VrijemePomak(ts)
 
 VrijemeLokalno(&g, &m, &d, &sat, &minuta)
 {
-    new ts = gettime(), lokalno = ts + VrijemePomak(ts), sekundi = lokalno % 86400;
+    VrijemeTs(gettime(), g, m, d, sat, minuta);
+}
+
+VrijemeTs(ts, &g, &m, &d, &sat, &minuta)
+{
+    new lokalno = ts + VrijemePomak(ts), sekundi = lokalno % 86400;
     VrijemeDatum(lokalno / 86400, g, m, d);
     sat = sekundi / 3600;
     minuta = sekundi / 60 % 60;
