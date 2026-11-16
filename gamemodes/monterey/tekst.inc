@@ -1634,7 +1634,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Brod uplovljava u luku.", "The ship is sailing into the port.", "Корабль входит в порт.", "El barco entra en el puerto.", "Gemi limana giriyor." },
     { "Kladionica", "Sportsbook", "Букмекер", "Apuestas", "Bahis" },
     { "Trenutno nema dostupnih utakmica.", "No matches available right now.", "Сейчас нет доступных матчей.", "No hay partidos disponibles ahora.", "Su anda mac yok." },
-    { "Str. %d", "Page %d", "Стр. %d", "Pag. %d", "Sayfa %d" },
     { "Na listicu moze biti najvise %d parova.", "A slip can have at most %d picks.", "В купоне может быть не более %d событий.", "Un boleto puede tener como maximo %d selecciones.", "Kuponda en fazla %d mac olabilir." },
     { "Listic je prazan. Odaberite utakmice.", "The slip is empty. Pick some matches.", "Купон пуст. Выберите матчи.", "El boleto esta vacio. Elige partidos.", "Kupon bos. Mac secin." },
     { "Jedna od utakmica je vec pocela. Uklonite je s listica.", "One of the matches has already started. Remove it from the slip.", "Один из матчей уже начался. Уберите его из купона.", "Uno de los partidos ya empezo. Quitalo del boleto.", "Maclardan biri basladi. Kupondan cikarin." },
@@ -1680,7 +1679,14 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "UPLATI", "PLACE BET", "СТАВКА", "APOSTAR", "YATIR" },
     { "~b~#%d ~l~%d/%d  koef. %d.%02d~n~ulog $%d  dobitak $%d  %s", "~b~#%d ~l~%d/%d  odds %d.%02d~n~stake $%d  win $%d  %s", "~b~#%d ~l~%d/%d  коэф. %d.%02d~n~ставка $%d  выигрыш $%d  %s", "~b~#%d ~l~%d/%d  cuota %d.%02d~n~apuesta $%d  premio $%d  %s", "~b~#%d ~l~%d/%d  oran %d.%02d~n~bahis $%d  kazanc $%d  %s" },
     { "Odaberite listic", "Pick a slip", "Выберите купон", "Elige un boleto", "Bir kupon secin" },
-    { "LISTIC #%d", "SLIP #%d", "КУПОН #%d", "BOLETO #%d", "KUPON #%d" }
+    { "LISTIC #%d", "SLIP #%d", "КУПОН #%d", "BOLETO #%d", "KUPON #%d" },
+    { "Konacan ishod", "Final result", "Итоговый результат", "Resultado final", "Mac sonucu" },
+    { "Ukupno (%s)", "Total (%s)", "Тотал (%s)", "Total (%s)", "Toplam (%s)" },
+    { "Vise  %s", "Over  %s", "Больше  %s", "Mas  %s", "Ust  %s" },
+    { "Manje  %s", "Under  %s", "Меньше  %s", "Menos  %s", "Alt  %s" },
+    { "Hendikep (domacin %s)", "Handicap (home %s)", "Фора (хозяева %s)", "Handicap (local %s)", "Handikap (ev sahibi %s)" },
+    { "Dom", "Home", "Хоз.", "Local", "Ev" },
+    { "Gost", "Away", "Гост.", "Visit.", "Dep." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
