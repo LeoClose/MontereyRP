@@ -826,6 +826,7 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_BRZINA_PUTA      1.3
 #define VOZILO_BRZINA_VISE      20.0
 #define VOZILO_MOTOR_MS         200
+#define VOZILO_MOTOR_OD         0.85
 #define VOZILO_DOMET            4.0
 #define BENZIN_CIJENA           3
 #define DIZEL_CIJENA            2
@@ -1100,7 +1101,7 @@ VoziloUpdate(playerid)
         GetPlayerKeys(playerid, tipke, gore, strana);
         GetVehicleZAngle(v, a);
         new Float:naprijed = -vx * floatsin(a, degrees) + vy * floatcos(a, degrees);
-        if ((tipke & KEY_SPRINT) && !(tipke & (KEY_JUMP | KEY_HANDBRAKE)) && kmh > 15.0 && naprijed > 0.95 * ravno && floatabs(vz) < 0.15
+        if ((tipke & KEY_SPRINT) && !(tipke & (KEY_JUMP | KEY_HANDBRAKE)) && kmh > float(gVoziloBrzina[model - 400]) * VOZILO_MOTOR_OD && naprijed > 0.95 * ravno && floatabs(vz) < 0.15
             && kmh < float(gVoziloBrzina[model - 400]) * (1.0 + 0.08 * float(razina)))
         {
             gVoziloMotorMs[v] = GetTickCount();
@@ -1209,7 +1210,7 @@ enum { DT_BRZINA = 1, DT_LAMPICE = 3 }
 static const gDashDio[][5] = {
     { 0, 1, 0, 5, 1 }, { 0, 1, 1, 1, 3 }, { 0, 5, 1, 1, 3 }, { 0, 1, 4, 5, 5 }, { 0, 0, 9, 7, 1 }, { 0, 6, 5, 1, 1 }, { 0, 7, 2, 1, 4 }, { 0, 7, 1, 2, 1 },
     { 1, 2, 3, 6, 5 }, { 1, 3, 1, 4, 1 }, { 1, 4, 2, 2, 1 }, { 1, 0, 4, 2, 3 }, { 1, 8, 4, 1, 3 }, { 1, 9, 3, 1, 5 },
-    { 2, 5, 1, 2, 8 }, { 2, 7, 2, 1, 6 }, { 2, 8, 3, 1, 4 }, { 2, 0, 2, 4, 1 }, { 2, 0, 4, 4, 1 }, { 2, 0, 6, 4, 1 }, { 2, 0, 8, 4, 1 },
+    { 2, 6, 1, 2, 8 }, { 2, 8, 2, 1, 6 }, { 2, 9, 3, 1, 4 }, { 2, 1, 2, 4, 1 }, { 2, 1, 4, 4, 1 }, { 2, 1, 6, 4, 1 }, { 2, 1, 8, 4, 1 },
     { 3, 4, 0, 2, 2 }, { 3, 3, 3, 3, 4 }, { 3, 3, 7, 5, 2 }, { 3, 7, 9, 2, 1 }, { 3, 1, 2, 1, 7 },
     { 4, 3, 0, 4, 1 }, { 4, 2, 1, 1, 3 }, { 4, 7, 1, 1, 3 }, { 4, 1, 4, 8, 6 }
 };
