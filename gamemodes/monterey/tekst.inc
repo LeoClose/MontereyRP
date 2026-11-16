@@ -1008,7 +1008,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Stavili ste: %s.", "You put on: %s.", "Вы надели: %s.", "Te has puesto: %s.", "Taktiniz: %s." },
     { "Namjestite ga i spremite (ikona diskete).", "Adjust it and save (floppy disk icon).", "Настройте и сохраните (значок дискеты).", "Ajustalo y guarda (icono del disquete).", "Ayarlayip kaydedin (disket simgesi)." },
     { "Trazeni ste i ne mozete uci u HQ.", "You are wanted and cannot enter the HQ.", "Вы в розыске и не можете войти в штаб.", "Estas buscado y no puedes entrar al HQ.", "Araniyorsunuz ve HQya giremezsiniz." },
-    { "Poslovi", "Jobs", "Работа", "Empleos", "Isler" },
     { "Lokacije", "Locations", "Места", "Lugares", "Konumlar" },
     { "Frizeri", "Barbers", "Парикмахерские", "Barberias", "Berberler" },
     { "Saloni", "Car dealers", "Автосалоны", "Concesionarios", "Galeriler" },
@@ -1586,7 +1585,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dali ste otkaz.", "You quit your job.", "Вы уволились.", "Has dejado tu trabajo.", "Isten ayrildiniz." },
     { "Depo je postavljen.", "Depot set.", "Депо установлено.", "Deposito establecido.", "Depo ayarlandi." },
     { "Depo se postavlja samo izvana.", "The depot can only be set outside.", "Депо можно поставить только снаружи.", "El deposito solo se puede poner fuera.", "Depo sadece disarida ayarlanabilir." },
-    { "Dostava zavrsena. Zaradili ste $%d (isplata na placu).", "Delivery done. You earned $%d (paid on payday).", "Доставка выполнена. Вы заработали $%d (выплата в день зарплаты).", "Entrega hecha. Ganaste $%d (se paga el dia de pago).", "Teslimat tamam. $%d kazandiniz (maas gununde odenir)." },
     { "Dostavite robu na oznaceno mjesto (%s).", "Deliver the goods to the marked spot (%s).", "Доставьте груз в отмеченное место (%s).", "Entrega la mercancia en el punto marcado (%s).", "Mallari isaretli yere teslim edin (%s)." },
     { "Dostavljac robe\nKontrolor leta\nDaj otkaz", "Delivery driver\nAir traffic controller\nQuit job", "Курьер-водитель\nАвиадиспетчер\nУволиться", "Repartidor\nControlador aereo\nDejar el trabajo", "Teslimat soforu\nHava trafik kontroloru\nIsten ayril" },
     { "Nemate posao. Zaposlite se u opstini.", "You have no job. Get one at city hall.", "У вас нет работы. Устройтесь в мэрии.", "No tienes trabajo. Busca uno en el ayuntamiento.", "Isiniz yok. Belediyeden is bulun." },
@@ -1603,9 +1601,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Prvo zavrsite smjenu dostave robe.", "Finish your goods delivery shift first.", "Сначала закончите смену доставки груза.", "Primero termina tu turno de reparto.", "Once mal teslimat vardiyanizi bitirin." },
     { "Prihvatili ste narudzbu. Preuzmite hranu u restoranu (%s).", "Order accepted. Pick up the food at the restaurant (%s).", "Заказ принят. Заберите еду в ресторане (%s).", "Pedido aceptado. Recoge la comida en el restaurante (%s).", "Siparis kabul edildi. Yemegi restorandan alin (%s)." },
     { "Preuzeli ste hranu. Dostavite je na adresu (%s).", "You picked up the food. Deliver it to the address (%s).", "Вы забрали еду. Доставьте её по адресу (%s).", "Has recogido la comida. Entregala en la direccion (%s).", "Yemegi aldiniz. Adrese teslim edin (%s)." },
-    { "Hrana je dostavljena. Zaradili ste $%d (isplata na placu). Nova narudzba: Internet > Poslovi.", "Food delivered. You earned $%d (paid on payday). New order: Internet > Jobs.", "Еда доставлена. Вы заработали $%d (выплата в день зарплаты). Новый заказ: Интернет > Работа.", "Comida entregada. Ganaste $%d (se paga el dia de pago). Nuevo pedido: Internet > Trabajos.", "Yemek teslim edildi. $%d kazandiniz (maas gununde odenir). Yeni siparis: Internet > Isler." },
     { "Pomoc: Premium taksi nije dostupan dok radite.", "Help: Premium taxi is not available while you are working.", "Помощь: премиум-такси недоступно, пока вы работаете.", "Ayuda: el taxi premium no esta disponible mientras trabajas.", "Yardim: Calisirken premium taksi kullanilamaz." },
-    { "Otkazi narudzbu", "Cancel order", "Отменить заказ", "Cancelar pedido", "Siparisi iptal et" },
     { "Otkazali ste narudzbu. Hrana od $%d naplacena je s vaseg racuna.", "You cancelled the order. The $%d food was charged to your bank account.", "Вы отменили заказ. Еда за $%d списана с вашего счёта.", "Has cancelado el pedido. La comida de $%d se cobro de tu cuenta.", "Siparisi iptal ettiniz. $%d tutarindaki yemek hesabinizdan alindi." },
     { "rulanje do parkinga", "taxi to parking", "руление к стоянке", "rodaje al estacionamiento", "parka taksi" },
     { "guranje i rulanje", "pushback and taxi", "буксировка и руление", "remolque y rodaje", "geri itme ve taksi" },
@@ -1625,7 +1621,14 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "ceka polijetanje", "waiting for takeoff", "ждёт взлёта", "esperando despegue", "kalkis bekliyor" },
     { "ODOBRI", "APPROVE", "РАЗРЕШИТЬ", "APROBAR", "ONAYLA" },
     { "Odobreno: %d~n~/toranj - kursor, ESC - kamera", "Approved: %d~n~/atc - cursor, ESC - camera", "Одобрено: %d~n~/atc - курсор, ESC - камера", "Aprobado: %d~n~/atc - cursor, ESC - camara", "Onaylanan: %d~n~/atc - imlec, ESC - kamera" },
-    { "Svi kontrolni tornjevi su trenutno zauzeti.", "All control towers are busy right now.", "Все диспетчерские вышки сейчас заняты.", "Todas las torres de control estan ocupadas.", "Tum kontrol kuleleri su anda dolu." }
+    { "Svi kontrolni tornjevi su trenutno zauzeti.", "All control towers are busy right now.", "Все диспетчерские вышки сейчас заняты.", "Todas las torres de control estan ocupadas.", "Tum kontrol kuleleri su anda dolu." },
+    { "Dostava hrane", "Food delivery", "Доставка еды", "Entrega de comida", "Yemek teslimati" },
+    { "Zapocni dostavu", "Start delivery", "Начать доставку", "Empezar entrega", "Teslimata basla" },
+    { "Prekini dostavu", "Abort delivery", "Прервать доставку", "Cancelar entrega", "Teslimati iptal et" },
+    { "Za dostavu hrane potreban vam je bankovni racun.", "You need a bank account for food delivery.", "Для доставки еды нужен банковский счёт.", "Necesitas una cuenta bancaria para entregar comida.", "Yemek teslimati icin banka hesabi gerekir." },
+    { "Uplata za dostavu hrane: $%d.", "Food delivery payment: $%d.", "Оплата за доставку еды: $%d.", "Pago por entrega de comida: $%d.", "Yemek teslimati odemesi: $%d." },
+    { "Hrana je dostavljena. $%d je uplaceno na vas racun.", "Food delivered. $%d was paid into your bank account.", "Еда доставлена. $%d зачислено на ваш счёт.", "Comida entregada. Se ingresaron $%d en tu cuenta.", "Yemek teslim edildi. Hesabiniza $%d yatirildi." },
+    { "Dostava zavrsena. Dobili ste $%d na ruke.", "Delivery done. You got $%d in cash.", "Доставка выполнена. Вы получили $%d наличными.", "Entrega hecha. Recibiste $%d en efectivo.", "Teslimat tamam. Elden $%d aldiniz." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

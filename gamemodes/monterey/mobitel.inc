@@ -56,11 +56,12 @@
 #define MOBITEL_LOKACIJA    24
 #define MOBITEL_GPS_DOMET   6.0
 #define MOBITEL_BANKA       30
+#define MOBITEL_HRANA       31
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 static const gMobitelOpcije[][] = { "Nazovi", "Posalji poruku", "Preimenuj", "Obrisi" };
-static const gMobitelInternet[][] = { "Poslovi", "Lokacije", "Banka" };
+static const gMobitelInternet[][] = { "Dostava hrane", "Lokacije", "Banka" };
 static const gMobitelGrupe[][] = { "Trgovine", "Odjeca", "Frizeri", "Oruzarnice", "Saloni", "Ostalo" };
 static const gMobitelGrupeSql[][] = {
     "SELECT x, y, z, '' FROM shops ORDER BY id",
@@ -329,6 +330,7 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_JEZIK) return BROJ_JEZIKA;
     if (gMobitelEkran[playerid] == MOBITEL_KAMERA) return 2;
     if (gMobitelEkran[playerid] == MOBITEL_INTERNET) return sizeof gMobitelInternet;
+    if (gMobitelEkran[playerid] == MOBITEL_HRANA) return 1;
     if (gMobitelEkran[playerid] == MOBITEL_GRUPE) return sizeof gMobitelGrupe;
     if (gMobitelEkran[playerid] == MOBITEL_LOKACIJE) return gMobitelLokBroj[playerid];
     return 0;
@@ -417,6 +419,7 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_KONTAKT) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], gMobitelKontaktIme[playerid][gMobitelKontakt[playerid]]);
     else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Jezik"));
     else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Lokacije"));
+    else if (ekran == MOBITEL_HRANA) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Dostava hrane"));
     else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelGrupe[gMobitelGrupa[playerid]]));
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
@@ -442,7 +445,8 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_POSTAVKE) PlayerTextDrawSetString(playerid, td, T(playerid, "Jezik"));
         else if (ekran == MOBITEL_JEZIK) PlayerTextDrawSetString(playerid, td, gMobitelJezici[s]);
         else if (ekran == MOBITEL_KAMERA) PlayerTextDrawSetString(playerid, td, T(playerid, s ? ("Selfie") : ("Fotoaparat")));
-        else if (ekran == MOBITEL_INTERNET && s == 0 && HranaAktivna(playerid)) PlayerTextDrawSetString(playerid, td, T(playerid, "Otkazi narudzbu"));
+        else if (ekran == MOBITEL_HRANA && HranaAktivna(playerid)) PlayerTextDrawSetString(playerid, td, T(playerid, "Prekini dostavu"));
+        else if (ekran == MOBITEL_HRANA) PlayerTextDrawSetString(playerid, td, T(playerid, "Zapocni dostavu"));
         else if (ekran == MOBITEL_INTERNET) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelInternet[s]));
         else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelGrupe[s]));
         else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelLokIme[playerid][s]));
@@ -899,9 +903,14 @@ static MobitelOdaberi(playerid)
         gMobitelOdabir[playerid] = 0;
     }
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
+    else if (ekran == MOBITEL_HRANA) HranaNarudzba(playerid);
     else if (ekran == MOBITEL_INTERNET)
     {
-        if (odabir == 0) HranaNarudzba(playerid);
+        if (odabir == 0)
+        {
+            gMobitelEkran[playerid] = MOBITEL_HRANA;
+            gMobitelOdabir[playerid] = 0;
+        }
         else if (odabir == 2)
         {
             if (!gInv[playerid][ITEM_KARTICA]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate bankovnu karticu."));
@@ -993,9 +1002,9 @@ static MobitelNatrag(playerid, ekran)
             gMobitelEkran[playerid] = MOBITEL_KONTAKT;
             gMobitelOdabir[playerid] = ekran == MOBITEL_PREIMENUJ ? 2 : 3;
         }
-        case MOBITEL_GRUPE, MOBITEL_BANKA:
+        case MOBITEL_GRUPE, MOBITEL_BANKA, MOBITEL_HRANA:
         {
-            gMobitelOdabir[playerid] = ekran == MOBITEL_BANKA ? 2 : 1;
+            gMobitelOdabir[playerid] = ekran == MOBITEL_BANKA ? 2 : ekran == MOBITEL_GRUPE ? 1 : 0;
             gMobitelEkran[playerid] = MOBITEL_INTERNET;
         }
         case MOBITEL_LOKACIJE:

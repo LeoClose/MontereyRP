@@ -177,6 +177,7 @@ HranaNarudzba(playerid)
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Otkazali ste narudzbu. Hrana od $%d naplacena je s vaseg racuna."), HRANA_CIJENA);
     }
     if (gDostavaVozilo[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prvo zavrsite smjenu dostave robe."));
+    if (!BankaUplati(gAccountId[playerid], 0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za dostavu hrane potreban vam je bankovni racun."));
     new Float:x, Float:y, Float:z, r = 0, Float:najblize = 1.0e9;
     GetPlayerPos(playerid, x, y, z);
     for (new k = 0; k < sizeof gRestoran; k++)
@@ -217,8 +218,12 @@ static HranaCheckpoint(playerid)
     if (gHrana[playerid] == 1) return HranaKuca(playerid), 1;
     gHrana[playerid] = 0;
     new iznos = HRANA_BAZA + floatround(VectorSize(gHranaCilj[playerid][0] - gHranaOd[playerid][0], gHranaCilj[playerid][1] - gHranaOd[playerid][1], 0.0) * HRANA_PO_KM / 1000.0);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = payday_earn + %d WHERE id = %d", iznos, gAccountId[playerid]));
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Hrana je dostavljena. Zaradili ste $%d (isplata na placu). Nova narudzba: Internet > Poslovi."), iznos), 1;
+    new poruka[144];
+    iznos = BlagajnaIsplati(iznos);
+    if (!BankaUplati(gAccountId[playerid], iznos)) BlagajnaDodaj(iznos), iznos = 0;
+    format(poruka, sizeof poruka, T(playerid, "Uplata za dostavu hrane: $%d."), iznos);
+    MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_BANKA_BROJ, poruka);
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Hrana je dostavljena. $%d je uplaceno na vas racun."), iznos), 1;
 }
 
 DostavaCheckpoint(playerid)
@@ -235,8 +240,9 @@ DostavaCheckpoint(playerid)
     new iznos = DOSTAVA_BAZA + floatround(VectorSize(x - gDostavaOd[playerid][0], y - gDostavaOd[playerid][1], 0.0) * DOSTAVA_PO_KM / 1000.0);
     DisablePlayerCheckpoint(playerid);
     gDostavaCilj[playerid] = false;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = payday_earn + %d WHERE id = %d", iznos, gAccountId[playerid]));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Dostava zavrsena. Zaradili ste $%d (isplata na placu)."), iznos);
+    iznos = BlagajnaIsplati(iznos);
+    if (!DajNovac(playerid, iznos)) BlagajnaDodaj(iznos), iznos = 0;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Dostava zavrsena. Dobili ste $%d na ruke."), iznos);
     DostavaCilj(playerid);
     return 1;
 }
