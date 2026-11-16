@@ -9,13 +9,20 @@
 #define ARK_TD              (ARK_CELIJA + 7)
 #define ARK_KRAJ_MS         5000
 #define ARK_DOMET           1.6
+#define ARK_TR              8
+#define ARK_TR_H            20.0
+#define ARK_TR_MS           80
+#define ARK_AUTO            ((ARK_TR - 1) * 3)
+#define ARK_ASFALT          0x3A3A3AFF
+#define ARK_ZUTO            0xFFD32AFF
 
-enum { AI_ZMIJA, AI_REAKCIJA }
+enum { AI_ZMIJA, AI_REAKCIJA, AI_MEMORIJA, AI_TRAKE }
 enum E_ARK { bool:amIma, amDb, Float:amX, Float:amY, Float:amZ, Float:amA, amInt, amSvijet, amIgra, STREAMER_TAG_OBJECT:amObj, STREAMER_TAG_3D_TEXT_LABEL:amTekst,
     amIgrac, amToken, amBod, amZivoti, amSmjer, amRep, amDuz, amHrana, amMeta, amMs, bool:amKraj }
 
-static const gArkModel[] = { 2681, 2779 };
-static const gArkIme[][] = { "Snake", "Reakcija" };
+static const gArkModel[] = { 2681, 2779, 2778, 2872 };
+static const gArkIme[][] = { "Snake", "Reakcija", "Memorija", "Dodger" };
+static const gArkSimonBoja[9] = { 0xFF4757FF, 0x2ED573FF, 0x1E90FFFF, 0xFFA502FF, 0xECCC68FF, 0xA55EEAFF, 0x00D2D3FF, 0xFF6B81FF, 0x7BED9FFF };
 static const gArkSmjerX[] = { 0, 1, 0, -1 };
 static const gArkSmjerY[] = { -1, 0, 1, 0 };
 
@@ -38,7 +45,7 @@ InitArkada()
         gArk[m][amA] = DB_GetFieldFloat(res, 4);
         gArk[m][amInt] = DB_GetFieldInt(res, 5);
         gArk[m][amSvijet] = DB_GetFieldInt(res, 6);
-        gArk[m][amIgra] = DB_GetFieldInt(res, 7) == AI_REAKCIJA ? AI_REAKCIJA : AI_ZMIJA;
+        gArk[m][amIgra] = clamp(DB_GetFieldInt(res, 7), AI_ZMIJA, AI_TRAKE);
         ArkStvori(m);
     }
     DB_FreeResultSet(res);
@@ -93,6 +100,7 @@ static ArkBodovi(m)
 {
     new p = gArk[m][amIgrac], tekst[64];
     if (gArk[m][amIgra] == AI_REAKCIJA) format(tekst, sizeof tekst, "~w~%s: ~y~%d   ~w~%s: ~r~%d", T(p, "BODOVI"), gArk[m][amBod], T(p, "ZIVOTI"), gArk[m][amZivoti]);
+    else if (gArk[m][amIgra] == AI_MEMORIJA) format(tekst, sizeof tekst, "~w~%s: ~y~%d   %s", T(p, "BODOVI"), gArk[m][amBod], gArk[m][amSmjer] ? T(p, "~g~TVOJ RED") : T(p, "~p~GLEDAJ"));
     else format(tekst, sizeof tekst, "~w~%s: ~y~%d", T(p, "BODOVI"), gArk[m][amBod]);
     PlayerTextDrawSetString(p, gArkBodTd[p], tekst);
 }
@@ -105,7 +113,8 @@ bool:ArkadaKey(playerid)
         if (gArk[i][amIma] && gArk[i][amSvijet] == GetPlayerVirtualWorld(playerid) && IsPlayerInRangeOfPoint(playerid, ARK_DOMET, gArk[i][amX], gArk[i][amY], gArk[i][amZ] + 1.0)) m = i;
     if (m == -1) return false;
     if (gArk[m][amIgrac] != INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Netko vec igra na ovom automatu.")), true;
-    if (MobitelOtvoren(playerid) || MdtOtvoren(playerid)) return true;
+    if (MdtOtvoren(playerid)) return true;
+    if (MobitelOtvoren(playerid)) MobitelZatvori(playerid);
     if (!DajNovac(playerid, -ARK_CIJENA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca.")), true;
     BlagajnaDodaj(ARK_CIJENA);
     ArkPokreni(playerid, m);
@@ -146,17 +155,45 @@ static ArkPokreni(playerid, m)
         }
         ArkHrana(m);
     }
+    else if (gArk[m][amIgra] == AI_TRAKE)
+    {
+        ArkKutija(playerid, 320.0 - 70.0, ARK_Y - 34.0, 140.0, ARK_TR * ARK_TR_H + 64.0, 0x111111E6);
+        for (new c = 0; c < ARK_TR * 3; c++)
+        {
+            ArkKutija(playerid, 320.0 - 61.0 + float(c % 3) * 41.0, ARK_Y + float(c / 3) * ARK_TR_H, 38.0, ARK_TR_H - 2.0, ARK_ASFALT);
+            gArkPolje[m][c] = false;
+        }
+        ArkTekst(playerid, 320.0, ARK_Y - 30.0, "DODGER", 1.6, ARK_ZUTO);
+        gArkBodTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + ARK_TR * ARK_TR_H + 6.0, "_", 1.0, 0xFFFFFFFF);
+        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + ARK_TR * ARK_TR_H + 18.0, T(playerid, "A/D - traka   ENTER - izlaz"), 0.8, 0xAAAAAAFF);
+        gArk[m][amSmjer] = 1;
+        gArk[m][amMeta] = 0;
+        gArk[m][amRep] = 1;
+        gArk[m][amMs] = 300;
+        gArk[m][amHrana] = GetTickCount() + 600;
+        ArkCelija(playerid, ARK_AUTO + 1, ARK_ZUTO);
+        SetTimerEx("ArkTrakeTick", ARK_TR_MS, false, "ii", m, gArk[m][amToken]);
+    }
     else
     {
-        ArkKutija(playerid, 320.0 - 88.0, ARK_Y - 34.0, 176.0, 194.0, 0x14152AE6);
-        for (new c = 0; c < 9; c++) ArkKutija(playerid, 320.0 - 75.0 + float(c % 3) * 52.0, ARK_Y + float(c / 3) * 40.0, 46.0, 34.0, 0x2C2F45FF, true);
-        ArkTekst(playerid, 320.0, ARK_Y - 30.0, "REAKCIJA", 1.6, 0x00E5FFFF);
+        new bool:mem = gArk[m][amIgra] == AI_MEMORIJA;
+        ArkKutija(playerid, 320.0 - 88.0, ARK_Y - 34.0, 176.0, 194.0, mem ? 0x1E1230E6 : 0x14152AE6);
+        for (new c = 0; c < 9; c++) ArkKutija(playerid, 320.0 - 75.0 + float(c % 3) * 52.0, ARK_Y + float(c / 3) * 40.0, 46.0, 34.0, mem ? ArkTamna(gArkSimonBoja[c]) : 0x2C2F45FF, true);
+        ArkTekst(playerid, 320.0, ARK_Y - 30.0, mem ? ("MEMORIJA") : ("REAKCIJA"), 1.6, mem ? 0xD980FAFF : 0x00E5FFFF);
         gArkBodTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 124.0, "_", 1.0, 0xFFFFFFFF);
-        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 138.0, T(playerid, "Kliknite svijetli kvadrat   ESC - izlaz"), 0.8, 0xAAAAAAFF);
-        gArk[m][amZivoti] = 3;
-        gArk[m][amMeta] = -1;
-        SelectTextDraw(playerid, 0x00E5FFFF);
-        ArkMeta(m);
+        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 138.0, T(playerid, mem ? ("Zapamtite i ponovite niz   ENTER - izlaz") : ("Kliknite svijetli kvadrat   ENTER - izlaz")), 0.8, 0xAAAAAAFF);
+        SelectTextDraw(playerid, mem ? 0xD980FFFF : 0x00E5FFFF);
+        if (mem)
+        {
+            gArk[m][amDuz] = 0;
+            ArkSimonDodaj(m);
+        }
+        else
+        {
+            gArk[m][amZivoti] = 3;
+            gArk[m][amMeta] = -1;
+            ArkMeta(m);
+        }
     }
     ArkBodovi(m);
     if (gArk[m][amIgra] == AI_ZMIJA) SetTimerEx("ArkZmijaTick", gArk[m][amMs], false, "ii", m, gArk[m][amToken]);
@@ -260,15 +297,153 @@ public ArkReakcijaIstek(m, token)
     ArkPromasaj(m);
 }
 
+static ArkTamna(boja)
+{
+    return ((boja >>> 1) & 0x7F7F7F00) | 0xFF;
+}
+
+static ArkSimonDodaj(m)
+{
+    new p = gArk[m][amIgrac];
+    for (new c = 0; c < 9; c++) ArkCelija(p, c, ArkTamna(gArkSimonBoja[c]));
+    if (gArk[m][amDuz] >= ARK_CELIJA)
+    {
+        ArkKraj(m);
+        return;
+    }
+    gArkZmija[m][gArk[m][amDuz]++] = random(9);
+    gArk[m][amSmjer] = 0;
+    gArk[m][amRep] = 0;
+    ArkBodovi(m);
+    SetTimerEx("ArkSimonKorak", 800, false, "ii", m, ++gArk[m][amToken]);
+}
+
+forward ArkSimonKorak(m, token);
+public ArkSimonKorak(m, token)
+{
+    if (token != gArk[m][amToken] || gArk[m][amKraj]) return;
+    new p = gArk[m][amIgrac], i = gArk[m][amRep]++;
+    if (i >= gArk[m][amDuz] * 2)
+    {
+        gArk[m][amSmjer] = 1;
+        gArk[m][amRep] = 0;
+        ArkBodovi(m);
+        return;
+    }
+    new c = gArkZmija[m][i / 2], ms = 180;
+    if (i % 2 == 0)
+    {
+        ArkCelija(p, c, gArkSimonBoja[c]);
+        PlayerPlaySound(p, 1056, 0.0, 0.0, 0.0);
+        ms = 620 - gArk[m][amDuz] * 20;
+        if (ms < 260) ms = 260;
+    }
+    else ArkCelija(p, c, ArkTamna(gArkSimonBoja[c]));
+    SetTimerEx("ArkSimonKorak", ms, false, "ii", m, token);
+}
+
+forward ArkSimonUgasi(m, c, token);
+public ArkSimonUgasi(m, c, token)
+{
+    if (token == gArk[m][amToken] && !gArk[m][amKraj]) ArkCelija(gArk[m][amIgrac], c, ArkTamna(gArkSimonBoja[c]));
+}
+
+static ArkSimonKlik(m, c)
+{
+    if (gArk[m][amSmjer] != 1) return;
+    new p = gArk[m][amIgrac], tocna = gArkZmija[m][gArk[m][amRep]];
+    if (c != tocna)
+    {
+        PlayerPlaySound(p, 1055, 0.0, 0.0, 0.0);
+        ArkCelija(p, tocna, gArkSimonBoja[tocna]);
+        ArkKraj(m);
+        return;
+    }
+    ArkCelija(p, c, gArkSimonBoja[c]);
+    PlayerPlaySound(p, 1056, 0.0, 0.0, 0.0);
+    SetTimerEx("ArkSimonUgasi", 220, false, "iii", m, c, gArk[m][amToken]);
+    if (++gArk[m][amRep] < gArk[m][amDuz]) return;
+    gArk[m][amBod] = gArk[m][amDuz];
+    ArkSimonDodaj(m);
+}
+
+static bool:ArkTrakeKorak(m)
+{
+    new p = gArk[m][amIgrac], bool:novo[ARK_TR * 3], prije = gArk[m][amBod];
+    for (new c = 0; c < ARK_TR * 3; c++)
+    {
+        if (!gArkPolje[m][c]) continue;
+        new n = c + 3;
+        if (n >= ARK_TR * 3)
+        {
+            gArk[m][amBod]++;
+            continue;
+        }
+        if (n == ARK_AUTO + gArk[m][amSmjer]) return false;
+        novo[n] = true;
+    }
+    if (--gArk[m][amRep] <= 0)
+    {
+        new a = random(3);
+        novo[a] = true;
+        if (gArk[m][amBod] >= 15 && !random(3)) novo[(a + 1 + random(2)) % 3] = true;
+        gArk[m][amRep] = 2 + random(2);
+    }
+    for (new c = 0; c < ARK_TR * 3; c++)
+    {
+        if (novo[c] == gArkPolje[m][c]) continue;
+        gArkPolje[m][c] = novo[c];
+        ArkCelija(p, c, novo[c] ? 0xFF4757FF : ARK_ASFALT);
+    }
+    gArk[m][amMs] = 300 - gArk[m][amBod] * 4;
+    if (gArk[m][amMs] < 90) gArk[m][amMs] = 90;
+    if (gArk[m][amBod] != prije) ArkBodovi(m);
+    return true;
+}
+
+forward ArkTrakeTick(m, token);
+public ArkTrakeTick(m, token)
+{
+    if (token != gArk[m][amToken] || gArk[m][amKraj]) return;
+    new p = gArk[m][amIgrac], KEY:tipke, gore, strana;
+    GetPlayerKeys(p, tipke, gore, strana);
+    new smjer = strana < 0 ? -1 : strana > 0 ? 1 : 0, l = gArk[m][amSmjer] + smjer;
+    if (smjer && !gArk[m][amMeta] && l >= 0 && l <= 2)
+    {
+        ArkCelija(p, ARK_AUTO + gArk[m][amSmjer], ARK_ASFALT);
+        gArk[m][amSmjer] = l;
+        if (gArkPolje[m][ARK_AUTO + l])
+        {
+            ArkCelija(p, ARK_AUTO + l, 0xFF0000FF);
+            ArkKraj(m);
+            return;
+        }
+        ArkCelija(p, ARK_AUTO + l, ARK_ZUTO);
+    }
+    gArk[m][amMeta] = smjer;
+    if (GetTickCount() - gArk[m][amHrana] >= 0)
+    {
+        gArk[m][amHrana] = GetTickCount() + gArk[m][amMs];
+        if (!ArkTrakeKorak(m))
+        {
+            ArkCelija(p, ARK_AUTO + gArk[m][amSmjer], 0xFF0000FF);
+            ArkKraj(m);
+            return;
+        }
+    }
+    SetTimerEx("ArkTrakeTick", ARK_TR_MS, false, "ii", m, token);
+}
+
 bool:ArkadaKlik(playerid, PlayerText:td)
 {
     new m = gArkAutomat[playerid];
-    if (m == -1 || gArk[m][amIgra] != AI_REAKCIJA) return false;
+    if (m == -1 || (gArk[m][amIgra] != AI_REAKCIJA && gArk[m][amIgra] != AI_MEMORIJA)) return false;
     if (gArk[m][amKraj]) return true;
     for (new c = 0; c < 9; c++)
     {
         if (td != gArkTd[playerid][c + 1]) continue;
-        if (c != gArk[m][amMeta]) ArkPromasaj(m);
+        if (gArk[m][amIgra] == AI_MEMORIJA) ArkSimonKlik(m, c);
+        else if (c != gArk[m][amMeta]) ArkPromasaj(m);
         else
         {
             gArk[m][amBod]++;
@@ -322,6 +497,11 @@ ArkZatvori(playerid)
     if (!IsPlayerConnected(playerid)) return;
     if (gArk[m][amIgra] == AI_REAKCIJA) CancelSelectTextDraw(playerid);
     TogglePlayerControllable(playerid, true);
+}
+
+ArkadaIgra(playerid)
+{
+    return gArkAutomat[playerid] != -1;
 }
 
 ArkadaEsc(playerid)

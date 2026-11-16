@@ -552,7 +552,7 @@ MobitelZatvori(playerid)
 
 static bool:MobitelDostupan(playerid)
 {
-    return gUlogiran[playerid] && gInv[playerid][ITEM_MOBITEL] > 0 && !IsRanjen(playerid) && !ImaLisice(playerid) && gMobitelDrugi[playerid] == INVALID_PLAYER_ID && !gMobitelPoziv[playerid];
+    return gUlogiran[playerid] && gInv[playerid][ITEM_MOBITEL] > 0 && !IsRanjen(playerid) && !ImaLisice(playerid) && gMobitelDrugi[playerid] == INVALID_PLAYER_ID && !gMobitelPoziv[playerid] && !ArkadaIgra(playerid);
 }
 
 static MobitelDolazni(playerid, pozivatelj)
@@ -1200,7 +1200,7 @@ MobitelDisconnect(playerid)
 
 MobitelPrebaci(playerid)
 {
-    if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid) || TuningAktivan(playerid)) return 1;
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid) || TuningAktivan(playerid) || ArkadaIgra(playerid)) return 1;
     if (gMobitelKamera[playerid]) MobitelKameraKraj(playerid);
     else if (gMobitelOtvoren[playerid]) MobitelZatvori(playerid);
     else if (!gInv[playerid][ITEM_MOBITEL]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate mobitel."));

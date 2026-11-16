@@ -156,14 +156,14 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
-    if (TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
+    if (ArkadaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
     AnimKey(playerid, newkeys, oldkeys);
     VoziloKey(playerid, newkeys, oldkeys);
     KurvaPotrubiKey(playerid, newkeys, oldkeys);
     PolicijaKey(playerid, newkeys, oldkeys);
-    if (ArkadaTipke(playerid, newkeys, oldkeys) || BilijarTipke(playerid, newkeys, oldkeys) || KosTipke(playerid, newkeys, oldkeys)) return 1;
+    if (BilijarTipke(playerid, newkeys, oldkeys) || KosTipke(playerid, newkeys, oldkeys)) return 1;
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) Interakcija(playerid);
     if ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK) && !IsRanjen(playerid) && !KosKey(playerid) && !BacenoPodigni(playerid)) KosPodigni(playerid);
     return 1;
@@ -221,6 +221,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
     }
     cmd[len] = EOS;
     while (cmdtext[pos] == ' ') pos++;
+    if (ArkadaIgra(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete koristiti komande dok igrate na automatu (ENTER - izlaz)."));
     if (len > 4 && funcidx(cmd) != -1 && CallLocalFunction(cmd, "is", playerid, cmdtext[pos])) return 1;
     return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Komanda ne postoji, /help za spisak svih komandi"));
 }

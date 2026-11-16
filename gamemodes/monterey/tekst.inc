@@ -1713,7 +1713,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~r~Promasaj", "~r~Missed", "~r~Мимо", "~r~Fallo", "~r~Kacti" },
     { "%s vam je ukrao loptu!", "%s stole the ball from you!", "%s отобрал у вас мяч!", "%s te robo el balon!", "%s topu sizden kapti!" },
     { "~g~Ukradeno!", "~g~Stolen!", "~g~Перехват!", "~g~Robado!", "~g~Kapildi!" },
-    { "Drzi LMB - sut (pusti u zelenom), N - dodaj, ALT - ispusti. Bez lopte: RMB - ukradi.", "Hold LMB - shoot (release in green), N - pass, ALT - drop. Without the ball: RMB - steal.", "Держите ЛКМ - бросок (отпустите на зелёном), N - пас, ALT - бросить мяч. Без мяча: ПКМ - перехват.", "Manten LMB - tirar (suelta en verde), N - pasar, ALT - soltar. Sin balon: RMB - robar.", "LMB basili tut - sut (yesilde birak), N - pas, ALT - birak. Topsuz: RMB - top cal." },
     { "Lopta je vracena na teren.", "The ball was returned to the court.", "Мяч возвращён на площадку.", "El balon volvio a la cancha.", "Top sahaya geri dondu." },
     { "+ Novi kos na mojoj poziciji (gledajte prema terenu)", "+ New hoop at my position (face the court)", "+ Новое кольцо на моей позиции (смотрите на площадку)", "+ Nueva canasta en mi posicion (mira hacia la cancha)", "+ Konumuma yeni pota (sahaya bakin)" },
     { "[%d] Kos (%s) - obrisi", "[%d] Hoop (%s) - delete", "[%d] Кольцо (%s) - удалить", "[%d] Canasta (%s) - borrar", "[%d] Pota (%s) - sil" },
@@ -1735,14 +1734,23 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "ZIVOTI", "LIVES", "ЖИЗНИ", "VIDAS", "CAN" },
     { "Netko vec igra na ovom automatu.", "Someone is already playing on this machine.", "На этом автомате уже кто-то играет.", "Alguien ya esta jugando en esta maquina.", "Bu makinede zaten biri oynuyor." },
     { "W/A/S/D - smjer   ENTER - izlaz", "W/A/S/D - direction   ENTER - exit", "W/A/S/D - направление   ENTER - выход", "W/A/S/D - direccion   ENTER - salir", "W/A/S/D - yon   ENTER - cikis" },
-    { "Kliknite svijetli kvadrat   ESC - izlaz", "Click the lit square   ESC - exit", "Нажмите на светящийся квадрат   ESC - выход", "Haz clic en el cuadro iluminado   ESC - salir", "Yanan kareye tiklayin   ESC - cikis" },
+    { "Kliknite svijetli kvadrat   ENTER - izlaz", "Click the lit square   ENTER - exit", "Нажмите на светящийся квадрат   ENTER - выход", "Haz clic en el cuadro iluminado   ENTER - salir", "Yanan kareye tiklayin   ENTER - cikis" },
     { "KRAJ IGRE", "GAME OVER", "ИГРА ОКОНЧЕНА", "FIN DEL JUEGO", "OYUN BITTI" },
     { "+ Novi automat: %s (ispred mene)", "+ New machine: %s (in front of me)", "+ Новый автомат: %s (передо мной)", "+ Nueva maquina: %s (delante de mi)", "+ Yeni makine: %s (onumde)" },
     { "[%d] %s (%s) - obrisi", "[%d] %s (%s) - delete", "[%d] %s (%s) - удалить", "[%d] %s (%s) - borrar", "[%d] %s (%s) - sil" },
     { "Arkade", "Arcades", "Аркады", "Arcades", "Atari salonlari" },
     { "Dosegnut je najveci broj automata.", "Maximum number of machines reached.", "Достигнуто максимальное число автоматов.", "Se alcanzo el maximo de maquinas.", "Azami makine sayisina ulasildi." },
     { "Automat je postavljen.", "Machine placed.", "Автомат установлен.", "Maquina colocada.", "Makine yerlestirildi." },
-    { "Automat je obrisan.", "Machine deleted.", "Автомат удалён.", "Maquina borrada.", "Makine silindi." }
+    { "Automat je obrisan.", "Machine deleted.", "Автомат удалён.", "Maquina borrada.", "Makine silindi." },
+    { "Ne mozete koristiti komande dok igrate na automatu (ENTER - izlaz).", "You cannot use commands while playing an arcade machine (ENTER - exit).", "Нельзя использовать команды во время игры на автомате (ENTER - выход).", "No puedes usar comandos mientras juegas en una maquina (ENTER - salir).", "Makinede oynarken komut kullanamazsiniz (ENTER - cikis)." },
+    { "Memorija", "Memory", "Память", "Memoria", "Hafiza" },
+    { "Dodger", "Dodger", "Уклонение", "Esquiva", "Kacis" },
+    { "Zapamtite i ponovite niz   ENTER - izlaz", "Memorize and repeat the sequence   ENTER - exit", "Запомните и повторите последовательность   ENTER - выход", "Memoriza y repite la secuencia   ENTER - salir", "Diziyi ezberleyip tekrarlayin   ENTER - cikis" },
+    { "A/D - traka   ENTER - izlaz", "A/D - lane   ENTER - exit", "A/D - полоса   ENTER - выход", "A/D - carril   ENTER - salir", "A/D - serit   ENTER - cikis" },
+    { "~g~TVOJ RED", "~g~YOUR TURN", "~g~ВАШ ХОД", "~g~TU TURNO", "~g~SIRA SENDE" },
+    { "~p~GLEDAJ", "~p~WATCH", "~p~СМОТРИТЕ", "~p~MIRA", "~p~IZLE" },
+    { "~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti", "~y~LMB ~w~shoot   ~y~N ~w~pass   ~y~ALT ~w~drop", "~y~ЛКМ ~w~бросок   ~y~N ~w~пас   ~y~ALT ~w~бросить", "~y~LMB ~w~tirar   ~y~N ~w~pasar   ~y~ALT ~w~soltar", "~y~LMB ~w~sut   ~y~N ~w~pas   ~y~ALT ~w~birak" },
+    { "~y~ALT ~w~uzmi loptu   ~y~RMB ~w~ukradi", "~y~ALT ~w~pick up ball   ~y~RMB ~w~steal", "~y~ALT ~w~взять мяч   ~y~ПКМ ~w~перехват", "~y~ALT ~w~coger balon   ~y~RMB ~w~robar", "~y~ALT ~w~topu al   ~y~RMB ~w~top cal" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
