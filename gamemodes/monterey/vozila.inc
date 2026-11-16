@@ -1193,9 +1193,9 @@ static KradjaKorak(playerid)
     }
 }
 
-#define DASH_X              262.0
+#define DASH_X              283.0
 #define DASH_Y              398.0
-#define DASH_TD             15
+#define DASH_TD             12
 #define DASH_BOJA_SLABO     0x2A3644CC
 #define DASH_BOJA_LABEL     0x8AA0B6FF
 #define DASH_BOJA_AKCENT    0x5B8DBFFF
@@ -1203,9 +1203,9 @@ static KradjaKorak(playerid)
 #define DASH_BOJA_ZUTO      0xF5A623FF
 #define DASH_BOJA_CRVENO    0xE5484DFF
 #define DASH_BOJA_PLAVO     0x5BC0EBFF
-#define DASH_BOJA_TRAKA     0x0F1A27AA
+#define DASH_BOJA_POZADINA  0x0F1A2799
 
-enum { DT_BRZINA = 0, DT_BRZINA_BAR = 3, DT_KAPLJICA = 4, DT_GORIVO_BAR = 6, DT_LAMPICE = 7 }
+enum { DT_BRZINA = 1, DT_KAPLJICA = 3, DT_LAMPICE = 4 }
 static const gDashSlova[][] = { "M", "_", "P", "B" };
 static PlayerText:gDash[MAX_PLAYERS][DASH_TD], gDashV[MAX_PLAYERS], gDashBrzina[MAX_PLAYERS], gDashGorivo[MAX_PLAYERS], gDashLamp[MAX_PLAYERS];
 
@@ -1243,27 +1243,17 @@ static DashPokazi(playerid, v)
     DashSakrij(playerid);
     gDashV[playerid] = v;
     gDashBrzina[playerid] = gDashGorivo[playerid] = gDashLamp[playerid] = -1;
-    gDash[playerid][DT_BRZINA] = DashTekst(playerid, 50.0, 0.0, "0", 0xFFFFFFFF, 0.42, 1.9, TEXT_DRAW_ALIGN_RIGHT, TEXT_DRAW_FONT_3);
-    gDash[playerid][1] = DashTekst(playerid, 52.0, 8.5, "km/h", DASH_BOJA_LABEL, 0.15, 0.7);
-    gDash[playerid][2] = DashSlika(playerid, 0.0, 20.0, 112.0, 3.0, DASH_BOJA_TRAKA);
-    gDash[playerid][DT_BRZINA_BAR] = DashSlika(playerid, 0.0, 20.0, 1.0, 3.0, DASH_BOJA_AKCENT);
-    gDash[playerid][DT_KAPLJICA] = DashSlika(playerid, 0.0, 26.0, 5.0, 7.0, DASH_BOJA_ZELENO, "hud:radar_centre");
-    gDash[playerid][5] = DashSlika(playerid, 8.0, 28.0, 104.0, 3.0, DASH_BOJA_TRAKA);
-    gDash[playerid][DT_GORIVO_BAR] = DashSlika(playerid, 8.0, 28.0, 1.0, 3.0, DASH_BOJA_ZELENO);
+    gDash[playerid][0] = DashSlika(playerid, 0.0, 0.0, 74.0, 34.0, DASH_BOJA_POZADINA);
+    gDash[playerid][DT_BRZINA] = DashTekst(playerid, 44.0, 1.0, "0", 0xFFFFFFFF, 0.42, 1.9, TEXT_DRAW_ALIGN_RIGHT, TEXT_DRAW_FONT_3);
+    gDash[playerid][2] = DashTekst(playerid, 46.0, 9.5, "km/h", DASH_BOJA_LABEL, 0.15, 0.7);
+    gDash[playerid][DT_KAPLJICA] = DashSlika(playerid, 7.5, 20.0, 7.0, 10.0, DASH_BOJA_SLABO, "hud:radar_centre");
     for (new l = 0; l < 4; l++)
     {
-        new Float:x = 66.0 + 12.0 * float(l);
-        gDash[playerid][DT_LAMPICE + l * 2] = l == 1 ? DashSlika(playerid, x, 3.0, 10.0, 10.0, DASH_BOJA_SLABO, "hud:radar_light") : DashSlika(playerid, x, 3.0, 10.0, 10.0, DASH_BOJA_SLABO, "LD_POOL:ball");
-        gDash[playerid][DT_LAMPICE + l * 2 + 1] = DashTekst(playerid, x + 5.0, 4.6, gDashSlova[l], 0x0F1A27FF, 0.16, 0.65, TEXT_DRAW_ALIGN_CENTER, TEXT_DRAW_FONT_2, 0);
+        new Float:x = 19.0 + 13.0 * float(l);
+        gDash[playerid][DT_LAMPICE + l * 2] = l == 1 ? DashSlika(playerid, x, 20.0, 10.0, 10.0, DASH_BOJA_SLABO, "hud:radar_light") : DashSlika(playerid, x, 20.0, 10.0, 10.0, DASH_BOJA_SLABO, "LD_POOL:ball");
+        gDash[playerid][DT_LAMPICE + l * 2 + 1] = DashTekst(playerid, x + 5.0, 21.6, gDashSlova[l], 0x0F1A27FF, 0.16, 0.65, TEXT_DRAW_ALIGN_CENTER, TEXT_DRAW_FONT_2, 0);
     }
-    for (new t = 0; t < DASH_TD; t++) if (t != DT_BRZINA_BAR && t != DT_GORIVO_BAR) PlayerTextDrawShow(playerid, gDash[playerid][t]);
-}
-
-static DashBar(playerid, t, Float:x, Float:y, Float:w, Float:h, boja)
-{
-    PlayerTextDrawDestroy(playerid, gDash[playerid][t]);
-    gDash[playerid][t] = DashSlika(playerid, x, y, w < 1.0 ? 1.0 : w, h, boja);
-    PlayerTextDrawShow(playerid, gDash[playerid][t]);
+    for (new t = 0; t < DASH_TD; t++) PlayerTextDrawShow(playerid, gDash[playerid][t]);
 }
 
 static DashBoja(boja)
@@ -1280,24 +1270,19 @@ static DashBoja(boja)
 
 static DashOsvjezi(playerid, v)
 {
-    new model = GetVehicleModel(v), Float:vx, Float:vy, Float:vz, Float:zdravlje, tekst[8];
+    new Float:vx, Float:vy, Float:vz, Float:zdravlje, tekst[8];
     GetVehicleVelocity(v, vx, vy, vz);
-    new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), najvise = gVoziloBrzina[model - 400] * (100 + 8 * TuningMotor(v)) / 100;
+    new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0);
     if (kmh != gDashBrzina[playerid])
     {
         gDashBrzina[playerid] = kmh;
         valstr(tekst, kmh);
         PlayerTextDrawSetString(playerid, gDash[playerid][DT_BRZINA], tekst);
-        new Float:udio = najvise ? float(kmh) / float(najvise) : 0.0;
-        if (udio > 1.0) udio = 1.0;
-        DashBar(playerid, DT_BRZINA_BAR, 0.0, 20.0, 112.0 * udio, 3.0, udio < 0.6 ? DASH_BOJA_AKCENT : udio < 0.85 ? DASH_BOJA_ZUTO : DASH_BOJA_CRVENO);
     }
-    new Float:tank = VoziloTank(v), gorivo = floatround(gGorivo[v] * 104.0 / tank);
-    if (gorivo != gDashGorivo[playerid])
+    new boja = gGorivo[v] <= VOZILO_REZERVA ? DASH_BOJA_CRVENO : gGorivo[v] <= VoziloTank(v) * 0.5 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
+    if (boja != gDashGorivo[playerid])
     {
-        gDashGorivo[playerid] = gorivo;
-        new boja = gGorivo[v] <= VOZILO_REZERVA ? DASH_BOJA_CRVENO : gGorivo[v] <= tank * 0.3 ? DASH_BOJA_ZUTO : DASH_BOJA_ZELENO;
-        DashBar(playerid, DT_GORIVO_BAR, 8.0, 28.0, float(gorivo), 3.0, boja);
+        gDashGorivo[playerid] = boja;
         PlayerTextDrawColour(playerid, gDash[playerid][DT_KAPLJICA], boja);
         PlayerTextDrawShow(playerid, gDash[playerid][DT_KAPLJICA]);
     }
