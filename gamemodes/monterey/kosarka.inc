@@ -3,8 +3,9 @@
 #define KOS_LOPTA           2114
 #define KOS_SLOT            3
 #define KOS_TOCAKA          24
-#define KOS_KORAK_MS        60
+#define KOS_KORAK_MS        70
 #define KOS_NABIJA_MS       50
+#define KOS_HOD_MS          150
 #define KOS_STUP_Z          2.05
 #define KOS_OBRUC_Z         3.05
 #define KOS_OBRUC_D         0.38
@@ -17,18 +18,26 @@
 #define KOS_UKRADI          1.4
 #define KOS_KRADJA_MS       1500
 #define KOS_IZLAZ           40.0
+#define KOS_TEREN           32.0
+#define KOS_TIM_MAX         5
+#define KOS_POBJEDA         21
+#define KOS_HUD             4
 
 enum { KF_SLOBODNA, KF_NOSI, KF_LET }
+enum { KH_STOJI, KH_HODA, KH_TRCI }
 enum E_KOS { bool:koIma, koDb, Float:koX, Float:koY, Float:koZ, Float:koA, koInt, koSvijet, STREAMER_TAG_OBJECT:koObj, STREAMER_TAG_OBJECT:koLopta, STREAMER_TAG_3D_TEXT_LABEL:koTekst,
-    koFaza, koNosi, Float:koLx, Float:koLy, Float:koLz, koToken, koPn, koPi, koPogodak, koPoeni, koStrijelac, koPrima }
+    koFaza, koNosi, Float:koLx, Float:koLy, Float:koLz, Float:koRot, koToken, koPn, koPi, koPogodak, koPoeni, koStrijelac, koPrima, koMetaTeren, koTeren, koBod[2] }
 
 static const Float:gKosSa[][4] = {
     { 2768.15625, -2019.6171875, 14.6015625, 90.0 }, { 2795.4921875, -2019.6171875, 14.59375, -90.0 }, { 2533.8828125, -1667.578125, 16.2890625, -90.0 },
     { 2290.640625, -1541.609375, 28.0703125, 0.0 }, { 2290.578125, -1514.2734375, 28.046875, -180.0 }, { 2316.9375, -1541.609375, 26.5, 0.0 }, { 2316.9375, -1514.2734375, 26.5, -180.0 }
 };
 static const gKosSaModel[sizeof gKosSa] = { 946, 946, 947, 946, 946, 946, 946 };
+static const gKosTimIme[2][] = { "PLAVI", "CRVENI" };
+static const gKosTimBoja[2][] = { "~b~", "~r~" };
 
 static gKos[KOS_MAX][E_KOS], Float:gKosPut[KOS_MAX][KOS_TOCAKA][3], gKosDrzi[MAX_PLAYERS] = { -1, ... }, bool:gKosNabija[MAX_PLAYERS], Float:gKosSnaga[MAX_PLAYERS], bool:gKosGore[MAX_PLAYERS], gKosKradja[MAX_PLAYERS], PlayerText:gKosTd[MAX_PLAYERS], gApKos[MAX_PLAYERS][KOS_MAX];
+static gKosTeren[MAX_PLAYERS] = { -1, ... }, gKosTim[MAX_PLAYERS], PlayerText:gKosHud[MAX_PLAYERS][KOS_HUD], gKosHod[MAX_PLAYERS], gKosAnimDo[MAX_PLAYERS];
 
 static KosNaprijed(Float:a, &Float:fx, &Float:fy)
 {
@@ -52,6 +61,13 @@ static KosSansa(Float:d, Float:snaga)
     return floatround(float(osnova) * f);
 }
 
+static KosAnim(playerid, const lib[], const ime[], bool:petlja, bool:kreci, bool:zamrzni, ms)
+{
+    ApplyAnimation(playerid, lib, ime, 4.1, petlja, kreci, kreci, zamrzni, 0);
+    gKosAnimDo[playerid] = GetTickCount() + ms;
+    gKosHod[playerid] = -1;
+}
+
 InitKosarka()
 {
     assert(KosSansa(1.0, 75.0) == 95 && KosSansa(8.0, 75.0) == 42 && KosSansa(8.0, 0.0) == 6);
@@ -73,11 +89,31 @@ InitKosarka()
         KosStvori(k);
     }
     DB_FreeResultSet(res);
+    KosTereni();
+    SetTimer("KosHod", KOS_HOD_MS, true);
+}
+
+static KosTereni()
+{
+    for (new p = 0; p < MAX_PLAYERS; p++) if (gKosTeren[p] != -1) KosNapusti(p, false);
+    for (new k = 0; k < KOS_MAX; k++)
+    {
+        gKos[k][koTeren] = k;
+        gKos[k][koBod][0] = gKos[k][koBod][1] = 0;
+        if (!gKos[k][koIma]) continue;
+        for (new j = 0; j < k; j++)
+        {
+            if (!gKos[j][koIma] || gKos[j][koSvijet] != gKos[k][koSvijet] || gKos[j][koInt] != gKos[k][koInt] || VectorSize(gKos[j][koX] - gKos[k][koX], gKos[j][koY] - gKos[k][koY], 0.0) > KOS_TEREN) continue;
+            gKos[k][koTeren] = gKos[j][koTeren];
+            break;
+        }
+    }
 }
 
 KosConnect(playerid)
 {
     gKosDrzi[playerid] = -1;
+    gKosTeren[playerid] = -1;
     gKosNabija[playerid] = false;
     for (new i = 0; i < sizeof gKosSa; i++) RemoveBuildingForPlayer(playerid, gKosSaModel[i], gKosSa[i][0], gKosSa[i][1], gKosSa[i][2], 0.5);
 }
@@ -86,7 +122,7 @@ static KosStvori(k)
 {
     gKos[k][koIma] = true;
     gKos[k][koObj] = CreateDynamicObject(KOS_MODEL, gKos[k][koX], gKos[k][koY], gKos[k][koZ] + KOS_STUP_Z, 0.0, 0.0, gKos[k][koA] + 180.0, gKos[k][koSvijet], gKos[k][koInt]);
-    gKos[k][koTekst] = CreateDynamic3DTextLabel("Kosarka\n[Y]", COLOR_ORG, gKos[k][koX], gKos[k][koY], gKos[k][koZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKos[k][koSvijet], gKos[k][koInt]);
+    gKos[k][koTekst] = CreateDynamic3DTextLabel("{F39C12}Kosarka\n{FFFFFF}[ALT]", 0xFFFFFFFF, gKos[k][koX], gKos[k][koY], gKos[k][koZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKos[k][koSvijet], gKos[k][koInt]);
     KosLoptaReset(k);
 }
 
@@ -100,8 +136,101 @@ static KosLoptaReset(k)
     gKos[k][koLx] = gKos[k][koX] + fx * 3.0;
     gKos[k][koLy] = gKos[k][koY] + fy * 3.0;
     gKos[k][koLz] = gKos[k][koZ] + KOS_LOPTA_Z;
-    if (gKos[k][koLopta]) StopDynamicObject(gKos[k][koLopta]), SetDynamicObjectPos(gKos[k][koLopta], gKos[k][koLx], gKos[k][koLy], gKos[k][koLz]);
+    gKos[k][koRot] = 0.0;
+    if (gKos[k][koLopta])
+    {
+        StopDynamicObject(gKos[k][koLopta]);
+        SetDynamicObjectPos(gKos[k][koLopta], gKos[k][koLx], gKos[k][koLy], gKos[k][koLz]);
+        SetDynamicObjectRot(gKos[k][koLopta], 0.0, 0.0, 0.0);
+    }
     else gKos[k][koLopta] = CreateDynamicObject(KOS_LOPTA, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz], 0.0, 0.0, 0.0, gKos[k][koSvijet], gKos[k][koInt], -1, 80.0);
+}
+
+static KosBroj(t, tim)
+{
+    new n = 0;
+    for (new p = 0; p < MAX_PLAYERS; p++) if (gKosTeren[p] == t && gKosTim[p] == tim) n++;
+    return n;
+}
+
+static PlayerText:KosHudTd(playerid, Float:x, Float:y, Float:vel, TEXT_DRAW_ALIGN:poravnanje, boja)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, "_");
+    PlayerTextDrawLetterSize(playerid, td, vel * 0.25, vel);
+    PlayerTextDrawAlignment(playerid, td, poravnanje);
+    PlayerTextDrawColour(playerid, td, boja);
+    PlayerTextDrawSetShadow(playerid, td, 0);
+    PlayerTextDrawSetOutline(playerid, td, 1);
+    PlayerTextDrawBackgroundColour(playerid, td, 0x000000AA);
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_1);
+    PlayerTextDrawSetProportional(playerid, td, true);
+    return td;
+}
+
+static KosHudStvori(playerid)
+{
+    gKosHud[playerid][0] = KosHudTd(playerid, 320.0, 4.0, 0.9, TEXT_DRAW_ALIGN_CENTER, 0xFFFFFFFF);
+    PlayerTextDrawSetString(playerid, gKosHud[playerid][0], "_~n~_~n~_~n~_~n~_~n~_~n~_");
+    PlayerTextDrawUseBox(playerid, gKosHud[playerid][0], true);
+    PlayerTextDrawBoxColour(playerid, gKosHud[playerid][0], 0x0B1622C8);
+    PlayerTextDrawTextSize(playerid, gKosHud[playerid][0], 0.0, 190.0);
+    gKosHud[playerid][1] = KosHudTd(playerid, 320.0, 6.0, 1.5, TEXT_DRAW_ALIGN_CENTER, 0xFFFFFFFF);
+    PlayerTextDrawFont(playerid, gKosHud[playerid][1], TEXT_DRAW_FONT_2);
+    gKosHud[playerid][2] = KosHudTd(playerid, 230.0, 24.0, 0.85, TEXT_DRAW_ALIGN_LEFT, 0x6EC1FFFF);
+    gKosHud[playerid][3] = KosHudTd(playerid, 410.0, 24.0, 0.85, TEXT_DRAW_ALIGN_RIGHT, 0xFF7070FF);
+    for (new i = 0; i < KOS_HUD; i++) PlayerTextDrawShow(playerid, gKosHud[playerid][i]);
+}
+
+static KosHudOsvjezi(t)
+{
+    new popis[2][256], ime[24];
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (gKosTeren[p] != t) continue;
+        format(ime, sizeof ime, "%s", GetRPIme(p));
+        TdCisti(ime);
+        if (popis[gKosTim[p]][0]) strcat(popis[gKosTim[p]], "~n~");
+        strcat(popis[gKosTim[p]], ime);
+    }
+    for (new i = 0; i < 2; i++) if (!popis[i][0]) strcat(popis[i], "-");
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        if (gKosTeren[p] != t) continue;
+        new nas = gKosTim[p], naslov[96];
+        format(naslov, sizeof naslov, "%s%s%s%s  ~w~%d : %d  %s%s%s%s", gKosTimBoja[0], nas == 0 ? ("[") : (""), T(p, gKosTimIme[0]), nas == 0 ? ("]") : (""), gKos[t][koBod][0], gKos[t][koBod][1], gKosTimBoja[1], nas == 1 ? ("[") : (""), T(p, gKosTimIme[1]), nas == 1 ? ("]") : (""));
+        PlayerTextDrawSetString(p, gKosHud[p][1], naslov);
+        PlayerTextDrawSetString(p, gKosHud[p][2], popis[0]);
+        PlayerTextDrawSetString(p, gKosHud[p][3], popis[1]);
+    }
+}
+
+static bool:KosPridruzi(playerid, t, zeljeni = -1)
+{
+    if (gKosTeren[playerid] == t) return true;
+    if (gKosTeren[playerid] != -1) KosNapusti(playerid, true);
+    new a = KosBroj(t, 0), b = KosBroj(t, 1), tim = zeljeni != -1 ? zeljeni : a <= b ? 0 : 1;
+    if ((tim == 0 ? a : b) >= KOS_TIM_MAX) tim = 1 - tim;
+    if ((tim == 0 ? a : b) >= KOS_TIM_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Oba tima su puna.")), false;
+    gKosTeren[playerid] = t;
+    gKosTim[playerid] = tim;
+    KosHudStvori(playerid);
+    KosHudOsvjezi(t);
+    new tekst[64];
+    format(tekst, sizeof tekst, "%s%s", gKosTimBoja[tim], T(playerid, gKosTimIme[tim]));
+    GameTextForPlayer(playerid, tekst, 2000, 6);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Igrate za tim %s. Prvi do %d poena pobjeduje. Udaljite se s terena za izlaz."), T(playerid, gKosTimIme[tim]), KOS_POBJEDA);
+    return true;
+}
+
+static KosNapusti(playerid, bool:osvjezi)
+{
+    new t = gKosTeren[playerid];
+    if (t == -1) return;
+    gKosTeren[playerid] = -1;
+    if (IsPlayerConnected(playerid)) for (new i = 0; i < KOS_HUD; i++) PlayerTextDrawDestroy(playerid, gKosHud[playerid][i]);
+    if (!osvjezi) return;
+    if (KosBroj(t, 0) + KosBroj(t, 1) == 0) gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
+    else KosHudOsvjezi(t);
 }
 
 static KosLuk(k, Float:ax, Float:ay, Float:az, Float:bx, Float:by, Float:bz, Float:vis, koraka)
@@ -128,6 +257,8 @@ static KosPusti(playerid)
     new k = gKosDrzi[playerid];
     if (k == -1) return -1;
     RemovePlayerAttachedObject(playerid, KOS_SLOT);
+    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ClearAnimations(playerid);
+    gKosHod[playerid] = -1;
     if (gKosNabija[playerid])
     {
         gKosNabija[playerid] = false;
@@ -146,6 +277,7 @@ static KosPusti(playerid)
     gKos[k][koPogodak] = -1;
     gKos[k][koPrima] = INVALID_PLAYER_ID;
     gKos[k][koStrijelac] = playerid;
+    gKos[k][koMetaTeren] = -1;
     SetDynamicObjectPos(gKos[k][koLopta], gKos[k][koLx], gKos[k][koLy], gKos[k][koLz]);
     return k;
 }
@@ -169,24 +301,54 @@ public KosKorak(k, token)
     }
     new Float:ox = p ? gKosPut[k][p - 1][0] : gKos[k][koLx], Float:oy = p ? gKosPut[k][p - 1][1] : gKos[k][koLy], Float:oz = p ? gKosPut[k][p - 1][2] : gKos[k][koLz];
     new Float:d = VectorSize(gKosPut[k][p][0] - ox, gKosPut[k][p][1] - oy, gKosPut[k][p][2] - oz);
-    MoveDynamicObject(gKos[k][koLopta], gKosPut[k][p][0], gKosPut[k][p][1], gKosPut[k][p][2], d < 0.01 ? 0.1 : d * 1000.0 / KOS_KORAK_MS);
+    gKos[k][koRot] += d * 160.0;
+    MoveDynamicObject(gKos[k][koLopta], gKosPut[k][p][0], gKosPut[k][p][1], gKosPut[k][p][2], d < 0.01 ? 0.1 : d * 1000.0 / KOS_KORAK_MS, gKos[k][koRot], 0.0, 0.0);
     if (p == gKos[k][koPogodak]) KosObjavi(k);
     SetTimerEx("KosKorak", KOS_KORAK_MS, false, "ii", k, token);
 }
 
 static KosObjavi(k)
 {
-    new s = gKos[k][koStrijelac];
-    if (!IsPlayerConnected(s)) return;
+    new s = gKos[k][koStrijelac], t = gKos[k][koMetaTeren];
+    if (!IsPlayerConnected(s) || t == -1) return;
+    new Float:x = gKos[t][koX], Float:y = gKos[t][koY], Float:z = gKos[t][koZ];
     for (new i = 0; i < MAX_PLAYERS; i++)
-        if (gUlogiran[i] && GetPlayerVirtualWorld(i) == gKos[k][koSvijet] && IsPlayerInRangeOfPoint(i, 30.0, gKos[k][koX], gKos[k][koY], gKos[k][koZ])) SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] %s je zabio za %d poena!"), GetRPIme(s), gKos[k][koPoeni]);
+    {
+        if (!gUlogiran[i] || GetPlayerVirtualWorld(i) != gKos[k][koSvijet] || !IsPlayerInRangeOfPoint(i, 30.0, x, y, z)) continue;
+        PlayerPlaySound(i, 1057, 0.0, 0.0, 0.0);
+        if (gKosTeren[i] == -1) SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] %s je zabio za %d poena!"), GetRPIme(s), gKos[k][koPoeni]);
+    }
     GameTextForPlayer(s, gKos[k][koPoeni] == 3 ? ("~y~+3") : ("~g~+2"), 1500, 6);
+    if (gKosDrzi[s] == -1 && GetPlayerState(s) == PLAYER_STATE_ONFOOT) KosAnim(s, "BSKTBALL", "BBALL_react_score", false, false, false, 1200);
+    if (gKosTeren[s] != t) return;
+    new tim = gKosTim[s];
+    gKos[t][koBod][tim] += gKos[k][koPoeni];
+    if (gKos[t][koBod][tim] < KOS_POBJEDA)
+    {
+        KosHudOsvjezi(t);
+        return;
+    }
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gKosTeren[i] != t) continue;
+        new tekst[64];
+        format(tekst, sizeof tekst, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
+        GameTextForPlayer(i, tekst, 3000, 3);
+        SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
+    }
+    gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
+    KosHudOsvjezi(t);
 }
 
 static KosSlijetanje(k)
 {
     KosZadnja(k, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz]);
     gKos[k][koFaza] = KF_SLOBODNA;
+    if (gKos[k][koRot] > 3600.0)
+    {
+        gKos[k][koRot] = 0.0;
+        SetDynamicObjectRot(gKos[k][koLopta], 0.0, 0.0, 0.0);
+    }
     new q = gKos[k][koPrima];
     gKos[k][koPrima] = INVALID_PLAYER_ID;
     if (q != INVALID_PLAYER_ID && IsPlayerConnected(q) && gKosDrzi[q] == -1 && GetPlayerState(q) == PLAYER_STATE_ONFOOT && GetPlayerVirtualWorld(q) == gKos[k][koSvijet] && IsPlayerInRangeOfPoint(q, 2.5, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz])) KosUhvati(q, k, false);
@@ -202,7 +364,8 @@ static KosUhvati(playerid, k, bool:sagni)
     StopDynamicObject(gKos[k][koLopta]);
     SetDynamicObjectPos(gKos[k][koLopta], gKos[k][koX], gKos[k][koY], gKos[k][koZ] - 20.0);
     SetPlayerAttachedObject(playerid, KOS_SLOT, KOS_LOPTA, 6, 0.35, 0.0, 0.0);
-    if (sagni) ApplyAnimation(playerid, "BSKTBALL", "BBALL_pickup", 4.1, false, false, false, false, 0);
+    if (sagni) KosAnim(playerid, "BSKTBALL", "BBALL_pickup", false, false, false, 700);
+    else KosAnim(playerid, "BSKTBALL", "BBALL_idle", false, false, false, 400);
 }
 
 static KosIspusti(playerid)
@@ -213,7 +376,8 @@ static KosIspusti(playerid)
     GetPlayerFacingAngle(playerid, a);
     KosNaprijed(a, fx, fy);
     KosLuk(k, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz], gKos[k][koLx] + fx * 0.3, gKos[k][koLy] + fy * 0.3, gz, 0.1, 3);
-    KosLuk(k, gKos[k][koLx] + fx * 0.3, gKos[k][koLy] + fy * 0.3, gz, gKos[k][koLx] + fx * 1.1, gKos[k][koLy] + fy * 1.1, gz, 0.35, 4);
+    KosLuk(k, gKos[k][koLx] + fx * 0.3, gKos[k][koLy] + fy * 0.3, gz, gKos[k][koLx] + fx * 0.8, gKos[k][koLy] + fy * 0.8, gz, 0.5, 4);
+    KosLuk(k, gKos[k][koLx] + fx * 0.8, gKos[k][koLy] + fy * 0.8, gz, gKos[k][koLx] + fx * 1.2, gKos[k][koLy] + fy * 1.2, gz, 0.2, 3);
     KosKreni(k);
 }
 
@@ -240,26 +404,29 @@ static KosSutni(playerid, Float:snaga)
 {
     new t = KosMeta(playerid), k = KosPusti(playerid);
     if (k == -1) return;
-    new Float:sx = gKos[k][koLx], Float:sy = gKos[k][koLy], Float:sz = gKos[k][koLz], Float:gz = gKos[k][koZ] + KOS_LOPTA_Z;
+    new Float:sx = gKos[k][koLx], Float:sy = gKos[k][koLy], Float:sz = gKos[k][koLz] + 0.4, Float:gz = gKos[k][koZ] + KOS_LOPTA_Z;
     if (t == -1)
     {
         new Float:a, Float:fx, Float:fy;
         GetPlayerFacingAngle(playerid, a);
         KosNaprijed(a, fx, fy);
-        ApplyAnimation(playerid, "BSKTBALL", "BBALL_Jump_Shot", 4.1, false, true, true, false, 0);
+        KosAnim(playerid, "BSKTBALL", "BBALL_Jump_Shot", false, true, false, 900);
         KosLuk(k, sx, sy, sz, sx + fx * 6.0, sy + fy * 6.0, gz, 2.5, 9);
-        KosLuk(k, sx + fx * 6.0, sy + fy * 6.0, gz, sx + fx * 7.2, sy + fy * 7.2, gz, 0.4, 4);
+        KosLuk(k, sx + fx * 6.0, sy + fy * 6.0, gz, sx + fx * 7.2, sy + fy * 7.2, gz, 0.5, 4);
+        KosLuk(k, sx + fx * 7.2, sy + fy * 7.2, gz, sx + fx * 7.8, sy + fy * 7.8, gz, 0.2, 3);
         KosKreni(k);
         return;
     }
     new Float:rx, Float:ry, Float:rz, Float:hx, Float:hy;
     KosObruc(t, rx, ry, rz);
     KosNaprijed(gKos[t][koA], hx, hy);
+    gKos[k][koMetaTeren] = gKos[t][koTeren];
     new Float:d = VectorSize(rx - sx, ry - sy, 0.0), koraka = floatround(d * 1.2);
     if (koraka < 5) koraka = 5;
     if (koraka > 12) koraka = 12;
     new bool:zakucaj = d < KOS_ZAKUCAJ, Float:vis = zakucaj ? 0.3 : 1.0 + d * 0.18, Float:tz = gKos[t][koZ] + KOS_LOPTA_Z;
-    ApplyAnimation(playerid, "BSKTBALL", zakucaj ? ("BBALL_Dnk") : ("BBALL_Jump_Shot"), 4.1, false, true, true, false, 0);
+    if (zakucaj) KosAnim(playerid, "BSKTBALL", "BBALL_Dnk", false, true, false, 1100);
+    else KosAnim(playerid, "BSKTBALL", "BBALL_Jump_Shot", false, true, false, 900);
     if (random(100) < KosSansa(d, snaga))
     {
         KosLuk(k, sx, sy, sz, rx, ry, rz + 0.12, vis, zakucaj ? 3 : koraka);
@@ -267,17 +434,26 @@ static KosSutni(playerid, Float:snaga)
         gKos[k][koPoeni] = d > KOS_TRICA ? 3 : 2;
         KosLuk(k, rx, ry, rz + 0.12, rx, ry, rz - 0.6, 0.0, 2);
         KosLuk(k, rx, ry, rz - 0.6, rx + hx * 0.3, ry + hy * 0.3, tz, 0.0, 2);
-        KosLuk(k, rx + hx * 0.3, ry + hy * 0.3, tz, rx + hx * 1.3, ry + hy * 1.3, tz, 0.4, 4);
+        KosLuk(k, rx + hx * 0.3, ry + hy * 0.3, tz, rx + hx * 1.3, ry + hy * 1.3, tz, 0.5, 4);
+        KosLuk(k, rx + hx * 1.3, ry + hy * 1.3, tz, rx + hx * 1.8, ry + hy * 1.8, tz, 0.2, 3);
     }
     else
     {
         new Float:ox = rx + float(random(51) - 25) / 100.0, Float:oy = ry + float(random(51) - 25) / 100.0, Float:kut = atan2(hy, hx) + float(random(141) - 70), Float:dalj = 1.5 + float(random(21)) / 10.0;
-        new Float:bx = rx + floatcos(kut, degrees) * dalj, Float:by = ry + floatsin(kut, degrees) * dalj;
+        new Float:bx = rx + floatcos(kut, degrees) * dalj, Float:by = ry + floatsin(kut, degrees) * dalj, Float:ux = (bx - rx) / dalj, Float:uy = (by - ry) / dalj;
         KosLuk(k, sx, sy, sz, ox, oy, rz + 0.1, vis, zakucaj ? 3 : koraka);
         KosLuk(k, ox, oy, rz + 0.1, bx, by, tz, 1.0, 6);
-        KosLuk(k, bx, by, tz, bx + (bx - rx) / dalj * 0.8, by + (by - ry) / dalj * 0.8, tz, 0.3, 3);
+        KosLuk(k, bx, by, tz, bx + ux * 0.9, by + uy * 0.9, tz, 0.4, 3);
+        KosLuk(k, bx + ux * 0.9, by + uy * 0.9, tz, bx + ux * 1.3, by + uy * 1.3, tz, 0.15, 2);
+        SetTimerEx("KosPromasaj", KOS_KORAK_MS * gKos[k][koPn] / 2, false, "i", playerid);
     }
     KosKreni(k);
+}
+
+forward KosPromasaj(playerid);
+public KosPromasaj(playerid)
+{
+    if (IsPlayerConnected(playerid) && gKosDrzi[playerid] == -1 && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && GetTickCount() - gKosAnimDo[playerid] >= 0) KosAnim(playerid, "BSKTBALL", "BBALL_react_miss", false, false, false, 1200);
 }
 
 static KosDodaj(playerid)
@@ -288,7 +464,7 @@ static KosDodaj(playerid)
     KosNaprijed(a, fx, fy);
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
-        if (i == playerid || !gUlogiran[i] || gKosDrzi[i] != -1 || GetPlayerState(i) != PLAYER_STATE_ONFOOT || GetPlayerVirtualWorld(i) != GetPlayerVirtualWorld(playerid)) continue;
+        if (i == playerid || gKosTeren[i] != gKosTeren[playerid] || gKosTim[i] != gKosTim[playerid] || gKosDrzi[i] != -1 || GetPlayerState(i) != PLAYER_STATE_ONFOOT || GetPlayerVirtualWorld(i) != GetPlayerVirtualWorld(playerid)) continue;
         new Float:x, Float:y, Float:z;
         GetPlayerPos(i, x, y, z);
         new Float:d = VectorSize(x - px, y - py, z - pz);
@@ -302,7 +478,7 @@ static KosDodaj(playerid)
     new k = KosPusti(playerid);
     if (koraka < 3) koraka = 3;
     if (koraka > 10) koraka = 10;
-    ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, false, false, false, false, 0);
+    KosAnim(playerid, "GRENADE", "WEAPON_throwu", false, false, false, 600);
     KosLuk(k, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz], x, y, z + 0.3, 0.3 + najblize * 0.06, koraka);
     gKos[k][koPrima] = q;
     KosKreni(k);
@@ -318,10 +494,14 @@ static KosUkradi(playerid)
     {
         new h = gKos[k][koNosi];
         if (!gKos[k][koIma] || gKos[k][koFaza] != KF_NOSI || h == playerid || GetPlayerVirtualWorld(h) != GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(h, KOS_UKRADI, px, py, pz)) continue;
+        new t = gKosTeren[h];
+        if (t != -1 && gKosTeren[playerid] == t && gKosTim[playerid] == gKosTim[h]) continue;
+        if (t != -1 && !KosPridruzi(playerid, t, 1 - gKosTim[h])) return 1;
         gKosKradja[playerid] = GetTickCount();
-        ApplyAnimation(playerid, "BSKTBALL", "BBALL_def_loop", 4.1, false, false, false, false, 0);
+        KosAnim(playerid, "BSKTBALL", "BBALL_def_loop", false, false, false, 700);
         if (random(100) >= 35) return GameTextForPlayer(playerid, T(playerid, "~r~Promasaj"), 1000, 6), 1;
         KosPusti(h);
+        KosAnim(h, "BSKTBALL", "BBALL_SkidStop_R", false, false, false, 700);
         KosUhvati(playerid, k, false);
         SendClientMessage(h, COLOR_ERROR, T(h, "%s vam je ukrao loptu!"), GetRPIme(playerid));
         GameTextForPlayer(playerid, T(playerid, "~g~Ukradeno!"), 1000, 6);
@@ -333,19 +513,46 @@ static KosUkradi(playerid)
 KosKey(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
-    if (gKosDrzi[playerid] != -1)
-    {
-        KosIspusti(playerid);
-        return 1;
-    }
+    if (gKosDrzi[playerid] == -1) return 0;
+    KosIspusti(playerid);
+    return 1;
+}
+
+bool:KosPodigni(playerid)
+{
+    if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || gKosDrzi[playerid] != -1) return false;
     for (new k = 0; k < KOS_MAX; k++)
     {
         if (!gKos[k][koIma] || gKos[k][koFaza] != KF_SLOBODNA || gKos[k][koSvijet] != GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, KOS_UZMI, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz] + 0.8)) continue;
+        if (!KosPridruzi(playerid, gKos[k][koTeren])) return true;
         KosUhvati(playerid, k, true);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Drzi LMB - sut (pusti u zelenom), N - dodaj, Y - ispusti. Bez lopte: RMB - ukradi."));
-        return 1;
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Drzi LMB - sut (pusti u zelenom), N - dodaj, ALT - ispusti. Bez lopte: RMB - ukradi."));
+        return true;
     }
-    return 0;
+    return false;
+}
+
+forward KosHod();
+public KosHod()
+{
+    new sad = GetTickCount();
+    for (new k = 0; k < KOS_MAX; k++)
+    {
+        if (!gKos[k][koIma] || gKos[k][koFaza] != KF_NOSI) continue;
+        new p = gKos[k][koNosi];
+        if (gKosNabija[p] || sad - gKosAnimDo[p] < 0 || GetPlayerState(p) != PLAYER_STATE_ONFOOT) continue;
+        new KEY:tipke, gore, strana;
+        GetPlayerKeys(p, tipke, gore, strana);
+        new hod = !gore && !strana ? KH_STOJI : (tipke & KEY_SPRINT) ? KH_TRCI : KH_HODA;
+        if (hod == gKosHod[p]) continue;
+        gKosHod[p] = hod;
+        switch (hod)
+        {
+            case KH_TRCI: ApplyAnimation(p, "BSKTBALL", "BBALL_run", 4.1, true, true, true, false, 0);
+            case KH_HODA: ApplyAnimation(p, "BSKTBALL", "BBALL_walk", 4.1, true, true, true, false, 0);
+            default: ApplyAnimation(p, "BSKTBALL", "BBALL_idleloop", 4.1, true, false, false, false, 0);
+        }
+    }
 }
 
 forward KosNabijaTick(playerid);
@@ -394,7 +601,7 @@ KosTipke(playerid, KEY:newkeys, KEY:oldkeys)
         PlayerTextDrawFont(playerid, gKosTd[playerid], TEXT_DRAW_FONT_2);
         PlayerTextDrawSetOutline(playerid, gKosTd[playerid], 1);
         PlayerTextDrawShow(playerid, gKosTd[playerid]);
-        ApplyAnimation(playerid, "BSKTBALL", "BBALL_idleloop", 4.1, true, false, false, true, 0);
+        KosAnim(playerid, "BSKTBALL", "BBALL_idleloop", true, false, true, 0);
         KosNabijaTick(playerid);
         return 1;
     }
@@ -409,6 +616,7 @@ KosTipke(playerid, KEY:newkeys, KEY:oldkeys)
 KosOdlazi(playerid)
 {
     if (gKosDrzi[playerid] != -1) KosIspusti(playerid);
+    KosNapusti(playerid, true);
 }
 
 KosTick()
@@ -424,6 +632,14 @@ KosTick()
             SendClientMessage(p, COLOR_INFO, T(p, "Lopta je vracena na teren."));
         }
         else if (GetPlayerState(p) != PLAYER_STATE_ONFOOT) KosIspusti(p);
+    }
+    for (new p = 0; p < MAX_PLAYERS; p++)
+    {
+        new t = gKosTeren[p];
+        if (t == -1 || gKosDrzi[p] != -1) continue;
+        if (GetPlayerVirtualWorld(p) == gKos[t][koSvijet] && IsPlayerInRangeOfPoint(p, KOS_IZLAZ, gKos[t][koX], gKos[t][koY], gKos[t][koZ])) continue;
+        KosNapusti(p, true);
+        SendClientMessage(p, COLOR_INFO, T(p, "Napustili ste kosarkaski teren."));
     }
 }
 
@@ -464,6 +680,7 @@ DLG:apanel_kos(playerid, response, listitem)
         gKos[k][koInt] = GetPlayerInterior(playerid);
         gKos[k][koSvijet] = GetPlayerVirtualWorld(playerid);
         KosStvori(k);
+        KosTereni();
         new Float:fx, Float:fy;
         KosNaprijed(a, fx, fy);
         SetPlayerPos(playerid, x + fx * 4.0, y + fy * 4.0, z + 1.0);
@@ -482,6 +699,7 @@ DLG:apanel_kos(playerid, response, listitem)
     DestroyDynamic3DTextLabel(gKos[k][koTekst]);
     gKos[k][koLopta] = STREAMER_TAG_OBJECT:0;
     gKos[k][koIma] = false;
+    KosTereni();
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Kos je obrisan."));
     return ShowKosevi(playerid);
 }

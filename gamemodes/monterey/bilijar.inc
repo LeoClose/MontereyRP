@@ -229,8 +229,8 @@ static BilijarNisanPostavi(s)
     if (gBilijar[s][bsStap]) SetDynamicObjectPos(gBilijar[s][bsStap], bx - dx * 0.085, by - dy * 0.085, z);
     else gBilijar[s][bsStap] = CreateDynamicObject(BILIJAR_STAP, bx - dx * 0.085, by - dy * 0.085, z, 7.0, 0.0, h + 180.0, gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
     SetDynamicObjectRot(gBilijar[s][bsStap], 7.0, 0.0, h + 180.0);
-    SetPlayerCameraPos(p, bx - dx * 1.1, by - dy * 1.1, z + 0.55);
-    SetPlayerCameraLookAt(p, bx + dx * 0.6, by + dy * 0.6, z);
+    SetPlayerCameraPos(p, bx - dx * 0.55, by - dy * 0.55, z + 0.22);
+    SetPlayerCameraLookAt(p, bx + dx * 2.0, by + dy * 2.0, z - 0.05);
     new tekst[64], crte = floatround(gBilijar[s][bsSnaga] / 5.0);
     for (new i = 0; i < 20; i++) tekst[i] = i < crte ? 'I' : '.';
     tekst[20] = EOS;

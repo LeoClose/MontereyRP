@@ -212,6 +212,7 @@ public OnGameModeInit()
     InitKafic();
     InitBilijar();
     InitKosarka();
+    InitArkada();
     InitZlatara();
     InitVrijeme();
     InitOruzarnica();
@@ -328,6 +329,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kafic.inc"
 #include "monterey/bilijar.inc"
 #include "monterey/kosarka.inc"
+#include "monterey/arkada.inc"
 #include "monterey/fit_tablica.inc"
 #include "monterey/zlatara.inc"
 #include "monterey/oruzarnica.inc"
