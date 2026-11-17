@@ -2,7 +2,9 @@
 #define ORG_RANK_LEN        32
 #define ORG_VEH_RESPAWN     600
 #define COLOR_ORG           0x8AB4F8FF
-#define ORG_PANEL_FIXED     4
+#define ORG_PANEL_FIXED     5
+#define DNEVNIK_DANA        30
+#define DNEVNIK_PRIKAZ      30
 #define ORG_MEMBERS_SQL     "SELECT id, name, org_rank, org_perms FROM accounts WHERE org = %d ORDER BY (org_perms & 8) DESC, name COLLATE NOCASE, id"
 #define ORG_MEMBER_AT_SQL   "SELECT id FROM accounts WHERE org = %d ORDER BY (org_perms & 8) DESC, name COLLATE NOCASE, id LIMIT 1 OFFSET %d"
 
@@ -25,6 +27,8 @@ new gOrgEditAcc[MAX_PLAYERS];
 new gOrgVehOrg[MAX_VEHICLES];
 new gOrgVehDb[MAX_VEHICLES];
 
+enum { DNEVNIK_NOVAC_STAVI, DNEVNIK_NOVAC_UZMI, DNEVNIK_STAVI, DNEVNIK_UZMI, DNEVNIK_SANDUK, DNEVNIK_TER_ZAUZET, DNEVNIK_TER_IZGUBLJEN, DNEVNIK_TRGOVINA, DNEVNIK_BANKA, DNEVNIK_ZLATARA, DNEVNIK_ULAZ, DNEVNIK_IZLAZ, DNEVNIK_IZBACEN }
+
 InitOrg()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS orgs (\
@@ -36,6 +40,9 @@ InitOrg()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS org_vehicles (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, model INTEGER NOT NULL,\
         x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, c1 INTEGER NOT NULL, c2 INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS org_log (id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, vrijeme INTEGER NOT NULL, ime TEXT NOT NULL, tip INTEGER NOT NULL, iznos INTEGER NOT NULL, item INTEGER NOT NULL, tekst TEXT NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS org_log_org ON org_log (org, id)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_log WHERE vrijeme < %d", gettime() - DNEVNIK_DANA * 86400));
 
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, org, model, x, y, z, a, c1, c2 FROM org_vehicles");
     if (DB_GetRowCount(res)) do
@@ -116,6 +123,14 @@ OcistiClana(playerid)
     SpremiClana(playerid);
 }
 
+OrgDnevnik(org, playerid, tip, iznos = 0, item = -1, const tekst[] = "")
+{
+    if (!org) return;
+    new ime[MAX_PLAYER_NAME + 1];
+    if (playerid != INVALID_PLAYER_ID) strcat(ime, GetRPIme(playerid));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO org_log (org, vrijeme, ime, tip, iznos, item, tekst) VALUES (%d, %d, '%q', %d, %d, %d, '%q')", org, gettime(), ime, tip, iznos, item, tekst));
+}
+
 bool:ZaduzenjeProvjera(playerid, perm)
 {
     if (gOrg[playerid] && (gOrgPerms[playerid] & (perm | PERM_LEADER))) return true;
@@ -158,6 +173,7 @@ IzbaciClana(playerid, acc)
     if (!ClanInfo(gOrg[playerid], acc, name, rank, perms)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije u vasoj organizaciji."));
     if (perms & PERM_LEADER) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Lidera moze maknuti samo admin."));
     PosaljiOrg(gOrg[playerid], "%s je izbacio %s iz organizacije.", GetRPIme(playerid), name);
+    OrgDnevnik(gOrg[playerid], playerid, DNEVNIK_IZBACEN, 0, -1, name);
     new t = IgracRacuna(acc);
     if (t != INVALID_PLAYER_ID) { OcistiClana(t); SetPlayerSkin(t, DEFAULT_SKIN); }
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org = 0, org_rank = '', org_perms = 0, org_skin = -1 WHERE id = %d", acc));
@@ -200,7 +216,7 @@ ShowOrgPanel(playerid)
     static list[4096];
     new orgname[MAX_ORG_NAME], name[MAX_PLAYER_NAME + 1], rank[ORG_RANK_LEN], row[96], title[96];
     if (!GetOrgIme(gOrg[playerid], orgname)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Niste clan nijedne organizacije."));
-    list = "Clan\tRank\tStatus\n{8AB4F8}Odaberi skin\t\t\n{8AB4F8}Pozovi igraca\t\t\n{8AB4F8}Teritoriji organizacije\t\t\n{8AB4F8}Napusti organizaciju\t\t\n";
+    list = "Clan\tRank\tStatus\n{8AB4F8}Odaberi skin\t\t\n{8AB4F8}Pozovi igraca\t\t\n{8AB4F8}Teritoriji organizacije\t\t\n{8AB4F8}Dnevnik organizacije\t\t\n{8AB4F8}Napusti organizaciju\t\t\n";
     new len = strlen(list);
 
     new online[MAX_PLAYERS], count = 0;
@@ -243,6 +259,7 @@ DLG:org_poziv(playerid, response)
     gOrgSkin[playerid] = -1;
     SpremiClana(playerid);
     PosaljiOrg(org, "%s se pridruzio organizaciji %s.", GetRPIme(playerid), name);
+    OrgDnevnik(org, playerid, DNEVNIK_ULAZ);
     return 1;
 }
 
@@ -276,7 +293,8 @@ DLG:org_panel(playerid, response, listitem)
         case 0: return OrgSkinovi(playerid);
         case 1: return PrikaziDialog(playerid, DLG_ORG_POZIV_UNOS, DIALOG_STYLE_INPUT, T(playerid, "Pozovi igraca"), T(playerid, "Unesite id/ime igraca:"), T(playerid, "Pozovi"), T(playerid, "Natrag"));
         case 2: return ShowTerOrg(playerid);
-        case 3: return PrikaziDialog(playerid, DLG_ORG_NAPUSTI, DIALOG_STYLE_MSGBOX, T(playerid, "Napusti organizaciju"), T(playerid, "Sigurno zelite napustiti organizaciju?"), T(playerid, "Napusti"), T(playerid, "Natrag"));
+        case 3: return OrgDnevnikPrikazi(playerid);
+        case 4: return PrikaziDialog(playerid, DLG_ORG_NAPUSTI, DIALOG_STYLE_MSGBOX, T(playerid, "Napusti organizaciju"), T(playerid, "Sigurno zelite napustiti organizaciju?"), T(playerid, "Napusti"), T(playerid, "Natrag"));
     }
     new DBResult:res = DB_ExecuteQuery(gDB, ORG_MEMBER_AT_SQL, gOrg[playerid], listitem - ORG_PANEL_FIXED);
     gOrgEditAcc[playerid] = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
@@ -371,6 +389,7 @@ OrgNapusti(playerid)
     if (!gOrg[playerid]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Niste clan nijedne organizacije."));
     if (gOrgPerms[playerid] & PERM_LEADER) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Lider ne moze napustiti organizaciju. Javite se adminu."));
     PosaljiOrg(gOrg[playerid], "%s je napustio organizaciju.", GetRPIme(playerid));
+    OrgDnevnik(gOrg[playerid], playerid, DNEVNIK_IZLAZ);
     OcistiClana(playerid);
     SetPlayerSkin(playerid, DEFAULT_SKIN);
     return 1;

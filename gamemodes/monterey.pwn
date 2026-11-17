@@ -16,6 +16,10 @@ forward OnCheatDetected(playerid, const ip_address[], type, code);
 #define AC_USE_CONFIG_FILES false
 #define NO_SUSPICION_LOGS
 #define AC_MAX_CONNECTS_FROM_IP 3
+#define NO_SUSPICION_LOGS
+#define AC_USE_STATISTICS false
+#define AC_USE_AMMUNATIONS false
+#define AC_USE_TUNING_GARAGES false
 #include <nex-ac>
 #pragma unused KICK_MSG, MAX_CONNECTS_MSG, UNKNOWN_CLIENT_MSG
 

@@ -1949,7 +1949,23 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Samo bande mogu pljackati trgovine.", "Only gangs can rob stores.", "Только банды могут грабить магазины.", "Solo las bandas pueden robar tiendas.", "Sadece ceteler market soyabilir." },
     { "Pljacka je pocela! Ostanite u trgovini %d s dok blagajnik puni vrecu.", "The robbery has started! Stay in the store for %d s while the clerk fills the bag.", "Ограбление началось! Оставайтесь в магазине %d с, пока кассир наполняет сумку.", "El robo ha empezado! Quedate en la tienda %d s mientras el cajero llena la bolsa.", "Soygun basladi! Kasiyer cantayi doldururken %d sn markette kalin." },
     { "Dojava: pljacka trgovine u tijeku, %s.", "Tip-off: store robbery in progress, %s.", "Наводка: идёт ограбление магазина, %s.", "Aviso: robo a una tienda en curso, %s.", "Ihbar: market soygunu devam ediyor, %s." },
-    { "Pljacka trgovine je propala.", "The store robbery failed.", "Ограбление магазина провалилось.", "El robo a la tienda fracaso.", "Market soygunu basarisiz oldu." }
+    { "Pljacka trgovine je propala.", "The store robbery failed.", "Ограбление магазина провалилось.", "El robo a la tienda fracaso.", "Market soygunu basarisiz oldu." },
+    { "Dogadaj", "Event", "Событие", "Evento", "Olay" },
+    { "Dnevnik organizacije", "Organization log", "Журнал организации", "Registro de la organizacion", "Orgut kaydi" },
+    { "Dnevnik organizacije je prazan.", "The organization log is empty.", "Журнал организации пуст.", "El registro de la organizacion esta vacio.", "Orgut kaydi bos." },
+    { "Ostavio $%d u sef", "Deposited $%d in the safe", "Положил $%d в сейф", "Deposito $%d en la caja fuerte", "Kasaya $%d birakti" },
+    { "Uzeo $%d iz sefa", "Took $%d from the safe", "Взял $%d из сейфа", "Tomo $%d de la caja fuerte", "Kasadan $%d aldi" },
+    { "Ostavio u sef: %d %s %s", "Deposited in the safe: %d %s %s", "Положил в сейф: %d %s %s", "Deposito en la caja fuerte: %d %s %s", "Kasaya birakti: %d %s %s" },
+    { "Uzeo iz sefa: %d %s %s", "Took from the safe: %d %s %s", "Взял из сейфа: %d %s %s", "Tomo de la caja fuerte: %d %s %s", "Kasadan aldi: %d %s %s" },
+    { "Dostavio sanduk oruzja", "Delivered a weapon crate", "Доставил ящик оружия", "Entrego una caja de armas", "Silah sandigi teslim etti" },
+    { "Zauzet teritorij %s", "Captured territory %s", "Захвачена территория %s", "Territorio capturado: %s", "Bolge ele gecirildi: %s" },
+    { "Izgubljen teritorij %s", "Lost territory %s", "Потеряна территория %s", "Territorio perdido: %s", "Bolge kaybedildi: %s" },
+    { "Opljackao trgovinu: $%d (%s)", "Robbed a store: $%d (%s)", "Ограбил магазин: $%d (%s)", "Robo una tienda: $%d (%s)", "Market soydu: $%d (%s)" },
+    { "Opljackana banka: $%d", "Bank robbed: $%d", "Ограблен банк: $%d", "Banco robado: $%d", "Banka soyuldu: $%d" },
+    { "Opljackana zlatara (%d clanova)", "Jewelry store robbed (%d members)", "Ограблен ювелирный (%d участников)", "Joyeria robada (%d miembros)", "Kuyumcu soyuldu (%d uye)" },
+    { "Pridruzio se organizaciji", "Joined the organization", "Вступил в организацию", "Se unio a la organizacion", "Orgute katildi" },
+    { "Napustio organizaciju", "Left the organization", "Покинул организацию", "Dejo la organizacion", "Orgutten ayrildi" },
+    { "Izbacio clana %s", "Kicked member %s", "Исключил участника %s", "Expulso al miembro %s", "Uyeyi atti: %s" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

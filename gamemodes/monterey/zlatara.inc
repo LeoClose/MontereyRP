@@ -546,6 +546,7 @@ ZlataraTick()
             if (plijen > 0) GiveItem(i, ITEM_UKRADENI_NAKIT, plijen);
             SendClientMessage(i, COLOR_INFO, T(i, "Pljacka uspjela! Uzeli ste %d komada nakita. Prodajte ih preprodavacu."), plijen);
         }
+        OrgDnevnik(org, INVALID_PLAYER_ID, DNEVNIK_ZLATARA, n);
     }
 }
 

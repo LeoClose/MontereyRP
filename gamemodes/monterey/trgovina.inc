@@ -169,6 +169,7 @@ public TrgovinaPlijen(playerid, racun, s)
     }
     new plijen = TRGOVINA_PLIJEN_MIN + random(TRGOVINA_PLIJEN_RASPON);
     DajNovac(playerid, plijen);
+    OrgDnevnik(gOrg[playerid], playerid, DNEVNIK_TRGOVINA, plijen, -1, CestaZona(gTrg[s][tgX], gTrg[s][tgY]));
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s uzima novac od blagajnika.", GetRPIme(playerid), "", 1);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Opljackali ste trgovinu: $%d."), plijen);
 }

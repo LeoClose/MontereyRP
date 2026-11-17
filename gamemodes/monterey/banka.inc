@@ -260,6 +260,7 @@ static BankaPljackaTick()
                 DajNovac(prisutni[k], dio);
                 SendClientMessage(prisutni[k], COLOR_INFO, T(prisutni[k], "Pljacka uspjela! Vas dio: $%d."), dio);
             }
+            OrgDnevnik(org, INVALID_PLAYER_ID, DNEVNIK_BANKA, dio * n);
             BankaPljackaStani(s);
             continue;
         }

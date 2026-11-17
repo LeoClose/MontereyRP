@@ -313,6 +313,8 @@ static FinishNapad(t, bool:zauzet)
     if (zauzet)
     {
         SendNapad(t, "Napadaci su zauzeli teritorij.");
+        OrgDnevnik(gTer[t][terOrg], INVALID_PLAYER_ID, DNEVNIK_TER_IZGUBLJEN, 0, -1, gTer[t][terIme]);
+        OrgDnevnik(gTer[t][terNapadac], INVALID_PLAYER_ID, DNEVNIK_TER_ZAUZET, 0, -1, gTer[t][terIme]);
         gTer[t][terOrg] = gTer[t][terNapadac];
     }
     else SendNapad(t, "Napad je propao.");

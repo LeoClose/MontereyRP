@@ -379,6 +379,7 @@ static DrogaOruzjeDostava(playerid)
         return 1;
     }
     for (new k = 0; k < sizeof gOruzjeSanduk; k++) SefDodaj(org, gOruzjeSanduk[k][0], gOruzjeSanduk[k][1]);
+    OrgDnevnik(org, playerid, DNEVNIK_SANDUK);
     DrogaUvozGotov(playerid);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sanduk oruzja je dostavljen u sef organizacije (/sef)."));
     return 1;

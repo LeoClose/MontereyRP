@@ -41,6 +41,7 @@ LoadAdmina(playerid)
     gAdmin[playerid] = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
     gPremium[playerid] = DB_GetRowCount(res) && DB_GetFieldInt(res, 1);
     DB_FreeResultSet(res);
+    AntiCheatAdmin(playerid);
     if (gAdmin[playerid] > 0)
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prijavljeni ste kao %s (razina %d)."), gRankName[gAdmin[playerid]], gAdmin[playerid]);
 }
@@ -71,6 +72,7 @@ bool:PostaviAdmina(const name[], level)
     if (pid != INVALID_PLAYER_ID && gUlogiran[pid])
     {
         gAdmin[pid] = level;
+        AntiCheatAdmin(pid);
         if (level > 0) SendClientMessage(pid, COLOR_ADMIN, T(pid, "Vasa admin razina je sada %d (%s)."), level, gRankName[level]);
         else SendClientMessage(pid, COLOR_ADMIN, T(pid, "Vise niste admin."));
     }

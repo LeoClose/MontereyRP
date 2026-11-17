@@ -27,6 +27,7 @@ static const gAcZadano[AC_KODOVA] = {
 static const gAcNacinIme[3][] = { "{777777}Iskljuceno", "{F1C40F}Upozorenje", "{E74C3C}Izbacivanje" };
 
 static gAcNacin[AC_KODOVA], gAcZadnje[MAX_PLAYERS][AC_KODOVA], bool:gAcIzbacen[MAX_PLAYERS];
+static const gAcAdminKodovi[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 19, 20, 21, 34 };
 
 InitAntiCheat()
 {
@@ -42,8 +43,20 @@ InitAntiCheat()
     }
     DB_FreeResultSet(res);
     for (new c = 0; c < AC_KODOVA; c++) EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
+    EnableAntiNOP(2, false);
     EnableAntiNOP(3, false);
     EnableAntiNOP(5, false);
+    EnableAntiNOP(10, false);
+}
+
+AntiCheatAdmin(playerid)
+{
+    new bool:admin = gAdmin[playerid] > 0;
+    for (new k = 0; k < sizeof gAcAdminKodovi; k++)
+    {
+        new c = gAcAdminKodovi[k];
+        EnableAntiCheatForPlayer(playerid, c, !admin && gAcNacin[c] != ACM_ISKLJUCENO);
+    }
 }
 
 AntiCheatConnect(playerid)
@@ -140,6 +153,7 @@ DLG:apanel_ac(playerid, response, listitem)
     if (c < 0 || c >= AC_KODOVA) return 1;
     gAcNacin[c] = (gAcNacin[c] + 1) % 3;
     EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
+    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) AntiCheatAdmin(i);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO ac_settings (code, mode) VALUES (%d, %d)", c, gAcNacin[c]));
     return ShowAntiCheat(playerid);
 }

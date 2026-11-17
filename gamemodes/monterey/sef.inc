@@ -14,6 +14,7 @@ SefOrgObrisana(org)
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_safes WHERE org = %d", org));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_safe_items WHERE org = %d", org));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_log WHERE org = %d", org));
 }
 
 static SefKolicina(org, item)
@@ -144,7 +145,11 @@ DLG:sef_kol(playerid, response, const inputtext[])
                 DajNovac(playerid, n);
                 SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Sef je pun."));
             }
-            else SendClientMessage(playerid, COLOR_ORG, T(playerid, "Ostavili ste $%d u sef."), n);
+            else
+            {
+                OrgDnevnik(org, playerid, DNEVNIK_NOVAC_STAVI, n);
+                SendClientMessage(playerid, COLOR_ORG, T(playerid, "Ostavili ste $%d u sef."), n);
+            }
         }
         else if (!SefDodaj(org, SEF_NOVAC, -n)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U sefu nema toliko."));
         else if (!DajNovac(playerid, n))
@@ -152,7 +157,11 @@ DLG:sef_kol(playerid, response, const inputtext[])
             SefDodaj(org, SEF_NOVAC, n);
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko novca."));
         }
-        else SendClientMessage(playerid, COLOR_ORG, T(playerid, "Uzeli ste $%d iz sefa."), n);
+        else
+        {
+            OrgDnevnik(org, playerid, DNEVNIK_NOVAC_UZMI, n);
+            SendClientMessage(playerid, COLOR_ORG, T(playerid, "Uzeli ste $%d iz sefa."), n);
+        }
         return SefMeni(playerid);
     }
     if (gSefStavlja[playerid])
@@ -162,6 +171,7 @@ DLG:sef_kol(playerid, response, const inputtext[])
         else
         {
             GiveItem(playerid, item, -n);
+            OrgDnevnik(org, playerid, DNEVNIK_STAVI, n, item);
             SendClientMessage(playerid, COLOR_ORG, T(playerid, "Ostavili ste u sef: %d %s %s."), n, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
         }
     }
@@ -171,6 +181,60 @@ DLG:sef_kol(playerid, response, const inputtext[])
         SefDodaj(org, item, n);
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
     }
-    else SendClientMessage(playerid, COLOR_ORG, T(playerid, "Uzeli ste iz sefa: %d %s %s."), n, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
+    else
+    {
+        OrgDnevnik(org, playerid, DNEVNIK_UZMI, n, item);
+        SendClientMessage(playerid, COLOR_ORG, T(playerid, "Uzeli ste iz sefa: %d %s %s."), n, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
+    }
     return SefMeni(playerid);
+}
+
+OrgDnevnikPrikazi(playerid)
+{
+    if (!ZaduzenjeProvjera(playerid, PERM_SAFE)) return ShowOrgPanel(playerid);
+    static list[4096];
+    new row[192], dogadaj[128], vrijeme[16], ime[MAX_PLAYER_NAME + 1], tekst[64], len, count = 0;
+    format(list, sizeof list, "%s\t%s\t%s\n", T(playerid, "Vrijeme"), T(playerid, "Ime"), T(playerid, "Dogadaj"));
+    len = strlen(list);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT strftime('%%d.%%m. %%H:%%M', vrijeme, 'unixepoch'), ime, tip, iznos, item, tekst FROM org_log WHERE org = %d ORDER BY id DESC LIMIT %d", gOrg[playerid], DNEVNIK_PRIKAZ);
+    for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
+    {
+        DB_GetFieldString(res, 0, vrijeme, sizeof vrijeme);
+        DB_GetFieldString(res, 1, ime, sizeof ime);
+        DB_GetFieldString(res, 5, tekst, sizeof tekst);
+        new tip = DB_GetFieldInt(res, 2), iznos = DB_GetFieldInt(res, 3), item = DB_GetFieldInt(res, 4);
+        if ((tip == DNEVNIK_STAVI || tip == DNEVNIK_UZMI) && (item < 0 || item >= BROJ_ITEMA)) continue;
+        switch (tip)
+        {
+            case DNEVNIK_NOVAC_STAVI: format(dogadaj, sizeof dogadaj, T(playerid, "Ostavio $%d u sef"), iznos);
+            case DNEVNIK_NOVAC_UZMI: format(dogadaj, sizeof dogadaj, T(playerid, "Uzeo $%d iz sefa"), iznos);
+            case DNEVNIK_STAVI: format(dogadaj, sizeof dogadaj, T(playerid, "Ostavio u sef: %d %s %s"), iznos, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
+            case DNEVNIK_UZMI: format(dogadaj, sizeof dogadaj, T(playerid, "Uzeo iz sefa: %d %s %s"), iznos, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
+            case DNEVNIK_SANDUK: format(dogadaj, sizeof dogadaj, T(playerid, "Dostavio sanduk oruzja"));
+            case DNEVNIK_TER_ZAUZET: format(dogadaj, sizeof dogadaj, T(playerid, "Zauzet teritorij %s"), tekst);
+            case DNEVNIK_TER_IZGUBLJEN: format(dogadaj, sizeof dogadaj, T(playerid, "Izgubljen teritorij %s"), tekst);
+            case DNEVNIK_TRGOVINA: format(dogadaj, sizeof dogadaj, T(playerid, "Opljackao trgovinu: $%d (%s)"), iznos, tekst);
+            case DNEVNIK_BANKA: format(dogadaj, sizeof dogadaj, T(playerid, "Opljackana banka: $%d"), iznos);
+            case DNEVNIK_ZLATARA: format(dogadaj, sizeof dogadaj, T(playerid, "Opljackana zlatara (%d clanova)"), iznos);
+            case DNEVNIK_ULAZ: format(dogadaj, sizeof dogadaj, T(playerid, "Pridruzio se organizaciji"));
+            case DNEVNIK_IZLAZ: format(dogadaj, sizeof dogadaj, T(playerid, "Napustio organizaciju"));
+            case DNEVNIK_IZBACEN: format(dogadaj, sizeof dogadaj, T(playerid, "Izbacio clana %s"), tekst);
+            default: continue;
+        }
+        format(row, sizeof row, "%s\t%s\t%s", vrijeme, ime[0] ? ime : ("-"), dogadaj);
+        if (DodajStupac(list, len, row)) count++;
+    }
+    DB_FreeResultSet(res);
+    if (!count)
+    {
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Dnevnik organizacije je prazan."));
+        return ShowOrgPanel(playerid);
+    }
+    return PrikaziDialog(playerid, DLG_ORG_DNEVNIK, DIALOG_STYLE_TABLIST_HEADERS, T(playerid, "Dnevnik organizacije"), list, T(playerid, "Natrag"));
+}
+
+DLG:org_dnevnik(playerid, response)
+{
+    #pragma unused response
+    return ShowOrgPanel(playerid);
 }
