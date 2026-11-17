@@ -19,7 +19,7 @@
 
 enum { KG_CEKA, KG_IGRA, KG_KOTRLJA, KG_PAUZA }
 enum E_KUGLANA { bool:kgIma, kgDb, Float:kgX, Float:kgY, Float:kgZ, Float:kgA, kgInt, kgSvijet, STREAMER_TAG_OBJECT:kgCunj[10], STREAMER_TAG_OBJECT:kgKugla, STREAMER_TAG_3D_TEXT_LABEL:kgTekst,
-    kgFaza, kgIgrac[2], kgNaPotezu, bool:kgStoji[10], bool:kgPao[10], kgNisani, Float:kgKut, Float:kgSnaga, bool:kgGore, Float:kgBx, kgToken }
+    kgFaza, kgIgrac[2], kgNaPotezu, bool:kgStoji[10], bool:kgPao[10], kgNisani, Float:kgKut, Float:kgSnaga, bool:kgGore, Float:kgBx, kgToken, bool:kgSam }
 
 static const Float:gKgCunj[10][2] = {
     { 0.0, 0.0 },
@@ -214,6 +214,7 @@ static KuglanjeKraj(s)
         gKg[s][kgIgrac][i] = INVALID_PLAYER_ID;
     }
     gKg[s][kgFaza] = KG_CEKA;
+    gKg[s][kgSam] = false;
     OkladaZatvori(OK_KUGLANJE, s);
     KuglanjePostavi(s);
     KuglanjeKuglaNazad(s);
@@ -252,7 +253,7 @@ KuglanjeOdlazi(playerid)
     gKg[s][kgIgrac][i] = INVALID_PLAYER_ID;
     gKuglanjeIgrac[playerid] = -1;
     OkladaIzadi(playerid, true);
-    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) OkladaZatvori(OK_KUGLANJE, s);
+    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) KuglanjeKraj(s);
 }
 
 KuglanjeOkladaStaza(playerid)
@@ -274,6 +275,12 @@ static KuglanjeStanje(s, tekst[], size)
 {
     new u, a = gKg[s][kgIgrac][0], b = gKg[s][kgIgrac][1];
     new fa = KuglanjeOkvir(gKgRoll[s][0], gKgN[s][0], u), fb = KuglanjeOkvir(gKgRoll[s][1], gKgN[s][1], u);
+    if (gKg[s][kgSam])
+    {
+        new n = gKg[s][kgNaPotezu], f = n ? fb : fa;
+        format(tekst, size, "%s: %d (%d/10)", GetRPIme(gKg[s][kgIgrac][n]), KuglanjeRezultat(gKgRoll[s][n], gKgN[s][n]), f > 9 ? 10 : f + 1);
+        return;
+    }
     format(tekst, size, "%s: %d (%d/10)  |  %s: %d (%d/10)", GetRPIme(a), KuglanjeRezultat(gKgRoll[s][0], gKgN[s][0]), fa > 9 ? 10 : fa + 1, GetRPIme(b), KuglanjeRezultat(gKgRoll[s][1], gKgN[s][1]), fb > 9 ? 10 : fb + 1);
 }
 
@@ -309,7 +316,8 @@ KuglanjeKey(playerid)
     if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return 1;
     gKg[s][kgIgrac][i] = playerid;
     gKuglanjeIgrac[playerid] = s;
-    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    gKg[s][kgSam] = false;
     gKgN[s][0] = gKgN[s][1] = 0;
     gKg[s][kgNaPotezu] = random(2);
     KuglanjePostavi(s);
@@ -485,7 +493,13 @@ public KuglanjeDalje(s, token)
         KuglanjePotez(s);
         return;
     }
-    new o = 1 - n, uo, fo = KuglanjeOkvir(gKgRoll[s][o], gKgN[s][o], uo);
+    new o = 1 - n, uo, fo = gKg[s][kgSam] ? 10 : KuglanjeOkvir(gKgRoll[s][o], gKgN[s][o], uo);
+    if (f >= 10 && gKg[s][kgSam])
+    {
+        KuglanjePoruka(s, "[Kuglanje] %s je zavrsio igru s %d bodova.", gKg[s][kgIgrac][n], KuglanjeRezultat(gKgRoll[s][n], gKgN[s][n]));
+        KuglanjeKraj(s);
+        return;
+    }
     if (f >= 10 && fo >= 10)
     {
         new a = KuglanjeRezultat(gKgRoll[s][0], gKgN[s][0]), b = KuglanjeRezultat(gKgRoll[s][1], gKgN[s][1]);
@@ -497,9 +511,29 @@ public KuglanjeDalje(s, token)
     KuglanjePotez(s);
 }
 
+static KuglanjeSam(s, playerid)
+{
+    new i = gKg[s][kgIgrac][0] == playerid ? 0 : 1;
+    OkladaZatvori(OK_KUGLANJE, s);
+    gKg[s][kgSam] = true;
+    gKgN[s][0] = gKgN[s][1] = 0;
+    gKg[s][kgNaPotezu] = i;
+    KuglanjePostavi(s);
+    KuglanjeKuglaNazad(s);
+    SendClientMessage(playerid, 0x2DD9A9FF, T(playerid, "[Kuglanje] Igrate sami, 10 okvira."));
+    KuglanjePotez(s);
+}
+
 KuglanjeTipke(playerid, KEY:newkeys, KEY:oldkeys)
 {
     new s = gKuglanjeIgrac[playerid];
+    if (s != -1 && gKg[s][kgFaza] == KG_CEKA && (newkeys & KEY_AIM) && !(oldkeys & KEY_AIM) && gKg[s][kgIgrac][gKg[s][kgIgrac][0] == playerid ? 1 : 0] == INVALID_PLAYER_ID)
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, KUGLANJE_DOMET, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite na liniju bacanja.")), 1;
+        KuglanjeSam(s, playerid);
+        KuglanjeNisani(playerid, s);
+        return 1;
+    }
     if (s == -1 || gKg[s][kgFaza] != KG_IGRA || gKg[s][kgIgrac][gKg[s][kgNaPotezu]] != playerid) return 0;
     if ((newkeys & KEY_AIM) && !(oldkeys & KEY_AIM))
     {

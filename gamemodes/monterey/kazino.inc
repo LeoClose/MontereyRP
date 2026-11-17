@@ -24,7 +24,7 @@
 #define BJ_RED              58.0
 #define BJ_RAZMAK           18.0
 
-enum { KZ_BLACKJACK, KZ_RULET, KZ_POKER, KZ_KOCKE, KZ_SLOT, KZ_BLAGAJNA, KZ_BACCARAT, KZ_AVIATOR, KZ_KONJI }
+enum { KZ_BLACKJACK, KZ_RULET, KZ_POKER, KZ_KOCKE, KZ_SLOT, KZ_BLAGAJNA, KZ_BACCARAT, KZ_AVIATOR, KZ_KONJI, KZ_HOLDEM }
 enum { KZI_POZADINA, KZI_NASLOV, KZI_STATUS, KZI_LIJEVO, KZI_DESNO, KZI_PRVI }
 enum { BTD_DILER = KZI_PRVI, BTD_DOUBLE, BTD_SPLIT, BTD_SURRENDER, BTD_RUKA, BTD_KARTA = BTD_RUKA + BJ_RUKE }
 enum { VTD_KARTA = KZI_PRVI, VTD_DRZI = VTD_KARTA + 5 }
@@ -56,7 +56,7 @@ static gAvIsplaceno[MAX_PLAYERS], Float:gAvDno[MAX_PLAYERS];
 static gKocke[MAX_PLAYERS][4], gSlot[MAX_PLAYERS][3];
 static Float:gKonjY[MAX_PLAYERS];
 
-static const gKzIme[][] = { "Blackjack", "Rulet", "Video poker", "Kocke", "Slot", "Blagajna", "Baccarat", "Aviator", "Konjske utrke" };
+static const gKzIme[][] = { "Blackjack", "Rulet", "Video poker", "Kocke", "Slot", "Blagajna", "Baccarat", "Aviator", "Konjske utrke", "Texas Hold'em" };
 static const gKonjIme[][] = { "Munja", "Vihor", "Sjena", "Plamen", "Oluja" };
 static const gKonjSlovo[] = "bgpry";
 static const gBacIme[][] = { "Igrac", "Tie", "Bankar" };
@@ -66,8 +66,8 @@ static const gKonjBoja[] = { 0x1E88E5FF, 0x43A047FF, 0x8E24AAFF, 0xE53935FF, 0xF
 static const gKonjKvota[] = { 3, 4, 5, 6, 8 };
 static const gKonjTezina[] = { 40, 30, 24, 20, 15 };
 static const gBjBoja[] = "cdhs";
-static const gKzZetoni[] = { 1, 5, 10, 25, 100, 500, 1000, 5000 };
-static const gKzZetonSprite[][] = { "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulgre", "LD_ROUL:roulgre", "LD_ROUL:roulbla", "LD_ROUL:roulbla", "LD_ROUL:roulbla" };
+new const gKzZetoni[] = { 1, 5, 10, 25, 100, 500, 1000, 5000 };
+new const gKzZetonSprite[][] = { "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulred", "LD_ROUL:roulgre", "LD_ROUL:roulgre", "LD_ROUL:roulbla", "LD_ROUL:roulbla", "LD_ROUL:roulbla" };
 static const gRulVani[][] = { "1-12", "13-24", "25-36", "2:1", "2:1", "2:1", "1-18", "Par", "Crveno", "Crno", "Nepar", "19-36" };
 static const gVpIme[][] = { "Nista", "Jacks or Better", "Two Pair", "Three of a Kind", "Straight", "Flush", "Full House", "Four of a Kind", "Straight Flush", "Royal Flush" };
 static const gVpIsplata[] = { 0, 1, 2, 3, 4, 6, 9, 25, 50, 250 };
@@ -207,6 +207,7 @@ static KazinoStvori(k)
     }
     format(tekst, sizeof tekst, "%s\n[Y]", gKzIme[gKaz[k][kzTip]]);
     gKaz[k][kzTekst] = CreateDynamic3DTextLabel(tekst, COLOR_ORG, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ] + (KazinoMasina(gKaz[k][kzTip]) ? 0.5 : 1.2), 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKaz[k][kzSvijet], gKaz[k][kzInt]);
+    if (gKaz[k][kzTip] == KZ_HOLDEM) PokerStvori(k, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ], gKaz[k][kzA], gKaz[k][kzInt], gKaz[k][kzSvijet], gKaz[k][kzAktor]);
 }
 
 static bool:KazinoBlizu(playerid, k)
@@ -313,6 +314,7 @@ KazinoKey(playerid)
     if (k == KAZINO_MAX) return 0;
     if (gKzBira[playerid] || (gKzOtvoren[playerid] && KzTabla(gKzTip[playerid]))) return 1;
     if (gKzIgra[playerid] && (!KzRundaIgra(gKzTip[playerid]) || gKzStol[playerid] != k)) return 1;
+    if (gKaz[k][kzTip] == KZ_HOLDEM) return PokerKazino(playerid, k);
     gKzStol[playerid] = k;
     gKzTip[playerid] = gKaz[k][kzTip];
     if (gKzTip[playerid] == KZ_BLAGAJNA)
@@ -1784,6 +1786,7 @@ DLG:apanel_kazino_brisi(playerid, response)
     new k = gApKazino[playerid];
     if (!response || !gKaz[k][kzIma]) return ShowKazino(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    if (gKaz[k][kzTip] == KZ_HOLDEM) PokerUkloni(k);
     if (gKaz[k][kzAktor] != INVALID_ACTOR_ID) DestroyActor(gKaz[k][kzAktor]);
     DestroyDynamic3DTextLabel(gKaz[k][kzTekst]);
     gKaz[k][kzIma] = false;

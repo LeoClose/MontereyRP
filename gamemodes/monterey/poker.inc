@@ -1,4 +1,3 @@
-#define POKER_MAX           8
 #define POKER_MJESTA        6
 #define POKER_MODEL         19474
 #define POKER_MALI          25
@@ -9,13 +8,14 @@
 #define POKER_RAKE_MAX      500
 #define POKER_POTEZ_S       30
 #define POKER_PAUZA_S       6
-#define POKER_DOMET         2.5
+#define POKER_STOL_RAZMAK   1.3
+#define POKER_STOL_Z        -1.0
 #define POKER_NAPUSTI       8.0
-#define POKER_TD            16
 
 enum { PO_CEKA, PO_RUKA }
-enum { PTD_POZADINA, PTD_PLOCA, PTD_MOJA = PTD_PLOCA + 5, PTD_BANKA = PTD_MOJA + 2, PTD_IGRACI, PTD_STATUS, PTD_FOLD, PTD_CALL, PTD_RAISE, PTD_ALLIN, PTD_USTANI }
-enum E_POKER { bool:poIma, poDb, Float:poX, Float:poY, Float:poZ, Float:poA, poInt, poSvijet, STREAMER_TAG_OBJECT:poObj, STREAMER_TAG_3D_TEXT_LABEL:poTekst,
+enum { PTD_POZADINA, PTD_PLOCA, PTD_MOJA = PTD_PLOCA + 5, PTD_BANKA = PTD_MOJA + 2, PTD_IGRACI, PTD_STATUS, PTD_FOLD, PTD_CALL, PTD_RAISE, PTD_ALLIN, PTD_USTANI, PTD_STOL_NASLOV, PTD_IZNOS, PTD_POTVRDI, PTD_PONISTI, PTD_NATRAG, PTD_ZETON, PTD_KRAJ = PTD_ZETON + sizeof gKzZetoni * 2 }
+enum { PM_IGRA, PM_ULAZ, PM_DIZI }
+enum E_POKER { bool:poIma, poAktor, Float:poX, Float:poY, Float:poZ, Float:poA, poInt, poSvijet, STREAMER_TAG_OBJECT:poObj,
     poFaza, poIgrac[POKER_MJESTA], poStog[POKER_MJESTA], poUlog[POKER_MJESTA], poUkupno[POKER_MJESTA], bool:poU[POKER_MJESTA], bool:poFold[POKER_MJESTA], bool:poAllin[POKER_MJESTA], bool:poOdigrao[POKER_MJESTA],
     poKarte[POKER_MJESTA * 2], poPloca[5], poPlocaN, poSpil[52], poSpilI, poDiler, poNaPotezu, poNajveci, poMinRaise, poRunda, poRok, poPauza }
 
@@ -23,8 +23,8 @@ static const gPokerRang[] = "23456789TJQKA";
 static const gPokerBoja[] = "cdhs";
 static const gPokerKat[9][] = { "Visoka karta", "Par", "Dva para", "Tris", "Skala", "Boja", "Ful", "Poker", "Skala u boji" };
 
-static gPo[POKER_MAX][E_POKER], gPokerStol[MAX_PLAYERS] = { -1, ... }, gPokerMjesto[MAX_PLAYERS], gApPoker[MAX_PLAYERS][POKER_MAX], gPokerOdabran[MAX_PLAYERS];
-static PlayerText:gPoTd[MAX_PLAYERS][POKER_TD], bool:gPoTdIma[MAX_PLAYERS];
+static gPo[KAZINO_MAX][E_POKER], gPokerStol[MAX_PLAYERS] = { -1, ... }, gPokerMjesto[MAX_PLAYERS], gPokerOdabran[MAX_PLAYERS];
+static PlayerText:gPoTd[MAX_PLAYERS][PTD_KRAJ], bool:gPoTdIma[MAX_PLAYERS], gPoMod[MAX_PLAYERS], gPoIznos[MAX_PLAYERS];
 
 static PokerRang(c)
 {
@@ -133,30 +133,24 @@ InitPoker()
     assert(PokerOcjena(a, 7) == PokerVr(6, 10, 3));
     a[0] = PokerKarta(10, 0); a[1] = PokerKarta(10, 1); a[2] = PokerKarta(7, 2); a[3] = PokerKarta(7, 3); a[4] = PokerKarta(2, 0); a[5] = PokerKarta(2, 1); a[6] = PokerKarta(12, 2);
     assert(PokerOcjena(a, 7) == PokerVr(2, 10, 7, 12));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS poker_tables (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world FROM poker_tables LIMIT %d", POKER_MAX);
-    for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
-    {
-        gPo[s][poDb] = DB_GetFieldInt(res, 0);
-        gPo[s][poX] = DB_GetFieldFloat(res, 1);
-        gPo[s][poY] = DB_GetFieldFloat(res, 2);
-        gPo[s][poZ] = DB_GetFieldFloat(res, 3);
-        gPo[s][poA] = DB_GetFieldFloat(res, 4);
-        gPo[s][poInt] = DB_GetFieldInt(res, 5);
-        gPo[s][poSvijet] = DB_GetFieldInt(res, 6);
-        PokerStvori(s);
-    }
-    DB_FreeResultSet(res);
 }
 
 PokerConnect(playerid)
 {
     gPokerStol[playerid] = -1;
+    gPoMod[playerid] = PM_IGRA;
     gPoTdIma[playerid] = false;
 }
 
-static PokerStvori(s)
+PokerStvori(s, Float:x, Float:y, Float:z, Float:a, interijer, svijet, aktor)
 {
+    gPo[s][poX] = x;
+    gPo[s][poY] = y;
+    gPo[s][poZ] = z;
+    gPo[s][poA] = a;
+    gPo[s][poInt] = interijer;
+    gPo[s][poSvijet] = svijet;
+    gPo[s][poAktor] = aktor;
     gPo[s][poIma] = true;
     gPo[s][poFaza] = PO_CEKA;
     for (new m = 0; m < POKER_MJESTA; m++)
@@ -164,10 +158,22 @@ static PokerStvori(s)
         gPo[s][poIgrac][m] = INVALID_PLAYER_ID;
         gPo[s][poU][m] = false;
     }
-    gPo[s][poObj] = CreateDynamicObject(POKER_MODEL, gPo[s][poX], gPo[s][poY], gPo[s][poZ], 0.0, 0.0, gPo[s][poA], gPo[s][poSvijet], gPo[s][poInt]);
-    new tekst[64];
-    format(tekst, sizeof tekst, "Poker\n$%d/$%d\n[Y]", POKER_MALI, POKER_VELIKI);
-    gPo[s][poTekst] = CreateDynamic3DTextLabel(tekst, COLOR_ORG, gPo[s][poX], gPo[s][poY], gPo[s][poZ] + 1.4, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gPo[s][poSvijet], gPo[s][poInt]);
+    gPo[s][poObj] = CreateDynamicObject(POKER_MODEL, x - floatsin(a, degrees) * POKER_STOL_RAZMAK, y + floatcos(a, degrees) * POKER_STOL_RAZMAK, z + POKER_STOL_Z, 0.0, 0.0, a + 90.0, svijet, interijer);
+}
+
+PokerUkloni(s)
+{
+    if (!gPo[s][poIma]) return;
+    gPo[s][poFaza] = PO_CEKA;
+    for (new m = 0; m < POKER_MJESTA; m++)
+    {
+        gPo[s][poStog][m] += gPo[s][poUkupno][m];
+        gPo[s][poUkupno][m] = 0;
+        gPo[s][poU][m] = false;
+    }
+    for (new m = 0; m < POKER_MJESTA; m++) if (gPo[s][poIgrac][m] != INVALID_PLAYER_ID) PokerUstani(gPo[s][poIgrac][m]);
+    DestroyDynamicObject(gPo[s][poObj]);
+    gPo[s][poIma] = false;
 }
 
 static PokerImeKarte(c, out[], size)
@@ -233,7 +239,7 @@ static PokerTdUnisti(playerid)
 {
     if (!gPoTdIma[playerid]) return;
     gPoTdIma[playerid] = false;
-    for (new i = 0; i < POKER_TD; i++) PlayerTextDrawDestroy(playerid, gPoTd[playerid][i]);
+    for (new i = 0; i < PTD_KRAJ; i++) PlayerTextDrawDestroy(playerid, gPoTd[playerid][i]);
     CancelSelectTextDraw(playerid);
 }
 
@@ -252,9 +258,47 @@ static PokerTdStvori(playerid)
     gPoTd[playerid][PTD_RAISE] = PokerTdGumb(playerid, 325.0, 418.0, 64.0, "RAISE", 0x1E8449FF);
     gPoTd[playerid][PTD_ALLIN] = PokerTdGumb(playerid, 390.0, 418.0, 54.0, "ALL-IN", 0xB7950BFF);
     gPoTd[playerid][PTD_USTANI] = PokerTdGumb(playerid, 450.0, 418.0, 54.0, "USTANI", 0x555555FF);
+    gPoTd[playerid][PTD_STOL_NASLOV] = PokerTdTekst(playerid, 320.0, 232.0, "Texas Hold'em", 0.4, TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawFont(playerid, gPoTd[playerid][PTD_STOL_NASLOV], TEXT_DRAW_FONT_2);
+    PlayerTextDrawLetterSize(playerid, gPoTd[playerid][PTD_STOL_NASLOV], 0.4, 1.6);
+    PlayerTextDrawColour(playerid, gPoTd[playerid][PTD_STOL_NASLOV], 0xE8C15AFF);
     PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_USTANI], T(playerid, "USTANI"));
-    for (new i = 0; i < POKER_TD; i++) PlayerTextDrawShow(playerid, gPoTd[playerid][i]);
-    SelectTextDraw(playerid, 0xE8C15AFF);
+    gPoTd[playerid][PTD_IZNOS] = PokerTdTekst(playerid, 480.0, 300.0, "_", 0.26, TEXT_DRAW_ALIGN_RIGHT);
+    gPoTd[playerid][PTD_POTVRDI] = PokerTdGumb(playerid, 255.0, 418.0, 64.0, "_", 0x1E8449FF);
+    gPoTd[playerid][PTD_PONISTI] = PokerTdGumb(playerid, 325.0, 418.0, 64.0, "_", 0x555555FF);
+    gPoTd[playerid][PTD_NATRAG] = PokerTdGumb(playerid, 390.0, 418.0, 54.0, "_", 0x8B2E2EFF);
+    PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_PONISTI], T(playerid, "Ponisti"));
+    for (new i = 0; i < sizeof gKzZetoni; i++)
+    {
+        new Float:cx = 180.0 + float(i) * 40.0, tekst[8];
+        gPoTd[playerid][PTD_ZETON + i] = PokerTdSprite(playerid, cx - 13.0, 380.0, 26.0, 26.0, gKzZetonSprite[i]);
+        PlayerTextDrawSetSelectable(playerid, gPoTd[playerid][PTD_ZETON + i], true);
+        format(tekst, sizeof tekst, "$%d", gKzZetoni[i]);
+        gPoTd[playerid][PTD_ZETON + sizeof gKzZetoni + i] = PokerTdTekst(playerid, cx, 388.0, tekst, 0.16, TEXT_DRAW_ALIGN_CENTER);
+        PlayerTextDrawFont(playerid, gPoTd[playerid][PTD_ZETON + sizeof gKzZetoni + i], TEXT_DRAW_FONT_2);
+        PlayerTextDrawLetterSize(playerid, gPoTd[playerid][PTD_ZETON + sizeof gKzZetoni + i], 0.16, 0.75);
+    }
+    PlayerTextDrawShow(playerid, gPoTd[playerid][PTD_POZADINA]);
+    PlayerTextDrawShow(playerid, gPoTd[playerid][PTD_STOL_NASLOV]);
+}
+
+static PokerVidi(playerid, idx, bool:vidi)
+{
+    if (vidi) PlayerTextDrawShow(playerid, gPoTd[playerid][idx]);
+    else PlayerTextDrawHide(playerid, gPoTd[playerid][idx]);
+}
+
+static PokerRaspon(playerid, s, &najmanje, &najvise)
+{
+    if (gPoMod[playerid] == PM_ULAZ)
+    {
+        najmanje = 0;
+        najvise = gInv[playerid][ITEM_ZETONI] < POKER_MAX_ULAZ ? gInv[playerid][ITEM_ZETONI] : POKER_MAX_ULAZ;
+        return;
+    }
+    new m = gPokerMjesto[playerid];
+    najmanje = gPo[s][poNajveci] + gPo[s][poMinRaise];
+    najvise = gPo[s][poUlog][m] + gPo[s][poStog][m];
 }
 
 static PokerZivi(s, bool:mozeIgrati = false)
@@ -273,7 +317,7 @@ static PokerBanka(s)
 
 static PokerOsvjeziIgraca(s, playerid)
 {
-    new m = gPokerMjesto[playerid], sprite[20], tekst[512], red[96], bool:ruka = gPo[s][poFaza] == PO_RUKA;
+    new m = gPokerStol[playerid] == s ? gPokerMjesto[playerid] : -1, sprite[20], tekst[512], red[96], bool:ruka = gPo[s][poFaza] == PO_RUKA;
     for (new i = 0; i < 5; i++)
     {
         if (ruka && i < gPo[s][poPlocaN])
@@ -286,7 +330,7 @@ static PokerOsvjeziIgraca(s, playerid)
     }
     for (new i = 0; i < 2; i++)
     {
-        if (ruka && gPo[s][poU][m] && !gPo[s][poFold][m])
+        if (ruka && m != -1 && gPo[s][poU][m] && !gPo[s][poFold][m])
         {
             PokerSprite(gPo[s][poKarte][m * 2 + i], sprite, sizeof sprite);
             PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_MOJA + i], sprite);
@@ -315,29 +359,51 @@ static PokerOsvjeziIgraca(s, playerid)
         strcat(tekst, "~n~");
     }
     PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_IGRACI], tekst);
-    new bool:moj = ruka && gPo[s][poNaPotezu] == m;
-    if (!ruka) format(tekst, sizeof tekst, T(playerid, "Ceka se igrace~n~(najmanje 2)"));
+    new bool:moj = ruka && m != -1 && gPo[s][poNaPotezu] == m;
+    if (gPoMod[playerid] == PM_DIZI && !moj) gPoMod[playerid] = PM_IGRA;
+    new mod = gPoMod[playerid];
+    if (mod == PM_ULAZ) format(tekst, sizeof tekst, T(playerid, "Blindovi %d/%d~n~Odaberite zetone za ulaz (%d-%d)"), POKER_MALI, POKER_VELIKI, POKER_MIN_ULAZ, POKER_MAX_ULAZ);
+    else if (!ruka) format(tekst, sizeof tekst, T(playerid, "Ceka se igrace~n~(najmanje 2)"));
     else if (moj) format(tekst, sizeof tekst, T(playerid, "~g~Vi ste na potezu~n~~w~%d s"), gPo[s][poRok]);
     else format(tekst, sizeof tekst, T(playerid, "Na potezu:~n~%s (%d s)"), GetRPIme(gPo[s][poIgrac][gPo[s][poNaPotezu]]), gPo[s][poRok]);
     PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_STATUS], tekst);
-    new za = gPo[s][poNajveci] - gPo[s][poUlog][m];
-    if (za > 0) format(tekst, sizeof tekst, "CALL %d", za > gPo[s][poStog][m] ? gPo[s][poStog][m] : za);
-    else format(tekst, sizeof tekst, "CHECK");
-    PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_CALL], tekst);
-    for (new i = PTD_FOLD; i <= PTD_ALLIN; i++)
+    PokerVidi(playerid, PTD_BANKA, true);
+    PokerVidi(playerid, PTD_IGRACI, true);
+    PokerVidi(playerid, PTD_STATUS, true);
+    if (m != -1)
     {
-        if (moj) PlayerTextDrawShow(playerid, gPoTd[playerid][i]);
-        else PlayerTextDrawHide(playerid, gPoTd[playerid][i]);
+        new za = gPo[s][poNajveci] - gPo[s][poUlog][m];
+        if (za > 0) format(tekst, sizeof tekst, "CALL %d", za > gPo[s][poStog][m] ? gPo[s][poStog][m] : za);
+        else format(tekst, sizeof tekst, "CHECK");
+        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_CALL], tekst);
+    }
+    for (new i = PTD_FOLD; i <= PTD_ALLIN; i++) PokerVidi(playerid, i, moj && mod == PM_IGRA);
+    PokerVidi(playerid, PTD_USTANI, m != -1 && mod == PM_IGRA);
+    new bool:bira = mod != PM_IGRA, najmanje, najvise;
+    if (bira)
+    {
+        PokerRaspon(playerid, s, najmanje, najvise);
+        format(tekst, sizeof tekst, T(playerid, mod == PM_ULAZ ? ("Ulaz: %d") : ("Dizanje na: %d")), gPoIznos[playerid]);
+        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_IZNOS], tekst);
+        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_POTVRDI], T(playerid, mod == PM_ULAZ ? ("Sjedi") : ("Potvrdi")));
+        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_NATRAG], T(playerid, mod == PM_ULAZ ? ("Zatvori") : ("Natrag")));
+    }
+    PokerVidi(playerid, PTD_IZNOS, bira);
+    PokerVidi(playerid, PTD_POTVRDI, bira);
+    PokerVidi(playerid, PTD_PONISTI, bira);
+    PokerVidi(playerid, PTD_NATRAG, bira);
+    for (new i = 0; i < sizeof gKzZetoni; i++)
+    {
+        new bool:vidi = bira && gKzZetoni[i] <= najvise - gPoIznos[playerid];
+        PokerVidi(playerid, PTD_ZETON + i, vidi);
+        PokerVidi(playerid, PTD_ZETON + sizeof gKzZetoni + i, vidi);
     }
 }
 
 static PokerOsvjezi(s)
 {
-    for (new m = 0; m < POKER_MJESTA; m++)
-    {
-        new p = gPo[s][poIgrac][m];
-        if (p != INVALID_PLAYER_ID && gPoTdIma[p]) PokerOsvjeziIgraca(s, p);
-    }
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (gPoTdIma[i] && (gPokerStol[i] == s || (gPoMod[i] == PM_ULAZ && gPokerOdabran[i] == s))) PokerOsvjeziIgraca(s, i);
 }
 
 static PokerSljedeci(s, m, bool:samoAktivni)
@@ -403,6 +469,7 @@ static PokerNovaRuka(s)
         gPo[s][poKarte][m * 2] = PokerDijeli(s);
         gPo[s][poKarte][m * 2 + 1] = PokerDijeli(s);
     }
+    if (gPo[s][poAktor] != INVALID_ACTOR_ID) ApplyActorAnimation(gPo[s][poAktor], "CASINO", "dealone", 4.1, false, false, false, false, 0);
     PokerUlozi(s, mali, POKER_MALI);
     PokerUlozi(s, veliki, POKER_VELIKI);
     gPo[s][poNajveci] = POKER_VELIKI;
@@ -599,6 +666,7 @@ PokerUstani(playerid)
     gPo[s][poStog][m] = 0;
     gPo[s][poIgrac][m] = INVALID_PLAYER_ID;
     gPokerStol[playerid] = -1;
+    gPoMod[playerid] = PM_IGRA;
     if (IsPlayerConnected(playerid)) PokerTdUnisti(playerid);
     if (gPo[s][poFaza] == PO_RUKA && gPo[s][poNaPotezu] == m) PokerDalje(s);
     else if (gPo[s][poFaza] == PO_RUKA && PokerZivi(s) == 1) PokerObracun(s);
@@ -612,7 +680,7 @@ PokerOdlazi(playerid)
 
 PokerVratiSve()
 {
-    for (new s = 0; s < POKER_MAX; s++)
+    for (new s = 0; s < KAZINO_MAX; s++)
     {
         if (!gPo[s][poIma]) continue;
         for (new m = 0; m < POKER_MJESTA; m++)
@@ -625,52 +693,63 @@ PokerVratiSve()
     }
 }
 
-static PokerBlizu(playerid)
-{
-    for (new s = 0; s < POKER_MAX; s++)
-        if (gPo[s][poIma] && GetPlayerVirtualWorld(playerid) == gPo[s][poSvijet] && GetPlayerInterior(playerid) == gPo[s][poInt] && IsPlayerInRangeOfPoint(playerid, POKER_DOMET, gPo[s][poX], gPo[s][poY], gPo[s][poZ] + 1.0)) return s;
-    return -1;
-}
-
 PokerKey(playerid)
 {
-    if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
     new s = gPokerStol[playerid];
-    if (s != -1)
-    {
-        if (!gPoTdIma[playerid]) PokerTdStvori(playerid);
-        PokerOsvjeziIgraca(s, playerid);
-        SelectTextDraw(playerid, 0xE8C15AFF);
-        return 1;
-    }
-    s = PokerBlizu(playerid);
-    if (s == -1) return 0;
+    if (s == -1 || !gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
+    if (!gPoTdIma[playerid]) PokerTdStvori(playerid);
+    PokerOsvjeziIgraca(s, playerid);
+    SelectTextDraw(playerid, 0xE8C15AFF);
+    return 1;
+}
+
+PokerKazino(playerid, s)
+{
+    if (gPokerStol[playerid] != -1) return PokerKey(playerid);
+    if (!gPo[s][poIma]) return 0;
     new slobodno = 0;
     for (new m = 0; m < POKER_MJESTA; m++) if (gPo[s][poIgrac][m] == INVALID_PLAYER_ID && !gPo[s][poU][m]) slobodno++;
     if (!slobodno) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za ovim stolom nema slobodnih mjesta.")), 1;
     if (gInv[playerid][ITEM_ZETONI] < POKER_MIN_ULAZ) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za poker trebate najmanje %d zetona. Kupite ih na blagajni kazina."), POKER_MIN_ULAZ), 1;
-    new body[160], najvise = gInv[playerid][ITEM_ZETONI] < POKER_MAX_ULAZ ? gInv[playerid][ITEM_ZETONI] : POKER_MAX_ULAZ;
+    if (gPo[s][poAktor] != INVALID_ACTOR_ID) AktorKaze(playerid, gPo[s][poAktor], "Krupije", "Dobrodosli za poker stol.");
     gPokerOdabran[playerid] = s;
-    format(body, sizeof body, T(playerid, "Blindovi %d/%d. S koliko zetona sjedate? (%d-%d)"), POKER_MALI, POKER_VELIKI, POKER_MIN_ULAZ, najvise);
-    PrikaziDialog(playerid, DLG_POKER_ULAZ, DIALOG_STYLE_INPUT, T(playerid, "Poker"), body, T(playerid, "Sjedi"), T(playerid, "Odustani"));
+    gPoMod[playerid] = PM_ULAZ;
+    gPoIznos[playerid] = 0;
+    PokerTdStvori(playerid);
+    PokerOsvjeziIgraca(s, playerid);
+    SelectTextDraw(playerid, 0xE8C15AFF);
     return 1;
 }
 
-DLG:poker_ulaz(playerid, response, const inputtext[])
+PokerEsc(playerid)
 {
-    new s = gPokerOdabran[playerid];
-    if (!response || s < 0 || s >= POKER_MAX || !gPo[s][poIma] || gPokerStol[playerid] != -1 || PokerBlizu(playerid) != s) return 1;
-    new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 6 ? strval(inputtext) : 0;
-    if (n < POKER_MIN_ULAZ || n > POKER_MAX_ULAZ || n > gInv[playerid][ITEM_ZETONI]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravan broj zetona."));
+    if (gPoMod[playerid] != PM_ULAZ) return;
+    gPoMod[playerid] = PM_IGRA;
+    PokerTdUnisti(playerid);
+}
+
+static PokerSjedi(playerid, s, n)
+{
+    if (GetPlayerVirtualWorld(playerid) != gPo[s][poSvijet] || !IsPlayerInRangeOfPoint(playerid, POKER_NAPUSTI, gPo[s][poX], gPo[s][poY], gPo[s][poZ]))
+    {
+        PokerEsc(playerid);
+        return 1;
+    }
+    if (n < POKER_MIN_ULAZ) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najmanji ulaz je %d zetona."), POKER_MIN_ULAZ), 1;
     new m = -1;
     for (new i = 0; i < POKER_MJESTA && m == -1; i++) if (gPo[s][poIgrac][i] == INVALID_PLAYER_ID && !gPo[s][poU][i]) m = i;
-    if (m == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za ovim stolom nema slobodnih mjesta."));
-    if (!GiveItem(playerid, ITEM_ZETONI, -n)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravan broj zetona."));
+    if (m == -1)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za ovim stolom nema slobodnih mjesta."));
+        PokerEsc(playerid);
+        return 1;
+    }
+    if (n > gInv[playerid][ITEM_ZETONI] || !GiveItem(playerid, ITEM_ZETONI, -n)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno zetona.")), 1;
     gPo[s][poIgrac][m] = playerid;
     gPo[s][poStog][m] = n;
     gPokerStol[playerid] = s;
     gPokerMjesto[playerid] = m;
-    PokerTdStvori(playerid);
+    gPoMod[playerid] = PM_IGRA;
     PokerPoruka(s, "[Poker] %s sjeda za stol sa %d zetona.", playerid, n);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Y - vrati kursor, USTANI - napusti stol (zetoni se vracaju u inventar)."));
     if (gPo[s][poFaza] == PO_CEKA && !gPo[s][poPauza]) gPo[s][poPauza] = POKER_PAUZA_S;
@@ -678,27 +757,46 @@ DLG:poker_ulaz(playerid, response, const inputtext[])
     return 1;
 }
 
-DLG:poker_povisi(playerid, response, const inputtext[])
+static PokerBiraKlik(playerid, s, PlayerText:td)
 {
-    new s = gPokerStol[playerid];
-    if (s == -1 || gPo[s][poFaza] != PO_RUKA || gPo[s][poNaPotezu] != gPokerMjesto[playerid]) return 1;
-    if (!response) return SelectTextDraw(playerid, 0xE8C15AFF), 1;
-    new m = gPokerMjesto[playerid], najmanje = gPo[s][poNajveci] + gPo[s][poMinRaise], najvise = gPo[s][poUlog][m] + gPo[s][poStog][m];
-    new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 7 ? strval(inputtext) : 0;
-    if (n >= najvise) n = najvise;
-    else if (n < najmanje)
+    new mod = gPoMod[playerid], najmanje, najvise;
+    PokerRaspon(playerid, s, najmanje, najvise);
+    if (td == gPoTd[playerid][PTD_POTVRDI])
     {
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najmanje dizanje je na %d."), najmanje);
-        return SelectTextDraw(playerid, 0xE8C15AFF), 1;
+        if (mod == PM_ULAZ) return PokerSjedi(playerid, s, gPoIznos[playerid]);
+        new m = gPokerMjesto[playerid];
+        gPoMod[playerid] = PM_IGRA;
+        if (gPo[s][poFaza] == PO_RUKA && gPo[s][poNaPotezu] == m) PokerAkcija(s, m, gPoIznos[playerid] >= najvise ? PTD_ALLIN : PTD_RAISE, gPoIznos[playerid] >= najvise ? najvise : gPoIznos[playerid]);
+        return 1;
     }
-    PokerAkcija(s, m, PTD_RAISE, n);
+    if (td == gPoTd[playerid][PTD_NATRAG])
+    {
+        if (mod == PM_ULAZ) PokerEsc(playerid);
+        else
+        {
+            gPoMod[playerid] = PM_IGRA;
+            PokerOsvjeziIgraca(s, playerid);
+        }
+        return 1;
+    }
+    if (td == gPoTd[playerid][PTD_PONISTI]) gPoIznos[playerid] = najmanje;
+    else
+    {
+        new z = -1;
+        for (new i = 0; i < sizeof gKzZetoni; i++) if (td == gPoTd[playerid][PTD_ZETON + i]) z = i;
+        if (z == -1) return 0;
+        if (gKzZetoni[z] <= najvise - gPoIznos[playerid]) gPoIznos[playerid] += gKzZetoni[z];
+    }
+    PokerOsvjeziIgraca(s, playerid);
     return 1;
 }
 
 PokerKlik(playerid, PlayerText:td)
 {
-    new s = gPokerStol[playerid];
-    if (s == -1 || !gPoTdIma[playerid]) return 0;
+    if (!gPoTdIma[playerid]) return 0;
+    new s = gPoMod[playerid] == PM_ULAZ ? gPokerOdabran[playerid] : gPokerStol[playerid];
+    if (s < 0 || s >= KAZINO_MAX || !gPo[s][poIma]) return 0;
+    if (gPoMod[playerid] != PM_IGRA) return PokerBiraKlik(playerid, s, td);
     if (td == gPoTd[playerid][PTD_USTANI])
     {
         PokerUstani(playerid);
@@ -709,7 +807,7 @@ PokerKlik(playerid, PlayerText:td)
     for (new i = PTD_FOLD; i <= PTD_ALLIN; i++) if (td == gPoTd[playerid][i]) akcija = i;
     if (akcija == -1) return 0;
     if (gPo[s][poFaza] != PO_RUKA || gPo[s][poNaPotezu] != m) return 1;
-    new najmanje = gPo[s][poNajveci] + gPo[s][poMinRaise], najvise = gPo[s][poUlog][m] + gPo[s][poStog][m], body[128];
+    new najmanje = gPo[s][poNajveci] + gPo[s][poMinRaise], najvise = gPo[s][poUlog][m] + gPo[s][poStog][m];
     if (akcija == PTD_ALLIN || (akcija == PTD_RAISE && najvise <= najmanje))
     {
         PokerAkcija(s, m, PTD_ALLIN, najvise);
@@ -720,14 +818,15 @@ PokerKlik(playerid, PlayerText:td)
         PokerAkcija(s, m, akcija);
         return 1;
     }
-    format(body, sizeof body, T(playerid, "Dizete na koliko ukupno? (%d-%d)"), najmanje, najvise);
-    PrikaziDialog(playerid, DLG_POKER_POVISI, DIALOG_STYLE_INPUT, T(playerid, "Poker"), body, T(playerid, "Digni"), T(playerid, "Natrag"));
+    gPoMod[playerid] = PM_DIZI;
+    gPoIznos[playerid] = najmanje;
+    PokerOsvjeziIgraca(s, playerid);
     return 1;
 }
 
 PokerTick()
 {
-    for (new s = 0; s < POKER_MAX; s++)
+    for (new s = 0; s < KAZINO_MAX; s++)
     {
         if (!gPo[s][poIma]) continue;
         for (new m = 0; m < POKER_MJESTA; m++)
@@ -753,67 +852,4 @@ PokerTick()
         new m = gPo[s][poNaPotezu];
         PokerAkcija(s, m, gPo[s][poNajveci] > gPo[s][poUlog][m] ? PTD_FOLD : PTD_CALL);
     }
-}
-
-ShowPoker(playerid)
-{
-    new list[1024], red[96], len = 0;
-    DodajStupac(list, len, T(playerid, "+ Novi poker stol na mojoj poziciji"));
-    for (new s = 0, n = 0; s < POKER_MAX; s++)
-    {
-        if (!gPo[s][poIma]) continue;
-        format(red, sizeof red, T(playerid, "[%d] Poker stol (%s) - obrisi"), gPo[s][poDb], CestaZona(gPo[s][poX], gPo[s][poY]));
-        DodajStupac(list, len, red);
-        gApPoker[playerid][n++] = s;
-    }
-    return PrikaziDialog(playerid, DLG_APANEL_POKER, DIALOG_STYLE_LIST, T(playerid, "Poker stolovi"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
-}
-
-DLG:apanel_poker(playerid, response, listitem)
-{
-    if (!response) return ShowAdminPanel(playerid);
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    if (listitem == 0)
-    {
-        new s = 0, Float:x, Float:y, Float:z, Float:a;
-        while (s < POKER_MAX && gPo[s][poIma]) s++;
-        if (s == POKER_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je najveci broj poker stolova.")), ShowPoker(playerid);
-        GetPlayerPos(playerid, x, y, z);
-        GetPlayerFacingAngle(playerid, a);
-        z -= 1.0;
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO poker_tables (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid)));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gPo[s][poDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
-        gPo[s][poX] = x;
-        gPo[s][poY] = y;
-        gPo[s][poZ] = z;
-        gPo[s][poA] = a;
-        gPo[s][poInt] = GetPlayerInterior(playerid);
-        gPo[s][poSvijet] = GetPlayerVirtualWorld(playerid);
-        PokerStvori(s);
-        SetPlayerPos(playerid, x + 2.0 * floatcos(a, degrees), y + 2.0 * floatsin(a, degrees), z + 1.0);
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Poker stol je postavljen."));
-        return ShowPoker(playerid);
-    }
-    new i = listitem - 1;
-    if (i < 0 || i >= POKER_MAX) return 1;
-    new s = gApPoker[playerid][i];
-    if (!gPo[s][poIma]) return ShowPoker(playerid);
-    for (new m = 0; m < POKER_MJESTA; m++)
-    {
-        new p = gPo[s][poIgrac][m];
-        if (p == INVALID_PLAYER_ID) continue;
-        gPo[s][poStog][m] += gPo[s][poUkupno][m];
-        gPo[s][poUkupno][m] = 0;
-        gPo[s][poU][m] = false;
-        PokerUstani(p);
-    }
-    gPo[s][poFaza] = PO_CEKA;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM poker_tables WHERE id = %d", gPo[s][poDb]));
-    DestroyDynamicObject(gPo[s][poObj]);
-    DestroyDynamic3DTextLabel(gPo[s][poTekst]);
-    gPo[s][poIma] = false;
-    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Poker stol je obrisan."));
-    return ShowPoker(playerid);
 }

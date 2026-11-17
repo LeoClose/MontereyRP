@@ -480,6 +480,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
         KazinoZatvori(playerid);
         PcZatvori(playerid);
         ArkadaEsc(playerid);
+        PokerEsc(playerid);
     }
     if (clickedid == INVALID_TEXT_DRAW && gUSalonu[playerid] != -1) SalonZatvori(playerid);
     return 0;
