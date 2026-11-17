@@ -20,6 +20,7 @@ public OnPlayerConnect(playerid)
     MapaJeffersonFlatsUkloni(playerid);
     MapaSpawnUkloni(playerid);
     MapaMontereyPeakUkloni(playerid);
+    MapaStadionUkloni(playerid);
     BrodUkloni(playerid);
     if (IsPlayerNPC(playerid)) return 1;
     new ljudi = 0;
