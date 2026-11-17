@@ -17,7 +17,8 @@
 #define ARK_ZUTO            0xFFD32AFF
 #define ARK_METE            5
 #define ARK_PUC_ZDRAVLJE    100
-#define ARK_PUC_STETA       20
+#define ARK_PUC_STETA       15
+#define ARK_PUC_NAJVISE     3
 #define ARK_PUC_TLO         100.0
 #define ARK_PUC_FIG_W       44.0
 #define ARK_PUC_FIG_H       80.0
@@ -240,7 +241,7 @@ static ArkPokreni(playerid, m)
         gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + ARK_PUC_H + 18.0, T(playerid, "WASD nisan (ALT fino), LMB pucaj, ne gadjajte civile   ENTER - izlaz"), 0.8, 0xAAAAAAFF);
         gArk[m][amZivoti] = ARK_PUC_ZDRAVLJE;
         gArk[m][amSmjer] = 0;
-        gArk[m][amMs] = 1400;
+        gArk[m][amMs] = 2200;
         gArk[m][amHrana] = GetTickCount() + 500;
         gArk[m][amRep] = 0;
         gArkCx[m] = ARK_PUC_W / 2.0;
@@ -346,9 +347,9 @@ static ArkPucNova(m)
 {
     new slobodna[ARK_METE], n = 0;
     for (new i = 0; i < ARK_METE; i++) if (gArkMt[m][i] == -1) slobodna[n++] = i;
-    if (!n) return;
-    new i = slobodna[random(n)], bool:civil = random(100) < 25, sad = GetTickCount(), rok = 1600 - gArk[m][amBod] * 3;
-    if (rok < 650) rok = 650;
+    if (ARK_METE - n >= ARK_PUC_NAJVISE || !n) return;
+    new i = slobodna[random(n)], bool:civil = random(100) < 25, sad = GetTickCount(), rok = 2600 - gArk[m][amBod] * 2;
+    if (rok < 1200) rok = 1200;
     gArkMt[m][i] = civil ? 1 : 0;
     gArkMod[m][i] = civil ? gArkCivil[random(sizeof gArkCivil)] : gArkKauboj[random(sizeof gArkKauboj)];
     gArkMe[m][i] = sad + (civil ? 1800 : rok);
@@ -388,8 +389,8 @@ public ArkPucTick(m, token)
     if (sad - gArk[m][amHrana] >= 0)
     {
         ArkPucNova(m);
-        gArk[m][amMs] = 1400 - gArk[m][amBod] * 3;
-        if (gArk[m][amMs] < 550) gArk[m][amMs] = 550;
+        gArk[m][amMs] = 2200 - gArk[m][amBod] * 2;
+        if (gArk[m][amMs] < 1100) gArk[m][amMs] = 1100;
         gArk[m][amHrana] = sad + gArk[m][amMs];
     }
     for (new i = 0; i < ARK_METE; i++)
@@ -399,8 +400,8 @@ public ArkPucTick(m, token)
         ArkPucSkrij(m, i);
         if (t == 0 && !ArkPucPogodjen(m)) return;
     }
-    new Float:a = 1.5 + float(sad - gArkCod[m]) * 0.0008, Float:x, Float:y;
-    if (a > 7.0) a = 7.0;
+    new Float:a = 0.8 + float(sad - gArkCod[m]) * 0.0003, Float:x, Float:y;
+    if (a > 2.5) a = 2.5;
     ArkPucNisan(m, a, float(sad % 360000) / 1000.0, x, y);
     ArkPomakni(p, ARK_PUC_NISAN, x, y, 16.0, 1.5);
     ArkPomakni(p, ARK_PUC_NISAN + 1, x, y, 1.5, 16.0);
@@ -419,15 +420,15 @@ static ArkPucaj(m)
     new p = gArk[m][amIgrac], sad = GetTickCount();
     if (sad - gArk[m][amRep] < ARK_PUC_PAUZA) return;
     gArk[m][amRep] = sad;
-    new Float:a = 1.5 + float(sad - gArkCod[m]) * 0.0008, Float:x, Float:y;
-    if (a > 7.0) a = 7.0;
+    new Float:a = 0.8 + float(sad - gArkCod[m]) * 0.0003, Float:x, Float:y;
+    if (a > 2.5) a = 2.5;
     ArkPucNisan(m, a, float(sad % 360000) / 1000.0, x, y);
     gArkCod[m] = sad;
     if (y < ARK_PUC_FIG_Y + 4.0 || y > ARK_PUC_TLO) return;
     for (new i = 0; i < ARK_METE; i++)
     {
         new t = gArkMt[m][i];
-        if ((t != 0 && t != 1) || floatabs(x - ArkPucSpotX(i)) > ARK_PUC_FIG_W * 0.3) continue;
+        if ((t != 0 && t != 1) || floatabs(x - ArkPucSpotX(i)) > ARK_PUC_FIG_W * 0.38) continue;
         ArkPucFigura(m, i, gArkMod[m][i], 90.0);
         gArkMt[m][i] = 2;
         if (t == 1)

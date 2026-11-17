@@ -151,6 +151,7 @@ public OnGameModeInit()
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA synchronous = NORMAL"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB,
         "CREATE TABLE IF NOT EXISTS accounts (\
             id INTEGER PRIMARY KEY AUTOINCREMENT,\
@@ -264,6 +265,21 @@ public OnGameModeInit()
     InitAvioni();
     InitPlaca();
     InitHod();
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_snd ON social_messages (sender)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_comments_post ON social_comments (post)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_posts_acc ON social_posts (account)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_friends_b ON social_friends (b, accepted)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bet_slips_acc ON bet_slips (account, status)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bet_slips_status ON bet_slips (status)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bet_legs_event ON bet_legs (event)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bet_events_status ON bet_events (status, start)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS furniture_owner ON furniture (owner)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS player_vehicles_owner ON player_vehicles (owner)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS fines_acc ON fines (account)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS police_records_acc ON police_records (account)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS phone_messages_acc ON phone_messages (account)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS stock_candles_stock ON stock_candles (stock)"));
     SetTimer("Sekunda", 1000, true);
 
     Ime = TextDrawCreate(580.0, 20.0, "Monterey");

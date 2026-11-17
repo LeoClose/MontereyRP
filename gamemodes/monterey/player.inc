@@ -1,3 +1,8 @@
+#define SMG_VJESTINA        200
+#define ORUZJE_PROVJERA_MS  250
+
+static gOruzjeProvjera[MAX_PLAYERS], bool:gOruzjeBlok[MAX_PLAYERS];
+
 public OnPlayerConnect(playerid)
 {
     KosConnect(playerid);
@@ -121,6 +126,8 @@ public OnPlayerSpawn(playerid)
     ShowHud(playerid);
     LoginSpawn(playerid);
     StetaSpawn(playerid);
+    SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, SMG_VJESTINA);
+    SetPlayerSkillLevel(playerid, WEAPONSKILL_MP5, SMG_VJESTINA);
     SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
     PrebaciIgraca(playerid, 0, 0, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
     AnimPreload(playerid);
@@ -213,7 +220,16 @@ public OnPlayerUpdate(playerid)
     ZlataraUpdate(playerid);
     TaksiPovratak(playerid);
     new WEAPON:w = GetPlayerWeapon(playerid);
-    if (w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN && IsShootingBlocked(playerid)) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
+    if (w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN)
+    {
+        new sad = GetTickCount();
+        if (sad - gOruzjeProvjera[playerid] >= ORUZJE_PROVJERA_MS)
+        {
+            gOruzjeProvjera[playerid] = sad;
+            gOruzjeBlok[playerid] = IsShootingBlocked(playerid);
+        }
+        if (gOruzjeBlok[playerid]) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
+    }
     if (w != WEAPON_FIST && ImaLisice(playerid)) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
     return 1;
 }

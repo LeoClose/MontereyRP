@@ -5,6 +5,8 @@
 #define STETA_ORUZJA        39
 #define STETA_NOZ_KRADOM    1000.0
 #define STETA_NOZ_MS        3000
+#define STETA_NOZ_DOMET     1.5
+#define STETA_NOZ_KUT       60.0
 #define STETA_VOZILO_MIN    300.0
 #define STETA_DIO_POSTO     35
 #define STETA_GUMA_DOMET    0.6
@@ -219,6 +221,18 @@ public StetaNozKraj(playerid, racun)
     RanjenProvjeri(playerid, 0.0);
 }
 
+static bool:StetaIza(napadac, zrtva)
+{
+    new Float:x, Float:y, Float:z, Float:a, Float:b;
+    GetPlayerPos(zrtva, x, y, z);
+    if (!IsPlayerInRangeOfPoint(napadac, STETA_NOZ_DOMET, x, y, z)) return false;
+    GetPlayerFacingAngle(napadac, a);
+    GetPlayerFacingAngle(zrtva, b);
+    new Float:r = floatabs(a - b);
+    if (r > 180.0) r = 360.0 - r;
+    return r <= STETA_NOZ_KUT;
+}
+
 static bool:NapadValidanProvjera(playerid, damagedid, WEAPON:weaponid)
 {
     new i = _:weaponid;
@@ -237,7 +251,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bo
     if (!NapadValidanProvjera(playerid, damagedid, weaponid)) return 1;
     if (weaponid == WEAPON_KNIFE && amount >= STETA_NOZ_KRADOM)
     {
-        StetaNoz(damagedid, playerid);
+        if (StetaIza(playerid, damagedid)) StetaNoz(damagedid, playerid);
         return 1;
     }
     if (sad - gStetaZadnji[playerid][damagedid] < gSteta[i][stRazmak]) return 1;
@@ -254,7 +268,7 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, WEAPON:weaponid, bod
     new i = _:weaponid;
     if (weaponid == WEAPON_KNIFE && amount == 0.0 && issuerid != INVALID_PLAYER_ID)
     {
-        if (NapadValidanProvjera(issuerid, playerid, weaponid)) StetaNoz(playerid, issuerid);
+        if (NapadValidanProvjera(issuerid, playerid, weaponid) && StetaIza(issuerid, playerid)) StetaNoz(playerid, issuerid);
         return 1;
     }
     if (issuerid != INVALID_PLAYER_ID && i >= 0 && i < STETA_ORUZJA && gSteta[i][stDmg] > 0.0) return 1;

@@ -1815,12 +1815,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje.", "[Basketball] Team %s won %d : %d! A new game begins.", "[Баскетбол] Команда %s победила %d : %d! Начинается новая игра.", "[Baloncesto] El equipo %s gano %d : %d! Empieza un nuevo partido.", "[Basketbol] %s takimi %d : %d kazandi! Yeni mac basliyor." },
     { "Napustili ste kosarkaski teren.", "You left the basketball court.", "Вы покинули баскетбольную площадку.", "Dejaste la cancha de baloncesto.", "Basketbol sahasindan ayrildiniz." },
     { "Snake", "Snake", "Змейка", "Serpiente", "Yilan" },
-    { "Reakcija", "Reaction", "Реакция", "Reaccion", "Refleks" },
     { "BODOVI", "SCORE", "ОЧКИ", "PUNTOS", "PUAN" },
-    { "ZIVOTI", "LIVES", "ЖИЗНИ", "VIDAS", "CAN" },
     { "Netko vec igra na ovom automatu.", "Someone is already playing on this machine.", "На этом автомате уже кто-то играет.", "Alguien ya esta jugando en esta maquina.", "Bu makinede zaten biri oynuyor." },
     { "W/A/S/D - smjer   ENTER - izlaz", "W/A/S/D - direction   ENTER - exit", "W/A/S/D - направление   ENTER - выход", "W/A/S/D - direccion   ENTER - salir", "W/A/S/D - yon   ENTER - cikis" },
-    { "Kliknite svijetli kvadrat   ENTER - izlaz", "Click the lit square   ENTER - exit", "Нажмите на светящийся квадрат   ENTER - выход", "Haz clic en el cuadro iluminado   ENTER - salir", "Yanan kareye tiklayin   ENTER - cikis" },
     { "KRAJ IGRE", "GAME OVER", "ИГРА ОКОНЧЕНА", "FIN DEL JUEGO", "OYUN BITTI" },
     { "+ Novi automat: %s (ispred mene)", "+ New machine: %s (in front of me)", "+ Новый автомат: %s (передо мной)", "+ Nueva maquina: %s (delante de mi)", "+ Yeni makine: %s (onumde)" },
     { "[%d] %s (%s) - obrisi", "[%d] %s (%s) - delete", "[%d] %s (%s) - удалить", "[%d] %s (%s) - borrar", "[%d] %s (%s) - sil" },
@@ -1855,7 +1852,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Streljana", "Shooting Gallery", "Тир", "Galeria de tiro", "Atis Poligonu" },
     { "WASD nisan (ALT fino), LMB pucaj, ne gadjajte civile   ENTER - izlaz", "WASD aim (ALT fine), LMB shoot, don't hit civilians   ENTER - exit", "WASD прицел (ALT точно), ЛКМ выстрел, не стреляйте в мирных жителей   ENTER - выход", "WASD apuntar (ALT fino), LMB disparar, no dispares a civiles   ENTER - salir", "WASD nisan (ALT hassas), LMB ates, sivillere ates etmeyin   ENTER - cikis" },
     { "ZDRAVLJE", "HEALTH", "ЗДОРОВЬЕ", "SALUD", "SAGLIK" },
-    { "~r~Ubili ste civila!", "~r~You shot a civilian!", "~r~Вы убили мирного жителя!", "~r~Has matado a un civil!", "~r~Bir sivili vurdunuz!" }
+    { "~r~Ubili ste civila!", "~r~You shot a civilian!", "~r~Вы убили мирного жителя!", "~r~Has matado a un civil!", "~r~Bir sivili vurdunuz!" },
+    { "Auto i garaze", "Cars & garages", "Авто и гаражи", "Autos y garajes", "Araclar ve garajlar" },
+    { "Nekretnine", "Real estate", "Недвижимость", "Inmuebles", "Emlak" },
+    { "Trgovine i usluge", "Shops & services", "Магазины и услуги", "Tiendas y servicios", "Dukkanlar ve hizmetler" },
+    { "Igre i zabava", "Games & fun", "Игры и развлечения", "Juegos y ocio", "Oyunlar ve eglence" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

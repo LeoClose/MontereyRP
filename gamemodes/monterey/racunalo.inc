@@ -1,3 +1,4 @@
+#define KLAD_CUVAJ_DANA     30
 #define RACUNALO_MODEL      2190
 #define RACUNALO_CIJENA     2500
 #define RACUNALO_DOMET      2.0
@@ -102,6 +103,10 @@ InitRacunalo()
     new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT line FROM bet_legs LIMIT 1");
     if (stupac) DB_FreeResultSet(stupac);
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE bet_legs ADD COLUMN line INTEGER NOT NULL DEFAULT 0"));
+    new staro = gettime() - KLAD_CUVAJ_DANA * 86400;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_legs WHERE slip IN (SELECT id FROM bet_slips WHERE status != 0 AND settled > 0 AND settled < %d)", staro));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_slips WHERE status != 0 AND settled > 0 AND settled < %d", staro));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_events WHERE status >= 2 AND start < %d AND id NOT IN (SELECT event FROM bet_legs)", staro));
     for (new c = 0; c < sizeof gKladStupci; c++)
     {
         stupac = DB_ExecuteQuery(gDB, "SELECT %s FROM bet_events LIMIT 1", gKladStupci[c]);
