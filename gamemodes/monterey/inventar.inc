@@ -97,7 +97,8 @@ enum
     ITEM_MUN_PISTOLJ, ITEM_MUN_SACMARICA, ITEM_MUN_SMG, ITEM_MUN_PUSKA,
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
-    ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE
+    ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE,
+    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -144,7 +145,10 @@ new const gItems[][E_ITEM] = {
     { "Ukradeni nakit",         "kom", 50,  0,  -1, 19941 },
     { "Zlatna poluga",          "kom", 100, 0,  -1, 19941 },
     { "Zlatne naocale",         "kom", 3,   0,  -1, 19017 },
-    { "Srebrne naocale",        "kom", 3,   0,  -1, 19023 }
+    { "Srebrne naocale",        "kom", 3,   0,  -1, 19023 },
+    { "Metamfetamin",           "g",   200, 0,  -1, 1579  },
+    { "Koka pasta",             "g",   500, 0,  -1, 1577  },
+    { "Kemikalije",             "l",   20,  0,  -1, 1576  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -230,8 +234,10 @@ static KoristiItem(playerid, item)
     if (item == ITEM_ZETONI) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zetone mijenjate na blagajni kazina."));
     if (item == ITEM_KANISTER) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prazan kanister napunite na pumpi naredbom /tankaj."));
     if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return VoziloKanister(playerid, item, -1);
-    if (item != ITEM_MARIHUANA && item != ITEM_KOKAIN)
-        return SendClientMessage(playerid, COLOR_INFO, item == ITEM_SJEME ? T(playerid, "Sjemenke se sade na teritoriju za uzgoj.") : T(playerid, "Municija se puni kad izvadite oruzje."));
+    if (item == ITEM_SJEME) return DrogaPosadi(playerid);
+    if (item == ITEM_KOKA || item == ITEM_KEMIKALIJE) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koka pasta i kemikalije preraduju se u laboratoriju mafije (/lab)."));
+    if (item != ITEM_MARIHUANA && item != ITEM_KOKAIN && item != ITEM_METH)
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Municija se puni kad izvadite oruzje."));
     if (GetTickCount() - gItemUsedAt[playerid] < KORISTENJE_COOLDOWN)
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte jos %d s."), (KORISTENJE_COOLDOWN - (GetTickCount() - gItemUsedAt[playerid])) / 1000 + 1);
     if (!GiveItem(playerid, item, -1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate tog predmeta."));
@@ -249,6 +255,14 @@ static KoristiItem(playerid, item)
             GetPlayerArmour(playerid, v);
             SetPlayerArmour(playerid, v + 20.0 > 100.0 ? 100.0 : v + 20.0);
             PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s smrka liniju kokaina.", GetRPIme(playerid), "", 1);
+        }
+        case ITEM_METH:
+        {
+            GetPlayerArmour(playerid, v);
+            SetPlayerArmour(playerid, v + 30.0 > 100.0 ? 100.0 : v + 30.0);
+            GetPlayerHealth(playerid, v);
+            SetPlayerHealth(playerid, v - 5.0 < 1.0 ? 1.0 : v - 5.0);
+            PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pusi metamfetamin iz lule.", GetRPIme(playerid), "", 1);
         }
     }
     return 1;

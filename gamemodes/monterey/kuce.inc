@@ -216,6 +216,13 @@ static bool:KucaStanar(playerid, k)
     return ima;
 }
 
+KucaPristupDb(playerid)
+{
+    new k = KucaIgraca(playerid);
+    if (k == -1) return 0;
+    return gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k) ? gKuca[k][kuDb] : 0;
+}
+
 static KucaUdi(playerid, k)
 {
     new i = gKuca[k][kuInt];

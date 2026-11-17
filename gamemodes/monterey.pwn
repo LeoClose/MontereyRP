@@ -265,6 +265,7 @@ public OnGameModeInit()
     InitAvioni();
     InitPlaca();
     InitHod();
+    InitDroga();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_snd ON social_messages (sender)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_comments_post ON social_comments (post)"));
@@ -330,6 +331,7 @@ public Sekunda()
     PokerTick();
     SatTick();
     AvionAtcTick();
+    DrogaTick();
 }
 
 public OnGameModeExit()
@@ -397,6 +399,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
 #include "monterey/kuce.inc"
+#include "monterey/droga.inc"
 #include "monterey/namjestaj.inc"
 #include "monterey/salon.inc"
 #include "monterey/pijaca.inc"

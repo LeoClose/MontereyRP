@@ -1387,7 +1387,7 @@ RanjenPrimijeni(playerid, bool:spasen)
     for (new i = 0; i < BROJ_ITEMA; i++)
     {
         if (!gInv[playerid][i]) continue;
-        new bool:droga = i == ITEM_MARIHUANA || i == ITEM_KOKAIN || i == ITEM_SJEME, bool:oruzje = gItems[i][ITEM_WEAPON] > 0 || (ITEM_MUN_PISTOLJ <= i <= ITEM_MUN_PUSKA);
+        new bool:droga = i == ITEM_MARIHUANA || i == ITEM_KOKAIN || i == ITEM_SJEME || i == ITEM_METH || i == ITEM_KOKA || i == ITEM_KEMIKALIJE, bool:oruzje = gItems[i][ITEM_WEAPON] > 0 || (ITEM_MUN_PISTOLJ <= i <= ITEM_MUN_PUSKA);
         if (droga || (oruzje && !dozvola)) GiveItem(playerid, i, -gInv[playerid][i]);
     }
     SendClientMessage(playerid, COLOR_INFO, dozvola ? T(playerid, "Izgubili ste drogu.") : T(playerid, "Izgubili ste drogu i oruzje (nemate dozvolu za oruzje)."));

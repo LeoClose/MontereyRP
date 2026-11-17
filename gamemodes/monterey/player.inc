@@ -42,6 +42,7 @@ public OnPlayerConnect(playerid)
     OkladaConnect(playerid);
     PikadoConnect(playerid);
     AntiCheatConnect(playerid);
+    DrogaConnect(playerid);
     KuglanjeConnect(playerid);
     IgraObavijestConnect(playerid);
     PokerConnect(playerid);
@@ -86,6 +87,7 @@ public OnPlayerDisconnect(playerid, reason)
     BilijarIgracOdlazi(playerid);
     KosOdlazi(playerid);
     PikadoOdlazi(playerid);
+    DrogaOdlazi(playerid);
     KuglanjeOdlazi(playerid);
     PokerOdlazi(playerid);
     ArkZatvori(playerid);
@@ -171,7 +173,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
-    if (ArkadaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
+    if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
     AnimKey(playerid, newkeys, oldkeys);
@@ -188,7 +190,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 static Interakcija(playerid)
 {
     if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid)) return;
+    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid)) return;
     if (!gUlogiran[playerid] || IsRanjen(playerid) || MobitelOtvoren(playerid) || MdtOtvoren(playerid)) return;
     if (IsPlayerInAnyVehicle(playerid)) VoziloMeni(playerid);
     else if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !VoziloMeni(playerid)) PrikaziInventar(playerid);
