@@ -1851,7 +1851,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Anticheat", "Anticheat", "Античит", "Anticheat", "Anticheat" },
     { "Nema detekcija.", "No detections.", "Нет срабатываний.", "Sin detecciones.", "Tespit yok." },
     { "Previse je igraca spojeno s vase IP adrese.", "Too many players are connected from your IP address.", "С вашего IP-адреса подключено слишком много игроков.", "Hay demasiados jugadores conectados desde tu direccion IP.", "IP adresinizden cok fazla oyuncu bagli." },
-    { "Ova verzija klijenta nije podrzana na serveru.", "This client version is not supported on the server.", "Эта версия клиента не поддерживается на сервере.", "Esta version del cliente no es compatible con el servidor.", "Bu istemci surumu sunucuda desteklenmiyor." }
+    { "Ova verzija klijenta nije podrzana na serveru.", "This client version is not supported on the server.", "Эта версия клиента не поддерживается на сервере.", "Esta version del cliente no es compatible con el servidor.", "Bu istemci surumu sunucuda desteklenmiyor." },
+    { "Streljana", "Shooting Gallery", "Тир", "Galeria de tiro", "Atis Poligonu" },
+    { "WASD nisan (ALT fino), LMB pucaj, ne gadjajte civile   ENTER - izlaz", "WASD aim (ALT fine), LMB shoot, don't hit civilians   ENTER - exit", "WASD прицел (ALT точно), ЛКМ выстрел, не стреляйте в мирных жителей   ENTER - выход", "WASD apuntar (ALT fino), LMB disparar, no dispares a civiles   ENTER - salir", "WASD nisan (ALT hassas), LMB ates, sivillere ates etmeyin   ENTER - cikis" },
+    { "ZDRAVLJE", "HEALTH", "ЗДОРОВЬЕ", "SALUD", "SAGLIK" },
+    { "~r~Ubili ste civila!", "~r~You shot a civilian!", "~r~Вы убили мирного жителя!", "~r~Has matado a un civil!", "~r~Bir sivili vurdunuz!" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

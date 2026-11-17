@@ -601,7 +601,6 @@ static PcLifeStalker(playerid)
         default: LsFeed(playerid);
     }
     new n = gLsAvatara[playerid];
-    if (n >= OBJAVA_REDOVA) return;
     new PlayerText:pokriv = gPc[playerid][PTD_LSPOKRIV + 7];
     PlayerTextDrawSetPos(playerid, pokriv, PC_X + 140.0, PC_Y + LS_RED_Y + float(n) * LS_RED_H - 1.0);
     PlayerTextDrawTextSize(playerid, pokriv, 52.0, 207.0 - LS_RED_Y - float(n) * LS_RED_H);

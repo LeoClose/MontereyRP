@@ -15,18 +15,37 @@
 #define ARK_AUTO            ((ARK_TR - 1) * 3)
 #define ARK_ASFALT          0x3A3A3AFF
 #define ARK_ZUTO            0xFFD32AFF
+#define ARK_METE            5
+#define ARK_PUC_ZDRAVLJE    100
+#define ARK_PUC_STETA       20
+#define ARK_PUC_TLO         100.0
+#define ARK_PUC_FIG_W       44.0
+#define ARK_PUC_FIG_H       80.0
+#define ARK_PUC_FIG_Y       38.0
+#define ARK_PUC_MS          60
+#define ARK_PUC_W           220.0
+#define ARK_PUC_H           150.0
+#define ARK_PUC_X           (320.0 - ARK_PUC_W / 2.0)
+#define ARK_PUC_META        3
+#define ARK_PUC_FLASH       (ARK_PUC_META + ARK_METE + 1)
+#define ARK_PUC_NISAN       (ARK_PUC_FLASH + 1)
+#define ARK_PUC_POMAK       4.0
+#define ARK_PUC_PAUZA       280
 
-enum { AI_ZMIJA, AI_REAKCIJA, AI_MEMORIJA, AI_TRAKE }
+enum { AI_ZMIJA, AI_PUCANJE, AI_MEMORIJA, AI_TRAKE }
 enum E_ARK { bool:amIma, amDb, Float:amX, Float:amY, Float:amZ, Float:amA, amInt, amSvijet, amIgra, STREAMER_TAG_OBJECT:amObj, STREAMER_TAG_3D_TEXT_LABEL:amTekst,
     amIgrac, amToken, amBod, amZivoti, amSmjer, amRep, amDuz, amHrana, amMeta, amMs, bool:amKraj }
 
 static const gArkModel[] = { 2681, 2779, 2778, 2872 };
-static const gArkIme[][] = { "Snake", "Reakcija", "Memorija", "Dodger" };
+static const gArkIme[][] = { "Snake", "Streljana", "Memorija", "Dodger" };
+static const gArkKauboj[] = { 34, 158, 161, 133 };
+static const gArkCivil[] = { 10, 12, 101, 157 };
 static const gArkSimonBoja[9] = { 0xFF4757FF, 0x2ED573FF, 0x1E90FFFF, 0xFFA502FF, 0xECCC68FF, 0xA55EEAFF, 0x00D2D3FF, 0xFF6B81FF, 0x7BED9FFF };
 static const gArkSmjerX[] = { 0, 1, 0, -1 };
 static const gArkSmjerY[] = { -1, 0, 1, 0 };
 
 static gArk[ARK_MAX][E_ARK], gArkZmija[ARK_MAX][ARK_CELIJA], bool:gArkPolje[ARK_MAX][ARK_CELIJA];
+static Float:gArkCx[ARK_MAX], Float:gArkCy[ARK_MAX], gArkCod[ARK_MAX], gArkMt[ARK_MAX][ARK_METE], gArkMe[ARK_MAX][ARK_METE], gArkMod[ARK_MAX][ARK_METE];
 static gArkAutomat[MAX_PLAYERS] = { -1, ... }, PlayerText:gArkTd[MAX_PLAYERS][ARK_TD], gArkBr[MAX_PLAYERS], PlayerText:gArkBodTd[MAX_PLAYERS], PlayerText:gArkInfoTd[MAX_PLAYERS], gApArk[MAX_PLAYERS][ARK_MAX];
 
 InitArkada()
@@ -90,6 +109,30 @@ static PlayerText:ArkTekst(playerid, Float:x, Float:y, const tekst[], Float:vel,
     return td;
 }
 
+static PlayerText:ArkSprite(playerid, Float:x, Float:y, Float:w, Float:h, const tex[], boja, bool:prikazi = true)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tex);
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawTextSize(playerid, td, w, h);
+    PlayerTextDrawColour(playerid, td, boja);
+    if (prikazi) PlayerTextDrawShow(playerid, td);
+    gArkTd[playerid][gArkBr[playerid]++] = td;
+    return td;
+}
+
+static ArkPomakni(playerid, i, Float:x, Float:y, Float:w, Float:h)
+{
+    new PlayerText:td = gArkTd[playerid][i];
+    PlayerTextDrawHide(playerid, td);
+    PlayerTextDrawSetPos(playerid, td, ARK_PUC_X + x - w / 2.0, ARK_Y + y - h / 2.0);
+    PlayerTextDrawShow(playerid, td);
+}
+
+static Float:ArkPucSpotX(i)
+{
+    return ARK_PUC_W * (float(i) + 0.5) / float(ARK_METE);
+}
+
 static ArkCelija(playerid, c, boja)
 {
     PlayerTextDrawBoxColour(playerid, gArkTd[playerid][c + 1], boja);
@@ -99,7 +142,7 @@ static ArkCelija(playerid, c, boja)
 static ArkBodovi(m)
 {
     new p = gArk[m][amIgrac], tekst[64];
-    if (gArk[m][amIgra] == AI_REAKCIJA) format(tekst, sizeof tekst, "~w~%s: ~y~%d   ~w~%s: ~r~%d", T(p, "BODOVI"), gArk[m][amBod], T(p, "ZIVOTI"), gArk[m][amZivoti]);
+    if (gArk[m][amIgra] == AI_PUCANJE) format(tekst, sizeof tekst, "~w~%s: ~y~%d   ~w~%s: ~r~%d", T(p, "BODOVI"), gArk[m][amBod], T(p, "ZDRAVLJE"), gArk[m][amZivoti]);
     else if (gArk[m][amIgra] == AI_MEMORIJA) format(tekst, sizeof tekst, "~w~%s: ~y~%d   %s", T(p, "BODOVI"), gArk[m][amBod], gArk[m][amSmjer] ? T(p, "~g~TVOJ RED") : T(p, "~p~GLEDAJ"));
     else format(tekst, sizeof tekst, "~w~%s: ~y~%d", T(p, "BODOVI"), gArk[m][amBod]);
     PlayerTextDrawSetString(p, gArkBodTd[p], tekst);
@@ -174,26 +217,47 @@ static ArkPokreni(playerid, m)
         ArkCelija(playerid, ARK_AUTO + 1, ARK_ZUTO);
         SetTimerEx("ArkTrakeTick", ARK_TR_MS, false, "ii", m, gArk[m][amToken]);
     }
+    else if (gArk[m][amIgra] == AI_PUCANJE)
+    {
+        ArkKutija(playerid, ARK_PUC_X - 10.0, ARK_Y - 34.0, ARK_PUC_W + 20.0, ARK_PUC_H + 72.0, 0x10141EE6);
+        ArkSprite(playerid, ARK_PUC_X, ARK_Y, ARK_PUC_W, ARK_PUC_H, "ld_grav:sky", 0xFFFFFFFF);
+        ArkSprite(playerid, ARK_PUC_X, ARK_Y + ARK_PUC_TLO, ARK_PUC_W, ARK_PUC_H - ARK_PUC_TLO, "LD_SPAC:white", 0xB08850FF);
+        for (new i = 0; i < ARK_METE; i++)
+        {
+            new PlayerText:td = ArkSprite(playerid, ARK_PUC_X + ArkPucSpotX(i) - ARK_PUC_FIG_W / 2.0, ARK_Y + ARK_PUC_FIG_Y, ARK_PUC_FIG_W, ARK_PUC_FIG_H, "_", 0xFFFFFFFF, false);
+            PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_MODEL_PREVIEW);
+            PlayerTextDrawBackgroundColour(playerid, td, 0x00000000);
+            PlayerTextDrawSetPreviewModel(playerid, td, gArkKauboj[0]);
+            gArkMt[m][i] = -1;
+        }
+        ArkSprite(playerid, ARK_PUC_X, ARK_Y + ARK_PUC_TLO - 8.0, ARK_PUC_W, 24.0, "LD_OTB:fen", 0xFFFFFFFF);
+        ArkSprite(playerid, ARK_PUC_X, ARK_Y, ARK_PUC_W, ARK_PUC_H, "LD_SPAC:white", 0xC0000070, false);
+        ArkSprite(playerid, -50.0, -50.0, 16.0, 1.5, "LD_SPAC:white", 0xFF3B3BFF);
+        ArkSprite(playerid, -50.0, -50.0, 1.5, 16.0, "LD_SPAC:white", 0xFF3B3BFF);
+        ArkSprite(playerid, -50.0, -50.0, 3.0, 3.0, "LD_BEAT:chit", 0xFFFFFFFF);
+        ArkTekst(playerid, 320.0, ARK_Y - 30.0, "STRELJANA", 1.6, 0xFF6B3BFF);
+        gArkBodTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + ARK_PUC_H + 6.0, "_", 1.0, 0xFFFFFFFF);
+        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + ARK_PUC_H + 18.0, T(playerid, "WASD nisan (ALT fino), LMB pucaj, ne gadjajte civile   ENTER - izlaz"), 0.8, 0xAAAAAAFF);
+        gArk[m][amZivoti] = ARK_PUC_ZDRAVLJE;
+        gArk[m][amSmjer] = 0;
+        gArk[m][amMs] = 1400;
+        gArk[m][amHrana] = GetTickCount() + 500;
+        gArk[m][amRep] = 0;
+        gArkCx[m] = ARK_PUC_W / 2.0;
+        gArkCy[m] = ARK_PUC_H / 2.0;
+        gArkCod[m] = GetTickCount();
+        SetTimerEx("ArkPucTick", ARK_PUC_MS, false, "ii", m, gArk[m][amToken]);
+    }
     else
     {
-        new bool:mem = gArk[m][amIgra] == AI_MEMORIJA;
-        ArkKutija(playerid, 320.0 - 88.0, ARK_Y - 34.0, 176.0, 194.0, mem ? 0x1E1230E6 : 0x14152AE6);
-        for (new c = 0; c < 9; c++) ArkKutija(playerid, 320.0 - 75.0 + float(c % 3) * 52.0, ARK_Y + float(c / 3) * 40.0, 46.0, 34.0, mem ? ArkTamna(gArkSimonBoja[c]) : 0x2C2F45FF, true);
-        ArkTekst(playerid, 320.0, ARK_Y - 30.0, mem ? ("MEMORIJA") : ("REAKCIJA"), 1.6, mem ? 0xD980FAFF : 0x00E5FFFF);
+        ArkKutija(playerid, 320.0 - 88.0, ARK_Y - 34.0, 176.0, 194.0, 0x1E1230E6);
+        for (new c = 0; c < 9; c++) ArkKutija(playerid, 320.0 - 75.0 + float(c % 3) * 52.0, ARK_Y + float(c / 3) * 40.0, 46.0, 34.0, ArkTamna(gArkSimonBoja[c]), true);
+        ArkTekst(playerid, 320.0, ARK_Y - 30.0, "MEMORIJA", 1.6, 0xD980FAFF);
         gArkBodTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 124.0, "_", 1.0, 0xFFFFFFFF);
-        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 138.0, T(playerid, mem ? ("Zapamtite i ponovite niz   ENTER - izlaz") : ("Kliknite svijetli kvadrat   ENTER - izlaz")), 0.8, 0xAAAAAAFF);
-        SelectTextDraw(playerid, mem ? 0xD980FFFF : 0x00E5FFFF);
-        if (mem)
-        {
-            gArk[m][amDuz] = 0;
-            ArkSimonDodaj(m);
-        }
-        else
-        {
-            gArk[m][amZivoti] = 3;
-            gArk[m][amMeta] = -1;
-            ArkMeta(m);
-        }
+        gArkInfoTd[playerid] = ArkTekst(playerid, 320.0, ARK_Y + 138.0, T(playerid, "Zapamtite i ponovite niz   ENTER - izlaz"), 0.8, 0xAAAAAAFF);
+        SelectTextDraw(playerid, 0xD980FFFF);
+        gArk[m][amDuz] = 0;
+        ArkSimonDodaj(m);
     }
     ArkBodovi(m);
     if (gArk[m][amIgra] == AI_ZMIJA) SetTimerEx("ArkZmijaTick", gArk[m][amMs], false, "ii", m, gArk[m][amToken]);
@@ -264,37 +328,121 @@ public ArkZmijaTick(m, token)
     SetTimerEx("ArkZmijaTick", gArk[m][amMs], false, "ii", m, token);
 }
 
-static ArkMeta(m)
+static ArkPucSkrij(m, i)
 {
-    new p = gArk[m][amIgrac], stara = gArk[m][amMeta], nova = random(8);
-    if (nova >= stara && stara != -1) nova++;
-    if (stara != -1) ArkCelija(p, stara, 0x2C2F45FF);
-    gArk[m][amMeta] = nova;
-    ArkCelija(p, nova, 0x00E5FFFF);
-    gArk[m][amMs] = 1100 - gArk[m][amBod] * 25;
-    if (gArk[m][amMs] < 380) gArk[m][amMs] = 380;
-    SetTimerEx("ArkReakcijaIstek", gArk[m][amMs], false, "ii", m, ++gArk[m][amToken]);
+    gArkMt[m][i] = -1;
+    PlayerTextDrawHide(gArk[m][amIgrac], gArkTd[gArk[m][amIgrac]][ARK_PUC_META + i]);
 }
 
-static ArkPromasaj(m)
+static ArkPucFigura(m, i, model, Float:rx)
+{
+    new p = gArk[m][amIgrac], PlayerText:td = gArkTd[p][ARK_PUC_META + i];
+    PlayerTextDrawSetPreviewModel(p, td, model);
+    PlayerTextDrawSetPreviewRot(p, td, rx, 0.0, 0.0, 1.0);
+    PlayerTextDrawShow(p, td);
+}
+
+static ArkPucNova(m)
+{
+    new slobodna[ARK_METE], n = 0;
+    for (new i = 0; i < ARK_METE; i++) if (gArkMt[m][i] == -1) slobodna[n++] = i;
+    if (!n) return;
+    new i = slobodna[random(n)], bool:civil = random(100) < 25, sad = GetTickCount(), rok = 1600 - gArk[m][amBod] * 3;
+    if (rok < 650) rok = 650;
+    gArkMt[m][i] = civil ? 1 : 0;
+    gArkMod[m][i] = civil ? gArkCivil[random(sizeof gArkCivil)] : gArkKauboj[random(sizeof gArkKauboj)];
+    gArkMe[m][i] = sad + (civil ? 1800 : rok);
+    ArkPucFigura(m, i, gArkMod[m][i], 0.0);
+}
+
+static ArkPucPogodjen(m)
 {
     new p = gArk[m][amIgrac];
     PlayerPlaySound(p, 1055, 0.0, 0.0, 0.0);
-    if (--gArk[m][amZivoti] <= 0)
-    {
-        ArkBodovi(m);
-        ArkKraj(m);
-        return;
-    }
+    gArk[m][amZivoti] -= ARK_PUC_STETA;
+    if (gArk[m][amZivoti] < 0) gArk[m][amZivoti] = 0;
     ArkBodovi(m);
-    ArkMeta(m);
+    PlayerTextDrawShow(p, gArkTd[p][ARK_PUC_FLASH]);
+    gArk[m][amSmjer] = GetTickCount() + 150;
+    if (gArk[m][amZivoti] > 0) return 1;
+    ArkKraj(m);
+    return 0;
 }
 
-forward ArkReakcijaIstek(m, token);
-public ArkReakcijaIstek(m, token)
+forward ArkPucTick(m, token);
+public ArkPucTick(m, token)
 {
     if (token != gArk[m][amToken] || gArk[m][amKraj]) return;
-    ArkPromasaj(m);
+    new p = gArk[m][amIgrac], KEY:tipke, gore, strana, sad = GetTickCount();
+    GetPlayerKeys(p, tipke, gore, strana);
+    new Float:brzina = (tipke & KEY_WALK) ? ARK_PUC_POMAK * 0.3 : ARK_PUC_POMAK;
+    gArkCx[m] += float(strana) / 128.0 * brzina;
+    gArkCy[m] += float(gore) / 128.0 * brzina;
+    gArkCx[m] = gArkCx[m] < 0.0 ? 0.0 : gArkCx[m] > ARK_PUC_W ? ARK_PUC_W : gArkCx[m];
+    gArkCy[m] = gArkCy[m] < 0.0 ? 0.0 : gArkCy[m] > ARK_PUC_H ? ARK_PUC_H : gArkCy[m];
+    if (gArk[m][amSmjer] && sad - gArk[m][amSmjer] >= 0)
+    {
+        gArk[m][amSmjer] = 0;
+        PlayerTextDrawHide(p, gArkTd[p][ARK_PUC_FLASH]);
+    }
+    if (sad - gArk[m][amHrana] >= 0)
+    {
+        ArkPucNova(m);
+        gArk[m][amMs] = 1400 - gArk[m][amBod] * 3;
+        if (gArk[m][amMs] < 550) gArk[m][amMs] = 550;
+        gArk[m][amHrana] = sad + gArk[m][amMs];
+    }
+    for (new i = 0; i < ARK_METE; i++)
+    {
+        new t = gArkMt[m][i];
+        if (t == -1 || sad - gArkMe[m][i] < 0) continue;
+        ArkPucSkrij(m, i);
+        if (t == 0 && !ArkPucPogodjen(m)) return;
+    }
+    new Float:a = 1.5 + float(sad - gArkCod[m]) * 0.0008, Float:x, Float:y;
+    if (a > 7.0) a = 7.0;
+    ArkPucNisan(m, a, float(sad % 360000) / 1000.0, x, y);
+    ArkPomakni(p, ARK_PUC_NISAN, x, y, 16.0, 1.5);
+    ArkPomakni(p, ARK_PUC_NISAN + 1, x, y, 1.5, 16.0);
+    ArkPomakni(p, ARK_PUC_NISAN + 2, x, y, 3.0, 3.0);
+    SetTimerEx("ArkPucTick", ARK_PUC_MS, false, "ii", m, token);
+}
+
+static ArkPucNisan(m, Float:a, Float:t, &Float:x, &Float:y)
+{
+    x = gArkCx[m] + a * (0.65 * floatsin(t * 97.0, degrees) + 0.35 * floatsin(t * 233.0 + 20.0, degrees));
+    y = gArkCy[m] + a * 0.8 * (0.6 * floatsin(t * 131.0 + 40.0, degrees) + 0.4 * floatsin(t * 263.0, degrees));
+}
+
+static ArkPucaj(m)
+{
+    new p = gArk[m][amIgrac], sad = GetTickCount();
+    if (sad - gArk[m][amRep] < ARK_PUC_PAUZA) return;
+    gArk[m][amRep] = sad;
+    new Float:a = 1.5 + float(sad - gArkCod[m]) * 0.0008, Float:x, Float:y;
+    if (a > 7.0) a = 7.0;
+    ArkPucNisan(m, a, float(sad % 360000) / 1000.0, x, y);
+    gArkCod[m] = sad;
+    if (y < ARK_PUC_FIG_Y + 4.0 || y > ARK_PUC_TLO) return;
+    for (new i = 0; i < ARK_METE; i++)
+    {
+        new t = gArkMt[m][i];
+        if ((t != 0 && t != 1) || floatabs(x - ArkPucSpotX(i)) > ARK_PUC_FIG_W * 0.3) continue;
+        ArkPucFigura(m, i, gArkMod[m][i], 90.0);
+        gArkMt[m][i] = 2;
+        if (t == 1)
+        {
+            PlayerPlaySound(p, 1055, 0.0, 0.0, 0.0);
+            GameTextForPlayer(p, T(p, "~r~Ubili ste civila!"), 2500, 3);
+            ArkKraj(m);
+            return;
+        }
+        gArk[m][amBod] += 10 + (gArkMe[m][i] - sad) / 100;
+        gArkMe[m][i] = sad + 450;
+        PlayerPlaySound(p, 1056, 0.0, 0.0, 0.0);
+        ArkBodovi(m);
+        return;
+    }
 }
 
 static ArkTamna(boja)
@@ -437,20 +585,12 @@ public ArkTrakeTick(m, token)
 bool:ArkadaKlik(playerid, PlayerText:td)
 {
     new m = gArkAutomat[playerid];
-    if (m == -1 || (gArk[m][amIgra] != AI_REAKCIJA && gArk[m][amIgra] != AI_MEMORIJA)) return false;
+    if (m == -1 || gArk[m][amIgra] != AI_MEMORIJA) return false;
     if (gArk[m][amKraj]) return true;
     for (new c = 0; c < 9; c++)
     {
         if (td != gArkTd[playerid][c + 1]) continue;
-        if (gArk[m][amIgra] == AI_MEMORIJA) ArkSimonKlik(m, c);
-        else if (c != gArk[m][amMeta]) ArkPromasaj(m);
-        else
-        {
-            gArk[m][amBod]++;
-            PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
-            ArkBodovi(m);
-            ArkMeta(m);
-        }
+        ArkSimonKlik(m, c);
         break;
     }
     return true;
@@ -495,7 +635,7 @@ ArkZatvori(playerid)
     for (new i = 0; i < gArkBr[playerid]; i++) PlayerTextDrawDestroy(playerid, gArkTd[playerid][i]);
     gArkBr[playerid] = 0;
     if (!IsPlayerConnected(playerid)) return;
-    if (gArk[m][amIgra] == AI_REAKCIJA) CancelSelectTextDraw(playerid);
+    if (gArk[m][amIgra] == AI_MEMORIJA) CancelSelectTextDraw(playerid);
     TogglePlayerControllable(playerid, true);
 }
 
@@ -516,6 +656,11 @@ bool:ArkadaTipke(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if (gArkAutomat[playerid] == -1) return false;
     if ((newkeys & KEY_SECONDARY_ATTACK) && !(oldkeys & KEY_SECONDARY_ATTACK)) ArkadaEsc(playerid);
+    else if ((newkeys & KEY_FIRE) && !(oldkeys & KEY_FIRE))
+    {
+        new m = gArkAutomat[playerid];
+        if (gArk[m][amIgra] == AI_PUCANJE && !gArk[m][amKraj]) ArkPucaj(m);
+    }
     return true;
 }
 
