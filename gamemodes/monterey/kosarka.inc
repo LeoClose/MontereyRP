@@ -97,6 +97,7 @@ InitKosarka()
 
 static KosTereni()
 {
+    for (new k = 0; k < KOS_MAX; k++) OkladaZatvori(OK_KOSARKA, k);
     for (new p = 0; p < MAX_PLAYERS; p++) if (gKosTeren[p] != -1) KosNapusti(p, false);
     for (new k = 0; k < KOS_MAX; k++)
     {
@@ -267,6 +268,7 @@ static bool:KosPridruzi(playerid, t, zeljeni = -1)
     new a = KosBroj(t, 0), b = KosBroj(t, 1), tim = zeljeni != -1 ? zeljeni : a <= b ? 0 : 1;
     if ((tim == 0 ? a : b) >= KOS_TIM_MAX) tim = 1 - tim;
     if ((tim == 0 ? a : b) >= KOS_TIM_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Oba tima su puna.")), false;
+    if (!OkladaUdi(playerid, OK_KOSARKA, t)) return false;
     gKosTeren[playerid] = t;
     gKosTim[playerid] = tim;
     KosHudStvori(playerid);
@@ -284,9 +286,53 @@ static KosNapusti(playerid, bool:osvjezi)
     if (t == -1) return;
     gKosTeren[playerid] = -1;
     if (IsPlayerConnected(playerid)) for (new i = 0; i < KOS_HUD; i++) PlayerTextDrawDestroy(playerid, gKosHud[playerid][i]);
-    if (!osvjezi) return;
-    if (KosBroj(t, 0) + KosBroj(t, 1) == 0) gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
+    if (!osvjezi)
+    {
+        OkladaIzadi(playerid, false);
+        return;
+    }
+    new a = KosBroj(t, 0), b = KosBroj(t, 1);
+    if (a + b == 0)
+    {
+        OkladaIzadi(playerid, true);
+        OkladaZatvori(OK_KOSARKA, t);
+        gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
+        return;
+    }
+    OkladaIzadi(playerid, false);
+    if (OkladaBanka(OK_KOSARKA, t) && (!a || !b)) KosPobjeda(t, a ? 0 : 1);
     else KosHudOsvjezi(t);
+}
+
+KosOkladaTeren(playerid)
+{
+    new t = gKosTeren[playerid];
+    if (t == -1) return -1;
+    return KosBroj(t, 0) + KosBroj(t, 1) == 1 ? t : -2 - t;
+}
+
+static KosPobjeda(t, tim)
+{
+    new pobjednici[KOS_TIM_MAX], n = 0;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gKosTeren[i] != t) continue;
+        if (gKosTim[i] == tim && n < sizeof pobjednici) pobjednici[n++] = i;
+        new tekst[64];
+        format(tekst, sizeof tekst, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
+        GameTextForPlayer(i, tekst, 3000, 3);
+        SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
+    }
+    OkladaIsplati(OK_KOSARKA, t, pobjednici, n);
+    gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
+    for (new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if (gKosTeren[i] != t || OkladaUdi(i, OK_KOSARKA, t, false)) continue;
+        if (gKosDrzi[i] != -1) KosIspusti(i);
+        KosNapusti(i, false);
+        SendClientMessage(i, COLOR_INFO, T(i, "Napustili ste kosarkaski teren."));
+    }
+    KosHudOsvjezi(t);
 }
 
 static KosLuk(k, Float:ax, Float:ay, Float:az, Float:bx, Float:by, Float:bz, Float:vis, koraka)
@@ -392,16 +438,7 @@ static KosObjavi(k)
         KosHudOsvjezi(t);
         return;
     }
-    for (new i = 0; i < MAX_PLAYERS; i++)
-    {
-        if (gKosTeren[i] != t) continue;
-        new tekst[64];
-        format(tekst, sizeof tekst, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
-        GameTextForPlayer(i, tekst, 3000, 3);
-        SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
-    }
-    gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
-    KosHudOsvjezi(t);
+    KosPobjeda(t, tim);
 }
 
 static KosSlijetanje(k)

@@ -827,9 +827,9 @@ enum
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade", "Pikado", "Kuglane", "Poker stolovi"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -841,8 +841,8 @@ CMD:apanel(playerid, params[])
 }
 
 static const gApKat[][] = { "Igraci", "Vozila", "Organizacije", "Teritoriji", "Administracija" };
-static const gApKatStavke[sizeof gApKat][16] = {
-    { 0, 1, 2, 7, 8, 22, 31, 32, -1, -1, -1, -1, -1, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21, 27, 28, -1, -1, -1, -1, -1 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 24, 25, 26, 20, 29, 30, 33, 34, 35, 36 }
+static const gApKatStavke[sizeof gApKat][20] = {
+    { 0, 1, 2, 7, 8, 22, 31, 32, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, 17, 19, 21, 27, 28, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 6, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 11, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 12, 14, 18, 24, 25, 26, 20, 29, 30, 33, 34, 35, 36, 37, 38, 39, -1 }
 };
 static gApKatOdabrana[MAX_PLAYERS];
 
@@ -862,7 +862,7 @@ ShowAdminPanel(playerid)
 
 ShowKategoriju(playerid)
 {
-    new k = gApKatOdabrana[playerid], list[256], row[48], len = 0;
+    new k = gApKatOdabrana[playerid], list[512], row[48], len = 0;
     for (new j = 0; j < sizeof gApKatStavke[]; j++)
     {
         new i = gApKatStavke[k][j];
@@ -987,6 +987,9 @@ static OtvoriStavku(playerid, stavka)
         case 34: return ShowBilijari(playerid);
         case 35: return ShowKosevi(playerid);
         case 36: return ShowArkade(playerid);
+        case 37: return ShowPikado(playerid);
+        case 38: return ShowKuglane(playerid);
+        case 39: return ShowPoker(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));

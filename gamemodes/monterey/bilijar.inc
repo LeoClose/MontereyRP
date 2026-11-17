@@ -146,6 +146,7 @@ static BilijarKraj(s)
         gBilijar[s][bsIgrac][i] = INVALID_PLAYER_ID;
     }
     gBilijar[s][bsFaza] = BF_CEKA;
+    OkladaZatvori(OK_BILIJAR, s);
     BilijarSlozi(s);
 }
 
@@ -158,6 +159,9 @@ static BilijarPobjeda(s, pobjednik)
 {
     new p = gBilijar[s][bsIgrac][pobjednik], g = gBilijar[s][bsIgrac][1 - pobjednik];
     if (p != INVALID_PLAYER_ID && g != INVALID_PLAYER_ID) BilijarPoruka(s, "[Bilijar] %s je pobijedio protiv %s!", p, g);
+    new w[1];
+    w[0] = p;
+    OkladaIsplati(OK_BILIJAR, s, w, p != INVALID_PLAYER_ID);
     BilijarKraj(s);
 }
 
@@ -169,12 +173,23 @@ BilijarIgracOdlazi(playerid)
     if (gBilijar[s][bsFaza] != BF_CEKA && gBilijar[s][bsIgrac][1 - i] != INVALID_PLAYER_ID)
     {
         BilijarPoruka(s, "[Bilijar] %s je napustio igru.", playerid);
+        OkladaIzadi(playerid, false);
         BilijarPobjeda(s, 1 - i);
         return;
     }
     if (gBilijar[s][bsNisani] == playerid) BilijarNisanKraj(s);
     gBilijar[s][bsIgrac][i] = INVALID_PLAYER_ID;
     gBilijarIgrac[playerid] = -1;
+    OkladaIzadi(playerid, true);
+    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) OkladaZatvori(OK_BILIJAR, s);
+}
+
+BilijarOkladaStol(playerid)
+{
+    new s = gBilijarIgrac[playerid];
+    if (s == -1) return -1;
+    new i = gBilijar[s][bsIgrac][0] == playerid ? 0 : 1;
+    return gBilijar[s][bsFaza] == BF_CEKA && gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID ? s : -2 - s;
 }
 
 static BilijarBlizu(playerid, Float:domet)
@@ -211,9 +226,10 @@ BilijarKey(playerid)
     if (s == -1) return 0;
     new i = gBilijar[s][bsIgrac][0] == INVALID_PLAYER_ID ? 0 : gBilijar[s][bsIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
     if (i == -1 || gBilijar[s][bsFaza] != BF_CEKA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za ovim stolom se vec igra.")), 1;
+    if (!OkladaUdi(playerid, OK_BILIJAR, s)) return 1;
     gBilijar[s][bsIgrac][i] = playerid;
     gBilijarIgrac[playerid] = s;
-    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak).")), 1;
+    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog).")), 1;
     BilijarSlozi(s);
     gBilijar[s][bsFaza] = BF_IGRA;
     gBilijar[s][bsNaPotezu] = random(2);

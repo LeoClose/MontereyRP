@@ -233,6 +233,9 @@ public OnGameModeInit()
     InitBilijar();
     InitKosarka();
     InitArkada();
+    InitPikado();
+    InitKuglanje();
+    InitPoker();
     InitZlatara();
     InitVrijeme();
     InitOruzarnica();
@@ -294,12 +297,17 @@ public Sekunda()
     KaficTick();
     BilijarTick();
     KosTick();
+    PikadoTick();
+    KuglanjeTick();
+    PokerTick();
     SatTick();
     AvionAtcTick();
 }
 
 public OnGameModeExit()
 {
+    OkladaVratiSve();
+    PokerVratiSve();
     StatsSaveAll();
     VlasnikStetaSpremiSve();
     DB_Close(gDB);
@@ -347,9 +355,13 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/banka.inc"
 #include "monterey/racunalo.inc"
 #include "monterey/kafic.inc"
+#include "monterey/oklada.inc"
 #include "monterey/bilijar.inc"
 #include "monterey/kosarka.inc"
 #include "monterey/arkada.inc"
+#include "monterey/pikado.inc"
+#include "monterey/kuglanje.inc"
+#include "monterey/poker.inc"
 #include "monterey/fit_tablica.inc"
 #include "monterey/zlatara.inc"
 #include "monterey/oruzarnica.inc"
