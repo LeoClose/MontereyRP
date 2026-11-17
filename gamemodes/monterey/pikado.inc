@@ -6,22 +6,29 @@
 #define PIKADO_NISAN_MS     50
 #define PIKADO_POTEZ_MS     1500
 #define PIKADO_CX           320.0
-#define PIKADO_CY           205.0
-#define PIKADO_R            125.0
-#define PIKADO_NJIHANJE     22.0
-#define PIKADO_RASIPANJE    8
+#define PIKADO_CY           200.0
+#define PIKADO_R            120.0
+#define PIKADO_AX           0.8
+#define PIKADO_RASIPANJE    5
 #define PIKADO_POMAK        5.0
-#define PIKADO_PLOCA        640
-#define PIKADO_TD           13
+#define PIKADO_DAH          2500
+#define PIKADO_IDEAL        75.0
+#define PIKADO_TOCNO        4.0
+#define PIKADO_BAR_X        240.0
+#define PIKADO_BAR_Y        408.0
+#define PIKADO_BAR_W        160.0
+#define PIKADO_PLOCA        800
+#define PIKADO_TD           18
 #define PIKADO_CRNA         0x161616FF
 #define PIKADO_KREM         0xEADFC3FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
 enum { PF_CEKA, PF_IGRA, PF_PAUZA }
-enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA * 3 }
+enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA * 3, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH }
 enum E_PIKADO { bool:pkIma, pkDb, Float:pkX, Float:pkY, Float:pkZ, Float:pkA, pkInt, pkSvijet, STREAMER_TAG_3D_TEXT_LABEL:pkTekst,
-    pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno }
+    pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno,
+    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkDah, pkNisanOd }
 
 static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5 };
 
@@ -47,9 +54,9 @@ static PikadoKrugPloce(Float:mx, Float:my, Float:rmm, boja)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
     new Float:k = PIKADO_R / 170.0, Float:r = rmm * k;
-    new Text:td = TextDrawCreate(PIKADO_CX + mx * k - r, PIKADO_CY - my * k - r, "LD_BEAT:chit");
+    new Text:td = TextDrawCreate(PIKADO_CX + (mx * k - r) * PIKADO_AX, PIKADO_CY - my * k - r, "LD_BEAT:chit");
     TextDrawFont(td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    TextDrawTextSize(td, r * 2.0, r * 2.0);
+    TextDrawTextSize(td, r * 2.0 * PIKADO_AX, r * 2.0);
     TextDrawColour(td, boja);
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
@@ -72,14 +79,14 @@ static PikadoKlin(i, Float:od, Float:doo, boja)
             zadnji = true;
         }
         new Float:x = p * 0.75 / r, Float:kut = 9.0 - asin(x > 1.0 ? 1.0 : x);
-        new m = floatround(2.0 * kut * 3.14159 / 180.0 * r / (p * 1.3), floatround_ceil) + 1;
+        new m = floatround(2.0 * kut * 3.14159 / 180.0 * r / (p * 0.8), floatround_ceil) + 1;
         for (new j = 0; j < m; j++)
         {
             new Float:a = float(i) * 18.0 + (m > 1 ? -kut + 2.0 * kut * float(j) / float(m - 1) : 0.0);
             PikadoKrugPloce(r * floatsin(a, degrees), r * floatcos(a, degrees), p, boja);
         }
         if (zadnji) break;
-        r += p * 1.3;
+        r += p * 0.8;
     }
 }
 
@@ -115,7 +122,7 @@ static PikadoPlocaStvori()
     {
         new Float:a = float(i) * 18.0, Text:td;
         valstr(broj, gPikadoBroj[i]);
-        td = TextDrawCreate(PIKADO_CX + 197.0 * k * floatsin(a, degrees), PIKADO_CY - 197.0 * k * floatcos(a, degrees) - 6.0, broj);
+        td = TextDrawCreate(PIKADO_CX + 197.0 * k * PIKADO_AX * floatsin(a, degrees), PIKADO_CY - 197.0 * k * floatcos(a, degrees) - 6.0, broj);
         TextDrawFont(td, TEXT_DRAW_FONT_2);
         TextDrawLetterSize(td, 0.26, 1.15);
         TextDrawAlignment(td, TEXT_DRAW_ALIGN_CENTER);
@@ -205,16 +212,29 @@ static PikadoTdStvori(playerid)
     PikadoTdUnisti(playerid);
     gPkTdIma[playerid] = true;
     for (new i = 0; i < gPikadoPlocaN; i++) TextDrawShowForPlayer(playerid, gPikadoPloca[i]);
-    gPkTd[playerid][PTD_NISAN] = PikadoPravokutnik(playerid, 18.0, 1.5, 0x00E5FFFF);
-    gPkTd[playerid][PTD_NISAN + 1] = PikadoPravokutnik(playerid, 1.5, 18.0, 0x00E5FFFF);
-    gPkTd[playerid][PTD_NISAN + 2] = PikadoTocka(playerid, 1.6, 0xFFFFFFFF);
     for (new d = 0; d < PIKADO_STRELICA; d++)
     {
-        gPkTd[playerid][PTD_STRELICA + d * 3] = PikadoPravokutnik(playerid, 13.0, 3.0, 0xF1C40FFF);
-        gPkTd[playerid][PTD_STRELICA + d * 3 + 1] = PikadoPravokutnik(playerid, 3.0, 13.0, 0xD4AC0DFF);
+        gPkTd[playerid][PTD_STRELICA + d * 3] = PikadoPravokutnik(playerid, 13.0 * PIKADO_AX, 3.0, 0xF1C40FFF);
+        gPkTd[playerid][PTD_STRELICA + d * 3 + 1] = PikadoPravokutnik(playerid, 3.0 * PIKADO_AX, 13.0, 0xD4AC0DFF);
         gPkTd[playerid][PTD_STRELICA + d * 3 + 2] = PikadoTocka(playerid, 2.2, 0x202020FF);
     }
-    gPkTd[playerid][PTD_INFO] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY + 178.0, "_");
+    gPkTd[playerid][PTD_NISAN] = PikadoPravokutnik(playerid, 18.0 * PIKADO_AX, 1.5, 0x00E5FFFF);
+    gPkTd[playerid][PTD_NISAN + 1] = PikadoPravokutnik(playerid, 1.5 * PIKADO_AX, 18.0, 0x00E5FFFF);
+    gPkTd[playerid][PTD_NISAN + 2] = PikadoTocka(playerid, 1.6, 0xFFFFFFFF);
+    gPkTd[playerid][PTD_BAR] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X - 2.0, PIKADO_BAR_Y - 2.0, "LD_SPAC:white");
+    gPkTd[playerid][PTD_SNAGA] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X, PIKADO_BAR_Y, "LD_SPAC:white");
+    gPkTd[playerid][PTD_ZONA] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X + (PIKADO_IDEAL - PIKADO_TOCNO) / 100.0 * PIKADO_BAR_W, PIKADO_BAR_Y, "LD_SPAC:white");
+    gPkTd[playerid][PTD_DAH] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X, PIKADO_BAR_Y + 12.0, "LD_SPAC:white");
+    for (new i = PTD_BAR; i <= PTD_DAH; i++) PlayerTextDrawFont(playerid, gPkTd[playerid][i], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_BAR], PIKADO_BAR_W + 4.0, 23.0);
+    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_BAR], 0x000000AA);
+    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_SNAGA], 0xF1C40FFF);
+    PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_ZONA], PIKADO_TOCNO * 2.0 / 100.0 * PIKADO_BAR_W, 8.0);
+    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_ZONA], 0x2ECC7199);
+    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_DAH], 0x5DADE2FF);
+    PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_BAR]);
+    PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_ZONA]);
+    gPkTd[playerid][PTD_INFO] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY + 168.0, "_");
     PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_INFO], TEXT_DRAW_FONT_2);
     PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_INFO], 0.24, 1.1);
     PlayerTextDrawAlignment(playerid, gPkTd[playerid][PTD_INFO], TEXT_DRAW_ALIGN_CENTER);
@@ -232,16 +252,27 @@ static PikadoPomakni(playerid, PlayerText:td, Float:px, Float:py, Float:w, Float
 static PikadoNaEkran(Float:mx, Float:my, &Float:px, &Float:py)
 {
     new Float:k = PIKADO_R / 170.0;
-    px = PIKADO_CX + mx * k;
+    px = PIKADO_CX + mx * k * PIKADO_AX;
     py = PIKADO_CY - my * k;
+}
+
+static PikadoTraka(playerid, i, Float:udio, Float:h)
+{
+    if (udio <= 0.0)
+    {
+        PlayerTextDrawHide(playerid, gPkTd[playerid][i]);
+        return;
+    }
+    PlayerTextDrawTextSize(playerid, gPkTd[playerid][i], udio * PIKADO_BAR_W, h);
+    PlayerTextDrawShow(playerid, gPkTd[playerid][i]);
 }
 
 static PikadoNisanCrtaj(playerid, Float:mx, Float:my)
 {
     new Float:px, Float:py;
     PikadoNaEkran(mx, my, px, py);
-    PikadoPomakni(playerid, gPkTd[playerid][PTD_NISAN], px, py, 18.0, 1.5);
-    PikadoPomakni(playerid, gPkTd[playerid][PTD_NISAN + 1], px, py, 1.5, 18.0);
+    PikadoPomakni(playerid, gPkTd[playerid][PTD_NISAN], px, py, 18.0 * PIKADO_AX, 1.5);
+    PikadoPomakni(playerid, gPkTd[playerid][PTD_NISAN + 1], px, py, 1.5 * PIKADO_AX, 18.0);
     PikadoPomakni(playerid, gPkTd[playerid][PTD_NISAN + 2], px, py, 3.2, 3.2);
 }
 
@@ -249,17 +280,17 @@ static PikadoStrelicaCrtaj(playerid, d, Float:mx, Float:my)
 {
     new Float:px, Float:py;
     PikadoNaEkran(mx, my, px, py);
-    PikadoPomakni(playerid, gPkTd[playerid][PTD_STRELICA + d * 3], px + 2.0, py - 2.0, 13.0, 3.0);
-    PikadoPomakni(playerid, gPkTd[playerid][PTD_STRELICA + d * 3 + 1], px + 2.0, py - 2.0, 3.0, 13.0);
+    PikadoPomakni(playerid, gPkTd[playerid][PTD_STRELICA + d * 3], px + 2.0, py - 2.0, 13.0 * PIKADO_AX, 3.0);
+    PikadoPomakni(playerid, gPkTd[playerid][PTD_STRELICA + d * 3 + 1], px + 2.0, py - 2.0, 3.0 * PIKADO_AX, 13.0);
     PikadoPomakni(playerid, gPkTd[playerid][PTD_STRELICA + d * 3 + 2], px, py, 4.4, 4.4);
 }
 
 static PikadoInfo(s, playerid)
 {
-    new tekst[160], n = gPikado[s][pkNaPotezu];
-    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~A/D/W/S nisan, LMB bacanje, RMB odustani"),
+    new tekst[256], n = gPikado[s][pkNaPotezu];
+    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~WASD nisan (ALT fino), SPACE dah, drzi/pusti LMB baci, RMB izlaz"),
         gPikado[s][pkBodovi][n], gPikado[s][pkBacio], PIKADO_STRELICA, gPikado[s][pkUkupno]);
-    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d  |  A/D/W/S nisan, LMB bacanje, RMB odustani"),
+    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d~n~WASD nisan (ALT fino), SPACE dah, drzi/pusti LMB baci, RMB izlaz"),
         GetRPIme(gPikado[s][pkIgrac][n]), gPikado[s][pkBodovi][n], GetRPIme(gPikado[s][pkIgrac][1 - n]), gPikado[s][pkBodovi][1 - n], gPikado[s][pkBacio], PIKADO_STRELICA);
     PlayerTextDrawSetString(playerid, gPkTd[playerid][PTD_INFO], tekst);
 }
@@ -268,6 +299,7 @@ static PikadoNisanKraj(s)
 {
     new p = gPikado[s][pkNisani];
     gPikado[s][pkNisani] = INVALID_PLAYER_ID;
+    gPikado[s][pkDrzi] = false;
     if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p)) return;
     PikadoTdUnisti(p);
     TogglePlayerControllable(p, true);
@@ -394,11 +426,29 @@ static Float:PikadoRub(Float:v)
     return v < -225.0 ? -225.0 : v > 225.0 ? 225.0 : v;
 }
 
-static PikadoNjihanje(s, &Float:x, &Float:y)
+static PikadoNjihanje(s, KEY:tipke)
 {
+    new p = gPikado[s][pkNisani], dah = gPikado[s][pkDah], Float:a = 10.0 + float(GetTickCount() - gPikado[s][pkNisanOd]) * 0.003;
+    if (a > 40.0) a = 40.0;
+    if (tipke & KEY_SPRINT)
+    {
+        if (dah > 0)
+        {
+            a = 3.0;
+            dah -= PIKADO_NISAN_MS;
+        }
+        else a *= 1.5;
+    }
+    else dah += PIKADO_NISAN_MS / 2;
+    dah = dah < 0 ? 0 : dah > PIKADO_DAH ? PIKADO_DAH : dah;
+    if (dah != gPikado[s][pkDah])
+    {
+        gPikado[s][pkDah] = dah;
+        PikadoTraka(p, PTD_DAH, float(dah) / float(PIKADO_DAH), 3.0);
+    }
     new Float:t = float(GetTickCount() % 360000) / 1000.0;
-    x = gPikado[s][pkAx] + PIKADO_NJIHANJE * floatsin(t * 97.0, degrees);
-    y = gPikado[s][pkAy] + PIKADO_NJIHANJE * 0.8 * floatsin(t * 131.0 + 40.0, degrees);
+    gPikado[s][pkSx] = a * (0.65 * floatsin(t * 97.0, degrees) + 0.35 * floatsin(t * 233.0 + 20.0, degrees));
+    gPikado[s][pkSy] = a * 0.8 * (0.6 * floatsin(t * 131.0 + 40.0, degrees) + 0.4 * floatsin(t * 263.0, degrees));
 }
 
 forward PikadoNisanTick(s, token);
@@ -413,11 +463,18 @@ public PikadoNisanTick(s, token)
     }
     new KEY:tipke, gore, strana;
     GetPlayerKeys(p, tipke, gore, strana);
-    gPikado[s][pkAx] = PikadoRub(gPikado[s][pkAx] + float(strana) / 128.0 * PIKADO_POMAK);
-    gPikado[s][pkAy] = PikadoRub(gPikado[s][pkAy] - float(gore) / 128.0 * PIKADO_POMAK);
-    new Float:x, Float:y;
-    PikadoNjihanje(s, x, y);
-    PikadoNisanCrtaj(p, x, y);
+    new Float:brzina = (tipke & KEY_WALK) ? PIKADO_POMAK * 0.3 : PIKADO_POMAK;
+    gPikado[s][pkAx] = PikadoRub(gPikado[s][pkAx] + float(strana) / 128.0 * brzina);
+    gPikado[s][pkAy] = PikadoRub(gPikado[s][pkAy] - float(gore) / 128.0 * brzina);
+    PikadoNjihanje(s, tipke);
+    if (gPikado[s][pkDrzi])
+    {
+        gPikado[s][pkSnaga] += gPikado[s][pkGore] ? 5.0 : -5.0;
+        if (gPikado[s][pkSnaga] >= 100.0) gPikado[s][pkSnaga] = 100.0, gPikado[s][pkGore] = false;
+        if (gPikado[s][pkSnaga] <= 0.0) gPikado[s][pkSnaga] = 0.0, gPikado[s][pkGore] = true;
+        PikadoTraka(p, PTD_SNAGA, gPikado[s][pkSnaga] / 100.0, 8.0);
+    }
+    PikadoNisanCrtaj(p, gPikado[s][pkAx] + gPikado[s][pkSx], gPikado[s][pkAy] + gPikado[s][pkSy]);
     SetTimerEx("PikadoNisanTick", PIKADO_NISAN_MS, false, "ii", s, token);
 }
 
@@ -426,20 +483,27 @@ static PikadoNisani(playerid, s)
     gPikado[s][pkNisani] = playerid;
     gPikado[s][pkAx] = 0.0;
     gPikado[s][pkAy] = 0.0;
+    gPikado[s][pkDrzi] = false;
+    gPikado[s][pkDah] = PIKADO_DAH;
+    gPikado[s][pkNisanOd] = GetTickCount();
     TogglePlayerControllable(playerid, false);
     SetPlayerFacingAngle(playerid, gPikado[s][pkA]);
     PikadoTdStvori(playerid);
     for (new i = 0; i < gPikado[s][pkBacio]; i++) PikadoStrelicaCrtaj(playerid, i, gPikado[s][pkHx][i], gPikado[s][pkHy][i]);
     PikadoInfo(s, playerid);
+    PikadoTraka(playerid, PTD_DAH, 1.0, 3.0);
     SetTimerEx("PikadoNisanTick", PIKADO_NISAN_MS, false, "ii", s, gPikado[s][pkToken]);
 }
 
 static PikadoBaci(playerid, s)
 {
-    new Float:x, Float:y, n = gPikado[s][pkNaPotezu], d = gPikado[s][pkBacio];
-    PikadoNjihanje(s, x, y);
-    x += float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
-    y += float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
+    new n = gPikado[s][pkNaPotezu], d = gPikado[s][pkBacio], Float:greska = gPikado[s][pkSnaga] - PIKADO_IDEAL;
+    new Float:x = gPikado[s][pkAx] + gPikado[s][pkSx] + float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
+    new Float:y = gPikado[s][pkAy] + gPikado[s][pkSy] + float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
+    if (floatabs(greska) > PIKADO_TOCNO) y += greska * 1.5;
+    gPikado[s][pkDrzi] = false;
+    gPikado[s][pkNisanOd] = GetTickCount();
+    PikadoTraka(playerid, PTD_SNAGA, 0.0, 8.0);
     gPikado[s][pkHx][d] = x;
     gPikado[s][pkHy][d] = y;
     gPikado[s][pkBacio]++;
@@ -479,7 +543,7 @@ public PikadoSljedeci(s, token)
 PikadoTipke(playerid, KEY:newkeys, KEY:oldkeys)
 {
     new s = gPikadoIgrac[playerid];
-    if (s == -1 || !(newkeys & (KEY_AIM | KEY_FIRE))) return 0;
+    if (s == -1 || !((newkeys | oldkeys) & (KEY_AIM | KEY_FIRE))) return 0;
     new i = gPikado[s][pkIgrac][0] == playerid ? 0 : 1, bool:rmb = (newkeys & KEY_AIM) && !(oldkeys & KEY_AIM);
     if (rmb && gPikado[s][pkFaza] == PF_CEKA && gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID)
     {
@@ -500,7 +564,15 @@ PikadoTipke(playerid, KEY:newkeys, KEY:oldkeys)
         PikadoNisani(playerid, s);
         return 1;
     }
-    if (gPikado[s][pkNisani] == playerid && (newkeys & KEY_FIRE) && !(oldkeys & KEY_FIRE))
+    if (gPikado[s][pkNisani] != playerid) return 0;
+    if ((newkeys & KEY_FIRE) && !(oldkeys & KEY_FIRE) && !gPikado[s][pkDrzi])
+    {
+        gPikado[s][pkDrzi] = true;
+        gPikado[s][pkGore] = true;
+        gPikado[s][pkSnaga] = 0.0;
+        return 1;
+    }
+    if (!(newkeys & KEY_FIRE) && (oldkeys & KEY_FIRE) && gPikado[s][pkDrzi])
     {
         PikadoBaci(playerid, s);
         return 1;

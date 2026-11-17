@@ -204,10 +204,22 @@ static KuglanjeNisanKraj(s)
     SetCameraBehindPlayer(p);
 }
 
+static KuglanjeKameraVrati(s)
+{
+    for (new i = 0; i < 2; i++)
+    {
+        new q = gKg[s][kgIgrac][i];
+        if (q == INVALID_PLAYER_ID || !IsPlayerConnected(q)) continue;
+        SetCameraBehindPlayer(q);
+        TogglePlayerControllable(q, true);
+    }
+}
+
 static KuglanjeKraj(s)
 {
     gKg[s][kgToken]++;
     KuglanjeNisanKraj(s);
+    if (gKg[s][kgFaza] == KG_KOTRLJA || gKg[s][kgFaza] == KG_PAUZA) KuglanjeKameraVrati(s);
     for (new i = 0; i < 2; i++)
     {
         if (gKg[s][kgIgrac][i] != INVALID_PLAYER_ID) gKuglanjeIgrac[gKg[s][kgIgrac][i]] = -1;
@@ -250,6 +262,11 @@ KuglanjeOdlazi(playerid)
         return;
     }
     if (gKg[s][kgNisani] == playerid) KuglanjeNisanKraj(s);
+    if (gKg[s][kgFaza] == KG_KOTRLJA || gKg[s][kgFaza] == KG_PAUZA)
+    {
+        SetCameraBehindPlayer(playerid);
+        TogglePlayerControllable(playerid, true);
+    }
     gKg[s][kgIgrac][i] = INVALID_PLAYER_ID;
     gKuglanjeIgrac[playerid] = -1;
     OkladaIzadi(playerid, true);
@@ -331,11 +348,11 @@ static KuglanjeNisanPostavi(s)
 {
     new p = gKg[s][kgNisani], Float:wx, Float:wy, Float:cx, Float:cy, Float:tx, Float:ty, Float:z = gKg[s][kgZ];
     KuglanjeSvijet(s, gKg[s][kgBx], 0.0, wx, wy);
-    KuglanjeSvijet(s, gKg[s][kgBx], -1.8, cx, cy);
+    KuglanjeSvijet(s, gKg[s][kgBx], -1.0, cx, cy);
     KuglanjeSvijet(s, gKg[s][kgBx] + KUGLANJE_DUZINA * floatsin(gKg[s][kgKut], degrees), KUGLANJE_DUZINA * floatcos(gKg[s][kgKut], degrees), tx, ty);
     SetDynamicObjectPos(gKg[s][kgKugla], wx, wy, z + KUGLANJE_KUGLA_Z);
-    SetPlayerCameraPos(p, cx, cy, z + 1.6);
-    SetPlayerCameraLookAt(p, tx, ty, z);
+    SetPlayerCameraPos(p, cx, cy, z + 2.3);
+    SetPlayerCameraLookAt(p, tx, ty, z + 0.2);
     new tekst[96], crte = floatround(gKg[s][kgSnaga] / 5.0);
     for (new i = 0; i < 20; i++) tekst[i] = i < crte ? 'I' : '.';
     tekst[20] = EOS;
@@ -445,15 +462,28 @@ static KuglanjeSimuliraj(s, Float:bx, Float:kut, Float:snaga, &Float:kraj)
 static KuglanjeBaci(playerid, s)
 {
     new Float:bx = gKg[s][kgBx], Float:kut = gKg[s][kgKut], Float:snaga = gKg[s][kgSnaga], Float:kraj;
-    KuglanjeNisanKraj(s);
+    gKg[s][kgNisani] = INVALID_PLAYER_ID;
+    KuglanjeTdUnisti(playerid);
     ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, false, false, false, false, 0);
     new pali = KuglanjeSimuliraj(s, bx, kut, snaga, kraj), Float:wx, Float:wy, Float:brzina = 5.0 + snaga * 0.07;
     KuglanjeSvijet(s, bx + floattan(kut, degrees) * kraj, kraj, wx, wy);
     MoveDynamicObject(gKg[s][kgKugla], wx, wy, gKg[s][kgZ] + KUGLANJE_KUGLA_Z, brzina, float(random(360)), 90.0, 0.0);
+    new Float:ax, Float:ay, Float:bx2, Float:by2, Float:lx, Float:ly, Float:cx, Float:cy, Float:z = gKg[s][kgZ], vrijeme = floatround(kraj / brzina * 1000.0);
+    KuglanjeSvijet(s, bx, -1.0, ax, ay);
+    KuglanjeSvijet(s, bx + floattan(kut, degrees) * (kraj - 4.0) * 0.5, kraj - 4.0, bx2, by2);
+    KuglanjeSvijet(s, bx + floattan(kut, degrees) * KUGLANJE_DUZINA, KUGLANJE_DUZINA, lx, ly);
+    KuglanjeSvijet(s, 0.0, KUGLANJE_DUZINA + 0.4, cx, cy);
+    for (new i = 0; i < 2; i++)
+    {
+        new q = gKg[s][kgIgrac][i];
+        if (q == INVALID_PLAYER_ID) continue;
+        InterpolateCameraPos(q, ax, ay, z + 2.3, bx2, by2, z + 1.3, vrijeme, CAMERA_MOVE);
+        InterpolateCameraLookAt(q, lx, ly, z + 0.2, cx, cy, z + 0.2, vrijeme, CAMERA_MOVE);
+    }
     gKg[s][kgFaza] = KG_KOTRLJA;
     new n = gKg[s][kgNaPotezu];
     gKgRoll[s][n][gKgN[s][n]++] = pali;
-    SetTimerEx("KuglanjeUdarac", floatround(kraj / brzina * 1000.0), false, "ii", s, gKg[s][kgToken]);
+    SetTimerEx("KuglanjeUdarac", vrijeme, false, "ii", s, gKg[s][kgToken]);
 }
 
 forward KuglanjeUdarac(s, token);
@@ -481,6 +511,7 @@ forward KuglanjeDalje(s, token);
 public KuglanjeDalje(s, token)
 {
     if (token != gKg[s][kgToken] || gKg[s][kgFaza] != KG_PAUZA) return;
+    KuglanjeKameraVrati(s);
     new n = gKg[s][kgNaPotezu], u, f = KuglanjeOkvir(gKgRoll[s][n], gKgN[s][n], u);
     new bool:cisto = true;
     for (new k = 0; k < 10; k++) if (gKg[s][kgStoji][k]) cisto = false;
