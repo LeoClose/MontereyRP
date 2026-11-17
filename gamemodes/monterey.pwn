@@ -12,6 +12,13 @@
 #include <streamer>
 #include <kolizija>
 
+forward OnCheatDetected(playerid, const ip_address[], type, code);
+#define AC_USE_CONFIG_FILES false
+#define NO_SUSPICION_LOGS
+#define AC_MAX_CONNECTS_FROM_IP 3
+#include <nex-ac>
+#pragma unused KICK_MSG, MAX_CONNECTS_MSG, UNKNOWN_CLIENT_MSG
+
 #define PRENOS_MS   100
 #define PRENOS_MIN  8
 #define PRENOS_MAX  50
@@ -56,6 +63,7 @@ stock ZamrzniIgraca(playerid, bool:moze)
     gPrenosZamrz[playerid] = 0;
     return TogglePlayerControllable(playerid, moze);
 }
+#undef SetPlayerPos
 #define SetPlayerPos PrenesiIgraca
 
 stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
@@ -67,6 +75,7 @@ stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Floa
     if (kut > -1000.0) SetPlayerFacingAngle(playerid, kut);
     SetCameraBehindPlayer(playerid);
 }
+#undef TogglePlayerControllable
 #define TogglePlayerControllable ZamrzniIgraca
 
 #pragma dynamic 32768
@@ -101,9 +110,11 @@ bool:DestroyVozilo(v)
         PrikolicaMakni(v);
         VlasnikMakni(v);
     }
-    return DestroyVehicle(v);
+    return !!DestroyVehicle(v);
 }
 
+#undef CreateVehicle
+#undef DestroyVehicle
 #define CreateVehicle CreateVozilo
 #define DestroyVehicle DestroyVozilo
 
@@ -235,6 +246,7 @@ public OnGameModeInit()
     InitArkada();
     InitPikado();
     InitKuglanje();
+    InitAntiCheat();
     InitPoker();
     InitZlatara();
     InitVrijeme();
@@ -361,6 +373,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/arkada.inc"
 #include "monterey/pikado.inc"
 #include "monterey/kuglanje.inc"
+#include "monterey/anticheat.inc"
 #include "monterey/poker.inc"
 #include "monterey/fit_tablica.inc"
 #include "monterey/zlatara.inc"

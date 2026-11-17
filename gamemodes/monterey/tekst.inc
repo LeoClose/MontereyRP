@@ -1838,7 +1838,20 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti", "~y~LMB ~w~shoot   ~y~N ~w~pass   ~y~ALT ~w~drop", "~y~ЛКМ ~w~бросок   ~y~N ~w~пас   ~y~ALT ~w~бросить", "~y~LMB ~w~tirar   ~y~N ~w~pasar   ~y~ALT ~w~soltar", "~y~LMB ~w~sut   ~y~N ~w~pas   ~y~ALT ~w~birak" },
     { "~y~ALT ~w~uzmi loptu   ~y~RMB ~w~ukradi", "~y~ALT ~w~pick up ball   ~y~RMB ~w~steal", "~y~ALT ~w~взять мяч   ~y~ПКМ ~w~перехват", "~y~ALT ~w~coger balon   ~y~RMB ~w~robar", "~y~ALT ~w~topu al   ~y~RMB ~w~top cal" },
     { "~r~Krivi kos!", "~r~Wrong hoop!", "~r~Не то кольцо!", "~r~Canasta equivocada!", "~r~Yanlis pota!" },
-    { "~w~Ucitavanje...", "~w~Loading...", "~w~Загрузка...", "~w~Cargando...", "~w~Yukleniyor..." }
+    { "~w~Ucitavanje...", "~w~Loading...", "~w~Загрузка...", "~w~Cargando...", "~w~Yukleniyor..." },
+    { "[AC] IP %s je blokiran na 10 minuta: %s (#%03d).", "[AC] IP %s blocked for 10 minutes: %s (#%03d).", "[AC] IP %s заблокирован на 10 минут: %s (#%03d).", "[AC] IP %s bloqueada por 10 minutos: %s (#%03d).", "[AC] IP %s 10 dakika engellendi: %s (#%03d)." },
+    { "Izbaceni ste zbog sumnje na varanje (#%03d).", "You were kicked on suspicion of cheating (#%03d).", "Вы были кикнуты по подозрению в читерстве (#%03d).", "Has sido expulsado por sospecha de trampas (#%03d).", "Hile suphesiyle sunucudan atildiniz (#%03d)." },
+    { "[AC] %s (%d) je izbacen: %s (#%03d).", "[AC] %s (%d) was kicked: %s (#%03d).", "[AC] %s (%d) кикнут: %s (#%03d).", "[AC] %s (%d) fue expulsado: %s (#%03d).", "[AC] %s (%d) atildi: %s (#%03d)." },
+    { "[AC] Sumnja: %s (%d) - %s (#%03d).", "[AC] Suspicion: %s (%d) - %s (#%03d).", "[AC] Подозрение: %s (%d) - %s (#%03d).", "[AC] Sospecha: %s (%d) - %s (#%03d).", "[AC] Suphe: %s (%d) - %s (#%03d)." },
+    { "{777777}Iskljuceno", "{777777}Disabled", "{777777}Выключено", "{777777}Desactivado", "{777777}Kapali" },
+    { "{F1C40F}Upozorenje", "{F1C40F}Warning", "{F1C40F}Предупреждение", "{F1C40F}Aviso", "{F1C40F}Uyari" },
+    { "{E74C3C}Izbacivanje", "{E74C3C}Kick", "{E74C3C}Кик", "{E74C3C}Expulsion", "{E74C3C}Atma" },
+    { "+ Zadnje detekcije", "+ Recent detections", "+ Последние срабатывания", "+ Detecciones recientes", "+ Son tespitler" },
+    { "Zadnje detekcije", "Recent detections", "Последние срабатывания", "Detecciones recientes", "Son tespitler" },
+    { "Anticheat", "Anticheat", "Античит", "Anticheat", "Anticheat" },
+    { "Nema detekcija.", "No detections.", "Нет срабатываний.", "Sin detecciones.", "Tespit yok." },
+    { "Previse je igraca spojeno s vase IP adrese.", "Too many players are connected from your IP address.", "С вашего IP-адреса подключено слишком много игроков.", "Hay demasiados jugadores conectados desde tu direccion IP.", "IP adresinizden cok fazla oyuncu bagli." },
+    { "Ova verzija klijenta nije podrzana na serveru.", "This client version is not supported on the server.", "Эта версия клиента не поддерживается на сервере.", "Esta version del cliente no es compatible con el servidor.", "Bu istemci surumu sunucuda desteklenmiyor." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

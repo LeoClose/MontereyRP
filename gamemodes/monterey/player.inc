@@ -36,6 +36,7 @@ public OnPlayerConnect(playerid)
     NovacConnect(playerid);
     OkladaConnect(playerid);
     PikadoConnect(playerid);
+    AntiCheatConnect(playerid);
     KuglanjeConnect(playerid);
     PokerConnect(playerid);
     InventarConnect(playerid);

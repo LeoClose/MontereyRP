@@ -114,13 +114,13 @@ static StetaTrakaVidljiva(playerid, bool:vidljiva)
 
 bool:SetHP(playerid, Float:z)
 {
-    if (IsPlayerNPC(playerid)) return SetPlayerHealth(playerid, z);
+    if (IsPlayerNPC(playerid)) return !!SetPlayerHealth(playerid, z);
     gZivot[playerid] = z;
     gStetaPrikaz[playerid] = IsRanjen(playerid) ? 0 : StetaPrikazZa(z);
     gStetaPostavljeno[playerid] = GetTickCount();
     StetaTraka(playerid);
     SetPVarInt(playerid, "steta_hp", gStetaPrikaz[playerid]);
-    return SetPlayerHealth(playerid, STETA_BAZA + float(gStetaPrikaz[playerid]));
+    return !!SetPlayerHealth(playerid, STETA_BAZA + float(gStetaPrikaz[playerid]));
 }
 
 bool:SetArmor(playerid, Float:o)
@@ -130,7 +130,7 @@ bool:SetArmor(playerid, Float:o)
         gOklop[playerid] = o;
         gStetaPostavljeno[playerid] = GetTickCount();
     }
-    return SetPlayerArmour(playerid, o);
+    return !!SetPlayerArmour(playerid, o);
 }
 
 bool:GetHP(playerid, &Float:z)
@@ -362,6 +362,8 @@ StetaTick()
     }
 }
 
+#undef SetPlayerHealth
+#undef SetPlayerArmour
 #define SetPlayerHealth SetHP
 #define SetPlayerArmour SetArmor
 #define GetPlayerHealth GetHP
