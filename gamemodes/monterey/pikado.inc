@@ -17,18 +17,18 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        800
-#define PIKADO_TD           18
-#define PIKADO_CRNA         0x161616FF
+#define PIKADO_PLOCA        128
+#define PIKADO_TD           19
+#define PIKADO_CRNA         0x0C0C0CFF
 #define PIKADO_KREM         0xEADFC3FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
 enum { PF_CEKA, PF_IGRA, PF_PAUZA }
-enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA * 3, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH }
+enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA * 3, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH, PTD_POLJE }
 enum E_PIKADO { bool:pkIma, pkDb, Float:pkX, Float:pkY, Float:pkZ, Float:pkA, pkInt, pkSvijet, STREAMER_TAG_3D_TEXT_LABEL:pkTekst,
     pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno,
-    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkDah, pkNisanOd }
+    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkDah, pkNisanOd, pkPolje }
 
 static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5 };
 
@@ -61,63 +61,25 @@ static PikadoKrugPloce(Float:mx, Float:my, Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static Float:PikadoRho(Float:r)
-{
-    new Float:p = r * 0.14;
-    return p < 3.0 ? 3.0 : p > 12.0 ? 12.0 : p;
-}
-
-static PikadoKlin(i, Float:od, Float:doo, boja)
-{
-    new Float:r = od + PikadoRho(od) * 0.7;
-    for (;;)
-    {
-        new Float:p = PikadoRho(r), bool:zadnji = false;
-        if (r + p * 0.7 >= doo)
-        {
-            r = doo - p * 0.7;
-            zadnji = true;
-        }
-        new Float:x = p * 0.75 / r, Float:kut = 9.0 - asin(x > 1.0 ? 1.0 : x);
-        new m = floatround(2.0 * kut * 3.14159 / 180.0 * r / (p * 0.8), floatround_ceil) + 1;
-        for (new j = 0; j < m; j++)
-        {
-            new Float:a = float(i) * 18.0 + (m > 1 ? -kut + 2.0 * kut * float(j) / float(m - 1) : 0.0);
-            PikadoKrugPloce(r * floatsin(a, degrees), r * floatcos(a, degrees), p, boja);
-        }
-        if (zadnji) break;
-        r += p * 0.8;
-    }
-}
-
-static PikadoPrsten(i, Float:rmm, Float:pola, boja)
-{
-    new Float:luk = rmm * 18.0 * 3.14159 / 180.0, n = floatround(luk / pola, floatround_ceil);
-    for (new j = 0; j < n; j++)
-    {
-        new Float:a = float(i) * 18.0 - 9.0 + (float(j) + 0.5) * 18.0 / float(n);
-        PikadoKrugPloce(rmm * floatsin(a, degrees), rmm * floatcos(a, degrees), pola, boja);
-    }
-}
-
 static PikadoPlocaStvori()
 {
     new Float:k = PIKADO_R / 170.0, broj[4];
-    PikadoKrugPloce(0.0, 0.0, 228.0, 0x2B2B2BFF);
-    PikadoKrugPloce(0.0, 0.0, 225.0, 0x0C0C0CFF);
+    PikadoKrugPloce(0.0, 0.0, 228.0, 0x3A3A3AFF);
+    PikadoKrugPloce(0.0, 0.0, 225.0, PIKADO_CRNA);
     PikadoKrugPloce(0.0, 0.0, 170.0, PIKADO_CRVENA);
-    PikadoKrugPloce(0.0, 0.0, 162.0, PIKADO_CRNA);
-    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 107.0, 162.0, PIKADO_KREM);
-    PikadoKrugPloce(0.0, 0.0, 107.0, PIKADO_CRVENA);
-    PikadoKrugPloce(0.0, 0.0, 99.0, PIKADO_CRNA);
-    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 15.9, 99.0, PIKADO_KREM);
-    for (new i = 1; i < 20; i += 2)
-    {
-        PikadoPrsten(i, 166.0, 5.0, PIKADO_ZELENA);
-        PikadoPrsten(i, 103.0, 5.0, PIKADO_ZELENA);
-    }
+    PikadoKrugPloce(0.0, 0.0, 162.0, PIKADO_KREM);
+    PikadoKrugPloce(0.0, 0.0, 107.0, PIKADO_ZELENA);
+    PikadoKrugPloce(0.0, 0.0, 99.0, PIKADO_KREM);
     PikadoKrugPloce(0.0, 0.0, 15.9, PIKADO_ZELENA);
     PikadoKrugPloce(0.0, 0.0, 6.35, PIKADO_CRVENA);
+    for (new i = 0; i < 20; i++)
+    {
+        new Float:a = float(i) * 18.0 + 9.0, Float:sn = floatsin(a, degrees), Float:c = floatcos(a, degrees);
+        PikadoKrugPloce(166.0 * sn, 166.0 * c, 4.5, PIKADO_CRNA);
+        PikadoKrugPloce(103.0 * sn, 103.0 * c, 4.5, PIKADO_CRNA);
+        PikadoKrugPloce(134.0 * sn, 134.0 * c, 2.2, PIKADO_CRNA);
+        PikadoKrugPloce(57.0 * sn, 57.0 * c, 2.2, PIKADO_CRNA);
+    }
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
         new Float:a = float(i) * 18.0, Text:td;
@@ -131,6 +93,20 @@ static PikadoPlocaStvori()
         TextDrawSetShadow(td, 0);
         gPikadoPloca[gPikadoPlocaN++] = td;
     }
+}
+
+static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)
+{
+    new Float:r = VectorSize(x, y, 0.0);
+    if (r <= 6.35) return format(tekst, size, "~r~BULL"), 1;
+    if (r <= 15.9) return format(tekst, size, "~g~25"), 2;
+    if (r > 170.0) return format(tekst, size, "~w~-"), 3;
+    new Float:a = atan2(x, y);
+    if (a < 0.0) a += 360.0;
+    new i = floatround((a + 9.0) / 18.0, floatround_floor) % 20, b = gPikadoBroj[i];
+    if (r > 162.0) return format(tekst, size, "~r~D%d", b), 100 + i;
+    if (r > 99.0 && r <= 107.0) return format(tekst, size, "~g~T%d", b), 200 + i;
+    return format(tekst, size, "~w~%d", b), 300 + i;
 }
 
 InitPikado()
@@ -234,6 +210,12 @@ static PikadoTdStvori(playerid)
     PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_DAH], 0x5DADE2FF);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_BAR]);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_ZONA]);
+    gPkTd[playerid][PTD_POLJE] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY - 190.0, "_");
+    PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_POLJE], TEXT_DRAW_FONT_2);
+    PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_POLJE], 0.45, 1.8);
+    PlayerTextDrawAlignment(playerid, gPkTd[playerid][PTD_POLJE], TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawSetOutline(playerid, gPkTd[playerid][PTD_POLJE], 1);
+    PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_POLJE]);
     gPkTd[playerid][PTD_INFO] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY + 168.0, "_");
     PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_INFO], TEXT_DRAW_FONT_2);
     PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_INFO], 0.24, 1.1);
@@ -474,7 +456,13 @@ public PikadoNisanTick(s, token)
         if (gPikado[s][pkSnaga] <= 0.0) gPikado[s][pkSnaga] = 0.0, gPikado[s][pkGore] = true;
         PikadoTraka(p, PTD_SNAGA, gPikado[s][pkSnaga] / 100.0, 8.0);
     }
-    PikadoNisanCrtaj(p, gPikado[s][pkAx] + gPikado[s][pkSx], gPikado[s][pkAy] + gPikado[s][pkSy]);
+    new Float:x = gPikado[s][pkAx] + gPikado[s][pkSx], Float:y = gPikado[s][pkAy] + gPikado[s][pkSy], polje[16], kod = PikadoPolje(x, y, polje);
+    PikadoNisanCrtaj(p, x, y);
+    if (kod != gPikado[s][pkPolje])
+    {
+        gPikado[s][pkPolje] = kod;
+        PlayerTextDrawSetString(p, gPkTd[p][PTD_POLJE], polje);
+    }
     SetTimerEx("PikadoNisanTick", PIKADO_NISAN_MS, false, "ii", s, token);
 }
 
@@ -486,6 +474,7 @@ static PikadoNisani(playerid, s)
     gPikado[s][pkDrzi] = false;
     gPikado[s][pkDah] = PIKADO_DAH;
     gPikado[s][pkNisanOd] = GetTickCount();
+    gPikado[s][pkPolje] = -1;
     TogglePlayerControllable(playerid, false);
     SetPlayerFacingAngle(playerid, gPikado[s][pkA]);
     PikadoTdStvori(playerid);
