@@ -17,10 +17,15 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        96
+#define PIKADO_PLOCA        600
+#define PIKADO_LOPTA        1.032
+#define PIKADO_ZICA_KORAK   6.0
+#define PIKADO_ZICA_LX      0.4
+#define PIKADO_ZICA_LY      0.6
+#define PIKADO_ZICA_DY      7.9
 #define PIKADO_TD           13
-#define PIKADO_CRNA         0x141414FF
-#define PIKADO_KREM         0xEADFC3FF
+#define PIKADO_CRNA         0x1C1C1CFF
+#define PIKADO_SREBRNA      0xC8C8C8FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
@@ -50,39 +55,54 @@ PikadoBodovi(Float:x, Float:y)
     return b;
 }
 
-static PikadoKrugPloce(Float:mx, Float:my, Float:rmm, boja)
+static PikadoNaEkran(Float:mx, Float:my, &Float:px, &Float:py)
+{
+    new Float:k = PIKADO_R / 170.0;
+    px = PIKADO_CX + mx * k * PIKADO_AX;
+    py = PIKADO_CY - my * k;
+}
+
+static PikadoKrugPloce(Float:rmm, boja)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:k = PIKADO_R / 170.0, Float:r = rmm * k;
-    new Text:td = TextDrawCreate(PIKADO_CX + (mx * k - r) * PIKADO_AX, PIKADO_CY - my * k - r, "LD_BEAT:chit");
+    new Float:r = rmm * PIKADO_R / 170.0 * PIKADO_LOPTA;
+    new Text:td = TextDrawCreate(PIKADO_CX - r * PIKADO_AX, PIKADO_CY - r, "LD_POOL:ball");
     TextDrawFont(td, TEXT_DRAW_FONT_SPRITE_DRAW);
     TextDrawTextSize(td, r * 2.0 * PIKADO_AX, r * 2.0);
     TextDrawColour(td, boja);
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoKlin(i, Float:od, Float:doo, kom)
+static PikadoZica(Float:mx, Float:my)
 {
-    new Float:sn = floatsin(9.0, degrees), Float:a = float(i) * 18.0, Float:r = doo / (1.0 + sn);
-    for (new j = 0; j < kom && r * (1.0 - sn) > od * 0.8; j++)
-    {
-        PikadoKrugPloce(r * floatsin(a, degrees), r * floatcos(a, degrees), r * sn, PIKADO_KREM);
-        r -= r * sn;
-    }
+    if (gPikadoPlocaN >= PIKADO_PLOCA) return;
+    new Float:px, Float:py;
+    PikadoNaEkran(mx, my, px, py);
+    new Text:td = TextDrawCreate(px, py - PIKADO_ZICA_DY, ".");
+    TextDrawFont(td, TEXT_DRAW_FONT_1);
+    TextDrawLetterSize(td, PIKADO_ZICA_LX, PIKADO_ZICA_LY);
+    TextDrawAlignment(td, TEXT_DRAW_ALIGN_CENTER);
+    TextDrawColour(td, PIKADO_SREBRNA);
+    TextDrawSetOutline(td, 0);
+    TextDrawSetShadow(td, 0);
+    gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
 static PikadoPlocaStvori()
 {
     new Float:k = PIKADO_R / 170.0, broj[4];
-    PikadoKrugPloce(0.0, 0.0, 226.0, 0x0C0C0CFF);
-    PikadoKrugPloce(0.0, 0.0, 170.0, PIKADO_CRVENA);
-    PikadoKrugPloce(0.0, 0.0, 162.0, PIKADO_CRNA);
-    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 107.0, 162.0, 2);
-    PikadoKrugPloce(0.0, 0.0, 107.0, PIKADO_ZELENA);
-    PikadoKrugPloce(0.0, 0.0, 99.0, PIKADO_CRNA);
-    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 16.0, 99.0, 4);
-    PikadoKrugPloce(0.0, 0.0, 15.9, PIKADO_ZELENA);
-    PikadoKrugPloce(0.0, 0.0, 6.35, PIKADO_CRVENA);
+    PikadoKrugPloce(226.0, 0x111111FF);
+    PikadoKrugPloce(170.0, PIKADO_CRVENA);
+    PikadoKrugPloce(162.0, PIKADO_CRNA);
+    PikadoKrugPloce(107.0, PIKADO_ZELENA);
+    PikadoKrugPloce(99.0, PIKADO_CRNA);
+    PikadoKrugPloce(15.9, PIKADO_ZELENA);
+    PikadoKrugPloce(6.35, PIKADO_CRVENA);
+    for (new i = 0; i < 20; i++)
+    {
+        new Float:a = float(i) * 18.0 + 9.0, Float:sn = floatsin(a, degrees), Float:c = floatcos(a, degrees);
+        for (new Float:r = 18.0; r <= 170.0; r += PIKADO_ZICA_KORAK) PikadoZica(r * sn, r * c);
+    }
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
         new Float:a = float(i) * 18.0, Text:td;
@@ -229,12 +249,6 @@ static PikadoPomakni(playerid, PlayerText:td, Float:px, Float:py, Float:w, Float
     PlayerTextDrawShow(playerid, td);
 }
 
-static PikadoNaEkran(Float:mx, Float:my, &Float:px, &Float:py)
-{
-    new Float:k = PIKADO_R / 170.0;
-    px = PIKADO_CX + mx * k * PIKADO_AX;
-    py = PIKADO_CY - my * k;
-}
 
 static PikadoTraka(playerid, i, Float:udio, Float:h)
 {
