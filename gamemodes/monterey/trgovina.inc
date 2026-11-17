@@ -5,16 +5,17 @@
 #define TRGOVINA_KASA_DOMET     2.5
 #define TRGOVINA_SKIN           217
 #define TRGOVINA_PLJACKA_S      3600
-#define TRGOVINA_PREDAJA_MS     4000
+#define TRGOVINA_PREDAJA_MS     30000
 #define TRGOVINA_RUKE_MS        60000
-#define TRGOVINA_PLIJEN_MIN     300
-#define TRGOVINA_PLIJEN_RASPON  700
+#define TRGOVINA_PLIJEN_MIN     1500
+#define TRGOVINA_PLIJEN_RASPON  2000
+#define TRGOVINA_BANDA          0
 
 enum E_TRGOVINA { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, bool:tgImaAktor, Float:tgAx, Float:tgAy, Float:tgAz, Float:tgAa, tgAktor, tgPljackano,
     STREAMER_TAG_PICKUP:tgPickup, STREAMER_TAG_PICKUP:tgPickupU, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_3D_TEXT_LABEL:tgTekstU, STREAMER_TAG_3D_TEXT_LABEL:tgTekstA }
 
 static gTrg[TRGOVINA_MAX][E_TRGOVINA];
-static gApTrgovina[MAX_PLAYERS];
+static gApTrgovina[MAX_PLAYERS], gTrgPoruka[MAX_PLAYERS];
 static const Float:gTrgovinaUlaz[3] = { -25.884, -185.869, 1003.547 };
 static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 150 }, { ITEM_KANISTER, 50 }, { ITEM_MOBITEL, 200 } };
 
@@ -137,10 +138,20 @@ TrgovinaUpdate(playerid)
 {
     new s = TrgovinaIgraca(playerid);
     if (s == -1 || !gTrg[s][tgImaAktor] || GetPlayerTargetActor(playerid) != gTrg[s][tgAktor]) return;
-    new WEAPON:w = GetPlayerWeapon(playerid);
-    if (w < WEAPON_COLT45 || w > WEAPON_MINIGUN || gettime() - gTrg[s][tgPljackano] < TRGOVINA_PLJACKA_S) return;
-    gTrg[s][tgPljackano] = gettime();
-    ApplyActorAnimation(gTrg[s][tgAktor], "SHOP", "SHP_Rob_GiveCash", 4.1, false, false, false, true, 0);
+    new WEAPON:w = GetPlayerWeapon(playerid), sad = gettime();
+    if (w < WEAPON_COLT45 || w > WEAPON_MINIGUN || sad - gTrg[s][tgPljackano] < TRGOVINA_PLJACKA_S || sad - gTrgPoruka[playerid] < 10) return;
+    if (!gOrg[playerid] || GetOrgTip(gOrg[playerid]) != TRGOVINA_BANDA)
+    {
+        gTrgPoruka[playerid] = sad;
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Samo bande mogu pljackati trgovine."));
+        return;
+    }
+    gTrg[s][tgPljackano] = sad;
+    ApplyActorAnimation(gTrg[s][tgAktor], "SHOP", "SHP_Rob_HandsUp", 4.1, false, false, false, true, 0);
+    DodajWanted(playerid);
+    SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pljacka je pocela! Ostanite u trgovini %d s dok blagajnik puni vrecu."), TRGOVINA_PREDAJA_MS / 1000);
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, "Dojava: pljacka trgovine u tijeku, %s."), CestaZona(gTrg[s][tgX], gTrg[s][tgY]));
     SetTimerEx("TrgovinaPlijen", TRGOVINA_PREDAJA_MS, false, "iii", playerid, gAccountId[playerid], s);
 }
 
@@ -148,9 +159,14 @@ forward TrgovinaPlijen(playerid, racun, s);
 public TrgovinaPlijen(playerid, racun, s)
 {
     if (!gTrg[s][tgImaAktor]) return;
-    ApplyActorAnimation(gTrg[s][tgAktor], "SHOP", "SHP_Rob_HandsUp", 4.1, false, false, false, true, 0);
+    ApplyActorAnimation(gTrg[s][tgAktor], "SHOP", "SHP_Rob_GiveCash", 4.1, false, false, false, true, 0);
     SetTimerEx("TrgovinaRuke", TRGOVINA_RUKE_MS, false, "ii", s, gTrg[s][tgAktor]);
-    if (gAccountId[playerid] != racun || TrgovinaIgraca(playerid) != s) return;
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    if (TrgovinaIgraca(playerid) != s || IsRanjen(playerid))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pljacka trgovine je propala."));
+        return;
+    }
     new plijen = TRGOVINA_PLIJEN_MIN + random(TRGOVINA_PLIJEN_RASPON);
     DajNovac(playerid, plijen);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s uzima novac od blagajnika.", GetRPIme(playerid), "", 1);

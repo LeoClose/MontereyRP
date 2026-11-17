@@ -421,6 +421,7 @@ ObrisiOrg(playerid, const params[])
         if (IsPlayerConnected(i) && gOrg[i] == org) { OrgConnect(i); SetPlayerSkin(i, DEFAULT_SKIN); SendClientMessage(i, COLOR_ORG, T(i, "Vasa organizacija je raspustena.")); }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org = 0, org_rank = '', org_perms = 0, org_skin = -1 WHERE org = %d", org));
     TeritorijOrgObrisana(org);
+    SefOrgObrisana(org);
     ObrisiHq(org);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_skins WHERE org = %d", org));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM vehicle_trunks WHERE veh IN (SELECT id FROM org_vehicles WHERE org = %d)", org));

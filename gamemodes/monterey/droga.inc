@@ -20,6 +20,8 @@
 #define UVOZ_PAUZA_S        7200
 #define UVOZ_ROK_MS         900000
 #define UVOZ_DOMET          6.0
+#define ORUZJE_CIJENA       25000
+#define ORUZJE_PAUZA_S      10800
 #define LAB_PASTA_PO_KEM    10
 #define LAB_RAST_S          900
 #define LAB_MAX_SERIJA      200
@@ -41,9 +43,10 @@ enum E_UVOZ { bool:uvIma, uvDb, Float:uvX, Float:uvY, Float:uvZ }
 
 static gBiljka[BILJKA_MAX][E_BILJKA], gDob[DOB_MAX][E_DOB], gUvoz[UVOZ_MAX][E_UVOZ];
 static gDrogaBiljka[MAX_PLAYERS], gDrogaDob[MAX_PLAYERS], gDrogaKupuje[MAX_PLAYERS], gDrogaUvoz[MAX_PLAYERS] = { -1, ... }, gDrogaUvozToken[MAX_PLAYERS];
-static gDrogaUvozOrg[MAX_PLAYERS], gDrogaUvozZadnji[MAX_HQ][2], gApDroga[MAX_PLAYERS][DOB_MAX + UVOZ_MAX];
+static gDrogaUvozOrg[MAX_PLAYERS], gDrogaUvozVrsta[MAX_PLAYERS], gDrogaUvozZadnji[MAX_HQ][3], gApDroga[MAX_PLAYERS][DOB_MAX + UVOZ_MAX];
 static bool:gMeth[MAX_PLAYERS], Float:gMethTemp[MAX_PLAYERS], Float:gMethBrzina[MAX_PLAYERS], gMethOd[MAX_PLAYERS], gMethDobro[MAX_PLAYERS], gMethUkupno[MAX_PLAYERS], gMethVruce[MAX_PLAYERS], gMethToken[MAX_PLAYERS];
 static PlayerText:gMethTd[MAX_PLAYERS][5];
+static const gOruzjeSanduk[][2] = { { ITEM_AK47, 2 }, { ITEM_M4, 1 }, { ITEM_DEAGLE, 2 }, { ITEM_UZI, 2 }, { ITEM_MUN_PUSKA, 300 }, { ITEM_MUN_PISTOLJ, 150 }, { ITEM_MUN_SMG, 200 } };
 
 InitDroga()
 {
@@ -260,8 +263,8 @@ static DobMeni(playerid, p)
     new tekst[512], bool:mafija = DrogaMafija(playerid);
     DobZaliha(p);
     gDrogaDob[playerid] = p;
-    format(tekst, sizeof tekst, T(playerid, "Sjemenke marihuane ($%d/kom, zaliha %d)\n%sKemikalije ($%d/l, zaliha %d)\n%sUvoz koka paste ($%d, %d g)"),
-        DOB_SJEME_CIJENA, gDob[p][dbSjeme], mafija ? ("{FFFFFF}") : ("{777777}"), DOB_KEM_CIJENA, gDob[p][dbKem], mafija ? ("{FFFFFF}") : ("{777777}"), UVOZ_CIJENA, UVOZ_KOLICINA);
+    format(tekst, sizeof tekst, T(playerid, "Sjemenke marihuane ($%d/kom, zaliha %d)\n%sKemikalije ($%d/l, zaliha %d)\n%sUvoz koka paste ($%d, %d g)\n%sSanduk oruzja ($%d)"),
+        DOB_SJEME_CIJENA, gDob[p][dbSjeme], mafija ? ("{FFFFFF}") : ("{777777}"), DOB_KEM_CIJENA, gDob[p][dbKem], mafija ? ("{FFFFFF}") : ("{777777}"), UVOZ_CIJENA, UVOZ_KOLICINA, mafija ? ("{FFFFFF}") : ("{777777}"), ORUZJE_CIJENA);
     return PrikaziDialog(playerid, DLG_DOBAVLJAC, DIALOG_STYLE_LIST, T(playerid, "Dobavljac"), tekst, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -290,7 +293,7 @@ DLG:dobavljac(playerid, response, listitem)
         AktorKaze(playerid, gDob[p][dbAktor], "Dobavljac", "To prodajem samo ljudima od povjerenja.");
         return DobMeni(playerid, p);
     }
-    if (listitem == 2) return DrogaUvozKreni(playerid);
+    if (listitem >= 2) return DrogaUvozKreni(playerid, listitem == 3);
     gDrogaKupuje[playerid] = listitem;
     return PrikaziDialog(playerid, DLG_DOBAVLJAC_KOL, DIALOG_STYLE_INPUT, T(playerid, "Dobavljac"), T(playerid, "Unesite kolicinu:"), T(playerid, "Kupi"), T(playerid, "Natrag"));
 }
@@ -312,28 +315,72 @@ DLG:dobavljac_kol(playerid, response, const inputtext[])
     return 1;
 }
 
-static DrogaUvozKreni(playerid)
+static bool:DrogaHq(org, &Float:x, &Float:y, &Float:z)
 {
-    new org = gOrg[playerid], slot = -1, sad = gettime();
+    new Float:a;
+    for (new i = 0; i < MAX_HQ; i++) if (OrgLokacija(i, x, y, z, a) == org) return true;
+    return false;
+}
+
+static DrogaUvozKreni(playerid, bool:oruzje)
+{
+    new org = gOrg[playerid], slot = -1, sad = gettime(), k = oruzje ? 2 : 1, pauza = oruzje ? ORUZJE_PAUZA_S : UVOZ_PAUZA_S, Float:x, Float:y, Float:z;
     for (new i = 0; i < MAX_HQ && slot == -1; i++) if (gDrogaUvozZadnji[i][0] == org) slot = i;
-    if (slot != -1 && sad - gDrogaUvozZadnji[slot][1] < UVOZ_PAUZA_S) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Sljedeca posiljka bit ce spremna za %d min."), (UVOZ_PAUZA_S - (sad - gDrogaUvozZadnji[slot][1])) / 60 + 1), 1;
+    if (slot != -1 && sad - gDrogaUvozZadnji[slot][k] < pauza) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Sljedeca posiljka bit ce spremna za %d min."), (pauza - (sad - gDrogaUvozZadnji[slot][k])) / 60 + 1), 1;
     if (gDrogaUvoz[playerid] != -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec imate aktivnu posiljku.")), 1;
+    if (oruzje && !DrogaHq(org, x, y, z)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vasa organizacija nema HQ za dostavu.")), 1;
     new tocke[UVOZ_MAX], n = 0;
     for (new u = 0; u < UVOZ_MAX; u++) if (gUvoz[u][uvIma]) tocke[n++] = u;
     if (!n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Trenutno nema ruta za uvoz.")), 1;
-    if (!DajNovac(playerid, -UVOZ_CIJENA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca.")), 1;
-    if (slot == -1) for (new i = 0; i < MAX_HQ && slot == -1; i++) if (!gDrogaUvozZadnji[i][0] || sad - gDrogaUvozZadnji[i][1] >= UVOZ_PAUZA_S) slot = i;
+    if (!DajNovac(playerid, oruzje ? -ORUZJE_CIJENA : -UVOZ_CIJENA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca.")), 1;
+    if (slot == -1) for (new i = 0; i < MAX_HQ && slot == -1; i++)
+    {
+        if (gDrogaUvozZadnji[i][0] && (sad - gDrogaUvozZadnji[i][1] < UVOZ_PAUZA_S || sad - gDrogaUvozZadnji[i][2] < ORUZJE_PAUZA_S)) continue;
+        slot = i;
+        gDrogaUvozZadnji[i][1] = 0;
+        gDrogaUvozZadnji[i][2] = 0;
+    }
     if (slot != -1)
     {
         gDrogaUvozZadnji[slot][0] = org;
-        gDrogaUvozZadnji[slot][1] = sad;
+        gDrogaUvozZadnji[slot][k] = sad;
     }
     new u = tocke[random(n)];
     gDrogaUvoz[playerid] = u;
     gDrogaUvozOrg[playerid] = org;
+    gDrogaUvozVrsta[playerid] = oruzje ? 1 : 0;
     SetPlayerCheckpoint(playerid, gUvoz[u][uvX], gUvoz[u][uvY], gUvoz[u][uvZ], UVOZ_DOMET);
     SetTimerEx("DrogaUvozIstek", UVOZ_ROK_MS, false, "ii", playerid, ++gDrogaUvozToken[playerid]);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Posiljka ceka na %s. Dodite vozilom u roku od %d min."), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]), UVOZ_ROK_MS / 60000);
+    if (oruzje) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sanduk oruzja ceka na %s. Dodite vozilom u roku od %d min."), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]), UVOZ_ROK_MS / 60000);
+    else SendClientMessage(playerid, COLOR_INFO, T(playerid, "Posiljka ceka na %s. Dodite vozilom u roku od %d min."), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]), UVOZ_ROK_MS / 60000);
+    return 1;
+}
+
+static DrogaUvozGotov(playerid)
+{
+    gDrogaUvoz[playerid] = -1;
+    gDrogaUvozToken[playerid]++;
+    DisablePlayerCheckpoint(playerid);
+}
+
+static DrogaPolicija(const poruka[], u)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, poruka), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]));
+}
+
+static DrogaOruzjeDostava(playerid)
+{
+    new org = gDrogaUvozOrg[playerid], Float:x, Float:y, Float:z;
+    if (!DrogaHq(org, x, y, z) || !IsPlayerInRangeOfPoint(playerid, UVOZ_DOMET + 2.0, x, y, z)) return 0;
+    if (!IsPlayerInAnyVehicle(playerid))
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dovezite sanduk vozilom do ulaza u HQ."));
+        return 1;
+    }
+    for (new k = 0; k < sizeof gOruzjeSanduk; k++) SefDodaj(org, gOruzjeSanduk[k][0], gOruzjeSanduk[k][1]);
+    DrogaUvozGotov(playerid);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sanduk oruzja je dostavljen u sef organizacije (/sef)."));
     return 1;
 }
 
@@ -349,10 +396,28 @@ public DrogaUvozIstek(playerid, token)
 DrogaCheckpoint(playerid)
 {
     new u = gDrogaUvoz[playerid];
-    if (u == -1 || !IsPlayerInRangeOfPoint(playerid, UVOZ_DOMET + 2.0, gUvoz[u][uvX], gUvoz[u][uvY], gUvoz[u][uvZ])) return 0;
+    if (u == -1) return 0;
+    if (gDrogaUvozVrsta[playerid] == 2) return DrogaOruzjeDostava(playerid);
+    if (!IsPlayerInRangeOfPoint(playerid, UVOZ_DOMET + 2.0, gUvoz[u][uvX], gUvoz[u][uvY], gUvoz[u][uvZ])) return 0;
     if (!IsPlayerInAnyVehicle(playerid))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za posiljku trebate vozilo."));
+        return 1;
+    }
+    if (gDrogaUvozVrsta[playerid] == 1)
+    {
+        new Float:x, Float:y, Float:z;
+        if (!DrogaHq(gDrogaUvozOrg[playerid], x, y, z))
+        {
+            DrogaUvozGotov(playerid);
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vasa organizacija nema HQ za dostavu."));
+            return 1;
+        }
+        gDrogaUvozVrsta[playerid] = 2;
+        SetPlayerCheckpoint(playerid, x, y, z, UVOZ_DOMET);
+        SetTimerEx("DrogaUvozIstek", UVOZ_ROK_MS, false, "ii", playerid, ++gDrogaUvozToken[playerid]);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Utovarili ste sanduk oruzja. Dostavite ga vozilom do HQ-a u roku od %d min."), UVOZ_ROK_MS / 60000);
+        DrogaPolicija("Dojava: sumnjiv utovar sanduka u vozilo, %s.", u);
         return 1;
     }
     new n = UVOZ_KOLICINA;
@@ -363,12 +428,9 @@ DrogaCheckpoint(playerid)
         return 1;
     }
     GiveItem(playerid, ITEM_KOKA, n);
-    gDrogaUvoz[playerid] = -1;
-    gDrogaUvozToken[playerid]++;
-    DisablePlayerCheckpoint(playerid);
+    DrogaUvozGotov(playerid);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Preuzeli ste %d g koka paste. Preradite je u laboratoriju HQ-a (/lab)."), n);
-    for (new i = 0; i < MAX_PLAYERS; i++)
-        if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, "Dojava: sumnjiva primopredaja paketa, %s."), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]));
+    DrogaPolicija("Dojava: sumnjiva primopredaja paketa, %s.", u);
     return 1;
 }
 

@@ -267,6 +267,7 @@ public OnGameModeInit()
     InitAvioni();
     InitPlaca();
     InitHod();
+    InitSef();
     InitDroga();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_snd ON social_messages (sender)"));
@@ -401,6 +402,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/oruzarnica.inc"
 #include "monterey/odjeca.inc"
 #include "monterey/kuce.inc"
+#include "monterey/sef.inc"
 #include "monterey/droga.inc"
 #include "monterey/namjestaj.inc"
 #include "monterey/salon.inc"
