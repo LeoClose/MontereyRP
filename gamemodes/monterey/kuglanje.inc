@@ -339,7 +339,7 @@ KuglanjeKey(playerid)
     if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return 1;
     gKg[s][kgIgrac][i] = playerid;
     gKuglanjeIgrac[playerid] = s;
-    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     gKg[s][kgSam] = false;
     gKgN[s][0] = gKgN[s][1] = 0;
     gKg[s][kgNaPotezu] = random(2);
@@ -414,7 +414,7 @@ static KuglanjeNisani(playerid, s)
     PlayerTextDrawShow(playerid, gKgTd[playerid]);
     gKgTdIma[playerid] = true;
     KuglanjeNisanPostavi(s);
-    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "A/D - smjer (ALT precizno), drzi LMB - snaga, pusti LMB - bacanje, RMB - odustani."));
+    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "A/D - smjer (ALT precizno), drzi LMB - snaga, pusti LMB - bacanje, RMB - odustani."), 0);
     SetTimerEx("KuglanjeNisanTick", KUGLANJE_NISAN_MS, false, "ii", s, gKg[s][kgToken]);
 }
 
@@ -557,7 +557,7 @@ static KuglanjeSam(s, playerid)
     gKg[s][kgNaPotezu] = i;
     KuglanjePostavi(s);
     KuglanjeKuglaNazad(s);
-    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "[Kuglanje] Igrate sami, 10 okvira."));
+    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "[Kuglanje] Igrate sami, 10 okvira."), 0);
     KuglanjePotez(s);
 }
 

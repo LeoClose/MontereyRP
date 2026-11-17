@@ -1,4 +1,5 @@
 #define KOS_MAX             32
+#define KOS_BOJA            0xE67E22E6
 #define KOS_MODEL           946
 #define KOS_LOPTA           2114
 #define KOS_SLOT            3
@@ -267,7 +268,7 @@ static bool:KosPridruzi(playerid, t, zeljeni = -1)
     if (gKosTeren[playerid] != -1) KosNapusti(playerid, true);
     new a = KosBroj(t, 0), b = KosBroj(t, 1), tim = zeljeni != -1 ? zeljeni : a <= b ? 0 : 1;
     if ((tim == 0 ? a : b) >= KOS_TIM_MAX) tim = 1 - tim;
-    if ((tim == 0 ? a : b) >= KOS_TIM_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Oba tima su puna.")), false;
+    if ((tim == 0 ? a : b) >= KOS_TIM_MAX) return IgraObavijest(playerid, T(playerid, "Kosarka"), OBAVIJEST_GRESKA, T(playerid, "Oba tima su puna.")), false;
     if (!OkladaUdi(playerid, OK_KOSARKA, t)) return false;
     gKosTeren[playerid] = t;
     gKosTim[playerid] = tim;
@@ -276,7 +277,9 @@ static bool:KosPridruzi(playerid, t, zeljeni = -1)
     new tekst[64];
     format(tekst, sizeof tekst, "%s%s", gKosTimBoja[tim], T(playerid, gKosTimIme[tim]));
     GameTextForPlayer(playerid, tekst, 2000, 6);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Igrate za tim %s. Prvi do %d poena pobjeduje. Udaljite se s terena za izlaz."), T(playerid, gKosTimIme[tim]), KOS_POBJEDA);
+    new poruka[160];
+    format(poruka, sizeof poruka, T(playerid, "Igrate za tim %s. Prvi do %d poena pobjeduje. Udaljite se s terena za izlaz."), T(playerid, gKosTimIme[tim]), KOS_POBJEDA);
+    IgraObavijest(playerid, T(playerid, "Kosarka"), KOS_BOJA, poruka, 0);
     return true;
 }
 
@@ -321,7 +324,9 @@ static KosPobjeda(t, tim)
         new tekst[64];
         format(tekst, sizeof tekst, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
         GameTextForPlayer(i, tekst, 3000, 3);
-        SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
+        new poruka[160];
+        format(poruka, sizeof poruka, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
+        IgraObavijest(i, T(i, "Kosarka"), KOS_BOJA, poruka);
     }
     OkladaIsplati(OK_KOSARKA, t, pobjednici, n);
     gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
@@ -330,7 +335,7 @@ static KosPobjeda(t, tim)
         if (gKosTeren[i] != t || OkladaUdi(i, OK_KOSARKA, t, false)) continue;
         if (gKosDrzi[i] != -1) KosIspusti(i);
         KosNapusti(i, false);
-        SendClientMessage(i, COLOR_INFO, T(i, "Napustili ste kosarkaski teren."));
+        IgraObavijest(i, T(i, "Kosarka"), KOS_BOJA, T(i, "Napustili ste kosarkaski teren."));
     }
     KosHudOsvjezi(t);
 }
@@ -426,7 +431,10 @@ static KosObjavi(k)
     {
         if (!gUlogiran[i] || GetPlayerVirtualWorld(i) != gKos[k][koSvijet] || !IsPlayerInRangeOfPoint(i, 30.0, x, y, z)) continue;
         PlayerPlaySound(i, 1057, 0.0, 0.0, 0.0);
-        if (gKosTeren[i] == -1) SendClientMessage(i, 0xF39C12FF, T(i, "[Kosarka] %s je zabio za %d poena!"), GetRPIme(s), gKos[k][koPoeni]);
+        if (gKosTeren[i] != -1) continue;
+        new poruka[160];
+        format(poruka, sizeof poruka, T(i, "[Kosarka] %s je zabio za %d poena!"), GetRPIme(s), gKos[k][koPoeni]);
+        IgraObavijest(i, T(i, "Kosarka"), KOS_BOJA, poruka);
     }
     GameTextForPlayer(s, gKos[k][koPoeni] == 3 ? ("~y~+3") : ("~g~+2"), 1500, 6);
     if (gKosDrzi[s] == -1 && GetPlayerState(s) == PLAYER_STATE_ONFOOT) KosAnim(s, "BSKTBALL", "BBALL_react_score", false, false, false, 1200);
@@ -575,7 +583,7 @@ static KosDodaj(playerid)
         najblize = d;
         q = i;
     }
-    if (q == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nema suigraca ispred vas.")), 0;
+    if (q == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kosarka"), OBAVIJEST_GRESKA, T(playerid, "Nema suigraca ispred vas.")), 0;
     new Float:x, Float:y, Float:z, koraka = floatround(najblize);
     GetPlayerPos(q, x, y, z);
     new k = KosPusti(playerid);
@@ -606,7 +614,9 @@ static KosUkradi(playerid)
         KosPusti(h);
         KosAnim(h, "BSKTBALL", "BBALL_SkidStop_R", false, false, false, 700);
         KosUhvati(playerid, k, false);
-        SendClientMessage(h, COLOR_ERROR, T(h, "%s vam je ukrao loptu!"), GetRPIme(playerid));
+        new poruka[96];
+        format(poruka, sizeof poruka, T(h, "%s vam je ukrao loptu!"), GetRPIme(playerid));
+        IgraObavijest(h, T(h, "Kosarka"), OBAVIJEST_GRESKA, poruka);
         GameTextForPlayer(playerid, T(playerid, "~g~Ukradeno!"), 1000, 6);
         return 1;
     }
@@ -727,7 +737,7 @@ KosTick()
         {
             KosPusti(p);
             KosLoptaReset(k);
-            SendClientMessage(p, COLOR_INFO, T(p, "Lopta je vracena na teren."));
+            IgraObavijest(p, T(p, "Kosarka"), KOS_BOJA, T(p, "Lopta je vracena na teren."));
         }
         else if (GetPlayerState(p) != PLAYER_STATE_ONFOOT) KosIspusti(p);
     }
@@ -737,7 +747,7 @@ KosTick()
         if (t == -1 || gKosDrzi[p] != -1) continue;
         if (GetPlayerVirtualWorld(p) == gKos[t][koSvijet] && IsPlayerInRangeOfPoint(p, gKos[t][koR] + KOS_IZLAZ, gKos[t][koSx], gKos[t][koSy], gKos[t][koSz] + 1.0)) continue;
         KosNapusti(p, true);
-        SendClientMessage(p, COLOR_INFO, T(p, "Napustili ste kosarkaski teren."));
+        IgraObavijest(p, T(p, "Kosarka"), KOS_BOJA, T(p, "Napustili ste kosarkaski teren."));
     }
 }
 

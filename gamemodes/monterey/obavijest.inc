@@ -11,7 +11,7 @@ IgraObavijestConnect(playerid)
     gObOd[playerid] = 0;
 }
 
-IgraObavijest(playerid, const naslov[], boja, const tekst[])
+IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
 {
     new i = strfind(tekst, "] ");
     if (tekst[0] == '[' && i != -1) i += 2;
@@ -46,7 +46,8 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[])
     PlayerTextDrawSetString(playerid, gObTd[playerid][1], gObTekst[playerid]);
     PlayerTextDrawShow(playerid, gObTd[playerid][0]);
     PlayerTextDrawShow(playerid, gObTd[playerid][1]);
-    SetTimerEx("IgraObavijestSkrij", OBAVIJEST_MS, false, "ii", playerid, ++gObToken[playerid]);
+    gObToken[playerid]++;
+    if (ms > 0) SetTimerEx("IgraObavijestSkrij", ms, false, "ii", playerid, gObToken[playerid]);
     return 1;
 }
 

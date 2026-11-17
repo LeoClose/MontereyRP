@@ -1,4 +1,5 @@
 #define BILIJAR_MAX         16
+#define BILIJAR_BOJA        0x16A085E6
 #define BILIJAR_KUGLI       16
 #define BILIJAR_STOL        2964
 #define BILIJAR_STAP        3004
@@ -115,9 +116,9 @@ static BilijarPoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, drugi = INVALI
     {
         new p = gBilijar[s][bsIgrac][i];
         if (p == INVALID_PLAYER_ID) continue;
-        if (drugi != INVALID_PLAYER_ID) SendClientMessage(p, 0x2DD9A9FF, T(p, tekst), GetRPIme(igrac), GetRPIme(drugi));
-        else if (igrac != INVALID_PLAYER_ID) SendClientMessage(p, 0x2DD9A9FF, T(p, tekst), GetRPIme(igrac));
-        else SendClientMessage(p, 0x2DD9A9FF, T(p, tekst));
+        new poruka[160];
+        format(poruka, sizeof poruka, T(p, tekst), igrac != INVALID_PLAYER_ID ? GetRPIme(igrac) : "", drugi != INVALID_PLAYER_ID ? GetRPIme(drugi) : "");
+        IgraObavijest(p, T(p, "Bilijar"), BILIJAR_BOJA, poruka);
     }
 }
 
@@ -219,17 +220,17 @@ BilijarKey(playerid)
     if (s != -1)
     {
         BilijarIgracOdlazi(playerid);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Napustili ste bilijarski stol."));
+        IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "Napustili ste bilijarski stol."));
         return 1;
     }
     s = BilijarBlizu(playerid, BILIJAR_DOMET);
     if (s == -1) return 0;
     new i = gBilijar[s][bsIgrac][0] == INVALID_PLAYER_ID ? 0 : gBilijar[s][bsIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
-    if (i == -1 || gBilijar[s][bsFaza] != BF_CEKA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za ovim stolom se vec igra.")), 1;
+    if (i == -1 || gBilijar[s][bsFaza] != BF_CEKA) return IgraObavijest(playerid, T(playerid, "Bilijar"), OBAVIJEST_GRESKA, T(playerid, "Za ovim stolom se vec igra.")), 1;
     if (!OkladaUdi(playerid, OK_BILIJAR, s)) return 1;
     gBilijar[s][bsIgrac][i] = playerid;
     gBilijarIgrac[playerid] = s;
-    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     BilijarSlozi(s);
     gBilijar[s][bsFaza] = BF_IGRA;
     gBilijar[s][bsNaPotezu] = random(2);
@@ -292,7 +293,7 @@ BilijarTipke(playerid, KEY:newkeys, KEY:oldkeys)
         new Float:bx, Float:by, Float:px, Float:py, Float:pz;
         BilijarSvijet(s, gBilijar[s][bsKx][0], gBilijar[s][bsKy][0], bx, by);
         GetPlayerPos(playerid, px, py, pz);
-        if (VectorSize(px - bx, py - by, 0.0) > 2.2) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pridite blize bijeloj kugli.")), 1;
+        if (VectorSize(px - bx, py - by, 0.0) > 2.2) return IgraObavijest(playerid, T(playerid, "Bilijar"), OBAVIJEST_GRESKA, T(playerid, "Pridite blize bijeloj kugli.")), 1;
         gBilijar[s][bsNisani] = playerid;
         gBilijar[s][bsKut] = atan2(by - py, bx - px) - 90.0;
         gBilijar[s][bsSnaga] = 0.0;
@@ -307,7 +308,7 @@ BilijarTipke(playerid, KEY:newkeys, KEY:oldkeys)
         PlayerTextDrawSetOutline(playerid, gBilijarTd[playerid], 1);
         PlayerTextDrawShow(playerid, gBilijarTd[playerid]);
         BilijarNisanPostavi(s);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "A/D - nisan (ALT precizno), drzi LMB - snaga, pusti LMB - udarac, RMB - odustani."));
+        IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "A/D - nisan (ALT precizno), drzi LMB - snaga, pusti LMB - udarac, RMB - odustani."), 0);
         SetTimerEx("BilijarNisanTick", BILIJAR_NISAN_MS, false, "ii", s, gBilijar[s][bsToken]);
         return 1;
     }
@@ -520,7 +521,7 @@ BilijarTick()
             if (p == INVALID_PLAYER_ID || gBilijar[s][bsNisani] == p) continue;
             if (GetPlayerVirtualWorld(p) != gBilijar[s][bsSvijet] || !IsPlayerInRangeOfPoint(p, BILIJAR_NAPUSTI, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ]))
             {
-                SendClientMessage(p, COLOR_INFO, T(p, "Napustili ste bilijarski stol."));
+                IgraObavijest(p, T(p, "Bilijar"), BILIJAR_BOJA, T(p, "Napustili ste bilijarski stol."));
                 BilijarIgracOdlazi(p);
             }
         }

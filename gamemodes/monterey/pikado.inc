@@ -11,7 +11,6 @@
 #define PIKADO_AX           0.8
 #define PIKADO_RASIPANJE    5
 #define PIKADO_POMAK        5.0
-#define PIKADO_DAH          2500
 #define PIKADO_IDEAL        75.0
 #define PIKADO_TOCNO        4.0
 #define PIKADO_BAR_X        240.0
@@ -21,17 +20,17 @@
 #define PIKADO_LOPTA        1.032
 #define PIKADO_ZICA_DEB     1.2
 #define PIKADO_ZICA_MAX     6.0
-#define PIKADO_TD           14
+#define PIKADO_TD           13
 #define PIKADO_CRNA         0x1C1C1CFF
 #define PIKADO_SREBRNA      0xC8C8C8FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
 enum { PF_CEKA, PF_IGRA, PF_PAUZA }
-enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH, PTD_POLJE, PTD_BROJ }
+enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_POLJE, PTD_BROJ }
 enum E_PIKADO { bool:pkIma, pkDb, Float:pkX, Float:pkY, Float:pkZ, Float:pkA, pkInt, pkSvijet, STREAMER_TAG_3D_TEXT_LABEL:pkTekst,
     pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno,
-    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkDah, pkNisanOd, pkPolje }
+    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkNisanOd, pkPolje }
 
 static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5 };
 
@@ -234,14 +233,12 @@ static PikadoTdStvori(playerid)
     gPkTd[playerid][PTD_BAR] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X - 2.0, PIKADO_BAR_Y - 2.0, "LD_SPAC:white");
     gPkTd[playerid][PTD_SNAGA] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X, PIKADO_BAR_Y, "LD_SPAC:white");
     gPkTd[playerid][PTD_ZONA] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X + (PIKADO_IDEAL - PIKADO_TOCNO) / 100.0 * PIKADO_BAR_W, PIKADO_BAR_Y, "LD_SPAC:white");
-    gPkTd[playerid][PTD_DAH] = CreatePlayerTextDraw(playerid, PIKADO_BAR_X, PIKADO_BAR_Y + 12.0, "LD_SPAC:white");
-    for (new i = PTD_BAR; i <= PTD_DAH; i++) PlayerTextDrawFont(playerid, gPkTd[playerid][i], TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_BAR], PIKADO_BAR_W + 4.0, 23.0);
+    for (new i = PTD_BAR; i <= PTD_ZONA; i++) PlayerTextDrawFont(playerid, gPkTd[playerid][i], TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_BAR], PIKADO_BAR_W + 4.0, 12.0);
     PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_BAR], 0x000000AA);
     PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_SNAGA], 0xF1C40FFF);
     PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_ZONA], PIKADO_TOCNO * 2.0 / 100.0 * PIKADO_BAR_W, 8.0);
     PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_ZONA], 0x2ECC7199);
-    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_DAH], 0x5DADE2FF);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_BAR]);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_ZONA]);
     gPkTd[playerid][PTD_POLJE] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY - 190.0, "_");
@@ -303,9 +300,9 @@ static PikadoStrelicaCrtaj(playerid, d, Float:mx, Float:my)
 static PikadoInfo(s, playerid)
 {
     new tekst[256], n = gPikado[s][pkNaPotezu];
-    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~WASD nisan (ALT fino), SPACE dah, drzi/pusti LMB baci, RMB izlaz"),
+    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~WASD nisan (ALT fino), drzi/pusti LMB baci, RMB izlaz"),
         gPikado[s][pkBodovi][n], gPikado[s][pkBacio], PIKADO_STRELICA, gPikado[s][pkUkupno]);
-    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d~n~WASD nisan (ALT fino), SPACE dah, drzi/pusti LMB baci, RMB izlaz"),
+    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d~n~WASD nisan (ALT fino), drzi/pusti LMB baci, RMB izlaz"),
         GetRPIme(gPikado[s][pkIgrac][n]), gPikado[s][pkBodovi][n], GetRPIme(gPikado[s][pkIgrac][1 - n]), gPikado[s][pkBodovi][1 - n], gPikado[s][pkBacio], PIKADO_STRELICA);
     PlayerTextDrawSetString(playerid, gPkTd[playerid][PTD_INFO], tekst);
 }
@@ -415,7 +412,7 @@ PikadoKey(playerid)
     if (!OkladaUdi(playerid, OK_PIKADO, s)) return 1;
     gPikado[s][pkIgrac][i] = playerid;
     gPikadoIgrac[playerid] = s;
-    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     gPikado[s][pkSam] = false;
     gPikado[s][pkBodovi][0] = gPikado[s][pkBodovi][1] = PIKADO_POCETNO;
     gPikado[s][pkNaPotezu] = random(2);
@@ -432,7 +429,7 @@ static PikadoSam(s, playerid)
     gPikado[s][pkUkupno] = 0;
     gPikado[s][pkBodovi][i] = PIKADO_POCETNO;
     gPikado[s][pkNaPotezu] = i;
-    IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "[Pikado] Igrate 301 sami. Spustite rezultat na 0 u sto manje strelica."));
+    IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "[Pikado] Igrate 301 sami. Spustite rezultat na 0 u sto manje strelica."), 0);
     PikadoPotez(s);
 }
 
@@ -441,26 +438,10 @@ static Float:PikadoRub(Float:v)
     return v < -225.0 ? -225.0 : v > 225.0 ? 225.0 : v;
 }
 
-static PikadoNjihanje(s, KEY:tipke)
+static PikadoNjihanje(s)
 {
-    new p = gPikado[s][pkNisani], dah = gPikado[s][pkDah], Float:a = 10.0 + float(GetTickCount() - gPikado[s][pkNisanOd]) * 0.003;
+    new Float:a = 10.0 + float(GetTickCount() - gPikado[s][pkNisanOd]) * 0.003;
     if (a > 40.0) a = 40.0;
-    if (tipke & KEY_SPRINT)
-    {
-        if (dah > 0)
-        {
-            a = 3.0;
-            dah -= PIKADO_NISAN_MS;
-        }
-        else a *= 1.5;
-    }
-    else dah += PIKADO_NISAN_MS / 2;
-    dah = dah < 0 ? 0 : dah > PIKADO_DAH ? PIKADO_DAH : dah;
-    if (dah != gPikado[s][pkDah])
-    {
-        gPikado[s][pkDah] = dah;
-        PikadoTraka(p, PTD_DAH, float(dah) / float(PIKADO_DAH), 3.0);
-    }
     new Float:t = float(GetTickCount() % 360000) / 1000.0;
     gPikado[s][pkSx] = a * (0.65 * floatsin(t * 97.0, degrees) + 0.35 * floatsin(t * 233.0 + 20.0, degrees));
     gPikado[s][pkSy] = a * 0.8 * (0.6 * floatsin(t * 131.0 + 40.0, degrees) + 0.4 * floatsin(t * 263.0, degrees));
@@ -481,7 +462,7 @@ public PikadoNisanTick(s, token)
     new Float:brzina = (tipke & KEY_WALK) ? PIKADO_POMAK * 0.3 : PIKADO_POMAK;
     gPikado[s][pkAx] = PikadoRub(gPikado[s][pkAx] + float(strana) / 128.0 * brzina);
     gPikado[s][pkAy] = PikadoRub(gPikado[s][pkAy] - float(gore) / 128.0 * brzina);
-    PikadoNjihanje(s, tipke);
+    PikadoNjihanje(s);
     if (gPikado[s][pkDrzi])
     {
         gPikado[s][pkSnaga] += gPikado[s][pkGore] ? 5.0 : -5.0;
@@ -515,7 +496,6 @@ static PikadoNisani(playerid, s)
     gPikado[s][pkAx] = 0.0;
     gPikado[s][pkAy] = 0.0;
     gPikado[s][pkDrzi] = false;
-    gPikado[s][pkDah] = PIKADO_DAH;
     gPikado[s][pkNisanOd] = GetTickCount();
     gPikado[s][pkPolje] = -1;
     TogglePlayerControllable(playerid, false);
@@ -523,7 +503,6 @@ static PikadoNisani(playerid, s)
     PikadoTdStvori(playerid);
     for (new i = 0; i < gPikado[s][pkBacio]; i++) PikadoStrelicaCrtaj(playerid, i, gPikado[s][pkHx][i], gPikado[s][pkHy][i]);
     PikadoInfo(s, playerid);
-    PikadoTraka(playerid, PTD_DAH, 1.0, 3.0);
     SetTimerEx("PikadoNisanTick", PIKADO_NISAN_MS, false, "ii", s, gPikado[s][pkToken]);
 }
 
