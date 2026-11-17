@@ -1,5 +1,4 @@
 #define POKER_MJESTA        6
-#define POKER_MODEL         19474
 #define POKER_MALI          25
 #define POKER_VELIKI        50
 #define POKER_MIN_ULAZ      1000
@@ -8,14 +7,12 @@
 #define POKER_RAKE_MAX      500
 #define POKER_POTEZ_S       30
 #define POKER_PAUZA_S       6
-#define POKER_STOL_RAZMAK   1.3
-#define POKER_STOL_Z        -1.0
 #define POKER_NAPUSTI       8.0
 
 enum { PO_CEKA, PO_RUKA }
 enum { PTD_POZADINA, PTD_PLOCA, PTD_MOJA = PTD_PLOCA + 5, PTD_BANKA = PTD_MOJA + 2, PTD_IGRACI, PTD_STATUS, PTD_FOLD, PTD_CALL, PTD_RAISE, PTD_ALLIN, PTD_USTANI, PTD_STOL_NASLOV, PTD_IZNOS, PTD_POTVRDI, PTD_PONISTI, PTD_NATRAG, PTD_ZETON, PTD_KRAJ = PTD_ZETON + sizeof gKzZetoni * 2 }
 enum { PM_IGRA, PM_ULAZ, PM_DIZI }
-enum E_POKER { bool:poIma, poAktor, Float:poX, Float:poY, Float:poZ, Float:poA, poInt, poSvijet, STREAMER_TAG_OBJECT:poObj,
+enum E_POKER { bool:poIma, poAktor, Float:poX, Float:poY, Float:poZ, Float:poA, poInt, poSvijet,
     poFaza, poIgrac[POKER_MJESTA], poStog[POKER_MJESTA], poUlog[POKER_MJESTA], poUkupno[POKER_MJESTA], bool:poU[POKER_MJESTA], bool:poFold[POKER_MJESTA], bool:poAllin[POKER_MJESTA], bool:poOdigrao[POKER_MJESTA],
     poKarte[POKER_MJESTA * 2], poPloca[5], poPlocaN, poSpil[52], poSpilI, poDiler, poNaPotezu, poNajveci, poMinRaise, poRunda, poRok, poPauza }
 
@@ -158,7 +155,6 @@ PokerStvori(s, Float:x, Float:y, Float:z, Float:a, interijer, svijet, aktor)
         gPo[s][poIgrac][m] = INVALID_PLAYER_ID;
         gPo[s][poU][m] = false;
     }
-    gPo[s][poObj] = CreateDynamicObject(POKER_MODEL, x - floatsin(a, degrees) * POKER_STOL_RAZMAK, y + floatcos(a, degrees) * POKER_STOL_RAZMAK, z + POKER_STOL_Z, 0.0, 0.0, a + 90.0, svijet, interijer);
 }
 
 PokerUkloni(s)
@@ -172,7 +168,6 @@ PokerUkloni(s)
         gPo[s][poU][m] = false;
     }
     for (new m = 0; m < POKER_MJESTA; m++) if (gPo[s][poIgrac][m] != INVALID_PLAYER_ID) PokerUstani(gPo[s][poIgrac][m]);
-    DestroyDynamicObject(gPo[s][poObj]);
     gPo[s][poIma] = false;
 }
 

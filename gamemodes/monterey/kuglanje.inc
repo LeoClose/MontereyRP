@@ -1,4 +1,5 @@
 #define KUGLANJE_MAX        16
+#define KUGLANJE_BOJA       0x1E5AA8E6
 #define KUGLANJE_CUNJ       1509
 #define KUGLANJE_KUGLA      2114
 #define KUGLANJE_DUZINA     18.29
@@ -162,7 +163,11 @@ static KuglanjeKuglaNazad(s)
         StopDynamicObject(gKg[s][kgKugla]);
         SetDynamicObjectPos(gKg[s][kgKugla], wx, wy, gKg[s][kgZ] + KUGLANJE_KUGLA_Z);
     }
-    else gKg[s][kgKugla] = CreateDynamicObject(KUGLANJE_KUGLA, wx, wy, gKg[s][kgZ] + KUGLANJE_KUGLA_Z, 0.0, 0.0, 0.0, gKg[s][kgSvijet], gKg[s][kgInt], -1, 80.0);
+    else
+    {
+        gKg[s][kgKugla] = CreateDynamicObject(KUGLANJE_KUGLA, wx, wy, gKg[s][kgZ] + KUGLANJE_KUGLA_Z, 0.0, 0.0, 0.0, gKg[s][kgSvijet], gKg[s][kgInt], -1, 80.0);
+        SetDynamicObjectMaterial(gKg[s][kgKugla], 0, 3922, "bistro", "Marble2", 0xFF1E5AA8);
+    }
 }
 
 static KuglanjeStvori(s)
@@ -182,8 +187,9 @@ static KuglanjePoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, a = 0, b = 0)
     {
         new p = gKg[s][kgIgrac][i];
         if (p == INVALID_PLAYER_ID) continue;
-        if (igrac != INVALID_PLAYER_ID) SendClientMessage(p, 0x2DD9A9FF, T(p, tekst), GetRPIme(igrac), a, b);
-        else SendClientMessage(p, 0x2DD9A9FF, T(p, tekst));
+        new poruka[160];
+        format(poruka, sizeof poruka, T(p, tekst), igrac != INVALID_PLAYER_ID ? GetRPIme(igrac) : "", a, b);
+        IgraObavijest(p, T(p, "Kuglanje"), KUGLANJE_BOJA, poruka);
     }
 }
 
@@ -310,7 +316,7 @@ static KuglanjePotez(s)
     {
         new q = gKg[s][kgIgrac][i];
         if (q == INVALID_PLAYER_ID) continue;
-        SendClientMessage(q, 0x2DD9A9FF, "[Kuglanje] %s", tekst);
+        IgraObavijest(q, T(q, "Kuglanje"), KUGLANJE_BOJA, tekst);
         if (q == p) GameTextForPlayer(q, T(q, "~g~Vi ste na potezu~n~~w~RMB - nisani"), 3000, 4);
         else GameTextForPlayer(q, T(q, "~y~Protivnik je na potezu"), 3000, 4);
     }
@@ -323,17 +329,17 @@ KuglanjeKey(playerid)
     if (s != -1)
     {
         KuglanjeOdlazi(playerid);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Napustili ste kuglanu."));
+        IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Napustili ste kuglanu."));
         return 1;
     }
     s = KuglanjeBlizu(playerid);
     if (s == -1) return 0;
     new i = gKg[s][kgIgrac][0] == INVALID_PLAYER_ID ? 0 : gKg[s][kgIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
-    if (i == -1 || gKg[s][kgFaza] != KG_CEKA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Na ovoj stazi se vec igra.")), 1;
+    if (i == -1 || gKg[s][kgFaza] != KG_CEKA) return IgraObavijest(playerid, T(playerid, "Kuglanje"), OBAVIJEST_GRESKA, T(playerid, "Na ovoj stazi se vec igra.")), 1;
     if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return 1;
     gKg[s][kgIgrac][i] = playerid;
     gKuglanjeIgrac[playerid] = s;
-    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
     gKg[s][kgSam] = false;
     gKgN[s][0] = gKgN[s][1] = 0;
     gKg[s][kgNaPotezu] = random(2);
@@ -408,7 +414,7 @@ static KuglanjeNisani(playerid, s)
     PlayerTextDrawShow(playerid, gKgTd[playerid]);
     gKgTdIma[playerid] = true;
     KuglanjeNisanPostavi(s);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "A/D - smjer (ALT precizno), drzi LMB - snaga, pusti LMB - bacanje, RMB - odustani."));
+    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "A/D - smjer (ALT precizno), drzi LMB - snaga, pusti LMB - bacanje, RMB - odustani."));
     SetTimerEx("KuglanjeNisanTick", KUGLANJE_NISAN_MS, false, "ii", s, gKg[s][kgToken]);
 }
 
@@ -551,7 +557,7 @@ static KuglanjeSam(s, playerid)
     gKg[s][kgNaPotezu] = i;
     KuglanjePostavi(s);
     KuglanjeKuglaNazad(s);
-    SendClientMessage(playerid, 0x2DD9A9FF, T(playerid, "[Kuglanje] Igrate sami, 10 okvira."));
+    IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "[Kuglanje] Igrate sami, 10 okvira."));
     KuglanjePotez(s);
 }
 
@@ -560,7 +566,7 @@ KuglanjeTipke(playerid, KEY:newkeys, KEY:oldkeys)
     new s = gKuglanjeIgrac[playerid];
     if (s != -1 && gKg[s][kgFaza] == KG_CEKA && (newkeys & KEY_AIM) && !(oldkeys & KEY_AIM) && gKg[s][kgIgrac][gKg[s][kgIgrac][0] == playerid ? 1 : 0] == INVALID_PLAYER_ID)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, KUGLANJE_DOMET, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite na liniju bacanja.")), 1;
+        if (!IsPlayerInRangeOfPoint(playerid, KUGLANJE_DOMET, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.0)) return IgraObavijest(playerid, T(playerid, "Kuglanje"), OBAVIJEST_GRESKA, T(playerid, "Stanite na liniju bacanja.")), 1;
         KuglanjeSam(s, playerid);
         KuglanjeNisani(playerid, s);
         return 1;
@@ -574,7 +580,7 @@ KuglanjeTipke(playerid, KEY:newkeys, KEY:oldkeys)
             KuglanjeKuglaNazad(s);
             return 1;
         }
-        if (!IsPlayerInRangeOfPoint(playerid, KUGLANJE_DOMET, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite na liniju bacanja.")), 1;
+        if (!IsPlayerInRangeOfPoint(playerid, KUGLANJE_DOMET, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.0)) return IgraObavijest(playerid, T(playerid, "Kuglanje"), OBAVIJEST_GRESKA, T(playerid, "Stanite na liniju bacanja.")), 1;
         KuglanjeNisani(playerid, s);
         return 1;
     }
@@ -597,7 +603,7 @@ KuglanjeTick()
             if (p == INVALID_PLAYER_ID || gKg[s][kgNisani] == p) continue;
             if (GetPlayerVirtualWorld(p) != gKg[s][kgSvijet] || !IsPlayerInRangeOfPoint(p, KUGLANJE_NAPUSTI, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ]))
             {
-                SendClientMessage(p, COLOR_INFO, T(p, "Napustili ste kuglanu."));
+                IgraObavijest(p, T(p, "Kuglanje"), KUGLANJE_BOJA, T(p, "Napustili ste kuglanu."));
                 KuglanjeOdlazi(p);
             }
         }

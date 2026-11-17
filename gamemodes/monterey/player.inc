@@ -38,6 +38,7 @@ public OnPlayerConnect(playerid)
     PikadoConnect(playerid);
     AntiCheatConnect(playerid);
     KuglanjeConnect(playerid);
+    IgraObavijestConnect(playerid);
     PokerConnect(playerid);
     InventarConnect(playerid);
     OruzjeConnect(playerid);

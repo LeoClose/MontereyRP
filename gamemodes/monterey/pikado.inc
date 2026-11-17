@@ -17,12 +17,10 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        600
+#define PIKADO_PLOCA        700
 #define PIKADO_LOPTA        1.032
-#define PIKADO_ZICA_KORAK   6.0
-#define PIKADO_ZICA_LX      0.4
-#define PIKADO_ZICA_LY      0.6
-#define PIKADO_ZICA_DY      7.9
+#define PIKADO_ZICA_DEB     1.2
+#define PIKADO_ZICA_MAX     6.0
 #define PIKADO_TD           14
 #define PIKADO_CRNA         0x1C1C1CFF
 #define PIKADO_SREBRNA      0xC8C8C8FF
@@ -80,14 +78,14 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoZica(Float:mx, Float:my)
+static PikadoZica(Float:mx, Float:my, Float:w, Float:h)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:px, Float:py;
+    new Float:px, Float:py, Float:lx = w * PIKADO_AX / 7.5, Float:ly = h / 1.98;
     PikadoNaEkran(mx, my, px, py);
-    new Text:td = TextDrawCreate(px, py - PIKADO_ZICA_DY, ".");
+    new Text:td = TextDrawCreate(px + lx, py - 6.8 * ly, ".");
     TextDrawFont(td, TEXT_DRAW_FONT_1);
-    TextDrawLetterSize(td, PIKADO_ZICA_LX, PIKADO_ZICA_LY);
+    TextDrawLetterSize(td, lx, ly);
     TextDrawAlignment(td, TEXT_DRAW_ALIGN_CENTER);
     TextDrawColour(td, PIKADO_SREBRNA);
     TextDrawSetOutline(td, 0);
@@ -113,7 +111,11 @@ static PikadoPlocaStvori()
     for (new i = 0; i < 20; i++)
     {
         new Float:a = float(i) * 18.0 + 9.0, Float:sn = floatsin(a, degrees), Float:c = floatcos(a, degrees);
-        for (new Float:r = 18.0; r <= 170.0; r += PIKADO_ZICA_KORAK) PikadoZica(r * sn, r * c);
+        new Float:korak = 1.5 * PIKADO_ZICA_DEB / (floatabs(sn) < floatabs(c) ? floatabs(sn) : floatabs(c));
+        if (korak > PIKADO_ZICA_MAX) korak = PIKADO_ZICA_MAX;
+        new Float:w = korak * floatabs(sn) + PIKADO_ZICA_DEB, Float:h = korak * floatabs(c) + PIKADO_ZICA_DEB;
+        korak /= PIKADO_R / 170.0;
+        for (new Float:r = 18.0; r <= 170.0; r += korak) PikadoZica(r * sn, r * c, w, h);
     }
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
@@ -188,8 +190,9 @@ static PikadoPoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, a = 0, b = 0)
     {
         new p = gPikado[s][pkIgrac][i];
         if (p == INVALID_PLAYER_ID) continue;
-        if (igrac != INVALID_PLAYER_ID) SendClientMessage(p, 0x2DD9A9FF, T(p, tekst), GetRPIme(igrac), a, b);
-        else SendClientMessage(p, 0x2DD9A9FF, T(p, tekst));
+        new poruka[160];
+        format(poruka, sizeof poruka, T(p, tekst), igrac != INVALID_PLAYER_ID ? GetRPIme(igrac) : "", a, b);
+        IgraObavijest(p, T(p, "Pikado"), PIKADO_ZELENA, poruka);
     }
 }
 
@@ -402,17 +405,17 @@ PikadoKey(playerid)
     if (s != -1)
     {
         PikadoOdlazi(playerid);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Napustili ste pikado."));
+        IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Napustili ste pikado."));
         return 1;
     }
     s = PikadoBlizu(playerid);
     if (s == -1) return 0;
     new i = gPikado[s][pkIgrac][0] == INVALID_PLAYER_ID ? 0 : gPikado[s][pkIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
-    if (i == -1 || gPikado[s][pkFaza] != PF_CEKA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovdje se vec igra.")), 1;
+    if (i == -1 || gPikado[s][pkFaza] != PF_CEKA) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Ovdje se vec igra.")), 1;
     if (!OkladaUdi(playerid, OK_PIKADO, s)) return 1;
     gPikado[s][pkIgrac][i] = playerid;
     gPikadoIgrac[playerid] = s;
-    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
+    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog).")), 1;
     gPikado[s][pkSam] = false;
     gPikado[s][pkBodovi][0] = gPikado[s][pkBodovi][1] = PIKADO_POCETNO;
     gPikado[s][pkNaPotezu] = random(2);
@@ -429,7 +432,7 @@ static PikadoSam(s, playerid)
     gPikado[s][pkUkupno] = 0;
     gPikado[s][pkBodovi][i] = PIKADO_POCETNO;
     gPikado[s][pkNaPotezu] = i;
-    SendClientMessage(playerid, 0x2DD9A9FF, T(playerid, "[Pikado] Igrate 301 sami. Spustite rezultat na 0 u sto manje strelica."));
+    IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "[Pikado] Igrate 301 sami. Spustite rezultat na 0 u sto manje strelica."));
     PikadoPotez(s);
 }
 
@@ -576,7 +579,7 @@ PikadoTipke(playerid, KEY:newkeys, KEY:oldkeys)
     new i = gPikado[s][pkIgrac][0] == playerid ? 0 : 1, bool:rmb = (newkeys & KEY_AIM) && !(oldkeys & KEY_AIM);
     if (rmb && gPikado[s][pkFaza] == PF_CEKA && gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, PIKADO_DOMET, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite na liniju bacanja.")), 1;
+        if (!IsPlayerInRangeOfPoint(playerid, PIKADO_DOMET, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.0)) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Stanite na liniju bacanja.")), 1;
         PikadoSam(s, playerid);
         PikadoNisani(playerid, s);
         return 1;
@@ -589,7 +592,7 @@ PikadoTipke(playerid, KEY:newkeys, KEY:oldkeys)
             PikadoNisanKraj(s);
             return 1;
         }
-        if (!IsPlayerInRangeOfPoint(playerid, PIKADO_DOMET, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite na liniju bacanja.")), 1;
+        if (!IsPlayerInRangeOfPoint(playerid, PIKADO_DOMET, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.0)) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Stanite na liniju bacanja.")), 1;
         PikadoNisani(playerid, s);
         return 1;
     }
@@ -620,7 +623,7 @@ PikadoTick()
             if (p == INVALID_PLAYER_ID || gPikado[s][pkNisani] == p) continue;
             if (GetPlayerVirtualWorld(p) != gPikado[s][pkSvijet] || !IsPlayerInRangeOfPoint(p, PIKADO_NAPUSTI, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ]))
             {
-                SendClientMessage(p, COLOR_INFO, T(p, "Napustili ste pikado."));
+                IgraObavijest(p, T(p, "Pikado"), PIKADO_ZELENA, T(p, "Napustili ste pikado."));
                 PikadoOdlazi(p);
             }
         }

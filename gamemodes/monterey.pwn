@@ -371,6 +371,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/bilijar.inc"
 #include "monterey/kosarka.inc"
 #include "monterey/arkada.inc"
+#include "monterey/obavijest.inc"
 #include "monterey/pikado.inc"
 #include "monterey/kuglanje.inc"
 #include "monterey/anticheat.inc"
