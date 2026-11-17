@@ -23,14 +23,14 @@
 #define PIKADO_ZICA_LX      0.4
 #define PIKADO_ZICA_LY      0.6
 #define PIKADO_ZICA_DY      7.9
-#define PIKADO_TD           13
+#define PIKADO_TD           14
 #define PIKADO_CRNA         0x1C1C1CFF
 #define PIKADO_SREBRNA      0xC8C8C8FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
 enum { PF_CEKA, PF_IGRA, PF_PAUZA }
-enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH, PTD_POLJE }
+enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_DAH, PTD_POLJE, PTD_BROJ }
 enum E_PIKADO { bool:pkIma, pkDb, Float:pkX, Float:pkY, Float:pkZ, Float:pkA, pkInt, pkSvijet, STREAMER_TAG_3D_TEXT_LABEL:pkTekst,
     pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno,
     Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkDah, pkNisanOd, pkPolje }
@@ -62,6 +62,13 @@ static PikadoNaEkran(Float:mx, Float:my, &Float:px, &Float:py)
     py = PIKADO_CY - my * k;
 }
 
+static PikadoBrojPoz(i, &Float:px, &Float:py)
+{
+    new Float:k = PIKADO_R / 170.0, Float:a = float(i) * 18.0;
+    px = PIKADO_CX + 197.0 * k * PIKADO_AX * floatsin(a, degrees);
+    py = PIKADO_CY - 197.0 * k * floatcos(a, degrees) - 6.0;
+}
+
 static PikadoKrugPloce(Float:rmm, boja)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
@@ -90,7 +97,12 @@ static PikadoZica(Float:mx, Float:my)
 
 static PikadoPlocaStvori()
 {
-    new Float:k = PIKADO_R / 170.0, broj[4];
+    new broj[4], Text:td = TextDrawCreate(0.0, 0.0, "_");
+    TextDrawLetterSize(td, 0.0, 50.0);
+    TextDrawUseBox(td, true);
+    TextDrawBoxColour(td, 0x000000A0);
+    TextDrawTextSize(td, 640.0, 0.0);
+    gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(226.0, 0x111111FF);
     PikadoKrugPloce(170.0, PIKADO_CRVENA);
     PikadoKrugPloce(162.0, PIKADO_CRNA);
@@ -105,9 +117,10 @@ static PikadoPlocaStvori()
     }
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
-        new Float:a = float(i) * 18.0, Text:td;
+        new Float:px, Float:py;
+        PikadoBrojPoz(i, px, py);
         valstr(broj, gPikadoBroj[i]);
-        td = TextDrawCreate(PIKADO_CX + 197.0 * k * PIKADO_AX * floatsin(a, degrees), PIKADO_CY - 197.0 * k * floatcos(a, degrees) - 6.0, broj);
+        td = TextDrawCreate(px, py, broj);
         TextDrawFont(td, TEXT_DRAW_FONT_2);
         TextDrawLetterSize(td, 0.26, 1.15);
         TextDrawAlignment(td, TEXT_DRAW_ALIGN_CENTER);
@@ -234,6 +247,13 @@ static PikadoTdStvori(playerid)
     PlayerTextDrawAlignment(playerid, gPkTd[playerid][PTD_POLJE], TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawSetOutline(playerid, gPkTd[playerid][PTD_POLJE], 1);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_POLJE]);
+    gPkTd[playerid][PTD_BROJ] = CreatePlayerTextDraw(playerid, -50.0, -50.0, "_");
+    PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_BROJ], TEXT_DRAW_FONT_2);
+    PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_BROJ], 0.26, 1.15);
+    PlayerTextDrawAlignment(playerid, gPkTd[playerid][PTD_BROJ], TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_BROJ], 0xF1C40FFF);
+    PlayerTextDrawSetOutline(playerid, gPkTd[playerid][PTD_BROJ], 0);
+    PlayerTextDrawSetShadow(playerid, gPkTd[playerid][PTD_BROJ], 0);
     gPkTd[playerid][PTD_INFO] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY + 168.0, "_");
     PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_INFO], TEXT_DRAW_FONT_2);
     PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_INFO], 0.24, 1.1);
@@ -472,6 +492,16 @@ public PikadoNisanTick(s, token)
     {
         gPikado[s][pkPolje] = kod;
         PlayerTextDrawSetString(p, gPkTd[p][PTD_POLJE], polje);
+        PlayerTextDrawHide(p, gPkTd[p][PTD_BROJ]);
+        if (kod >= 100)
+        {
+            new Float:px, Float:py, broj[4];
+            PikadoBrojPoz(kod % 100, px, py);
+            valstr(broj, gPikadoBroj[kod % 100]);
+            PlayerTextDrawSetPos(p, gPkTd[p][PTD_BROJ], px, py);
+            PlayerTextDrawSetString(p, gPkTd[p][PTD_BROJ], broj);
+            PlayerTextDrawShow(p, gPkTd[p][PTD_BROJ]);
+        }
     }
     SetTimerEx("PikadoNisanTick", PIKADO_NISAN_MS, false, "ii", s, token);
 }
