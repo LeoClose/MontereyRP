@@ -493,8 +493,9 @@ public PikadoNisanTick(s, token)
 static PikadoNisani(playerid, s)
 {
     gPikado[s][pkNisani] = playerid;
-    gPikado[s][pkAx] = 0.0;
-    gPikado[s][pkAy] = 0.0;
+    new Float:kut = float(random(360)), Float:r = float(random(150));
+    gPikado[s][pkAx] = r * floatsin(kut, degrees);
+    gPikado[s][pkAy] = r * floatcos(kut, degrees);
     gPikado[s][pkDrzi] = false;
     gPikado[s][pkNisanOd] = GetTickCount();
     gPikado[s][pkPolje] = -1;

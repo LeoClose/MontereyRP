@@ -9,7 +9,7 @@
 #define KUGLANJE_CUNJ_R     0.06
 #define KUGLANJE_KUGLA_R    0.11
 #define KUGLANJE_KUGLA_Z    0.15
-#define KUGLANJE_CUNJ_Z     0.0
+#define KUGLANJE_CUNJ_Z     0.1
 #define KUGLANJE_LANAC      0.42
 #define KUGLANJE_DOMET      1.5
 #define KUGLANJE_NAPUSTI    30.0
@@ -139,7 +139,12 @@ static KuglanjePostavi(s)
             SetDynamicObjectPos(gKg[s][kgCunj][k], wx, wy, gKg[s][kgZ] + KUGLANJE_CUNJ_Z);
             SetDynamicObjectRot(gKg[s][kgCunj][k], 0.0, 0.0, 0.0);
         }
-        else gKg[s][kgCunj][k] = CreateDynamicObject(KUGLANJE_CUNJ, wx, wy, gKg[s][kgZ] + KUGLANJE_CUNJ_Z, 0.0, 0.0, 0.0, gKg[s][kgSvijet], gKg[s][kgInt], -1, 60.0);
+        else
+        {
+            gKg[s][kgCunj][k] = CreateDynamicObject(KUGLANJE_CUNJ, wx, wy, gKg[s][kgZ] + KUGLANJE_CUNJ_Z, 0.0, 0.0, 0.0, gKg[s][kgSvijet], gKg[s][kgInt], -1, 60.0);
+            SetDynamicObjectMaterial(gKg[s][kgCunj][k], 0, 3922, "bistro", "Marble2", 0xFFFFFFFF);
+            SetDynamicObjectMaterial(gKg[s][kgCunj][k], 1, 3922, "bistro", "Marble2", 0xFFC0392B);
+        }
     }
 }
 
