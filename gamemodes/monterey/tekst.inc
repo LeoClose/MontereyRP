@@ -743,7 +743,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Kupnja vozila", "Vehicle purchase", "Покупка машины", "Compra de vehiculo", "Arac alimi" },
     { "Ponuda je poslana igracu %s.", "Offer sent to %s.", "Предложение отправлено %s.", "Oferta enviada a %s.", "Teklif %s oyuncusuna gonderildi." },
     { "%s je odbio ponudu.", "%s declined the offer.", "%s отклонил предложение.", "%s rechazo la oferta.", "%s teklifi reddetti." },
-    { "Ponuda vise ne vrijedi.", "The offer is no longer valid.", "Предложение больше не действует.", "La oferta ya no es valida.", "Teklif artik gecerli degil." },
+    { "Igrac vec odlucuje o jednoj ponudi.", "The player is already deciding on an offer.", "Игрок уже рассматривает предложение.", "El jugador ya esta decidiendo sobre una oferta.", "Oyuncu zaten bir teklifi degerlendiriyor." },
+    { "Ponuda vise ne vrijedi.","The offer is no longer valid.", "Предложение больше не действует.", "La oferta ya no es valida.", "Teklif artik gecerli degil." },
     { "Kupac nema dovoljno novca.", "The buyer doesn't have enough money.", "У покупателя недостаточно денег.", "El comprador no tiene suficiente dinero.", "Alicinin yeterli parasi yok." },
     { "Prodali ste vozilo za $%d.", "You sold the vehicle for $%d.", "Вы продали машину за $%d.", "Vendiste el vehiculo por $%d.", "Araci $%d karsiliginda sattiniz." },
     { "Kupili ste vozilo za $%d.", "You bought the vehicle for $%d.", "Вы купили машину за $%d.", "Compraste el vehiculo por $%d.", "Araci $%d karsiliginda aldiniz." },
@@ -1750,7 +1751,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~g~TVOJ RED", "~g~YOUR TURN", "~g~ВАШ ХОД", "~g~TU TURNO", "~g~SIRA SENDE" },
     { "~p~GLEDAJ", "~p~WATCH", "~p~СМОТРИТЕ", "~p~MIRA", "~p~IZLE" },
     { "~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti", "~y~LMB ~w~shoot   ~y~N ~w~pass   ~y~ALT ~w~drop", "~y~ЛКМ ~w~бросок   ~y~N ~w~пас   ~y~ALT ~w~бросить", "~y~LMB ~w~tirar   ~y~N ~w~pasar   ~y~ALT ~w~soltar", "~y~LMB ~w~sut   ~y~N ~w~pas   ~y~ALT ~w~birak" },
-    { "~y~ALT ~w~uzmi loptu   ~y~RMB ~w~ukradi", "~y~ALT ~w~pick up ball   ~y~RMB ~w~steal", "~y~ALT ~w~взять мяч   ~y~ПКМ ~w~перехват", "~y~ALT ~w~coger balon   ~y~RMB ~w~robar", "~y~ALT ~w~topu al   ~y~RMB ~w~top cal" }
+    { "~y~ALT ~w~uzmi loptu   ~y~RMB ~w~ukradi", "~y~ALT ~w~pick up ball   ~y~RMB ~w~steal", "~y~ALT ~w~взять мяч   ~y~ПКМ ~w~перехват", "~y~ALT ~w~coger balon   ~y~RMB ~w~robar", "~y~ALT ~w~topu al   ~y~RMB ~w~top cal" },
+    { "~r~Krivi kos!", "~r~Wrong hoop!", "~r~Не то кольцо!", "~r~Canasta equivocada!", "~r~Yanlis pota!" },
+    { "~w~Ucitavanje...", "~w~Loading...", "~w~Загрузка...", "~w~Cargando...", "~w~Yukleniyor..." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

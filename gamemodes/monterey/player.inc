@@ -28,7 +28,6 @@ public OnPlayerConnect(playerid)
     PijacaConnect(playerid);
     gAccountId[playerid] = 0;
     gUlogiran[playerid] = false;
-    gLoginAttempts[playerid] = 0;
     DialogConnect(playerid);
     AdminConnect(playerid);
     JezikConnect(playerid);
@@ -38,7 +37,7 @@ public OnPlayerConnect(playerid)
     InventarConnect(playerid);
     OruzjeConnect(playerid);
     TeritorijConnect(playerid);
-    if (ProvjeriBan(playerid)) return 1;
+    if (ProvjeriBan(playerid) || LoginBlokiran(playerid)) return 1;
 
     new name[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, name, sizeof name);

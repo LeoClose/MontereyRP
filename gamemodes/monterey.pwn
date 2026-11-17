@@ -12,29 +12,42 @@
 #include <streamer>
 #include <kolizija>
 
-new gPrenosZamrz[MAX_PLAYERS];
+#define PRENOS_MS   100
+#define PRENOS_MIN  8
+#define PRENOS_MAX  50
 
-forward PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z);
-public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z)
+new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS];
+
+forward PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak);
+public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak)
 {
     if (gPrenosZamrz[playerid] != token) return;
+    new n = Streamer_CountVisibleItems(playerid, STREAMER_TYPE_OBJECT);
+    if (korak < PRENOS_MAX && (korak < PRENOS_MIN || n != zadnji))
+    {
+        SetTimerEx("PrenosOdmrzni", PRENOS_MS, false, "ddfffdd", playerid, token, x, y, z, n, korak + 1);
+        return;
+    }
     gPrenosZamrz[playerid] = 0;
     SetPlayerPos(playerid, x, y, z);
     TogglePlayerControllable(playerid, true);
+    GameTextForPlayer(playerid, " ", 100, 3);
 }
 
 stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
 {
-    new Float:px, Float:py, Float:pz;
+    new Float:px, Float:py, Float:pz, bool:cekaj = gPrenosCekaj[playerid];
+    gPrenosCekaj[playerid] = false;
     GetPlayerPos(playerid, px, py, pz);
-    if (VectorSize(x - px, y - py, z - pz) <= 50.0) return SetPlayerPos(playerid, x, y, z);
+    if (!cekaj && VectorSize(x - px, y - py, z - pz) <= 50.0) return SetPlayerPos(playerid, x, y, z);
     Streamer_UpdateEx(playerid, x, y, z, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), STREAMER_TYPE_OBJECT);
     if (gPrenosZamrz[playerid] || IsPlayerControllable(playerid))
     {
         static token;
         gPrenosZamrz[playerid] = ++token ? token : ++token;
         TogglePlayerControllable(playerid, false);
-        SetTimerEx("PrenosOdmrzni", 2000, false, "ddfff", playerid, gPrenosZamrz[playerid], x, y, z);
+        GameTextForPlayer(playerid, T(playerid, "~w~Ucitavanje..."), 5000, 3);
+        SetTimerEx("PrenosOdmrzni", PRENOS_MS, false, "ddfffdd", playerid, gPrenosZamrz[playerid], x, y, z, -1, 0);
     }
     return SetPlayerPos(playerid, x, y, z);
 }
@@ -47,6 +60,7 @@ stock ZamrzniIgraca(playerid, bool:moze)
 
 stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
 {
+    gPrenosCekaj[playerid] = interijer != GetPlayerInterior(playerid) || svijet != GetPlayerVirtualWorld(playerid);
     SetPlayerInterior(playerid, interijer);
     SetPlayerVirtualWorld(playerid, svijet);
     SetPlayerPos(playerid, x, y, z);
@@ -108,7 +122,11 @@ bool:DestroyVozilo(v)
 new DB:gDB;
 new gAccountId[MAX_PLAYERS];
 new bool:gUlogiran[MAX_PLAYERS];
-new gLoginAttempts[MAX_PLAYERS];
+#define LOGIN_IP_MAX        64
+#define LOGIN_BLOK_S        600
+enum E_LOGIN_IP { liIp[16], liGreske, liVrijeme }
+new gLoginIp[LOGIN_IP_MAX][E_LOGIN_IP];
+forward bool:LoginBlokiran(playerid);
 
 main() {}
 
@@ -118,6 +136,7 @@ public OnGameModeInit()
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
     DisableInteriorEnterExits();
     Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 960);
+    Streamer_ToggleChunkStream(true);
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));
@@ -209,6 +228,7 @@ public OnGameModeInit()
     InitKazino();
     InitBanka();
     InitRacunalo();
+    LoginIpCheck();
     InitKafic();
     InitBilijar();
     InitKosarka();
@@ -427,6 +447,8 @@ DLG:prijava(playerid, response, const inputtext[])
 
     HashPassword(inputtext, salt, hash);
     if (strcmp(hash, stored) != 0) return NevazecaLozinka(playerid);
+    new s = LoginIpIgraca(playerid, false);
+    if (s != -1) gLoginIp[s][liGreske] = 0;
 
     gAccountId[playerid] = id;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET last_login = %d WHERE id = %d", gettime(), id));
@@ -450,15 +472,59 @@ PrikaziLogin(playerid, const error[])
     return PrikaziDialog(playerid, DLG_PRIJAVA, DIALOG_STYLE_PASSWORD, T(playerid, "Prijava"), body, T(playerid, "Prijava"), T(playerid, "Izlaz"));
 }
 
+static LoginIpSlot(const ip[], bool:stvori)
+{
+    new slot = 0, sad = gettime();
+    for (new i = 0; i < LOGIN_IP_MAX; i++)
+    {
+        if (gLoginIp[i][liGreske] && sad - gLoginIp[i][liVrijeme] >= LOGIN_BLOK_S) gLoginIp[i][liGreske] = 0;
+        if (gLoginIp[i][liGreske] && !strcmp(gLoginIp[i][liIp], ip)) return i;
+        if (gLoginIp[slot][liGreske] && (!gLoginIp[i][liGreske] || gLoginIp[i][liVrijeme] < gLoginIp[slot][liVrijeme])) slot = i;
+    }
+    if (!stvori) return -1;
+    strcopy(gLoginIp[slot][liIp], ip, 16);
+    gLoginIp[slot][liGreske] = 0;
+    return slot;
+}
+
+static LoginIpIgraca(playerid, bool:stvori)
+{
+    new ip[16];
+    GetPlayerIp(playerid, ip, sizeof ip);
+    return LoginIpSlot(ip, stvori);
+}
+
+LoginIpCheck()
+{
+    new s = LoginIpSlot("10.0.0.1", true);
+    gLoginIp[s][liGreske] = MAX_LOGIN_ATTEMPTS;
+    gLoginIp[s][liVrijeme] = gettime();
+    assert(LoginIpSlot("10.0.0.1", false) == s && LoginIpSlot("10.0.0.2", false) == -1 && LoginIpSlot("10.0.0.2", true) != s);
+    gLoginIp[s][liVrijeme] -= LOGIN_BLOK_S;
+    assert(LoginIpSlot("10.0.0.1", false) == -1);
+    for (new i = 0; i < LOGIN_IP_MAX; i++) gLoginIp[i][liGreske] = 0;
+}
+
+bool:LoginBlokiran(playerid)
+{
+    new s = LoginIpIgraca(playerid, false);
+    if (s == -1 || gLoginIp[s][liGreske] < MAX_LOGIN_ATTEMPTS) return false;
+    SendClientMessage(playerid, 0xFF6347FF, T(playerid, "Previse neuspjelih pokusaja prijave."));
+    KickTimer(playerid);
+    return true;
+}
+
 NevazecaLozinka(playerid)
 {
-    if (++gLoginAttempts[playerid] >= MAX_LOGIN_ATTEMPTS)
+    new s = LoginIpIgraca(playerid, true);
+    gLoginIp[s][liVrijeme] = gettime();
+    if (++gLoginIp[s][liGreske] >= MAX_LOGIN_ATTEMPTS)
     {
         SendClientMessage(playerid, 0xFF6347FF, T(playerid, "Previse neuspjelih pokusaja prijave."));
         return KickTimer(playerid);
     }
     new error[64];
-    format(error, sizeof error, T(playerid, "{FF6347}Pogresna lozinka (%d/%d).\n\n"), gLoginAttempts[playerid], MAX_LOGIN_ATTEMPTS);
+    format(error, sizeof error, T(playerid, "{FF6347}Pogresna lozinka (%d/%d).\n\n"), gLoginIp[s][liGreske], MAX_LOGIN_ATTEMPTS);
     return PrikaziLogin(playerid, error);
 }
 

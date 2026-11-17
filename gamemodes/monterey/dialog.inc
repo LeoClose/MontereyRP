@@ -26,6 +26,11 @@ PrikaziDialog(playerid, dialogid, DIALOG_STYLE:style, const caption[], const inf
     return ShowPlayerDialog(playerid, dialogid, style, caption, info, button1, button2);
 }
 
+AktivniDialog(playerid)
+{
+    return gDlg[playerid];
+}
+
 bool:DodajStupac(list[], &len, const row[], size = sizeof (list))
 {
     new rowlen = strlen(row);

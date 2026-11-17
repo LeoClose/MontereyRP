@@ -93,6 +93,9 @@ InitRacunalo()
 {
     assert(DionicaNova(10000, 10000, 0) == 10000 && DionicaNova(10000, 10000, 10) == 10100 && DionicaNova(500, 10000, -15) == 539 && DionicaNova(100000, 10000, 15) == 100000 && DionicaNova(500, 500, -15) == 500);
     assert(DionicaKupnja(3, 12345) == 371 && DionicaProdaja(3, 12345) == 367 && DionicaKupnja(DIONICA_MAX_KOM, 150000) == 15000000);
+    new koef = 100;
+    for (new i = 0; i < KLAD_PAROVA; i++) koef = KladPomnozi(koef, 500);
+    assert(koef == KLAD_MAX_KOEF && KladPomnozi(100, 250) == 250 && KladDobitak(KLAD_MAX_ULOG, KLAD_MAX_KOEF) == KLAD_MAX_DOBITAK);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_events (id TEXT PRIMARY KEY, league TEXT NOT NULL, home TEXT NOT NULL, away TEXT NOT NULL, start INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, result INTEGER NOT NULL DEFAULT 0, odd1 INTEGER NOT NULL DEFAULT 0, oddx INTEGER NOT NULL DEFAULT 0, odd2 INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_slips (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, stake INTEGER NOT NULL, odds INTEGER NOT NULL, payout INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, settled INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_legs (slip INTEGER NOT NULL, event TEXT NOT NULL, pick INTEGER NOT NULL, odd INTEGER NOT NULL, line INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (slip, event))"));
@@ -1226,8 +1229,14 @@ static KladNaListicu(playerid, const id[])
 static KladUkupno(playerid)
 {
     new koef = 100;
-    for (new k = 0; k < gKladN[playerid]; k++) koef = koef * gKladKoefPar[playerid][k] / 100;
-    return koef > KLAD_MAX_KOEF ? KLAD_MAX_KOEF : koef;
+    for (new k = 0; k < gKladN[playerid]; k++) koef = KladPomnozi(koef, gKladKoefPar[playerid][k]);
+    return koef;
+}
+
+static KladPomnozi(koef, o)
+{
+    new k = koef * o / 100;
+    return k > KLAD_MAX_KOEF ? KLAD_MAX_KOEF : k;
 }
 
 static KladDobitak(ulog, koef)
@@ -1565,9 +1574,8 @@ static KladUplati(playerid)
         if (o <= 100) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Jedna od utakmica je vec pocela. Uklonite je s listica."));
         gKladKoefPar[playerid][i] = o;
         gKladLin[playerid][i] = linija;
-        koef = koef * o / 100;
+        koef = KladPomnozi(koef, o);
     }
-    if (koef > KLAD_MAX_KOEF) koef = KLAD_MAX_KOEF;
     new dobitak = KladDobitak(ulog, koef);
     if (!BankaPromijeni(playerid, -ulog)) return 1;
     BlagajnaDodaj(ulog);
@@ -1714,11 +1722,9 @@ static KladObracun()
     {
         new koef = 100;
         res = DB_ExecuteQuery(gDB, "SELECT l.odd FROM bet_legs l JOIN bet_events e ON e.id = l.event WHERE l.slip = %d AND e.status = 2 AND %s", id[i], KLAD_OK);
-        for (new k = 0, nk = DB_GetRowCount(res); k < nk; k++, DB_SelectNextRow(res)) koef = koef * DB_GetFieldInt(res, 0) / 100;
+        for (new k = 0, nk = DB_GetRowCount(res); k < nk; k++, DB_SelectNextRow(res)) koef = KladPomnozi(koef, DB_GetFieldInt(res, 0));
         DB_FreeResultSet(res);
-        if (koef > KLAD_MAX_KOEF) koef = KLAD_MAX_KOEF;
-        new dobitak = iznos[i] * (koef / 100) + iznos[i] * (koef % 100) / 100;
-        if (dobitak > KLAD_MAX_DOBITAK) dobitak = KLAD_MAX_DOBITAK;
+        new dobitak = KladDobitak(iznos[i], koef);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bet_slips SET status = 1, payout = %d, settled = %d WHERE id = %d", dobitak, sad, id[i]));
         BlagajnaDodaj(-dobitak);
         if (!BankaUplati(racun[i], dobitak))

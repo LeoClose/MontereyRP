@@ -370,6 +370,7 @@ DLG:opstina_prodaja(playerid, response, const inputtext[])
     new target = ProvjetiBlizinuIgraca(playerid, p1), cijena = strval(p2);
     if (target == INVALID_PLAYER_ID) return ShowProdaja(playerid);
     if (cijena < 1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Cijena mora biti veca od 0.")), ShowProdaja(playerid);
+    if (AktivniDialog(target) == DLG_OPSTINA_PONUDA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac vec odlucuje o jednoj ponudi.")), ShowProdaja(playerid);
     gPonuda[target][pnProdavac] = playerid;
     gPonuda[target][pnRacun] = gAccountId[playerid];
     gPonuda[target][pnVozilo] = v;
