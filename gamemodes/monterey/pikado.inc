@@ -17,9 +17,13 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        128
+#define PIKADO_PLOCA        300
+#define PIKADO_KLIN_MAX     20.0
+#define PIKADO_KLIN_KORAK   0.75
+#define PIKADO_KLIN_KUT     7.0
 #define PIKADO_TD           19
-#define PIKADO_CRNA         0x0C0C0CFF
+#define PIKADO_CRNA         0x141414FF
+#define PIKADO_SREBRNA      0xB8B8B8FF
 #define PIKADO_KREM         0xEADFC3FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
@@ -61,25 +65,57 @@ static PikadoKrugPloce(Float:mx, Float:my, Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
+static PikadoKlin(i, Float:od, Float:doo, boja)
+{
+    new Float:sn = floatsin(9.0, degrees), Float:a0 = float(i) * 18.0, Float:r = doo, Float:p, bool:prvi = true;
+    for (;;)
+    {
+        if (prvi)
+        {
+            p = r * sn / (1.0 + sn);
+            if (p > PIKADO_KLIN_MAX) p = PIKADO_KLIN_MAX;
+            r -= p;
+            prvi = false;
+        }
+        p = r * sn;
+        if (p > PIKADO_KLIN_MAX) p = PIKADO_KLIN_MAX;
+        if (r - p < od - 30.0 || p < 1.5) break;
+        new Float:kut = 9.0 - asin(p / r > 1.0 ? 1.0 : p / r), m = 1;
+        if (kut > 0.3) m = floatround(2.0 * kut * 3.14159 / 180.0 * r / (PIKADO_KLIN_KORAK * p), floatround_ceil) + 1;
+        for (new j = 0; j < m; j++)
+        {
+            new Float:a = a0 + (m > 1 ? -kut + 2.0 * kut * float(j) / float(m - 1) : 0.0);
+            PikadoKrugPloce(r * floatsin(a, degrees), r * floatcos(a, degrees), p, boja);
+        }
+        if (r - p <= od) break;
+        r -= PIKADO_KLIN_KORAK * p;
+    }
+    for (new Float:pc = PIKADO_KLIN_KUT; pc > PIKADO_KLIN_KUT / 4.0; pc /= 2.0)
+    {
+        new Float:rc = doo - pc, Float:kc = 9.0 - asin(pc / rc);
+        PikadoKrugPloce(rc * floatsin(a0 - kc, degrees), rc * floatcos(a0 - kc, degrees), pc, boja);
+        PikadoKrugPloce(rc * floatsin(a0 + kc, degrees), rc * floatcos(a0 + kc, degrees), pc, boja);
+    }
+}
+
 static PikadoPlocaStvori()
 {
     new Float:k = PIKADO_R / 170.0, broj[4];
-    PikadoKrugPloce(0.0, 0.0, 228.0, 0x3A3A3AFF);
-    PikadoKrugPloce(0.0, 0.0, 225.0, PIKADO_CRNA);
+    PikadoKrugPloce(0.0, 0.0, 232.0, 0x2A2A2AFF);
+    PikadoKrugPloce(0.0, 0.0, 226.0, 0x0C0C0CFF);
+    PikadoKrugPloce(0.0, 0.0, 172.0, PIKADO_SREBRNA);
     PikadoKrugPloce(0.0, 0.0, 170.0, PIKADO_CRVENA);
-    PikadoKrugPloce(0.0, 0.0, 162.0, PIKADO_KREM);
+    PikadoKrugPloce(0.0, 0.0, 163.5, PIKADO_SREBRNA);
+    PikadoKrugPloce(0.0, 0.0, 162.0, PIKADO_CRNA);
+    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 107.0, 162.0, PIKADO_KREM);
+    PikadoKrugPloce(0.0, 0.0, 108.5, PIKADO_SREBRNA);
     PikadoKrugPloce(0.0, 0.0, 107.0, PIKADO_ZELENA);
-    PikadoKrugPloce(0.0, 0.0, 99.0, PIKADO_KREM);
+    PikadoKrugPloce(0.0, 0.0, 100.5, PIKADO_SREBRNA);
+    PikadoKrugPloce(0.0, 0.0, 99.0, PIKADO_CRNA);
+    for (new i = 1; i < 20; i += 2) PikadoKlin(i, 22.0, 99.0, PIKADO_KREM);
+    PikadoKrugPloce(0.0, 0.0, 17.4, PIKADO_SREBRNA);
     PikadoKrugPloce(0.0, 0.0, 15.9, PIKADO_ZELENA);
     PikadoKrugPloce(0.0, 0.0, 6.35, PIKADO_CRVENA);
-    for (new i = 0; i < 20; i++)
-    {
-        new Float:a = float(i) * 18.0 + 9.0, Float:sn = floatsin(a, degrees), Float:c = floatcos(a, degrees);
-        PikadoKrugPloce(166.0 * sn, 166.0 * c, 4.5, PIKADO_CRNA);
-        PikadoKrugPloce(103.0 * sn, 103.0 * c, 4.5, PIKADO_CRNA);
-        PikadoKrugPloce(134.0 * sn, 134.0 * c, 2.2, PIKADO_CRNA);
-        PikadoKrugPloce(57.0 * sn, 57.0 * c, 2.2, PIKADO_CRNA);
-    }
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
         new Float:a = float(i) * 18.0, Text:td;
