@@ -231,6 +231,8 @@ public OnGameModeInit()
     MapaMontereyPeak();
     MapaStadionUkloni(INVALID_PLAYER_ID);
     MapaStadion();
+    MapaGlenParkUkloni(INVALID_PLAYER_ID);
+    MapaGlenPark();
     MapaPD();
     InitMarica();
     InitPolicija();
@@ -428,6 +430,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_spawn.inc"
 #include "monterey/mape/mapa_monterey_peak.inc"
 #include "monterey/mape/mapa_stadion.inc"
+#include "monterey/mape/mapa_glen_park.inc"
 #include "monterey/brod.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"

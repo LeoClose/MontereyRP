@@ -547,18 +547,6 @@ static LsProfil(playerid)
     return 1;
 }
 
-static bool:LsImaRacun(playerid)
-{
-    new me = gAccountId[playerid], DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM furniture WHERE owner = %d AND model = %d LIMIT 1", me, RACUNALO_MODEL);
-    new bool:vlasnik = DB_GetRowCount(res) > 0;
-    DB_FreeResultSet(res);
-    if (vlasnik) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) VALUES (%d, %d)", me, gettime()));
-    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM social_accounts WHERE account = %d", me);
-    new bool:ima = DB_GetRowCount(res) > 0;
-    DB_FreeResultSet(res);
-    return ima;
-}
-
 static PcLifeStalker(playerid)
 {
     new me = gAccountId[playerid], tekst[32];
@@ -577,13 +565,7 @@ static PcLifeStalker(playerid)
     }
     gLsAvatara[playerid] = 0;
     PlayerTextDrawSetPos(playerid, gPc[playerid][PTD_SADRZAJ], PC_X + LS_SLOT_X + 46.0, PC_Y + 46.0);
-    if (!LsImaRacun(playerid))
-    {
-        for (new k = 0; k < sizeof gLsTab; k++) PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSTAB + k]);
-        PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "LifeStalker racun imaju samo~n~vlasnici racunala.~n~~n~Kupite racunalo u trgovini~n~namjestaja."));
-        LsAkcije(playerid, "");
-        return;
-    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) VALUES (%d, %d)", me, gettime()));
     new zahtjeva = LsBroj("SELECT COUNT(*) FROM social_friends WHERE b = %d AND accepted = 0", me);
     new poruka = LsBroj("SELECT COUNT(*) FROM social_messages WHERE receiver = %d AND seen = 0", me);
     new aktivan = gLsPogled[playerid] == LS_OBJAVA ? 0 : gLsPogled[playerid] == LS_RAZGOVOR ? 2 : gLsPogled[playerid] == LS_PRIJATELJI ? 1 : gLsPogled[playerid] == LS_PORUKE ? 2 : gLsPogled[playerid] == LS_PROFIL ? 3 : 0;

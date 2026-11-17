@@ -236,7 +236,7 @@ static KosHudStvori(playerid)
 static KosKontrole(playerid)
 {
     if (gKosTeren[playerid] == -1) return;
-    PlayerTextDrawSetString(playerid, gKosHud[playerid][4], T(playerid, gKosDrzi[playerid] != -1 ? ("~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti") : ("~y~ALT ~w~uzmi loptu   ~y~RMB ~w~ukradi")));
+    PlayerTextDrawSetString(playerid, gKosHud[playerid][4], T(playerid, gKosDrzi[playerid] != -1 ? ("~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti") : ("~y~ALT ~w~uzmi / ukradi loptu")));
 }
 
 static KosHudOsvjezi(t)
@@ -641,7 +641,7 @@ bool:KosPodigni(playerid)
         KosUhvati(playerid, k, true);
         return true;
     }
-    return false;
+    return KosUkradi(playerid) != 0;
 }
 
 forward KosHod();
@@ -656,10 +656,10 @@ public KosHod()
         new KEY:tipke, gore, strana;
         GetPlayerKeys(p, tipke, gore, strana);
         new hod = !gore && !strana ? KH_STOJI : (tipke & KEY_SPRINT) ? KH_TRCI : KH_HODA;
-        if (hod == gKosHod[p] || (hod != KH_STOJI && gKosHod[p] != KH_STOJI && gKosHod[p] != -1)) continue;
+        if (hod == gKosHod[p]) continue;
         gKosHod[p] = hod;
         if (hod == KH_STOJI) ApplyAnimation(p, "BSKTBALL", "BBALL_idleloop", 4.1, true, false, false, false, 0);
-        else ClearAnimations(p);
+        else ApplyAnimation(p, "BSKTBALL", hod == KH_TRCI ? ("BBALL_run") : ("BBALL_walk"), 4.1, true, true, true, true, 1);
     }
 }
 
@@ -681,11 +681,7 @@ public KosNabijaTick(playerid)
 KosTipke(playerid, KEY:newkeys, KEY:oldkeys)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
-    if (gKosDrzi[playerid] == -1)
-    {
-        if ((newkeys & KEY_AIM) && !(oldkeys & KEY_AIM)) return KosUkradi(playerid);
-        return 0;
-    }
+    if (gKosDrzi[playerid] == -1) return 0;
     if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO)) return KosDodaj(playerid), 1;
     if ((newkeys & KEY_FIRE) && !(oldkeys & KEY_FIRE))
     {
