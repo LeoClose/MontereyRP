@@ -185,6 +185,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     VoziloKey(playerid, newkeys, oldkeys);
     KurvaPotrubiKey(playerid, newkeys, oldkeys);
     PolicijaKey(playerid, newkeys, oldkeys);
+    PrikolicaAlt(playerid, newkeys, oldkeys);
     if (BilijarTipke(playerid, newkeys, oldkeys) || KosTipke(playerid, newkeys, oldkeys) || PikadoTipke(playerid, newkeys, oldkeys) || KuglanjeTipke(playerid, newkeys, oldkeys)) return 1;
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) Interakcija(playerid);
     if ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK) && !IsRanjen(playerid) && !KosKey(playerid) && !BacenoPodigni(playerid)) KosPodigni(playerid);

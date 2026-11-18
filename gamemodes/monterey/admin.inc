@@ -674,7 +674,7 @@ CMD:veh(playerid, params[])
 CMD:prikolica(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_VEH)) return 1;
-    return AdminStvoriVozilo(playerid, PRIKOLICA_MODEL, -1, -1);
+    return AdminStvoriVozilo(playerid, PRIKOLICA_VELIKA, -1, -1);
 }
 
 CMD:dozvola(playerid, params[])
