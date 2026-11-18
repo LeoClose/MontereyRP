@@ -7,27 +7,28 @@
 enum { ACM_ISKLJUCENO, ACM_UPOZORI, ACM_IZBACI }
 
 static const gAcIme[AC_KODOVA][] = {
-    "AirBreak (onfoot)", "AirBreak (vehicle)", "Teleport (onfoot)", "Teleport (vehicle)", "Teleport (into vehicle)", "Teleport (vehicle to player)", "Teleport (pickups)",
-    "FlyHack (onfoot)", "FlyHack (vehicle)", "SpeedHack (onfoot)", "SpeedHack (vehicle)", "Health hack (vehicle)", "Health hack (onfoot)", "Armour hack", "Money hack",
-    "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)", "Special action hack", "GodMode (onfoot)", "GodMode (vehicle)", "Invisible hack", "Lagcomp spoof",
-    "Tuning hack", "Parkour mod", "Quick turn", "Rapid fire", "Fake spawn", "Fake kill", "Pro Aim", "CJ run", "CarShot", "CarJack", "UnFreeze", "AFK Ghost",
-    "Full aiming", "Fake NPC", "Reconnect", "High ping", "Dialog hack", "Sandbox", "Invalid version", "Rcon hack", "Tuning crasher", "Invalid seat crasher",
-    "Dialog crasher", "Attached object crasher", "Weapon crasher", "Connection flood", "Callback flood", "Seat change flood", "DoS", "NOP"
+    "AirBreak (onfoot)", "AirBreak (vehicle)", "Teleport (onfoot)", "Teleport (vehicle)", "Teleport (into vehicle)", "Teleport (vehicle to player)", "Teleport (pickups)", "FlyHack (onfoot)", "FlyHack (vehicle)",
+    "SpeedHack (onfoot)", "", "Health hack (vehicle)", "", "Armour hack", "Money hack", "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)",
+    "Special action hack", "", "", "Invisible hack", "Lagcomp spoof", "Tuning hack", "", "", "Rapid fire",
+    "Fake spawn", "Fake kill", "Pro Aim", "", "CarShot", "CarJack", "", "AFK Ghost", "",
+    "", "", "High ping", "Dialog hack", "Sandbox", "Invalid version", "Rcon hack", "", "",
+    "", "", "", "Connection flood", "", "Seat change flood", "DoS", "NOP"
 };
 
 static const gAcZadano[AC_KODOVA] = {
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI,
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
     ACM_IZBACI, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
-    ACM_IZBACI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI,
-    ACM_UPOZORI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI,
-    ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI
+    ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI,
+    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO,
+    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_IZBACI, ACM_ISKLJUCENO, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI
 };
 
 static const gAcNacinIme[3][] = { "{777777}Iskljuceno", "{F1C40F}Upozorenje", "{E74C3C}Izbacivanje" };
 
 static gAcNacin[AC_KODOVA], gAcZadnje[MAX_PLAYERS][AC_KODOVA], bool:gAcIzbacen[MAX_PLAYERS];
-static const gAcAdminKodovi[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 19, 20, 21, 34 };
+static const gAcAdminKodovi[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 21, 34 };
+static gAcRed[MAX_PLAYERS][AC_KODOVA];
 
 InitAntiCheat()
 {
@@ -39,10 +40,14 @@ InitAntiCheat()
     for (new i = 0, n = DB_GetRowCount(res); i < n; i++, DB_SelectNextRow(res))
     {
         new c = DB_GetFieldInt(res, 0), m = DB_GetFieldInt(res, 1);
-        if (c >= 0 && c < AC_KODOVA && m >= ACM_ISKLJUCENO && m <= ACM_IZBACI) gAcNacin[c] = m;
+        if (c >= 0 && c < AC_KODOVA && gAcIme[c][0] && m >= ACM_ISKLJUCENO && m <= ACM_IZBACI) gAcNacin[c] = m;
     }
     DB_FreeResultSet(res);
-    for (new c = 0; c < AC_KODOVA; c++) EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
+    for (new c = 0; c < AC_KODOVA; c++)
+    {
+        if (gAcIme[c][0]) EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
+        else DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM ac_settings WHERE code = %d", c));
+    }
     EnableAntiNOP(2, false);
     EnableAntiNOP(3, false);
     EnableAntiNOP(5, false);
@@ -80,7 +85,7 @@ static AcZapisi(playerid, const ip[], code, nacin)
 
 public OnCheatDetected(playerid, const ip_address[], type, code)
 {
-    if (code < 0 || code >= AC_KODOVA || gAcNacin[code] == ACM_ISKLJUCENO) return 1;
+    if (code < 0 || code >= AC_KODOVA || !gAcIme[code][0] || gAcNacin[code] == ACM_ISKLJUCENO) return 1;
     if (type)
     {
         BlockIpAddress(ip_address, AC_BLOK_MS);
@@ -115,13 +120,15 @@ public OnCheatDetected(playerid, const ip_address[], type, code)
 
 ShowAntiCheat(playerid)
 {
-    new list[4096], red[96], len = 0;
+    new list[4096], red[96], len = 0, n = 0;
     DodajStupac(list, len, T(playerid, "+ Zadnje detekcije"));
     for (new c = 0; c < AC_KODOVA; c++)
     {
+        if (!gAcIme[c][0]) continue;
         format(red, sizeof red, "{FFFFFF}#%02d  %s  -  %s", c, gAcIme[c], T(playerid, gAcNacinIme[gAcNacin[c]]));
-        DodajStupac(list, len, red);
+        if (DodajStupac(list, len, red)) gAcRed[playerid][n++] = c;
     }
+    for (new k = n; k < AC_KODOVA; k++) gAcRed[playerid][k] = -1;
     return PrikaziDialog(playerid, DLG_APANEL_AC, DIALOG_STYLE_LIST, T(playerid, "Anticheat"), list, T(playerid, "Promijeni"), T(playerid, "Natrag"));
 }
 
@@ -132,7 +139,7 @@ static ShowAcLog(playerid)
     for (new i = 0, n = DB_GetRowCount(res); i < n; i++, DB_SelectNextRow(res))
     {
         new c = DB_GetFieldInt(res, 3), m = DB_GetFieldInt(res, 4);
-        if (c < 0 || c >= AC_KODOVA || m < ACM_ISKLJUCENO || m > ACM_IZBACI) continue;
+        if (c < 0 || c >= AC_KODOVA || !gAcIme[c][0] || m < ACM_ISKLJUCENO || m > ACM_IZBACI) continue;
         DB_GetFieldString(res, 0, vrijeme, sizeof vrijeme);
         DB_GetFieldString(res, 1, ime, sizeof ime);
         DB_GetFieldString(res, 2, ip, sizeof ip);
@@ -149,8 +156,10 @@ DLG:apanel_ac(playerid, response, listitem)
     if (!response) return ShowAdminPanel(playerid);
     if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
     if (listitem == 0) return ShowAcLog(playerid);
-    new c = listitem - 1;
-    if (c < 0 || c >= AC_KODOVA) return 1;
+    new k = listitem - 1;
+    if (k < 0 || k >= AC_KODOVA) return 1;
+    new c = gAcRed[playerid][k];
+    if (c < 0) return 1;
     gAcNacin[c] = (gAcNacin[c] + 1) % 3;
     EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
     for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) AntiCheatAdmin(i);

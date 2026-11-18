@@ -20,6 +20,9 @@ forward OnCheatDetected(playerid, const ip_address[], type, code);
 #define AC_USE_STATISTICS false
 #define AC_USE_AMMUNATIONS false
 #define AC_USE_TUNING_GARAGES false
+#define AC_USE_PICKUP_WEAPONS false
+#define AC_USE_RESTAURANTS false
+#define AC_USE_VENDING_MACHINES false
 #include <nex-ac>
 #pragma unused KICK_MSG, MAX_CONNECTS_MSG, UNKNOWN_CLIENT_MSG
 
