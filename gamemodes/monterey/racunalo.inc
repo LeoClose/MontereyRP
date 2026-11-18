@@ -53,8 +53,8 @@ enum { LS_NISTA, LS_POSLAO, LS_PRIMIO, LS_PRIJATELJ }
 enum { KT_BOK, KT_LISTIC, KT_TAB, KT_KAT = KT_TAB + 3, KT_LIGA = KT_KAT + 5, KT_MEC = KT_LIGA + 7, KT_RED, KT_KOEF = KT_RED + KLAD_RED, KT_STR_L = KT_KOEF + KLAD_RED * 3, KT_STR, KT_STR_D, KT_NASLOV, KT_PAR, KT_UKUPNO = KT_PAR + KLAD_PAROVA, KT_MINUS, KT_ULOG, KT_PLUS, KT_DOBITAK, KT_UPLATI, KLAD_TD }
 enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA }
 enum { SV_O, SV_H, SV_L, SV_C }
-enum { PTD_START, PTD_TRAKA, PTD_PROZOR = PTD_TRAKA + 6, PTD_NASLOV = PTD_PROZOR + 3, PTD_PROZOR_MIN, PTD_PROZOR_MAX, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 2, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_IMENOVANI = PTD_JEZIK_MENI + BROJ_JEZIKA }
+enum { PTD_START, PTD_TRAKA, PTD_PROZOR = PTD_TRAKA + 6, PTD_NASLOV = PTD_PROZOR + 3, PTD_PROZOR_MIN, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 17, PTD_APP,
+    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 2, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 4, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_KARTICA = PTD_JEZIK_MENI + BROJ_JEZIKA, PTD_MREZA = PTD_KARTICA + 5, PTD_IMENOVANI = PTD_MREZA + 3 }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
@@ -72,7 +72,8 @@ static const gPcIkonaDio[][E_PC_IKONA] = {
     { 2, 7.0, 6.0, 16.0, 18.0, 0xFFFFFFFF, 0 }, { 2, 9.0, 8.0, 12.0, 3.0, 0x424242FF, 0 }, { 2, 9.0, 13.0, 12.0, 1.5, 0x9E9E9EFF, 0 }, { 2, 9.0, 17.0, 9.0, 1.5, 0x9E9E9EFF, 0 },
     { 3, 6.0, 24.0, 18.0, 1.0, 0xFFFFFFFF, 0 }, { 3, 7.0, 17.0, 4.0, 7.0, 0xFFFFFFFF, 0 }, { 3, 13.0, 13.0, 4.0, 11.0, 0xFFFFFFFF, 0 }, { 3, 19.0, 8.0, 4.0, 16.0, 0xFFFFFFFF, 0 },
     { 4, 6.0, 8.0, 18.0, 12.0, 0xFFFFFFFF, 0 }, { 4, 9.0, 20.0, 4.0, 3.0, 0xFFFFFFFF, 0 },
-    { 5, 7.0, 7.0, 16.0, 16.0, 0xFFFFFFFF, 1 }, { 5, 13.0, 13.0, 4.0, 4.0, 0x212121FF, 1 }
+    { 5, 8.0, 5.0, 14.0, 20.0, 0xFFFFFFFF, 0 }, { 5, 10.0, 8.0, 10.0, 1.5, 0x00897BFF, 0 }, { 5, 10.0, 12.0, 10.0, 1.0, 0x9E9E9EFF, 0 }, { 5, 10.0, 15.0, 7.0, 1.0, 0x9E9E9EFF, 0 },
+    { 5, 15.0, 16.0, 10.0, 10.0, 0xFFD54FFF, 1 }, { 5, 18.5, 19.5, 3.0, 3.0, 0xF57F17FF, 1 }
 };
 static const gPcJezici[BROJ_JEZIKA][] = { "Hrvatski", "English", "Russkiy", "Espanol", "Turkce" };
 static PlayerText:gPcIkonaTd[MAX_PLAYERS][sizeof gPcIkonaDio];
@@ -328,7 +329,7 @@ static PcStart(playerid, bool:otvori)
     gPcStart[playerid] = otvori;
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        if (12.0 + float(i - 1) * 42.0 + 40.0 < 164.0 || gPcEkran[playerid] != PCE_POCETNA) continue;
+        if (12.0 + float(i - 1) * 42.0 + 40.0 < 100.0 || gPcEkran[playerid] != PCE_POCETNA) continue;
         PcAplikacijaVidljiva(playerid, i, !otvori);
     }
     for (new i = PTD_START_PANEL; i <= PTD_UGASI; i++)
@@ -926,11 +927,14 @@ static PcEkran(playerid, ekran)
     PcSakrij(playerid, PTD_LSTAB, 4);
     PcSakrij(playerid, PTD_LSAVATAR, PTD_KLAD - PTD_LSAVATAR);
     PcSakrij(playerid, PTD_KLAD, KLAD_TD);
+    PcSakrij(playerid, PTD_KARTICA, 5);
+    PcSakrij(playerid, PTD_MREZA, 3);
     if (ekran == PCE_POCETNA)
     {
         for (new i = PTD_PROZOR; i <= PTD_SADRZAJ; i++) PlayerTextDrawHide(playerid, gPc[playerid][i]);
         return;
     }
+    PlayerTextDrawColour(playerid, gPc[playerid][PTD_PROZOR + 2], gPcIkonaBoja[ekran]);
     for (new i = PTD_PROZOR; i <= PTD_ZATVORI; i++) PlayerTextDrawShow(playerid, gPc[playerid][i]);
     PcPostavi(playerid, PTD_NASLOV, T(playerid, gPcAplikacije[ekran]));
     PlayerTextDrawSetPos(playerid, gPc[playerid][PTD_SADRZAJ], PC_X + PcPX(88.0), PC_Y + PcPY(ekran == PCE_DIONICE ? 52.0 : 42.0));
@@ -943,6 +947,10 @@ static PcEkran(playerid, ekran)
             else if (!BankaTekst(playerid, tekst)) strcat(tekst, T(playerid, "Nemate bankovni racun."));
             else
             {
+                new broj[24];
+                format(broj, sizeof broj, "**** **** **** %04d", gAccountId[playerid] % 10000);
+                PlayerTextDrawSetString(playerid, gPc[playerid][PTD_KARTICA + 3], broj);
+                for (new k = 0; k < 5; k++) PlayerTextDrawShow(playerid, gPc[playerid][PTD_KARTICA + k]);
                 PcPostavi(playerid, PTD_AKCIJA, T(playerid, "Posalji novac"));
                 PcPostavi(playerid, PTD_AKCIJA + 1, T(playerid, "Otplati kredit"));
             }
@@ -970,6 +978,7 @@ static PcEkran(playerid, ekran)
         case PCE_DIONICE:
         {
             PlayerTextDrawShow(playerid, gPc[playerid][PTD_GRAF]);
+            for (new g = 0; g < 3; g++) PlayerTextDrawShow(playerid, gPc[playerid][PTD_MREZA + g]);
             PcPostavi(playerid, PTD_AKCIJA, T(playerid, "Kupi"));
             PcPostavi(playerid, PTD_AKCIJA + 1, T(playerid, "Prodaj"));
             PlayerTextDrawShow(playerid, gPc[playerid][PTD_KOL]);
@@ -1074,7 +1083,6 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_START] = PcKutija(playerid, 8.0, 226.0, 16.0, 16.0, 0x00000001);
     PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_START], true);
     for (new i = 0; i < 4; i++) PcKutija(playerid, 10.0 + float(i % 2) * 7.0, 228.0 + float(i / 2) * 7.0, 5.5, 5.5, 0x4FC3F7FF);
-    PcTekst(playerid, 330.0, 229.0, "^", 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
     gPc[playerid][PTD_JEZIK] = PcGumb(playerid, 346.0, 229.5, 16.0, 0xFFFFFF01, T(playerid, "HR"));
     gPc[playerid][PTD_SAT] = PcTekst(playerid, 390.0, 226.0, vrijeme, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
     gPc[playerid][PTD_DATUM] = PcTekst(playerid, 390.0, 234.0, datum, 0xFFFFFFFF, 0.16, 0.75, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
@@ -1082,13 +1090,18 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_PROZOR] = PcKutija(playerid, 80.0, 20.0, 300.0, 186.0, 0x00000000);
     gPc[playerid][PTD_PROZOR + 1] = PcKutija(playerid, 80.0, 20.0, 300.0, 186.0, 0xFFFFFFFF);
     gPc[playerid][PTD_PROZOR + 2] = PcKutija(playerid, 80.0, 20.0, 300.0, 16.0, 0xF0F0F0FF);
-    gPc[playerid][PTD_NASLOV] = PcTekst(playerid, 88.0, 23.0, "_", 0x202020FF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-    gPc[playerid][PTD_PROZOR_MIN] = PcGumb(playerid, 345.0, 23.0, 12.0, 0xF0F0F001, "-", 0x404040FF);
-    gPc[playerid][PTD_PROZOR_MAX] = PcTekst(playerid, 358.0, 23.0, "o", 0xB0B0B0FF, 0.18, 0.8, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    gPc[playerid][PTD_NASLOV] = PcTekst(playerid, 88.0, 23.0, "_", 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_PROZOR_MIN] = PcGumb(playerid, 345.0, 23.0, 12.0, 0xF0F0F001, "-", 0xFFFFFFFF);
     gPc[playerid][PTD_ZATVORI] = PcGumb(playerid, 371.0, 23.0, 16.0, 0xE81123FF, "X");
+    gPc[playerid][PTD_KARTICA] = PcKutija(playerid, 298.0, 44.0, 76.0, 46.0, 0x1B5E20FF);
+    gPc[playerid][PTD_KARTICA + 1] = PcKutija(playerid, 304.0, 58.0, 11.0, 8.0, 0xFFD54FFF);
+    gPc[playerid][PTD_KARTICA + 2] = PcTekst(playerid, 304.0, 47.0, "MONTEREY BANK", 0xFFFFFFFF, 0.12, 0.55, TEXT_DRAW_FONT_2);
+    gPc[playerid][PTD_KARTICA + 3] = PcTekst(playerid, 304.0, 70.0, "_", 0xFFFFFFFF, 0.13, 0.6, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_KARTICA + 4] = PcTekst(playerid, 304.0, 79.0, GetRPIme(playerid), 0xC8E6C9FF, 0.12, 0.55, TEXT_DRAW_FONT_1);
     gPc[playerid][PTD_SADRZAJ] = PcTekst(playerid, 88.0, 42.0, "_", 0x202020FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
     for (new k = 0; k < sizeof gDionicaIme; k++) gPc[playerid][PTD_DIONICA + k] = PcGumb(playerid, 110.0 + float(k) * 60.0, 40.0, 54.0, 0xDDDDDDFF, gDionicaKratko[k], 0x202020FF);
     gPc[playerid][PTD_GRAF] = PcKutija(playerid, GRAF_X - 2.0, GRAF_Y - 4.0, SVIJECA * GRAF_SIRINA + 4.0, GRAF_H + 8.0, 0xF5F5F5FF);
+    for (new mr = 0; mr < 3; mr++) gPc[playerid][PTD_MREZA + mr] = PcKutija(playerid, GRAF_X, GRAF_Y + GRAF_H * float(mr + 1) / 4.0, SVIJECA * GRAF_SIRINA, 0.5, 0xDDDDDDFF);
     for (new i = 0; i < SVIJECA; i++) gPc[playerid][PTD_TIJELO + i] = PcKutija(playerid, GRAF_X, GRAF_Y, 1.0, 1.0, 0x00000000);
     for (new i = 0; i < SVIJECA; i++) gPc[playerid][PTD_FITILJ + i] = PcKutija(playerid, GRAF_X, GRAF_Y, 1.0, 1.0, 0x00000000);
     for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_LSAVATAR + r] = PcModel(playerid, LS_SLOT_X - LS_AV_S / 2.0, LS_RED_Y + float(r) * LS_RED_H - 1.0, LS_AV_S, LS_AV_S);
@@ -1112,13 +1125,35 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_LSPOKRIV + 3] = PcKutija(playerid, 30.0, 244.0, 131.0, 4.0, 0x111111FF);
     for (new i = 1; i < sizeof gPcAplikacije; i++) gPc[playerid][PTD_TRAKA + i] = PcGumb(playerid, 58.0, 229.0, 52.0, 0xFFFFFF16, T(playerid, gPcAplikacije[i]));
     for (new j = 0; j < BROJ_JEZIKA; j++) gPc[playerid][PTD_JEZIK_MENI + j] = PcGumb(playerid, 346.0, 152.0 + 14.0 * float(j), 54.0, j == gJezik[playerid] ? 0x2C5A8CF2 : 0x1B2430F2, gPcJezici[j]);
-    gPc[playerid][PTD_START_PANEL] = PcKutija(playerid, 4.0, 164.0, 130.0, 60.0, 0x1B2430F2);
-    gPc[playerid][PTD_START_PANEL + 1] = PcTekst(playerid, 12.0, 170.0, GetRPIme(playerid), 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-    gPc[playerid][PTD_UGASI] = PcGumb(playerid, 69.0, 204.0, 110.0, 0x2C3746FF, T(playerid, "Ugasi"));
+    new ime[MAX_PLAYER_NAME + 1], slovo[2];
+    format(ime, sizeof ime, "%s", GetRPIme(playerid));
+    format(slovo, sizeof slovo, "%c", ime[0]);
+    gPc[playerid][PTD_START_PANEL] = PcKutija(playerid, 4.0, 100.0, 150.0, 124.0, 0x1B2430F2);
+    gPc[playerid][PTD_START_PANEL + 1] = PcKutija(playerid, 4.0, 100.0, 150.0, 26.0, 0x24344AFF);
+    gPc[playerid][PTD_START_PANEL + 2] = PcSlika(playerid, 9.0, 104.0, 18.0, 18.0, 0x4FC3F7FF, "LD_POOL:ball");
+    gPc[playerid][PTD_START_PANEL + 3] = PcTekst(playerid, 18.0, 107.5, slovo, 0x0D141CFF, 0.25, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    gPc[playerid][PTD_START_PANEL + 4] = PcTekst(playerid, 32.0, 104.0, ime, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_START_PANEL + 5] = PcTekst(playerid, 32.0, 114.0, "KALTRIX OS 11", 0x8AA0B6FF, 0.13, 0.6, TEXT_DRAW_FONT_1);
+    for (new k = 0; k < 5; k++)
+    {
+        gPc[playerid][PTD_START_PANEL + 6 + k] = PcKutija(playerid, 10.0, 131.0 + 15.0 * float(k), 8.0, 8.0, gPcIkonaBoja[k + 1]);
+        new PlayerText:red = gPc[playerid][PTD_START_PANEL + 11 + k] = PcRed(playerid, 24.0, 130.5 + 15.0 * float(k), 124.0);
+        PlayerTextDrawBoxColour(playerid, red, 0x24344AFF);
+        PlayerTextDrawColour(playerid, red, 0xFFFFFFFF);
+        PlayerTextDrawSetString(playerid, red, T(playerid, gPcAplikacije[k + 1]));
+    }
+    gPc[playerid][PTD_START_PANEL + 16] = PcKutija(playerid, 8.0, 206.0, 142.0, 0.6, 0x3A4656FF);
+    gPc[playerid][PTD_UGASI] = PcGumb(playerid, 115.0, 211.0, 66.0, 0xC62828FF, T(playerid, "Ugasi"));
     for (new i = 0; i < gPcBroj[playerid]; i++) PlayerTextDrawShow(playerid, gPcTd[playerid][i]);
-    gPc[playerid][PTD_OBAVIJEST] = PcKutija(playerid, 262.0, 190.0, 130.0, 30.0, 0x1B2430F2);
-    gPc[playerid][PTD_OBAVIJEST_TEKST] = PcTekst(playerid, 267.0, 193.0, "_", 0xFFFFFFFF, 0.14, 0.7, TEXT_DRAW_FONT_1);
-    PlayerTextDrawTextSize(playerid, gPc[playerid][PTD_OBAVIJEST_TEKST], PC_X + 388.0, 0.0);
+    gPc[playerid][PTD_OBAVIJEST] = PcTekst(playerid, 266.0, 192.0, "_", 0xFFFFFFFF, 0.1, 0.15, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_OBAVIJEST_TEKST] = PcTekst(playerid, 266.0, 196.0, "_", 0xFFFFFFFF, 0.14, 0.7, TEXT_DRAW_FONT_1);
+    for (new k = 0; k < 2; k++)
+    {
+        new PlayerText:td = gPc[playerid][k ? PTD_OBAVIJEST_TEKST : PTD_OBAVIJEST];
+        PlayerTextDrawUseBox(playerid, td, true);
+        PlayerTextDrawBoxColour(playerid, td, k ? 0x1B2430F8 : 0x4FC3F7FF);
+        PlayerTextDrawTextSize(playerid, td, PC_X + 390.0, 0.0);
+    }
     gPcObavijestDo[playerid] = 0;
     gPcOtvorene[playerid] = 0;
     PcEkran(playerid, PCE_POCETNA);
@@ -1213,6 +1248,12 @@ PcKlik(playerid, PlayerText:td)
     if (!PcBlizu(playerid))
     {
         PcZatvori(playerid);
+        return 1;
+    }
+    for (new k = 0; k < 5; k++)
+    {
+        if (td != gPc[playerid][PTD_START_PANEL + 11 + k]) continue;
+        PcEkran(playerid, k + 1);
         return 1;
     }
     if (td == gPc[playerid][PTD_UGASI])

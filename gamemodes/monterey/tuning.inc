@@ -493,7 +493,8 @@ static const Float:gPs[][8] = {
     { 2056.6, -1835.9, 2071.3, -1835.9, 2056.6, -1826.97, 12.5443, 18.5443 },
     { 1021.81, -1018.71, 1021.81, -1029.53, 1027.93, -1018.71, 30.9081, 36.9081 },
     { 491.103, -1747.55, 492.717, -1735.77, 481.972, -1746.3, 9.45516, 17.565 },
-    { 715.806, -462.403, 724.293, -462.403, 715.806, -447.29, 14.9635, 21.4398 }
+    { 715.806, -462.403, 724.293, -462.403, 715.806, -447.29, 14.9635, 21.4398 },
+    { 1843.91, -1858.8, 1857.1, -1858.8, 1843.91, -1853.79, 12.3645, 16.1118 }
 };
 static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], Float:gTunPovratak[MAX_PLAYERS][4];
 static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
@@ -599,9 +600,17 @@ public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
         new v = GetPlayerVehicleID(playerid);
         PsSnimi(playerid, v);
         gPsU[playerid] = k + 1;
-        if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
         new Float:x, Float:y;
         PsVani(playerid, x, y);
+        if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid])
+        {
+            if (k == sizeof gPs - 1)
+            {
+                SetVehicleVelocity(v, 0.0, 0.0, 0.0);
+                SetVehiclePos(v, x, y, gPsUlaz[playerid][2] + 0.3);
+            }
+            return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
+        }
         TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2] + 0.5, gPsUlaz[playerid][3] + 180.0);
         return 1;
     }

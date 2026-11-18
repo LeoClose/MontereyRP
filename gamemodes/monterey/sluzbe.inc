@@ -60,6 +60,7 @@ forward bool:GarazaIzvana(db, &Float:x, &Float:y);
 #define SLUCAJ_RUB_MS       6000
 #define RANJEN_GRUPA        40.0
 #define RANJEN_POMAK        1.0
+#define SLUCAJ_VATRA_DUBINA 1.6
 #define RANJEN_POPRAVAK_MS  1000
 #define KAMION_RESPAWN      120
 #define KAMION_PARKING      15.0
@@ -819,7 +820,12 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slTip] = tip;
     gSlucaj[s][slPacijent] = pacijent;
     gSlucaj[s][slPoziv] = SLUCAJ_POZIV_S;
-    if (vatra) gSlucaj[s][slObjekt] = CreateDynamicObject(SLUCAJ_OBJEKT, x, y, z - CESTA_Z_VOZILA, 0.0, 0.0, 0.0, 0);
+    if (vatra)
+    {
+        new Float:hx, Float:hy, Float:tlo = z - CESTA_Z_VOZILA;
+        Kolizija_Zraka(x, y, z, x, y, z - 20.0, hx, hy, tlo);
+        gSlucaj[s][slObjekt] = CreateDynamicObject(SLUCAJ_OBJEKT, x, y, tlo - SLUCAJ_VATRA_DUBINA, 0.0, 0.0, 0.0, 0);
+    }
     gSlucaj[s][slRok] = vatra ? SLUCAJ_TRAJANJE_S : RANJEN_TRAJANJE_S;
     gSlucaj[s][slGasenje] = 0;
     gSlucaj[s][slIgrac] = INVALID_PLAYER_ID;
@@ -1300,7 +1306,6 @@ public RanjenAnim(playerid, racun)
 {
     if (gAccountId[playerid] != racun || gRanjen[playerid] != RN_DOLJE) return;
     ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
-    TogglePlayerControllable(playerid, true);
     gRanjenAnimId[playerid] = -1;
     gRanjenPopravak[playerid] = GetTickCount();
 }
@@ -1319,8 +1324,12 @@ RanjenUpdate(playerid)
     new sad = GetTickCount();
     if (sad - gRanjenPopravak[playerid] < RANJEN_POPRAVAK_MS) return;
     gRanjenPopravak[playerid] = sad;
-    SetPlayerPos(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]);
-    SetPlayerFacingAngle(playerid, gRanjenPos[playerid][3]);
+    if (GetPlayerDistanceFromPoint(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]) > RANJEN_POMAK)
+    {
+        SetPlayerPos(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]);
+        SetPlayerFacingAngle(playerid, gRanjenPos[playerid][3]);
+    }
+    TogglePlayerControllable(playerid, false);
     ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
 }
 
