@@ -1994,7 +1994,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Ova igra se igra na okladu.\n\nUlog: {2DD9A9}$%d{FFFFFF}\nPobjednik uzima cijelu banku.\n\nZelite li se pridruziti?", "This game is played for a bet.\n\nStake: {2DD9A9}$%d{FFFFFF}\nThe winner takes the whole pot.\n\nDo you want to join?", "Эта игра идёт на ставку.\n\nСтавка: {2DD9A9}$%d{FFFFFF}\nПобедитель забирает весь банк.\n\nХотите присоединиться?", "Este juego es con apuesta.\n\nApuesta: {2DD9A9}$%d{FFFFFF}\nEl ganador se lleva todo el bote.\n\nQuieres unirte?", "Bu oyun bahisle oynaniyor.\n\nBahis: {2DD9A9}$%d{FFFFFF}\nKazanan tum potu alir.\n\nKatilmak istiyor musunuz?" },
     { "Pridruzi se", "Join", "Присоединиться", "Unirse", "Katil" },
     { "~p~LifeStalker~n~~w~%s vam je poslao zahtjev za prijateljstvo.", "~p~LifeStalker~n~~w~%s sent you a friend request.", "~p~LifeStalker~n~~w~%s отправил вам запрос в друзья.", "~p~LifeStalker~n~~w~%s te envio una solicitud de amistad.", "~p~LifeStalker~n~~w~%s size arkadaslik istegi gonderdi." },
-    { "~p~LifeStalker~n~~w~%s je prihvatio vas zahtjev za prijateljstvo.", "~p~LifeStalker~n~~w~%s accepted your friend request.", "~p~LifeStalker~n~~w~%s принял ваш запрос в друзья.", "~p~LifeStalker~n~~w~%s acepto tu solicitud de amistad.", "~p~LifeStalker~n~~w~%s arkadaslik isteginizi kabul etti." }
+    { "~p~LifeStalker~n~~w~%s je prihvatio vas zahtjev za prijateljstvo.", "~p~LifeStalker~n~~w~%s accepted your friend request.", "~p~LifeStalker~n~~w~%s принял ваш запрос в друзья.", "~p~LifeStalker~n~~w~%s acepto tu solicitud de amistad.", "~p~LifeStalker~n~~w~%s arkadaslik isteginizi kabul etti." },
+    { "HR", "EN", "RU", "ES", "TR" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

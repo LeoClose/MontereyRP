@@ -1567,6 +1567,7 @@ static RulOtvori(playerid)
     PlayerTextDrawTextSize(playerid, gKzTd[playerid][RTD_BROJ], 20.0, 28.0);
     KzTablaPolje(playerid, 0, x + 24.0, y + 30.0, 30.0, "_~n~0~n~_");
     PlayerTextDrawLetterSize(playerid, gKzTd[playerid][TTD_POLJE], 0.2, 1.55);
+    PlayerTextDrawTextSize(playerid, gKzTd[playerid][TTD_POLJE], 49.0, 30.0);
     PlayerTextDrawShow(playerid, gKzTd[playerid][TTD_POLJE]);
     for (new n = 1; n <= 36; n++)
     {

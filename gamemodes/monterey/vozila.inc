@@ -1249,7 +1249,7 @@ static KradjaKorak(playerid)
 
 #define DASH_TX             272.0
 #define DASH_SX             368.0
-#define DASH_GY             417.0
+#define DASH_GY             419.0
 #define DASH_EKRAN          0x16202BFF
 #define DASH_R              31.0
 #define DASH_ASP            1.07
@@ -1452,7 +1452,7 @@ static DashOkretaji(v, kmh, mjenjac)
 {
     if (mjenjac == 'P') return 0;
     if (mjenjac == 'N' || mjenjac == 'R') return mjenjac == 'N' ? 12 : 30;
-    new korak = DashKorak(v), r = 20 + 80 * (kmh - (mjenjac - '1') * korak) / korak;
+    new korak = DashKorak(v), r = 20 + (mjenjac - '0' < DashMjenjaca(v) ? 23 : 80) * (kmh - (mjenjac - '1') * korak) / korak;
     return r > 100 ? 100 : r < 12 ? 12 : r;
 }
 
