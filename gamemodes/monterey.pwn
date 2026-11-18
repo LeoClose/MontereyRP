@@ -116,6 +116,7 @@ bool:DestroyVozilo(v)
         gVozila[m] = zadnji;
         gVoziloMjesto[zadnji] = m + 1;
         gVoziloMjesto[v] = 0;
+        VoziloKmSpremi(v);
         ClearGepek(v);
         PrikolicaMakni(v);
         VlasnikMakni(v);
@@ -355,6 +356,7 @@ public OnGameModeExit()
     PokerVratiSve();
     StatsSaveAll();
     VlasnikStetaSpremiSve();
+    VoziloKmSpremiSve();
     DB_Close(gDB);
     return 1;
 }
