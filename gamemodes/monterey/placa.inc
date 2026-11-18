@@ -96,14 +96,14 @@ Placa(playerid)
     bruto = BlagajnaIsplati(bruto);
     new porez = bruto * PLACA_POREZ / 100, neto = bruto - porez, imovina = PlacaImovina(racun), poruka[144];
     BlagajnaDodaj(porez);
-    if (neto && !BankaUplati(racun, neto) && !DajNovac(playerid, neto))
+    if (neto && !BankaUplati(racun, neto, "Placa") && !DajNovac(playerid, neto))
     {
         BlagajnaDodaj(neto);
         neto = 0;
     }
     if (imovina)
     {
-        if (BankaUplati(racun, -imovina) || DajNovac(playerid, -imovina)) BlagajnaDodaj(imovina);
+        if (BankaUplati(racun, -imovina, "Porez na imovinu") || DajNovac(playerid, -imovina)) BlagajnaDodaj(imovina);
         else DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO fines (account, amount, reason, officer, created) VALUES (%d, %d, 'Porez na imovinu', 'Opstina', %d)", racun, imovina, gettime()));
     }
     format(poruka, sizeof poruka, T(playerid, "Placa: $%d (porez $%d). Porez na imovinu: $%d."), neto, porez, imovina);
@@ -172,7 +172,7 @@ HranaNarudzba(playerid)
         new bool:preuzeto = gHrana[playerid] == 2;
         HranaOtkazi(playerid);
         if (!preuzeto) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Otkazali ste dostavu hrane."));
-        if (!BankaUplati(gAccountId[playerid], -HRANA_CIJENA)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO fines (account, amount, reason, officer, created) VALUES (%d, %d, 'Neisporucena narudzba', 'Opstina', %d)", gAccountId[playerid], HRANA_CIJENA, gettime()));
+        if (!BankaUplati(gAccountId[playerid], -HRANA_CIJENA, "Narudzba hrane")) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO fines (account, amount, reason, officer, created) VALUES (%d, %d, 'Neisporucena narudzba', 'Opstina', %d)", gAccountId[playerid], HRANA_CIJENA, gettime()));
         else BlagajnaDodaj(HRANA_CIJENA);
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Otkazali ste narudzbu. Hrana od $%d naplacena je s vaseg racuna."), HRANA_CIJENA);
     }
@@ -220,7 +220,7 @@ static HranaCheckpoint(playerid)
     new iznos = HRANA_BAZA + floatround(VectorSize(gHranaCilj[playerid][0] - gHranaOd[playerid][0], gHranaCilj[playerid][1] - gHranaOd[playerid][1], 0.0) * HRANA_PO_KM / 1000.0);
     new poruka[144];
     iznos = BlagajnaIsplati(iznos);
-    if (!BankaUplati(gAccountId[playerid], iznos)) BlagajnaDodaj(iznos), iznos = 0;
+    if (!BankaUplati(gAccountId[playerid], iznos, "Dostava hrane")) BlagajnaDodaj(iznos), iznos = 0;
     format(poruka, sizeof poruka, T(playerid, "Uplata za dostavu hrane: $%d."), iznos);
     MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_BANKA_BROJ, poruka);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Hrana je dostavljena. $%d je uplaceno na vas racun."), iznos), 1;

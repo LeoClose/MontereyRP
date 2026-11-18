@@ -212,6 +212,7 @@ public OnGameModeInit()
     MapaIdlewoodFlatsUkloni(INVALID_PLAYER_ID);
     MapaMarica();
     MapaHitna();
+    MapaKuglana();
     MapaOpstina();
     MapaIdlewood();
     MapaIdlewoodFlats();
@@ -427,6 +428,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa.inc"
 #include "monterey/mape/mapa_marica.inc"
 #include "monterey/mape/mapa_hitna.inc"
+#include "monterey/mape/mapa_kuglana.inc"
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"

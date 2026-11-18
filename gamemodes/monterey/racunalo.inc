@@ -947,6 +947,7 @@ static PcEkran(playerid, ekran)
             else if (!BankaTekst(playerid, tekst)) strcat(tekst, T(playerid, "Nemate bankovni racun."));
             else
             {
+                BankaPovijest(playerid, tekst, sizeof tekst, 9);
                 new broj[24];
                 format(broj, sizeof broj, "**** **** **** %04d", gAccountId[playerid] % 10000);
                 PlayerTextDrawSetString(playerid, gPc[playerid][PTD_KARTICA + 3], broj);
@@ -1091,7 +1092,7 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_PROZOR + 1] = PcKutija(playerid, 80.0, 20.0, 300.0, 186.0, 0xFFFFFFFF);
     gPc[playerid][PTD_PROZOR + 2] = PcKutija(playerid, 80.0, 20.0, 300.0, 16.0, 0xF0F0F0FF);
     gPc[playerid][PTD_NASLOV] = PcTekst(playerid, 88.0, 23.0, "_", 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-    gPc[playerid][PTD_PROZOR_MIN] = PcGumb(playerid, 345.0, 23.0, 12.0, 0xF0F0F001, "-", 0xFFFFFFFF);
+    gPc[playerid][PTD_PROZOR_MIN] = PcGumb(playerid, 358.0, 23.0, 12.0, 0xF0F0F001, "-", 0xFFFFFFFF);
     gPc[playerid][PTD_ZATVORI] = PcGumb(playerid, 371.0, 23.0, 16.0, 0xE81123FF, "X");
     gPc[playerid][PTD_KARTICA] = PcKutija(playerid, 298.0, 44.0, 76.0, 46.0, 0x1B5E20FF);
     gPc[playerid][PTD_KARTICA + 1] = PcKutija(playerid, 304.0, 58.0, 11.0, 8.0, 0xFFD54FFF);
@@ -1363,7 +1364,7 @@ static PcDionicaTrgovina(playerid, bool:kupnja, n)
             format(poruka, sizeof poruka, T(playerid, "Najvise %d dionica po tvrtki."), DIONICA_MAX_KOM);
             return PcJavi(playerid, true, poruka);
         }
-        if (!BankaPromijeni(playerid, -iznos)) return 1;
+        if (!BankaPromijeni(playerid, -iznos, "Kupnja dionica")) return 1;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO stock_holdings (account, stock, shares, cost) VALUES (%d, %d, %d, %d)", gAccountId[playerid], d, ima + n, gPcTrosak[playerid][d] + iznos));
         gPcKomadaPamti[playerid][d] = ima + n;
         gPcTrosak[playerid][d] += iznos;
@@ -1372,7 +1373,7 @@ static PcDionicaTrgovina(playerid, bool:kupnja, n)
     }
     if (n > ima) return PcJavi(playerid, true, T(playerid, "Nemate toliko dionica."));
     new iznos = DionicaProdaja(n, cijena);
-    if (!BankaPromijeni(playerid, iznos)) return 1;
+    if (!BankaPromijeni(playerid, iznos, "Prodaja dionica")) return 1;
     if (ima == n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM stock_holdings WHERE account = %d AND stock = %d", gAccountId[playerid], d));
     gPcTrosak[playerid][d] = ima == n ? 0 : gPcTrosak[playerid][d] - gPcTrosak[playerid][d] * n / ima;
     if (ima != n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET shares = %d, cost = %d WHERE account = %d AND stock = %d", ima - n, gPcTrosak[playerid][d], gAccountId[playerid], d));
@@ -1773,7 +1774,7 @@ static KladUplati(playerid)
         koef = KladPomnozi(koef, o);
     }
     new dobitak = KladDobitak(ulog, koef);
-    if (!BankaPromijeni(playerid, -ulog)) return 1;
+    if (!BankaPromijeni(playerid, -ulog, "Uplata oklade")) return 1;
     BlagajnaDodaj(ulog);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_slips (account, stake, odds, payout, status, created) VALUES (%d, %d, %d, %d, 0, %d)", gAccountId[playerid], ulog, koef, dobitak, gettime()));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
@@ -1925,7 +1926,7 @@ static KladObracun()
         new dobitak = KladDobitak(iznos[i], koef);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bet_slips SET status = 1, payout = %d, settled = %d WHERE id = %d", dobitak, sad, id[i]));
         BlagajnaDodaj(-dobitak);
-        if (!BankaUplati(racun[i], dobitak))
+        if (!BankaUplati(racun[i], dobitak, "Dobitak oklade"))
         {
             new p = IgracRacuna(racun[i]);
             if (p == INVALID_PLAYER_ID || !DajNovac(p, dobitak)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", dobitak, racun[i]));
@@ -1978,7 +1979,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
             }
             strcat(tekst, inputtext);
             RemoveBoje(tekst);
-            if (!tekst[0] || !BankaPromijeni(playerid, -OGLAS_CIJENA)) return PcNatrag(playerid);
+            if (!tekst[0] || !BankaPromijeni(playerid, -OGLAS_CIJENA, "Oglas")) return PcNatrag(playerid);
             gOglasZadnji[playerid] = sad;
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO ads (account, text, created) VALUES (%d, '%q', %d)", gAccountId[playerid], tekst, sad));
             new DBResult:res = DB_ExecuteQuery(gDB, "SELECT number FROM phone_numbers WHERE account = %d", gAccountId[playerid]);

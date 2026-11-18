@@ -1,4 +1,8 @@
 #define KUGLANJE_MAX        16
+#define KUGLANA_INT         18
+#define KUGLANA_X           1600.0
+#define KUGLANA_Y           1600.0
+#define KUGLANA_Z           900.0
 #define KUGLANJE_BOJA       0x1E5AA8E6
 #define KUGLANJE_CUNJ       1509
 #define KUGLANJE_KUGLA      2114
@@ -90,7 +94,10 @@ InitKuglanje()
     for (new i = 0; i < 20; i++) b[i] = 4;
     assert(KuglanjeRezultat(b, 20) == 80 && KuglanjeOkvir(b, 20, u) == 10 && KuglanjeOkvir(b, 19, u) == 9 && u == 1);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bowling_lanes (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world FROM bowling_lanes LIMIT %d", KUGLANJE_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM bowling_lanes WHERE interior = %d", KUGLANA_INT);
+    if (!DB_GetFieldInt(res, 0)) for (new l = 0; l < 4; l++) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bowling_lanes (x, y, z, a, interior, world) VALUES (%f, %f, %f, 0.0, %d, 0)", KUGLANA_X - 3.0 + 2.0 * float(l), KUGLANA_Y, KUGLANA_Z, KUGLANA_INT));
+    DB_FreeResultSet(res);
+    res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world FROM bowling_lanes LIMIT %d", KUGLANJE_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
     {
         gKg[s][kgDb] = DB_GetFieldInt(res, 0);

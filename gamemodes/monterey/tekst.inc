@@ -1995,7 +1995,28 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pridruzi se", "Join", "Присоединиться", "Unirse", "Katil" },
     { "~p~LifeStalker~n~~w~%s vam je poslao zahtjev za prijateljstvo.", "~p~LifeStalker~n~~w~%s sent you a friend request.", "~p~LifeStalker~n~~w~%s отправил вам запрос в друзья.", "~p~LifeStalker~n~~w~%s te envio una solicitud de amistad.", "~p~LifeStalker~n~~w~%s size arkadaslik istegi gonderdi." },
     { "~p~LifeStalker~n~~w~%s je prihvatio vas zahtjev za prijateljstvo.", "~p~LifeStalker~n~~w~%s accepted your friend request.", "~p~LifeStalker~n~~w~%s принял ваш запрос в друзья.", "~p~LifeStalker~n~~w~%s acepto tu solicitud de amistad.", "~p~LifeStalker~n~~w~%s arkadaslik isteginizi kabul etti." },
-    { "HR", "EN", "RU", "ES", "TR" }
+    { "HR", "EN", "RU", "ES", "TR" },
+    { "Placa", "Paycheck", "Зарплата", "Salario", "Maas" },
+    { "Porez na imovinu", "Property tax", "Налог на имущество", "Impuesto de propiedad", "Emlak vergisi" },
+    { "Uplata gotovine", "Cash deposit", "Внесение наличных", "Deposito en efectivo", "Nakit yatirma" },
+    { "Isplata gotovine", "Cash withdrawal", "Снятие наличных", "Retiro en efectivo", "Nakit cekme" },
+    { "Na stednju", "To savings", "На сбережения", "A ahorros", "Birikime" },
+    { "Sa stednje", "From savings", "Со сбережений", "De ahorros", "Birikimden" },
+    { "Kamata na stednju", "Savings interest", "Проценты по вкладу", "Intereses de ahorro", "Birikim faizi" },
+    { "Kredit", "Loan", "Кредит", "Prestamo", "Kredi" },
+    { "Rata kredita", "Loan installment", "Платёж по кредиту", "Cuota del prestamo", "Kredi taksiti" },
+    { "Otplata kredita", "Loan repayment", "Погашение кредита", "Pago del prestamo", "Kredi odemesi" },
+    { "Poslano", "Sent", "Отправлено", "Enviado", "Gonderildi" },
+    { "Primljeno", "Received", "Получено", "Recibido", "Alindi" },
+    { "Dobitak oklade", "Bet winnings", "Выигрыш ставки", "Ganancia de apuesta", "Bahis kazanci" },
+    { "Uplata oklade", "Bet stake", "Ставка", "Apuesta", "Bahis yatirma" },
+    { "Kupnja dionica", "Stock purchase", "Покупка акций", "Compra de acciones", "Hisse alimi" },
+    { "Prodaja dionica", "Stock sale", "Продажа акций", "Venta de acciones", "Hisse satisi" },
+    { "Oglas", "Advertisement", "Объявление", "Anuncio", "Ilan" },
+    { "Narudzba hrane", "Food order", "Заказ еды", "Pedido de comida", "Yemek siparisi" },
+    { "Uplata", "Deposit", "Поступление", "Ingreso", "Yatirma" },
+    { "Zadnje transakcije", "Recent transactions", "Последние операции", "Transacciones recientes", "Son islemler" },
+    { "Nema transakcija.", "No transactions.", "Операций нет.", "No hay transacciones.", "Islem yok." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

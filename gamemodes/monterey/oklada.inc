@@ -25,7 +25,7 @@ OkladaBanka(v, s)
 static OkladaDaj(playerid, iznos)
 {
     if (iznos <= 0 || DajNovac(playerid, iznos)) return;
-    if (!BankaUplati(gAccountId[playerid], iznos))
+    if (!BankaUplati(gAccountId[playerid], iznos, "Dobitak oklade"))
     {
         BlagajnaDodaj(iznos);
         return;

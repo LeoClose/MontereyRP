@@ -58,6 +58,8 @@ InitBanka()
     assert(BankaDug(1000) == 1100 && BankaRata(1100) == 110 && BankaRata(1101) == 111 && BankaKamata(100) == 0 && BankaKamata(1000000) == BANKA_STEDNJA_MAX);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS banks (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, ix REAL NOT NULL, iy REAL NOT NULL, iz REAL NOT NULL, Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_guards (id INTEGER PRIMARY KEY AUTOINCREMENT, bank INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_log (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, amount INTEGER NOT NULL, kind TEXT NOT NULL, other INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bank_log_account ON bank_log (account, id)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_accounts (account INTEGER PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 0, savings INTEGER NOT NULL DEFAULT 0, savings_tick INTEGER NOT NULL DEFAULT 0, loan INTEGER NOT NULL DEFAULT 0, loan_rate INTEGER NOT NULL DEFAULT 0, loan_due INTEGER NOT NULL DEFAULT 0)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, ix, iy, iz, Aktor, ax, ay, az, aa FROM banks ORDER BY id LIMIT %d", BANKA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
@@ -316,6 +318,37 @@ static bool:BankaUcitaj(racun, &stanje, &stednja, &kredit, &rata, &rok)
     return ima;
 }
 
+BankaZapis(racun, iznos, const vrsta[], druga = 0)
+{
+    if (!racun || !iznos) return;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_log (account, amount, kind, other, created) VALUES (%d, %d, '%q', %d, %d)", racun, iznos, vrsta, druga, gettime()));
+}
+
+BankaPovijest(playerid, tekst[], size, broj)
+{
+    new vrsta[32], ime[MAX_PLAYER_NAME + 1], red[128], g, m, d, sat, minuta;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT l.amount, l.kind, l.created, IFNULL(replace(a.name, '_', ' '), '') FROM bank_log l LEFT JOIN accounts a ON a.id = l.other AND l.other > 0 WHERE l.account = %d ORDER BY l.id DESC LIMIT %d", gAccountId[playerid], broj);
+    new n = DB_GetRowCount(res);
+    format(red, sizeof red, "~n~~n~~b~%s~l~", T(playerid, "Zadnje transakcije"));
+    strcat(tekst, red, size);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new iznos = DB_GetFieldInt(res, 0);
+        DB_GetFieldString(res, 1, vrsta, sizeof vrsta);
+        DB_GetFieldString(res, 3, ime, sizeof ime);
+        TdCisti(ime);
+        VrijemeTs(DB_GetFieldInt(res, 2), g, m, d, sat, minuta);
+        format(red, sizeof red, "~n~%02d.%02d. %02d:%02d  %s$%d~l~  %s%s%s", d, m, sat, minuta, iznos > 0 ? ("~g~+") : ("~r~-"), iznos > 0 ? iznos : -iznos, T(playerid, vrsta), ime[0] ? (": ") : (""), ime);
+        strcat(tekst, red, size);
+    }
+    DB_FreeResultSet(res);
+    if (!n)
+    {
+        strcat(tekst, "~n~", size);
+        strcat(tekst, T(playerid, "Nema transakcija."), size);
+    }
+}
+
 bool:BankaTekst(playerid, tekst[], size = sizeof (tekst))
 {
     new stanje, stednja, kredit, rata, rok;
@@ -362,6 +395,8 @@ static bool:BankaPosalji(playerid, racun, iznos)
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d WHERE account = %d", iznos, gAccountId[playerid]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, racun));
+    BankaZapis(gAccountId[playerid], -iznos, "Poslano", racun);
+    BankaZapis(racun, iznos, "Primljeno", gAccountId[playerid]);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Poslali ste $%d."), iznos);
     new i = IgracRacuna(racun);
     if (i != INVALID_PLAYER_ID)
@@ -390,6 +425,7 @@ BankaTick()
         {
             new kamata = BankaKamata(stednja);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET savings = savings + %d, savings_tick = %d WHERE account = %d", kamata, tick + BANKA_DAN, gAccountId[i]));
+            BankaZapis(gAccountId[i], kamata, "Kamata na stednju");
             if (kamata)
             {
                 format(poruka, sizeof poruka, T(i, "Kamata na vasu stednju: $%d."), kamata);
@@ -408,6 +444,7 @@ BankaTick()
         }
         if (gotovina) DajNovac(i, -gotovina);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, loan = loan - %d, loan_due = %d WHERE account = %d", sRacuna, placa, rok + BANKA_DAN, gAccountId[i]));
+        BankaZapis(gAccountId[i], -sRacuna, "Rata kredita");
         format(poruka, sizeof poruka, T(i, "Naplacena je rata kredita $%d. Preostali dug: $%d."), placa, kredit - placa);
         MobitelBankaSms(i, poruka);
     }
@@ -502,18 +539,20 @@ bool:BankaOtplati(playerid, n)
         return false;
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, loan = loan - %d WHERE account = %d", n, n, gAccountId[playerid]));
+    BankaZapis(gAccountId[playerid], -n, "Otplata kredita");
     return true;
 }
 
-bool:BankaUplati(racun, iznos)
+bool:BankaUplati(racun, iznos, const vrsta[] = "Uplata")
 {
     new stanje, stednja, kredit, rata, rok;
     if (!BankaUcitaj(racun, stanje, stednja, kredit, rata, rok) || stanje + iznos < 0) return false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, racun));
+    BankaZapis(racun, iznos, vrsta);
     return true;
 }
 
-bool:BankaPromijeni(playerid, iznos)
+bool:BankaPromijeni(playerid, iznos, const vrsta[])
 {
     new stanje, stednja, kredit, rata, rok;
     if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok))
@@ -527,6 +566,7 @@ bool:BankaPromijeni(playerid, iznos)
         return false;
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", iznos, gAccountId[playerid]));
+    BankaZapis(gAccountId[playerid], iznos, vrsta);
     return true;
 }
 
@@ -555,22 +595,26 @@ DLG:banka_unos(playerid, response, const inputtext[])
             if (gNovac[playerid] < n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
             DajNovac(playerid, -n);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d WHERE account = %d", n, racun));
+            BankaZapis(racun, n, "Uplata gotovine");
         }
         case BA_ISPLATI:
         {
             if (stanje < n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko novca na racunu."));
             if (!DajNovac(playerid, n)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d WHERE account = %d", n, racun));
+            BankaZapis(racun, -n, "Isplata gotovine");
         }
         case BA_NA_STEDNJU:
         {
             if (stanje < n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko novca na racunu."));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance - %d, savings = savings + %d, savings_tick = CASE WHEN savings = 0 THEN %d ELSE savings_tick END WHERE account = %d", n, n, gettime(), racun));
+            BankaZapis(racun, -n, "Na stednju");
         }
         case BA_SA_STEDNJE:
         {
             if (stednja < n) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko na stednji."));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d, savings = savings - %d WHERE account = %d", n, n, racun));
+            BankaZapis(racun, n, "Sa stednje");
         }
         case BA_KREDIT:
         {
@@ -578,6 +622,7 @@ DLG:banka_unos(playerid, response, const inputtext[])
             if (n > BANKA_KREDIT_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najveci kredit je $%d."), BANKA_KREDIT_MAX);
             new dug = BankaDug(n);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d, loan = %d, loan_rate = %d, loan_due = %d WHERE account = %d", n, dug, BankaRata(dug), gettime() + BANKA_DAN, racun));
+            BankaZapis(racun, n, "Kredit");
             new poruka[144];
             format(poruka, sizeof poruka, T(playerid, "Kredit odobren: $%d na racun. Dug $%d, rata $%d svaka 24 h."), n, dug, BankaRata(dug));
             MobitelBankaSms(playerid, poruka);
