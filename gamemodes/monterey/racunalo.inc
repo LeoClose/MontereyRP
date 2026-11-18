@@ -49,7 +49,7 @@
 
 enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA, PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_DODAJ, PC_GRUPA_PORUKA }
 #define LS_GRUPA_IME        24
-enum { LS_FEED, LS_OBJAVA, LS_PRIJATELJI, LS_PORUKE, LS_RAZGOVOR, LS_PROFIL, LS_GRUPE, LS_GRUPA, LS_TRAZI, LS_CLANOVI }
+enum { LS_FEED, LS_OBJAVA, LS_PRIJATELJI, LS_PORUKE, LS_RAZGOVOR, LS_PROFIL, LS_GRUPE, LS_GRUPA, LS_TRAZI, LS_CLANOVI, LS_DODAJ }
 enum { PP_NISTA, PP_OBJAVA, PP_KOMENTAR, PP_GRUPA, PP_CLAN, PP_OGLAS }
 enum { LS_NISTA, LS_POSLAO, LS_PRIMIO, LS_PRIJATELJ }
 enum { KT_BOK, KT_LISTIC, KT_TAB, KT_KAT = KT_TAB + 3, KT_LIGA = KT_KAT + 5, KT_MEC = KT_LIGA + 7, KT_RED, KT_KOEF = KT_RED + KLAD_RED, KT_STR_L = KT_KOEF + KLAD_RED * 3, KT_STR, KT_STR_D, KT_NASLOV, KT_PAR, KT_UKUPNO = KT_PAR + KLAD_PAROVA, KT_MINUS, KT_ULOG, KT_PLUS, KT_DOBITAK, KT_UPLATI, KLAD_TD }
@@ -764,6 +764,53 @@ static LsProfil(playerid)
     return 1;
 }
 
+static LsDodaj(playerid)
+{
+    new grp = gLsCilj[playerid], me = gAccountId[playerid], red[160], ime[MAX_PLAYER_NAME + 1], naziv[LS_GRUPA_IME + 1];
+    if (LsGrupaPodaci(grp, naziv, sizeof naziv) != me)
+    {
+        gLsPogled[playerid] = LS_GRUPE;
+        LsGrupe(playerid);
+        return;
+    }
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x.acc, replace(a.name, '_', ' ') FROM (SELECT CASE WHEN a = %d THEN b ELSE a END AS acc FROM social_friends WHERE (a = %d OR b = %d) AND accepted = 1) x JOIN accounts a ON a.id = x.acc WHERE x.acc NOT IN (SELECT account FROM social_group_members WHERE grp = %d) ORDER BY a.name LIMIT %d", me, me, me, grp, OBJAVA_REDOVA);
+    new n = DB_GetRowCount(res);
+    for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new acc = DB_GetFieldInt(res, 0);
+        DB_GetFieldString(res, 1, ime, sizeof ime);
+        TdCisti(ime);
+        format(red, sizeof red, "~g~+  ~b~%s~n~%s", ime, IgracRacuna(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
+        LsRed(playerid, r, acc, acc, red);
+    }
+    DB_FreeResultSet(res);
+    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Svi vasi prijatelji su vec u grupi."));
+    LsAkcije(playerid, T(playerid, "Natrag"));
+}
+
+static LsGrupaDodaj(playerid, grp, acc)
+{
+    new me = gAccountId[playerid], naziv[LS_GRUPA_IME + 1];
+    if (LsGrupaPodaci(grp, naziv, sizeof naziv) != me) return 1;
+    if (!acc || acc == me || LsBlok(me, acc)) return PcJavi(playerid, true, T(playerid, "Korisnik nije pronadjen."));
+    if (LsOdnos(me, acc) != LS_PRIJATELJ) return PcJavi(playerid, true, T(playerid, "U grupu mozete dodati samo prijatelje."));
+    if (LsClan(grp, acc)) return PcJavi(playerid, true, T(playerid, "Korisnik je vec u grupi."));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_group_members (grp, account) VALUES (%d, %d)", grp, acc));
+    PcLifeStalker(playerid);
+    LsOsvjezi(LS_CLANOVI, grp, playerid);
+    LsOsvjezi(LS_GRUPA, grp, playerid);
+    LsOsvjezi(LS_DODAJ, grp, playerid);
+    new t = IgracRacuna(acc);
+    if (t != INVALID_PLAYER_ID && gPcOtvoren[t])
+    {
+        new obavijest[144];
+        format(obavijest, sizeof obavijest, T(t, "~p~LifeStalker~n~~w~%s vas je dodao u grupu %s."), GetRPIme(playerid), naziv);
+        PcObavijest(t, obavijest);
+        if (gPcEkran[t] == PCE_LIFESTALKER && gLsPogled[t] == LS_GRUPE) PcLifeStalker(t);
+    }
+    return PcJavi(playerid, false, T(playerid, "Clan je dodan u grupu."));
+}
+
 static LsClanovi(playerid)
 {
     new grp = gLsCilj[playerid], me = gAccountId[playerid], red[160], ime[MAX_PLAYER_NAME + 1], naziv[LS_GRUPA_IME + 1], vlasnik = LsGrupaPodaci(grp, naziv, sizeof naziv);
@@ -809,7 +856,8 @@ static LsGrupe(playerid)
 static LsGrupa(playerid)
 {
     new grp = gLsCilj[playerid], me = gAccountId[playerid], red[256], tekst[OBJAVA_LEN + 1], ime[MAX_PLAYER_NAME + 1], naziv[LS_GRUPA_IME + 1], vrijeme[24];
-    if (!LsGrupaPodaci(grp, naziv, sizeof naziv) || !LsClan(grp, me))
+    new vlasnik = LsGrupaPodaci(grp, naziv, sizeof naziv);
+    if (!vlasnik || !LsClan(grp, me))
     {
         gLsPogled[playerid] = LS_GRUPE;
         LsGrupe(playerid);
@@ -831,7 +879,7 @@ static LsGrupa(playerid)
     DB_FreeResultSet(res);
     format(red, sizeof red, T(playerid, "Grupa: %s~n~~n~Jos nema poruka."), naziv);
     PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : red);
-    LsAkcije(playerid, T(playerid, "Posalji"), T(playerid, "Clanovi"));
+    LsAkcije(playerid, T(playerid, "Posalji"), T(playerid, "Clanovi"), vlasnik == me ? ("+") : (""));
 }
 
 static LsTrazi(playerid)
@@ -883,7 +931,7 @@ static PcLifeStalker(playerid)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) VALUES (%d, %d)", me, gettime()));
     new zahtjeva = LsBroj("SELECT COUNT(*) FROM social_friends WHERE b = %d AND accepted = 0", me);
     new poruka = LsBroj("SELECT COUNT(*) FROM social_messages WHERE receiver = %d AND seen = 0", me);
-    new pogled = gLsPogled[playerid] == LS_OBJAVA ? LS_FEED : gLsPogled[playerid] == LS_RAZGOVOR ? LS_PORUKE : gLsPogled[playerid] == LS_GRUPA || gLsPogled[playerid] == LS_CLANOVI ? LS_GRUPE : gLsPogled[playerid], aktivan = 0;
+    new pogled = gLsPogled[playerid] == LS_OBJAVA ? LS_FEED : gLsPogled[playerid] == LS_RAZGOVOR ? LS_PORUKE : gLsPogled[playerid] == LS_GRUPA || gLsPogled[playerid] == LS_CLANOVI || gLsPogled[playerid] == LS_DODAJ ? LS_GRUPE : gLsPogled[playerid], aktivan = 0;
     for (new k = 0; k < sizeof gLsTabPogled; k++) if (gLsTabPogled[k] == pogled) aktivan = k;
     for (new k = 0; k < sizeof gLsTab; k++)
     {
@@ -905,6 +953,7 @@ static PcLifeStalker(playerid)
         case LS_GRUPA: LsGrupa(playerid);
         case LS_TRAZI: LsTrazi(playerid);
         case LS_CLANOVI: LsClanovi(playerid);
+        case LS_DODAJ: LsDodaj(playerid);
         default: LsFeed(playerid);
     }
     new n = gLsAvatara[playerid];
@@ -1030,6 +1079,7 @@ static LsKlik(playerid, PlayerText:td)
             case LS_PORUKE: return LsOtvori(playerid, LS_RAZGOVOR, v);
             case LS_GRUPE: return LsOtvori(playerid, LS_GRUPA, v);
             case LS_GRUPA, LS_TRAZI: return LsOtvori(playerid, LS_PROFIL, v);
+            case LS_DODAJ: return LsGrupaDodaj(playerid, gLsCilj[playerid], v);
             case LS_CLANOVI:
             {
                 new naziv[LS_GRUPA_IME + 1];
@@ -1150,6 +1200,7 @@ static LsKlik(playerid, PlayerText:td)
             case LS_GRUPE: if (!i) return PcUnos(playerid, PC_GRUPA_IME, T(playerid, "Naziv nove grupe (najvise 24 znaka):"));
             case LS_GRUPA:
             {
+                if (i == 2) return LsOtvori(playerid, LS_DODAJ, cilj);
                 if (i) return LsOtvori(playerid, LS_CLANOVI, cilj);
                 format(tekst, sizeof tekst, T(playerid, "Vasa poruka (najvise %d znakova):"), OBJAVA_LEN);
                 return PcUnos(playerid, PC_GRUPA_PORUKA, tekst);
@@ -1169,7 +1220,7 @@ static LsKlik(playerid, PlayerText:td)
                 new odabran = gLsOdabran[playerid], akcija = !i ? 0 : odabran ? i : i + 1;
                 switch (akcija)
                 {
-                    case 0: return PcUnos(playerid, PC_GRUPA_DODAJ, T(playerid, "Ime i prezime prijatelja kojeg dodajete:"));
+                    case 0: return LsOtvori(playerid, LS_DODAJ, cilj);
                     case 1:
                     {
                         if (!PcPotvrdi(playerid, i, PP_CLAN)) return 1;
@@ -1195,6 +1246,7 @@ static LsKlik(playerid, PlayerText:td)
                 }
             }
             case LS_TRAZI: if (!i) return PcUnos(playerid, PC_TRAZI, T(playerid, "Unesite ime ili dio imena:"));
+            case LS_DODAJ: return LsOtvori(playerid, LS_CLANOVI, cilj);
         }
         return 1;
     }
@@ -1299,26 +1351,6 @@ static LsUnos(playerid, akcija, const inputtext[])
             gLsPogled[playerid] = LS_GRUPA;
             gLsCilj[playerid] = grp;
             return 1;
-        }
-        case PC_GRUPA_DODAJ:
-        {
-            new naziv[LS_GRUPA_IME + 1], grp = gLsCilj[playerid], acc = LsRacun(inputtext);
-            if (LsGrupaPodaci(grp, naziv, sizeof naziv) != me) return 1;
-            if (!acc || acc == me || LsBlok(me, acc)) return PcJavi(playerid, true, T(playerid, "Korisnik nije pronadjen."));
-            if (LsOdnos(me, acc) != LS_PRIJATELJ) return PcJavi(playerid, true, T(playerid, "U grupu mozete dodati samo prijatelje."));
-            if (LsClan(grp, acc)) return PcJavi(playerid, true, T(playerid, "Korisnik je vec u grupi."));
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_group_members (grp, account) VALUES (%d, %d)", grp, acc));
-            LsOsvjezi(LS_CLANOVI, grp, playerid);
-            LsOsvjezi(LS_GRUPA, grp, playerid);
-            new t = IgracRacuna(acc);
-            if (t != INVALID_PLAYER_ID && gPcOtvoren[t])
-            {
-                new obavijest[144];
-                format(obavijest, sizeof obavijest, T(t, "~p~LifeStalker~n~~w~%s vas je dodao u grupu %s."), GetRPIme(playerid), naziv);
-                PcObavijest(t, obavijest);
-                if (gPcEkran[t] == PCE_LIFESTALKER && gLsPogled[t] == LS_GRUPE) PcLifeStalker(t);
-            }
-            return PcJavi(playerid, false, T(playerid, "Clan je dodan u grupu."));
         }
         case PC_PORUKA_KOME:
         {
@@ -2487,7 +2519,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
             new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 5 ? strval(inputtext) : 0;
             if (n >= 1 && n <= DIONICA_MAX_KOM) gPcKolicina[playerid] = n;
         }
-        case PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_DODAJ, PC_GRUPA_PORUKA: LsUnos(playerid, gPcAkcija[playerid], inputtext);
+        case PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_PORUKA: LsUnos(playerid, gPcAkcija[playerid], inputtext);
         case PC_OBJAVA:
         {
             new tekst[OBJAVA_LEN + 1], sad = gettime();

@@ -132,7 +132,8 @@ static GarazaIzvezi(v, g)
 
 static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
 {
-    new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], n = 0, svijet = GarazaSvijet(db), interijer = db ? GARAZA_INT : 0;
+    new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], n = 0, svijet = GarazaSvijet(db), interijer = db ? GARAZA_INT : 0, Float:hx, Float:hy, Float:hz;
+    if (!db && Kolizija_Zraka(x, y, z + 3.0, x, y, z - 20.0, hx, hy, hz)) z = hz + 1.0;
     for (new i = 0; i < MAX_PLAYERS; i++)
     {
         if (!IsPlayerInVehicle(i, v)) continue;
@@ -157,6 +158,21 @@ static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
         SetTimerEx("GarazaSjedni", GARAZA_SJEDNI_MS, false, "iiii", putnici[i], v, sjedala[i], svijet);
         SetTimerEx("GarazaOdmrzni", GARAZA_IZLAZ_MS, false, "ii", putnici[i], gAccountId[putnici[i]]);
     }
+    if (db) return;
+    SetTimerEx("GarazaVoziloPostavi", 300, false, "iffff", v, x, y, z, a);
+    SetTimerEx("GarazaVoziloPostavi", GARAZA_IZLAZ_MS, false, "iffff", v, x, y, z, a);
+}
+
+forward GarazaVoziloPostavi(v, Float:x, Float:y, Float:z, Float:a);
+public GarazaVoziloPostavi(v, Float:x, Float:y, Float:z, Float:a)
+{
+    new Float:vx, Float:vy, Float:vz;
+    if (!GetVehicleModel(v) || GetVehicleVirtualWorld(v)) return;
+    GetVehiclePos(v, vx, vy, vz);
+    if (VectorSize(vx - x, vy - y, 0.0) > 3.0 || vz > z - 1.0) return;
+    SetVehiclePos(v, x, y, z);
+    SetVehicleZAngle(v, a);
+    SetVehicleVelocity(v, 0.0, 0.0, 0.0);
 }
 
 forward GarazaOdmrzni(playerid, racun);

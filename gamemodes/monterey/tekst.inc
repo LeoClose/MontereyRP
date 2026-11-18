@@ -2123,7 +2123,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "{FF6347}[Prijava]{FFFFFF}", "{FF6347}[Report]{FFFFFF}", "{FF6347}[Жалоба]{FFFFFF}", "{FF6347}[Reporte]{FFFFFF}", "{FF6347}[Sikayet]{FFFFFF}" },
     { "(( Admin %s odgovara: %s ))", "(( Admin %s replies: %s ))", "(( Админ %s отвечает: %s ))", "(( Admin %s responde: %s ))", "(( Admin %s cevapliyor: %s ))" },
     { "Admin %s je odgovorio na upit #%d.", "Admin %s answered request #%d.", "Админ %s ответил на запрос #%d.", "El admin %s respondio la solicitud #%d.", "Admin %s #%d talebini cevapladi." },
-    { "Admin %s je zatvorio upit #%d.", "Admin %s closed request #%d.", "Админ %s закрыл запрос #%d.", "El admin %s cerro la solicitud #%d.", "Admin %s #%d talebini kapatti." }
+    { "Admin %s je zatvorio upit #%d.", "Admin %s closed request #%d.", "Админ %s закрыл запрос #%d.", "El admin %s cerro la solicitud #%d.", "Admin %s #%d talebini kapatti." },
+    { "Svi vasi prijatelji su vec u grupi.", "All your friends are already in the group.", "Все ваши друзья уже в группе.", "Todos tus amigos ya estan en el grupo.", "Tum arkadaslariniz zaten grupta." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
