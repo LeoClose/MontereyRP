@@ -1,4 +1,18 @@
-#define AC_KODOVA           53
+#define AC_KODOVA           59
+#define AC_CARSHOT          31
+#define AC_S0BEIT           53
+#define AC_SAMPFUNCS        54
+#define AC_CLEO             55
+#define AC_AIM_WH           56
+#define AC_MODOVI           57
+#define AC_PRIKOLICA        58
+#define AC_PROVJERA_MS      8000
+#define AC_PROVJERA_RAZMAK  300000
+#define AC_MOBITEL_GPCI     "ED40ED0E8089CC44C08EE9580F4C8C44EE8EE990"
+#define AC_AUTO_DOMET       40.0
+#define AC_AUTO_SKOK        10.0
+#define AC_AUTO_BRZINA      2.0
+#define AC_AUTO_UVIS        1.0
 #define AC_RAZMAK_MS        15000
 #define AC_BLOK_MS          600000
 #define AC_LOG_DANA         30
@@ -12,7 +26,8 @@ static const gAcIme[AC_KODOVA][] = {
     "Special action hack", "", "", "Invisible hack", "Lagcomp spoof", "Tuning hack", "", "", "Rapid fire",
     "Fake spawn", "Fake kill", "Pro Aim", "", "CarShot", "CarJack", "", "AFK Ghost", "",
     "", "", "High ping", "Dialog hack", "Sandbox", "Invalid version", "Rcon hack", "", "",
-    "", "", "", "Connection flood", "", "Seat change flood", "DoS", "NOP"
+    "", "", "", "Connection flood", "", "Seat change flood", "DoS", "NOP", "s0beit",
+    "SAMPFUNCS", "CLEO / MoonLoader", "Silent aim / WallHack / cheat menu", "Ostali modovi klijenta", "Trailer sync hack"
 };
 
 static const gAcZadano[AC_KODOVA] = {
@@ -21,8 +36,19 @@ static const gAcZadano[AC_KODOVA] = {
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
     ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI,
     ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO,
-    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_IZBACI, ACM_ISKLJUCENO, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI
+    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_IZBACI, ACM_ISKLJUCENO, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI,
+    ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI
 };
+
+enum E_AC_MEM { amAdresa, amOcekivano, amKod }
+static const gAcMem[][E_AC_MEM] = {
+    { 0x5E8606, 192, AC_S0BEIT }, { 0x7487A8, 72, AC_CLEO }, { 0x4667DB, 192, AC_CLEO }, { 0x57B9FD, 68, AC_CLEO },
+    { 0x58D552, 196, AC_CLEO }, { 0x58FCE4, 64, AC_CLEO }, { 0x46A21B, 8, AC_CLEO }, { 0x6FC5B0, 200, AC_MODOVI },
+    { 0x5E85F9, 200, AC_SAMPFUNCS }, { 0x520191, 204, AC_SAMPFUNCS }, { 0x6EFBC7, 196, AC_S0BEIT }, { 0x53C8F4, 132, AC_MODOVI },
+    { 0x747EB4, 132, AC_AIM_WH }, { 0x522C24, 192, AC_AIM_WH }, { 0x743C60, 200, AC_MODOVI }, { 0x584D00, 132, AC_AIM_WH },
+    { 0x522268, 132, AC_MODOVI }
+};
+static gAcMemPoslano[MAX_PLAYERS][sizeof gAcMem], gAcMemOdgovor[MAX_PLAYERS][sizeof gAcMem], gAcProvjeraToken[MAX_PLAYERS], gAcProvjeraZadnja[MAX_PLAYERS], bool:gAcKlijentPrijavljen[MAX_PLAYERS];
 
 static const gAcNacinIme[3][] = { "{777777}Iskljuceno", "{F1C40F}Upozorenje", "{E74C3C}Izbacivanje" };
 
@@ -67,7 +93,81 @@ AntiCheatAdmin(playerid)
 AntiCheatConnect(playerid)
 {
     gAcIzbacen[playerid] = false;
+    gAcKlijentPrijavljen[playerid] = false;
+    gAcProvjeraZadnja[playerid] = 0;
+    gAcProvjeraToken[playerid]++;
     for (new c = 0; c < AC_KODOVA; c++) gAcZadnje[playerid][c] = 0;
+}
+
+AntiCheatSpawn(playerid)
+{
+    new sad = GetTickCount(), serijski[48];
+    if (!gUlogiran[playerid] || IsPlayerNPC(playerid) || (gAcProvjeraZadnja[playerid] && sad - gAcProvjeraZadnja[playerid] < AC_PROVJERA_RAZMAK)) return;
+    gpci(playerid, serijski, sizeof serijski);
+    if (!strcmp(serijski, AC_MOBITEL_GPCI)) return;
+    gAcProvjeraZadnja[playerid] = sad;
+    for (new i = 0; i < sizeof gAcMem; i++)
+    {
+        new pomak = 4 * (1 + random(16));
+        gAcMemPoslano[playerid][i] = gAcMem[i][amAdresa] - pomak;
+        gAcMemOdgovor[playerid][i] = -1;
+        SendClientCheck(playerid, 0x5, gAcMemPoslano[playerid][i], pomak, 4);
+    }
+    SetTimerEx("AcKlijentOcjena", AC_PROVJERA_MS, false, "ii", playerid, ++gAcProvjeraToken[playerid]);
+}
+
+public OnClientCheckResponse(playerid, actionid, memaddr, retndata)
+{
+    if (actionid != 0x5 || playerid < 0 || playerid >= MAX_PLAYERS) return 1;
+    for (new i = 0; i < sizeof gAcMem; i++)
+    {
+        if (gAcMemPoslano[playerid][i] != memaddr || gAcMemOdgovor[playerid][i] != -1) continue;
+        gAcMemOdgovor[playerid][i] = retndata;
+        break;
+    }
+    return 1;
+}
+
+forward AcKlijentOcjena(playerid, token);
+public AcKlijentOcjena(playerid, token)
+{
+    if (token != gAcProvjeraToken[playerid] || !IsPlayerConnected(playerid) || gAcIzbacen[playerid]) return;
+    new odgovoreno = 0, dobro = 0, kodovi[AC_KODOVA];
+    for (new i = 0; i < sizeof gAcMem; i++)
+    {
+        if (gAcMemOdgovor[playerid][i] == -1) continue;
+        odgovoreno++;
+        if (gAcMemOdgovor[playerid][i] == gAcMem[i][amOcekivano]) dobro++;
+        else kodovi[gAcMem[i][amKod]] = 1;
+    }
+    if (odgovoreno * 2 < sizeof gAcMem || dobro * 2 < odgovoreno)
+    {
+        if (gAcKlijentPrijavljen[playerid]) return;
+        gAcKlijentPrijavljen[playerid] = true;
+        OnCheatDetected(playerid, "", 0, AC_MODOVI);
+        return;
+    }
+    for (new c = AC_S0BEIT; c <= AC_MODOVI && !gAcIzbacen[playerid]; c++) if (kodovi[c]) OnCheatDetected(playerid, "", 0, c);
+}
+
+public OnUnoccupiedVehicleUpdate(vehicleid, playerid, passenger_seat, Float:new_x, Float:new_y, Float:new_z, Float:vel_x, Float:vel_y, Float:vel_z)
+{
+    if (GetVehicleVirtualWorld(vehicleid) != GetPlayerVirtualWorld(playerid) || GetPlayerDistanceFromPoint(playerid, new_x, new_y, new_z) > AC_AUTO_DOMET
+        || GetVehicleDistanceFromPoint(vehicleid, new_x, new_y, new_z) > AC_AUTO_SKOK) return 0;
+    if (VectorSize(vel_x, vel_y, vel_z) > AC_AUTO_BRZINA || vel_z > AC_AUTO_UVIS)
+    {
+        OnCheatDetected(playerid, "", 0, AC_CARSHOT);
+        return 0;
+    }
+    return 1;
+}
+
+public OnTrailerUpdate(playerid, vehicleid)
+{
+    new v = GetPlayerVehicleID(playerid);
+    if (GetPlayerState(playerid) == PLAYER_STATE_DRIVER && v && GetVehicleTrailer(v) == vehicleid) return 1;
+    if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER) OnCheatDetected(playerid, "", 0, AC_PRIKOLICA);
+    return 0;
 }
 
 static AcZapisi(playerid, const ip[], code, nacin)

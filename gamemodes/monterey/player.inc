@@ -129,6 +129,7 @@ public OnPlayerSpawn(playerid)
     ShowHud(playerid);
     LoginSpawn(playerid);
     StetaSpawn(playerid);
+    AntiCheatSpawn(playerid);
     SetPlayerSkillLevel(playerid, WEAPONSKILL_MICRO_UZI, SMG_VJESTINA);
     SetPlayerSkillLevel(playerid, WEAPONSKILL_MP5, SMG_VJESTINA);
     SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
