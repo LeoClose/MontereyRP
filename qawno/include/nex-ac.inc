@@ -19,9 +19,6 @@
 
 #if !defined FILTERSCRIPT
 
-#if !defined DEBUG
-	#define DEBUG
-#endif
 
 #if !defined NO_SUSPICION_LOGS
 	//#define NO_SUSPICION_LOGS
@@ -312,15 +309,15 @@ bool:ac_NOPAllow[] =
 {
 	true,	//0 Anti-NOP GivePlayerWeapon
 	true,	//1 Anti-NOP SetPlayerAmmo
-	true,	//2 Anti-NOP SetPlayerInterior
-	true,	//3 Anti-NOP SetPlayerHealth
+	false,	//2 Anti-NOP SetPlayerInterior
+	false,	//3 Anti-NOP SetPlayerHealth
 	true,	//4 Anti-NOP SetVehicleHealth
-	true,	//5 Anti-NOP SetPlayerArmour
+	false,	//5 Anti-NOP SetPlayerArmour
 	true,	//6 Anti-NOP SetPlayerSpecialAction
 	true,	//7 Anti-NOP PutPlayerInVehicle
 	true,	//8 Anti-NOP TogglePlayerSpectating
 	true,	//9 Anti-NOP SpawnPlayer
-	true,	//10 Anti-NOP SetPlayerPos
+	false,	//10 Anti-NOP SetPlayerPos
 	true	//11 Anti-NOP RemovePlayerFromVehicle
 };
 
@@ -4687,30 +4684,7 @@ public OnPlayerUpdate(playerid)
 				}
 				else if(ac_gtc - ACInfo[playerid][acGtc][2] > ac_gpp)
 				{
-					if(ACInfo[playerid][acACAllow][52] && ACInfo[playerid][acNOPAllow][3] &&
-					ACInfo[playerid][acSet][1] < ac_health)
-					{
-						if(++ACInfo[playerid][acNOPCount][3] > AC_MAX_NOP_WARNINGS)
-						{
-							#if defined DEBUG
-								printf(DEBUG_CODE_5, playerid, "SetPlayerHealth");
-								printf("[Nex-AC debug] AC health: %d, health: %d", ACInfo[playerid][acSet][1], ac_health);
-							#endif
-							#if defined OnCheatDetected
-								ac_KickWithCode(playerid, "", 0, 52, 3);
-								if(ACInfo[playerid][acKicked] > 0) return 0;
-								#if defined FreezeSyncPacket
-								#endif
-								ACInfo[playerid][acSet][1] = -1;
-							#else
-								return ac_KickWithCode(playerid, "", 0, 52, 3);
-							#endif
-						}
-						#if defined OnNOPWarning
-							else OnNOPWarning(playerid, 3, ACInfo[playerid][acNOPCount][3]);
-						#endif
-					}
-					else if(++ACInfo[playerid][acNOPCount][3] > AC_MAX_NOP_WARNINGS)
+					if(++ACInfo[playerid][acNOPCount][3] > AC_MAX_NOP_WARNINGS)
 					{
 						if(ACInfo[playerid][acSet][1] > ac_health)
 						{
@@ -4748,30 +4722,7 @@ public OnPlayerUpdate(playerid)
 				}
 				else if(ac_gtc - ACInfo[playerid][acGtc][4] > ac_gpp)
 				{
-					if(ACInfo[playerid][acACAllow][52] && ACInfo[playerid][acNOPAllow][5] &&
-					ACInfo[playerid][acSet][2] < ac_armour)
-					{
-						if(++ACInfo[playerid][acNOPCount][5] > AC_MAX_NOP_WARNINGS)
-						{
-							#if defined DEBUG
-								printf(DEBUG_CODE_5, playerid, "SetPlayerArmour");
-								printf("[Nex-AC debug] AC armour: %d, armour: %d", ACInfo[playerid][acSet][2], ac_armour);
-							#endif
-							#if defined OnCheatDetected
-								ac_KickWithCode(playerid, "", 0, 52, 4);
-								if(ACInfo[playerid][acKicked] > 0) return 0;
-								#if defined FreezeSyncPacket
-								#endif
-								ACInfo[playerid][acSet][2] = -1;
-							#else
-								return ac_KickWithCode(playerid, "", 0, 52, 4);
-							#endif
-						}
-						#if defined OnNOPWarning
-							else OnNOPWarning(playerid, 5, ACInfo[playerid][acNOPCount][5]);
-						#endif
-					}
-					else if(++ACInfo[playerid][acNOPCount][5] > AC_MAX_NOP_WARNINGS)
+					if(++ACInfo[playerid][acNOPCount][5] > AC_MAX_NOP_WARNINGS)
 					{
 						if(ACInfo[playerid][acSet][2] > ac_armour)
 						{
@@ -4926,29 +4877,7 @@ public OnPlayerUpdate(playerid)
 					}
 					else if(ac_gtc - ACInfo[playerid][acGtc][10] > ac_gpp)
 					{
-						if(ACInfo[playerid][acACAllow][52] && ACInfo[playerid][acNOPAllow][10])
-						{
-							if(++ACInfo[playerid][acNOPCount][10] > AC_MAX_NOP_WARNINGS)
-							{
-								#if defined DEBUG
-									printf(DEBUG_CODE_5, playerid, "SetPlayerPos");
-									printf("[Nex-AC debug] Dist: %f, acSet[7]: %d", ac_dist_set, ACInfo[playerid][acSet][7]);
-								#endif
-								#if defined OnCheatDetected
-									ac_KickWithCode(playerid, "", 0, 52, 10);
-									if(ACInfo[playerid][acKicked] > 0) return 0;
-									#if defined FreezeSyncPacket
-									#endif
-									ACInfo[playerid][acSet][7] = -1;
-								#else
-									return ac_KickWithCode(playerid, "", 0, 52, 10);
-								#endif
-							}
-							#if defined OnNOPWarning
-								else OnNOPWarning(playerid, 10, ACInfo[playerid][acNOPCount][10]);
-							#endif
-						}
-						else if(++ACInfo[playerid][acNOPCount][10] > AC_MAX_NOP_WARNINGS)
+						if(++ACInfo[playerid][acNOPCount][10] > AC_MAX_NOP_WARNINGS)
 						{
 							ACInfo[playerid][acSet][7] = -1;
 							#if defined FreezeSyncPacket
@@ -8623,25 +8552,7 @@ ac_fpublic ac_Timer(playerid)
 			}
 			if(ACInfo[playerid][acSet][0] != -1 && ac_gtc - ACInfo[playerid][acGtc][0] > ac_gpp)
 			{
-				if(ACInfo[playerid][acACAllow][52] && ACInfo[playerid][acNOPAllow][2] &&
-				ACInfo[playerid][acInt] != ACInfo[playerid][acSet][0])
-				{
-					if(++ACInfo[playerid][acNOPCount][2] > AC_MAX_NOP_TIMER_WARNINGS)
-					{
-						#if defined DEBUG
-							printf(DEBUG_CODE_5, playerid, "SetPlayerInterior");
-							printf("[Nex-AC debug] AC interior: %d, interiorid: %d", ACInfo[playerid][acSet][0], ACInfo[playerid][acInt]);
-						#endif
-						ac_KickWithCode(playerid, "", 0, 52, 5);
-						#if defined OnCheatDetected
-							ACInfo[playerid][acSet][0] = -1;
-						#endif
-					}
-					#if defined OnNOPWarning
-						else OnNOPWarning(playerid, 2, ACInfo[playerid][acNOPCount][2]);
-					#endif
-				}
-				else if(++ACInfo[playerid][acNOPCount][2] > AC_MAX_NOP_TIMER_WARNINGS) ACInfo[playerid][acSet][0] = -1;
+				if(++ACInfo[playerid][acNOPCount][2] > AC_MAX_NOP_TIMER_WARNINGS) ACInfo[playerid][acSet][0] = -1;
 			}
 			if(ACInfo[playerid][acNOPCount][11] > 0) ACInfo[playerid][acNOPCount][11]--;
 			else

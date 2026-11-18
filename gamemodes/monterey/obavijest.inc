@@ -20,6 +20,24 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
     else gObTekst[playerid][0] = EOS;
     strcat(gObTekst[playerid], tekst[i]);
     gObOd[playerid] = GetTickCount();
+    ObPrikazi(playerid, naslov, boja, gObTekst[playerid]);
+    if (ms > 0) SetTimerEx("IgraObavijestSkrij", ms, false, "ii", playerid, gObToken[playerid]);
+    return 1;
+}
+
+IgraObavijestPanel(playerid, const naslov[], boja, const tekst[])
+{
+    gObOd[playerid] = 0;
+    return ObPrikazi(playerid, naslov, boja, tekst);
+}
+
+IgraObavijestUkloni(playerid)
+{
+    IgraObavijestSkrij(playerid, ++gObToken[playerid]);
+}
+
+static ObPrikazi(playerid, const naslov[], boja, const tekst[])
+{
     if (!gObIma[playerid])
     {
         gObIma[playerid] = true;
@@ -43,11 +61,10 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
     }
     PlayerTextDrawBoxColour(playerid, gObTd[playerid][0], boja);
     PlayerTextDrawSetString(playerid, gObTd[playerid][0], naslov);
-    PlayerTextDrawSetString(playerid, gObTd[playerid][1], gObTekst[playerid]);
+    PlayerTextDrawSetString(playerid, gObTd[playerid][1], tekst);
     PlayerTextDrawShow(playerid, gObTd[playerid][0]);
     PlayerTextDrawShow(playerid, gObTd[playerid][1]);
     gObToken[playerid]++;
-    if (ms > 0) SetTimerEx("IgraObavijestSkrij", ms, false, "ii", playerid, gObToken[playerid]);
     return 1;
 }
 

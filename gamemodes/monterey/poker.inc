@@ -132,6 +132,11 @@ InitPoker()
     assert(PokerOcjena(a, 7) == PokerVr(2, 10, 7, 12));
 }
 
+bool:PokerAktivan(playerid)
+{
+    return gPokerStol[playerid] != -1;
+}
+
 PokerConnect(playerid)
 {
     gPokerStol[playerid] = -1;

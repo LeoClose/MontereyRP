@@ -94,6 +94,11 @@ InitDroga()
     DB_FreeResultSet(res);
 }
 
+bool:DrogaKuha(playerid)
+{
+    return gMeth[playerid];
+}
+
 DrogaConnect(playerid)
 {
     gDrogaUvoz[playerid] = -1;

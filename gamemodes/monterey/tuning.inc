@@ -499,7 +499,7 @@ static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[M
 static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
 static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
-static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS];
+static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS], bool:gTunTrubaTipka[MAX_PLAYERS];
 static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], gTunNatpisObj[MAX_VEHICLES];
 static gTunNTekst[MAX_PLAYERS][TUNING_NATPIS_DUZ + 1], gTunNFont[MAX_PLAYERS], gTunNBoja[MAX_PLAYERS], bool:gTunUnos[MAX_PLAYERS];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
@@ -700,15 +700,21 @@ TuningVozac(v)
     }
 }
 
+bool:TuningTrubaKljuc(playerid, v, bool:pritisnuta)
+{
+    if (v <= 0 || v >= MAX_VEHICLES || !gTuningTrubaZvuk[gTunTruba[v]] || GetVehicleComponentInSlot(v, CARMODTYPE_HYDRAULICS))
+    {
+        gTunTrubaTipka[playerid] = false;
+        return false;
+    }
+    gTunTrubaTipka[playerid] = pritisnuta;
+    return true;
+}
+
 TuningTrubaSync(playerid, v)
 {
-    new tiha = gTuningTrubaZvuk[gTunTruba[v]] && !GetVehicleComponentInSlot(v, CARMODTYPE_HYDRAULICS) ? 1 : 0;
-    if (GetPVarInt(playerid, "truba_tiha") != tiha)
-    {
-        SetPVarInt(playerid, "truba_tiha", tiha);
-        SetPVarInt(playerid, "truba", 0);
-    }
-    new pritisnuta = GetPVarInt(playerid, "truba");
+    #pragma unused v
+    new pritisnuta = gTunTrubaTipka[playerid];
     if (pritisnuta && !gTunTrubaStaro[playerid])
     {
         new KEY:tipke, gore, strana;

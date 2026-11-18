@@ -1,4 +1,4 @@
-#define AC_KODOVA           59
+#define AC_KODOVA           60
 #define AC_CARSHOT          31
 #define AC_S0BEIT           53
 #define AC_SAMPFUNCS        54
@@ -6,6 +6,7 @@
 #define AC_AIM_WH           56
 #define AC_MODOVI           57
 #define AC_PRIKOLICA        58
+#define AC_RVANKA           59
 #define AC_PROVJERA_MS      8000
 #define AC_PROVJERA_RAZMAK  300000
 #define AC_MOBITEL_GPCI     "ED40ED0E8089CC44C08EE9580F4C8C44EE8EE990"
@@ -22,22 +23,22 @@ enum { ACM_ISKLJUCENO, ACM_UPOZORI, ACM_IZBACI }
 
 static const gAcIme[AC_KODOVA][] = {
     "AirBreak (onfoot)", "AirBreak (vehicle)", "Teleport (onfoot)", "Teleport (vehicle)", "Teleport (into vehicle)", "Teleport (vehicle to player)", "Teleport (pickups)", "FlyHack (onfoot)", "FlyHack (vehicle)",
-    "SpeedHack (onfoot)", "", "Health hack (vehicle)", "", "", "", "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)",
+    "SpeedHack (onfoot)", "SpeedHack (vehicle)", "Health hack (vehicle)", "", "Armour hack", "", "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)",
     "Special action hack", "", "", "Invisible hack", "Lagcomp spoof", "Tuning hack", "", "", "Rapid fire",
     "Fake spawn", "Fake kill", "Pro Aim", "", "CarShot", "CarJack", "", "AFK Ghost", "",
     "", "", "High ping", "Dialog hack", "Sandbox", "Invalid version", "Rcon hack", "", "",
     "", "", "", "Connection flood", "", "Seat change flood", "DoS", "NOP", "s0beit",
-    "SAMPFUNCS", "CLEO / MoonLoader", "Silent aim / WallHack / cheat menu", "Ostali modovi klijenta", "Trailer sync hack"
+    "SAMPFUNCS", "CLEO / MoonLoader", "Silent aim / WallHack / cheat menu", "Ostali modovi klijenta", "Trailer sync hack", "Rvanka / sync spoof"
 };
 
 static const gAcZadano[AC_KODOVA] = {
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI,
-    ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
+    ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
     ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI,
-    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO,
+    ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO,
     ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_IZBACI, ACM_ISKLJUCENO, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI,
-    ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI
+    ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI
 };
 
 enum E_AC_MEM { amAdresa, amOcekivano, amKod }
@@ -49,6 +50,7 @@ static const gAcMem[][E_AC_MEM] = {
     { 0x522268, 132, AC_MODOVI }
 };
 static gAcMemPoslano[MAX_PLAYERS][sizeof gAcMem], gAcMemOdgovor[MAX_PLAYERS][sizeof gAcMem], gAcProvjeraToken[MAX_PLAYERS], gAcProvjeraZadnja[MAX_PLAYERS], bool:gAcKlijentPrijavljen[MAX_PLAYERS];
+static gAcProvjeraAdmin[MAX_PLAYERS] = { INVALID_PLAYER_ID, ... }, gAcProvjeraAdminAcc[MAX_PLAYERS];
 
 static const gAcNacinIme[3][] = { "{777777}Iskljuceno", "{F1C40F}Upozorenje", "{E74C3C}Izbacivanje" };
 
@@ -60,6 +62,7 @@ InitAntiCheat()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ac_settings (code INTEGER PRIMARY KEY, mode INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ac_log (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, account INTEGER NOT NULL, name TEXT NOT NULL, ip TEXT NOT NULL, code INTEGER NOT NULL, mode INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS ac_log_account ON ac_log (account, id)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM ac_log WHERE ts < %d", gettime() - AC_LOG_DANA * 86400));
     for (new c = 0; c < AC_KODOVA; c++) gAcNacin[c] = gAcZadano[c];
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT code, mode FROM ac_settings");
@@ -74,10 +77,11 @@ InitAntiCheat()
         if (gAcIme[c][0]) EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
         else DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM ac_settings WHERE code = %d", c));
     }
-    EnableAntiNOP(2, false);
-    EnableAntiNOP(3, false);
-    EnableAntiNOP(5, false);
-    EnableAntiNOP(10, false);
+}
+
+bool:AcUkljuceno(code)
+{
+    return code >= 0 && code < AC_KODOVA && gAcIme[code][0] && gAcNacin[code] != ACM_ISKLJUCENO;
 }
 
 AntiCheatAdmin(playerid)
@@ -95,17 +99,56 @@ AntiCheatConnect(playerid)
     gAcIzbacen[playerid] = false;
     gAcKlijentPrijavljen[playerid] = false;
     gAcProvjeraZadnja[playerid] = 0;
+    gAcProvjeraAdmin[playerid] = INVALID_PLAYER_ID;
     gAcProvjeraToken[playerid]++;
     for (new c = 0; c < AC_KODOVA; c++) gAcZadnje[playerid][c] = 0;
 }
 
+static bool:AcMobitel(playerid)
+{
+    new serijski[48];
+    gpci(playerid, serijski, sizeof serijski);
+    return !strcmp(serijski, AC_MOBITEL_GPCI);
+}
+
 AntiCheatSpawn(playerid)
 {
-    new sad = GetTickCount(), serijski[48];
-    if (!gUlogiran[playerid] || IsPlayerNPC(playerid) || (gAcProvjeraZadnja[playerid] && sad - gAcProvjeraZadnja[playerid] < AC_PROVJERA_RAZMAK)) return;
-    gpci(playerid, serijski, sizeof serijski);
-    if (!strcmp(serijski, AC_MOBITEL_GPCI)) return;
-    gAcProvjeraZadnja[playerid] = sad;
+    new sad = GetTickCount();
+    if (!gUlogiran[playerid] || IsPlayerNPC(playerid) || (gAcProvjeraZadnja[playerid] && sad - gAcProvjeraZadnja[playerid] < AC_PROVJERA_RAZMAK) || AcMobitel(playerid)) return;
+    AcPokreniProvjeru(playerid);
+}
+
+AntiCheatProvjeriZa(playerid, admin)
+{
+    if (AcMobitel(playerid))
+    {
+        SpecModoviRezultat(admin, playerid, T(admin, "~y~mobitel, provjera nije moguca"));
+        return;
+    }
+    gAcProvjeraAdmin[playerid] = admin;
+    gAcProvjeraAdminAcc[playerid] = gAccountId[admin];
+    AcPokreniProvjeru(playerid);
+}
+
+AcSazetak(viewer, za, dest[], len)
+{
+    new broj = 0, c = -1, ts = 0, DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM ac_log WHERE account = %d AND ts > %d", gAccountId[za], gettime() - 86400);
+    if (DB_GetRowCount(res)) broj = DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    res = DB_ExecuteQuery(gDB, "SELECT code, ts FROM ac_log WHERE account = %d ORDER BY id DESC LIMIT 1", gAccountId[za]);
+    if (DB_GetRowCount(res))
+    {
+        c = DB_GetFieldInt(res, 0);
+        ts = DB_GetFieldInt(res, 1);
+    }
+    DB_FreeResultSet(res);
+    if (c >= 0 && c < AC_KODOVA && gAcIme[c][0]) format(dest, len, T(viewer, "%d u 24h, zadnje: %s prije %d min"), broj, gAcIme[c], (gettime() - ts) / 60);
+    else format(dest, len, T(viewer, "%d u 24h"), broj);
+}
+
+static AcPokreniProvjeru(playerid)
+{
+    gAcProvjeraZadnja[playerid] = GetTickCount();
     for (new i = 0; i < sizeof gAcMem; i++)
     {
         new pomak = 4 * (1 + random(16));
@@ -132,7 +175,9 @@ forward AcKlijentOcjena(playerid, token);
 public AcKlijentOcjena(playerid, token)
 {
     if (token != gAcProvjeraToken[playerid] || !IsPlayerConnected(playerid) || gAcIzbacen[playerid]) return;
-    new odgovoreno = 0, dobro = 0, kodovi[AC_KODOVA];
+    new odgovoreno = 0, dobro = 0, kodovi[AC_KODOVA], admin = gAcProvjeraAdmin[playerid], rezultat[96];
+    gAcProvjeraAdmin[playerid] = INVALID_PLAYER_ID;
+    if (admin != INVALID_PLAYER_ID && (!IsPlayerConnected(admin) || gAccountId[admin] != gAcProvjeraAdminAcc[playerid])) admin = INVALID_PLAYER_ID;
     for (new i = 0; i < sizeof gAcMem; i++)
     {
         if (gAcMemOdgovor[playerid][i] == -1) continue;
@@ -142,10 +187,26 @@ public AcKlijentOcjena(playerid, token)
     }
     if (odgovoreno * 2 < sizeof gAcMem || dobro * 2 < odgovoreno)
     {
+        if (admin != INVALID_PLAYER_ID)
+        {
+            format(rezultat, sizeof rezultat, T(admin, "~y~klijent ne odgovara (%d/%d)"), odgovoreno, sizeof gAcMem);
+            SpecModoviRezultat(admin, playerid, rezultat);
+        }
         if (gAcKlijentPrijavljen[playerid]) return;
         gAcKlijentPrijavljen[playerid] = true;
         OnCheatDetected(playerid, "", 0, AC_MODOVI);
         return;
+    }
+    if (admin != INVALID_PLAYER_ID)
+    {
+        for (new c = AC_S0BEIT; c <= AC_MODOVI; c++)
+        {
+            if (!kodovi[c]) continue;
+            strcat(rezultat, rezultat[0] ? (", ") : ("~r~"));
+            strcat(rezultat, gAcIme[c]);
+        }
+        if (!rezultat[0]) strcat(rezultat, T(admin, "~g~cisto"));
+        SpecModoviRezultat(admin, playerid, rezultat);
     }
     for (new c = AC_S0BEIT; c <= AC_MODOVI && !gAcIzbacen[playerid]; c++) if (kodovi[c]) OnCheatDetected(playerid, "", 0, c);
 }

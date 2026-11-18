@@ -43,6 +43,7 @@ public OnPlayerConnect(playerid)
     OkladaConnect(playerid);
     PikadoConnect(playerid);
     AntiCheatConnect(playerid);
+    SyncConnect(playerid);
     DrogaConnect(playerid);
     KuglanjeConnect(playerid);
     IgraObavijestConnect(playerid);
@@ -67,6 +68,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
+    SpecDisconnect(playerid);
     SlucajDisconnect(playerid);
     gPrenosZamrz[playerid] = 0;
     if (IsPlayerNPC(playerid)) return 1;
@@ -143,6 +145,7 @@ public OnPlayerSpawn(playerid)
     ZlataraSpawn(playerid);
     VrijemeIgrac(playerid);
     RanjenBolnica(playerid);
+    SpecSpawn(playerid);
     return 1;
 }
 
@@ -215,6 +218,7 @@ public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hi
 
 public OnPlayerUpdate(playerid)
 {
+    SpecUpdate(playerid);
     IkoneUpdate(playerid);
     RanjenUpdate(playerid);
     MobitelUpdate(playerid);
@@ -339,7 +343,7 @@ static const gAnimacije[][E_ANIMACIJA] = {
     { "Povracanje", "FOOD", "EAT_Vomit_P", false, false }
 };
 
-static const gAnimLib[][] = { "ROB_BANK", "BEACH", "SMOKING", "GANGS", "BAR", "DANCING", "ON_LOOKERS", "CAMERA", "BOMBER", "COP_AMBIENT", "FOOD", "SHOP" };
+static const gAnimLib[][] = { "ROB_BANK", "BEACH", "SMOKING", "GANGS", "BAR", "DANCING", "ON_LOOKERS", "CAMERA", "BOMBER", "COP_AMBIENT", "FOOD", "SHOP", "BSKTBALL", "BD_FIRE", "GRENADE", "KNIFE", "POOL" };
 static bool:gAnimAktivna[MAX_PLAYERS];
 
 AnimPreload(playerid)

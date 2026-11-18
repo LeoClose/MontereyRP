@@ -641,7 +641,16 @@ bool:KosPodigni(playerid)
         KosUhvati(playerid, k, true);
         return true;
     }
-    return KosUkradi(playerid) != 0;
+    if (KosUkradi(playerid)) return true;
+    if (gKosTeren[playerid] != -1) return false;
+    for (new k = 0; k < KOS_MAX; k++)
+    {
+        new t = gKos[k][koTeren];
+        if (!gKos[k][koIma] || t != k || gKos[t][koSvijet] != GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, gKos[t][koR], gKos[t][koSx], gKos[t][koSy], gKos[t][koSz] + 1.0)) continue;
+        KosPridruzi(playerid, t);
+        return true;
+    }
+    return false;
 }
 
 forward KosHod();

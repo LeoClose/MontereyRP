@@ -550,6 +550,13 @@ MobitelZatvori(playerid)
     MobitelZatvori(drugi);
 }
 
+static bool:MobitelZauzetIgrom(playerid)
+{
+    return ArkadaIgra(playerid) || KosOkladaTeren(playerid) != -1 || PikadoOkladaStol(playerid) != -1 || KuglanjeOkladaStaza(playerid) != -1 || BilijarOkladaStol(playerid) != -1
+        || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || MdtOtvoren(playerid) || TuningAktivan(playerid) || DrogaKuha(playerid)
+        || GetPlayerState(playerid) == PLAYER_STATE_SPECTATING;
+}
+
 static bool:MobitelDostupan(playerid)
 {
     return gUlogiran[playerid] && gInv[playerid][ITEM_MOBITEL] > 0 && !IsRanjen(playerid) && !ImaLisice(playerid) && gMobitelDrugi[playerid] == INVALID_PLAYER_ID && !gMobitelPoziv[playerid] && !ArkadaIgra(playerid);
@@ -589,6 +596,15 @@ static MobitelNazovi(playerid, const broj[])
         gMobitelEkran[playerid] = MOBITEL_ZAUZET;
         MobitelPrikazi(playerid);
         return 1;
+    }
+    if (drugi != INVALID_PLAYER_ID && MobitelDostupan(drugi) && MobitelZauzetIgrom(drugi))
+    {
+        new moj[MOBITEL_BROJ], tko[MOBITEL_IME];
+        MobitelMojBroj(playerid, moj);
+        MobitelImeBroja(drugi, moj, tko);
+        PlayerPlaySound(drugi, MOBITEL_SMS_ZVUK, 0.0, 0.0, 0.0);
+        SendClientMessage(drugi, COLOR_SMS, T(drugi, "Propusteni poziv od %s."), tko);
+        drugi = INVALID_PLAYER_ID;
     }
     if (drugi == INVALID_PLAYER_ID || !MobitelDostupan(drugi))
     {
@@ -694,7 +710,7 @@ static MobitelSms(playerid, const posiljatelj[], const tekst[])
 {
     if (!gUlogiran[playerid] || !gInv[playerid][ITEM_MOBITEL]) return;
     PlayerPlaySound(playerid, MOBITEL_SMS_ZVUK, 0.0, 0.0, 0.0);
-    if (!MobitelDostupan(playerid) || (gMobitelOtvoren[playerid] && MobitelUnosEkran(gMobitelEkran[playerid])))
+    if (!MobitelDostupan(playerid) || MobitelZauzetIgrom(playerid) || (gMobitelOtvoren[playerid] && MobitelUnosEkran(gMobitelEkran[playerid])))
     {
         SendClientMessage(playerid, COLOR_SMS, T(playerid, "Imate novu poruku od %s."), posiljatelj);
         return;

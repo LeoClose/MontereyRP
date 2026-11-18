@@ -1156,6 +1156,11 @@ static KzZavrsi(playerid)
     }
 }
 
+bool:KazinoAktivan(playerid)
+{
+    return gKzOtvoren[playerid];
+}
+
 KazinoZatvori(playerid)
 {
     if (!gKzOtvoren[playerid]) return;

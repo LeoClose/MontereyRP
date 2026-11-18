@@ -6,6 +6,8 @@ enum { OK_BILIJAR, OK_KOSARKA, OK_PIKADO, OK_KUGLANJE, OK_VRSTA }
 
 static const gOkladaIme[OK_VRSTA][] = { "Bilijar", "Kosarka", "Pikado", "Kuglanje" };
 static gOkladaUlog[OK_VRSTA][OKLADA_STOLOVA], gOkladaBanka[OK_VRSTA][OKLADA_STOLOVA];
+forward bool:KosPodigni(playerid);
+
 static gOkV[MAX_PLAYERS] = { -1, ... }, gOkS[MAX_PLAYERS], gOkIznos[MAX_PLAYERS], gOkPotvrda[MAX_PLAYERS], gOkPotvrdaOd[MAX_PLAYERS];
 
 OkladaConnect(playerid)
@@ -37,9 +39,11 @@ bool:OkladaUdi(playerid, v, s, bool:potvrdi = true)
     new u = gOkladaUlog[v][s], sad = GetTickCount(), kljuc = v * OKLADA_STOLOVA + s + 1;
     if (u && potvrdi && (gOkPotvrda[playerid] != kljuc || sad - gOkPotvrdaOd[playerid] > OKLADA_POTVRDA_MS))
     {
+        new tekst[192];
         gOkPotvrda[playerid] = kljuc;
-        gOkPotvrdaOd[playerid] = sad;
-        SendClientMessage(playerid, 0x2DD9A9FF, T(playerid, "[%s] Ulog za ovu igru je $%d. Ponovite radnju za pristanak."), T(playerid, gOkladaIme[v]), u);
+        gOkPotvrdaOd[playerid] = 0;
+        format(tekst, sizeof tekst, T(playerid, "Ova igra se igra na okladu.\n\nUlog: {2DD9A9}$%d{FFFFFF}\nPobjednik uzima cijelu banku.\n\nZelite li se pridruziti?"), u);
+        PrikaziDialog(playerid, DLG_OKLADA, DIALOG_STYLE_MSGBOX, T(playerid, gOkladaIme[v]), tekst, T(playerid, "Pridruzi se"), T(playerid, "Odustani"));
         return false;
     }
     gOkPotvrda[playerid] = 0;
@@ -55,6 +59,25 @@ bool:OkladaUdi(playerid, v, s, bool:potvrdi = true)
     gOkladaBanka[v][s] += u;
     if (u) SendClientMessage(playerid, 0x2DD9A9FF, T(playerid, "[%s] Ulozili ste $%d. U banci je $%d."), T(playerid, gOkladaIme[v]), u, gOkladaBanka[v][s]);
     return true;
+}
+
+DLG:oklada(playerid, response)
+{
+    new kljuc = gOkPotvrda[playerid];
+    if (!response || !kljuc)
+    {
+        gOkPotvrda[playerid] = 0;
+        return 1;
+    }
+    gOkPotvrdaOd[playerid] = GetTickCount();
+    switch ((kljuc - 1) / OKLADA_STOLOVA)
+    {
+        case OK_BILIJAR: BilijarKey(playerid);
+        case OK_KOSARKA: KosPodigni(playerid);
+        case OK_PIKADO: PikadoKey(playerid);
+        case OK_KUGLANJE: KuglanjeKey(playerid);
+    }
+    return 1;
 }
 
 OkladaIzadi(playerid, bool:vrati)

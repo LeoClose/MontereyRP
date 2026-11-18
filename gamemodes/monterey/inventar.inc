@@ -571,6 +571,15 @@ OruzjeLegit(playerid, WEAPON:w)
     return item != -1 && gItems[item][ITEM_WEAPON] == _:w && (gItems[item][ITEM_AMMO] == -1 || gEquipAmmo[playerid][slot] >= 0);
 }
 
+OruzjeServerMunicija(playerid, WEAPON:w)
+{
+    new slot = _:GetWeaponSlot(w);
+    if (slot < 0 || slot >= ORUZJE_SLOTOVI) return -1;
+    new item = gEquipPredmet[playerid][slot];
+    if (item == -1 || gItems[item][ITEM_WEAPON] != _:w || gItems[item][ITEM_AMMO] == -1) return -1;
+    return gEquipAmmo[playerid][slot];
+}
+
 bool:OruzjePucanj(playerid, WEAPON:w)
 {
     if (!OruzjeLegit(playerid, w)) return false;

@@ -121,8 +121,12 @@ bool:SetHP(playerid, Float:z)
     gStetaPrikaz[playerid] = IsRanjen(playerid) ? 0 : StetaPrikazZa(z);
     gStetaPostavljeno[playerid] = GetTickCount();
     StetaTraka(playerid);
-    SetPVarInt(playerid, "steta_hp", gStetaPrikaz[playerid]);
     return !!SetPlayerHealth(playerid, STETA_BAZA + float(gStetaPrikaz[playerid]));
+}
+
+StetaPrikaz(playerid)
+{
+    return gStetaPrikaz[playerid];
 }
 
 bool:SetArmor(playerid, Float:o)
@@ -372,7 +376,9 @@ StetaTick()
         StetaTrakaVidljiva(i, ziv);
         if (!ziv || sad - gStetaPostavljeno[i] < STETA_SYNC_MS) continue;
         GetPlayerArmour(i, o);
-        if (o > gOklop[i] + 1.0) SetPlayerArmour(i, gOklop[i]);
+        if (o <= gOklop[i] + 1.0) continue;
+        SetPlayerArmour(i, gOklop[i]);
+        OnCheatDetected(i, "", 0, 13);
     }
 }
 

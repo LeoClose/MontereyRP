@@ -12,7 +12,9 @@
 #include <streamer>
 #include <kolizija>
 
+#include <Pawn.RakNet>
 forward OnCheatDetected(playerid, const ip_address[], type, code);
+forward bool:AcUkljuceno(code);
 #define AC_USE_CONFIG_FILES false
 #define NO_SUSPICION_LOGS
 #define AC_MAX_CONNECTS_FROM_IP 3
@@ -258,6 +260,7 @@ public OnGameModeInit()
     InitPikado();
     InitKuglanje();
     InitAntiCheat();
+    InitSync();
     InitPoker();
     InitZlatara();
     InitVrijeme();
@@ -343,6 +346,7 @@ public Sekunda()
     SatTick();
     AvionAtcTick();
     DrogaTick();
+    SpecTick();
 }
 
 public OnGameModeExit()
@@ -412,6 +416,8 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kuce.inc"
 #include "monterey/sef.inc"
 #include "monterey/droga.inc"
+#include "monterey/spec.inc"
+#include "monterey/sync.inc"
 #include "monterey/namjestaj.inc"
 #include "monterey/salon.inc"
 #include "monterey/pijaca.inc"

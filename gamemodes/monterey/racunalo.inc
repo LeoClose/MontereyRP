@@ -604,12 +604,43 @@ static LsOtvori(playerid, pogled, cilj = 0)
     return 1;
 }
 
+static PcJavi(playerid, bool:greska, const tekst[])
+{
+    if (!gPcOtvoren[playerid]) return SendClientMessage(playerid, greska ? COLOR_ERROR : COLOR_INFO, tekst);
+    new s[200];
+    format(s, sizeof s, "%s%s", greska ? ("~r~") : ("~g~"), tekst);
+    PcObavijest(playerid, s);
+    return 1;
+}
+
+static PcPricekaj(playerid, sekundi)
+{
+    new s[64];
+    format(s, sizeof s, T(playerid, "Pricekajte jos %d s."), sekundi);
+    return PcJavi(playerid, true, s);
+}
+
+static LsOsvjezi(pogled, cilj, osim = INVALID_PLAYER_ID)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++)
+        if (i != osim && gPcOtvoren[i] && gPcEkran[i] == PCE_LIFESTALKER && gLsPogled[i] == pogled && (cilj == -1 || gLsCilj[i] == cilj)) PcLifeStalker(i);
+}
+
+static LsJaviDrugom(t, playerid, const poruka[])
+{
+    if (t == INVALID_PLAYER_ID || !gPcOtvoren[t]) return;
+    new s[160];
+    format(s, sizeof s, T(t, poruka), GetRPIme(playerid));
+    PcObavijest(t, s);
+    if (gPcEkran[t] == PCE_LIFESTALKER && (gLsPogled[t] == LS_PRIJATELJI || (gLsPogled[t] == LS_PROFIL && gLsCilj[t] == gAccountId[playerid]))) PcLifeStalker(t);
+}
+
 static bool:LsPauza(playerid)
 {
     new sad = gettime();
     if (sad - gLsZadnje[playerid] < LS_PAUZA)
     {
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte jos %d s."), LS_PAUZA - (sad - gLsZadnje[playerid]));
+        PcPricekaj(playerid, LS_PAUZA - (sad - gLsZadnje[playerid]));
         return true;
     }
     gLsZadnje[playerid] = sad;
@@ -619,31 +650,33 @@ static bool:LsPauza(playerid)
 static LsZahtjev(playerid, acc)
 {
     new me = gAccountId[playerid];
-    if (!acc || acc == me) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Korisnik nije pronadjen."));
+    if (!acc || acc == me) return PcJavi(playerid, true, T(playerid, "Korisnik nije pronadjen."));
     switch (LsOdnos(me, acc))
     {
-        case LS_PRIJATELJ: return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec ste prijatelji."));
-        case LS_POSLAO: return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Zahtjev je vec poslan."));
+        case LS_PRIJATELJ: return PcJavi(playerid, true, T(playerid, "Vec ste prijatelji."));
+        case LS_POSLAO: return PcJavi(playerid, true, T(playerid, "Zahtjev je vec poslan."));
         case LS_PRIMIO: return LsPrihvati(playerid, acc);
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_friends (a, b, created) VALUES (%d, %d, %d)", me, acc, gettime()));
     new t = IgracRacuna(acc);
-    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s vam je poslao zahtjev za prijateljstvo."), GetRPIme(playerid));
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zahtjev za prijateljstvo poslan."));
+    LsJaviDrugom(t, playerid, "~p~LifeStalker~n~~w~%s vam je poslao zahtjev za prijateljstvo.");
+    return PcJavi(playerid, false, T(playerid, "Zahtjev za prijateljstvo poslan."));
 }
 
 static LsPrihvati(playerid, acc)
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE social_friends SET accepted = 1 WHERE a = %d AND b = %d", acc, gAccountId[playerid]));
     new t = IgracRacuna(acc);
-    if (t != INVALID_PLAYER_ID) SendClientMessage(t, 0xE91E63FF, T(t, "[LifeStalker] %s je prihvatio vas zahtjev za prijateljstvo."), GetRPIme(playerid));
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sada ste prijatelji."));
+    LsJaviDrugom(t, playerid, "~p~LifeStalker~n~~w~%s je prihvatio vas zahtjev za prijateljstvo.");
+    return PcJavi(playerid, false, T(playerid, "Sada ste prijatelji."));
 }
 
 static LsUkloni(playerid, acc)
 {
     new me = gAccountId[playerid];
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_friends WHERE (a = %d AND b = %d) OR (a = %d AND b = %d)", me, acc, acc, me));
+    new t = IgracRacuna(acc);
+    if (t != INVALID_PLAYER_ID && gPcOtvoren[t] && gPcEkran[t] == PCE_LIFESTALKER && (gLsPogled[t] == LS_PRIJATELJI || (gLsPogled[t] == LS_PROFIL && gLsCilj[t] == me))) PcLifeStalker(t);
 }
 
 static LsKlik(playerid, PlayerText:td)
@@ -693,6 +726,7 @@ static LsKlik(playerid, PlayerText:td)
                 if (ima) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_likes WHERE post = %d AND account = %d", cilj, gAccountId[playerid]));
                 else DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_likes (post, account) VALUES (%d, %d)", cilj, gAccountId[playerid]));
                 PcLifeStalker(playerid);
+                LsOsvjezi(LS_OBJAVA, cilj, playerid);
             }
             case LS_PRIJATELJI:
             {
@@ -752,7 +786,7 @@ static LsUnos(playerid, akcija, const inputtext[])
         case PC_PORUKA_KOME:
         {
             new acc = LsRacun(inputtext);
-            if (!acc || acc == me) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Korisnik nije pronadjen."));
+            if (!acc || acc == me) return PcJavi(playerid, true, T(playerid, "Korisnik nije pronadjen."));
             gLsPogled[playerid] = LS_RAZGOVOR;
             gLsCilj[playerid] = acc;
             return 1;
@@ -767,6 +801,8 @@ static LsUnos(playerid, akcija, const inputtext[])
         DB_FreeResultSet(res);
         if (!autor) return 1;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_comments (post, account, text, created) VALUES (%d, %d, '%q', %d)", post, me, tekst, sad));
+        LsOsvjezi(LS_OBJAVA, post, playerid);
+        LsOsvjezi(LS_FEED, -1, playerid);
         new t = IgracRacuna(autor);
         if (autor != me && t != INVALID_PLAYER_ID)
         {
@@ -1014,6 +1050,11 @@ static PcObavijest(playerid, const tekst[])
     gPcObavijestDo[playerid] = GetTickCount() + PC_OBAVIJEST_MS;
 }
 
+bool:PcOtvoren(playerid)
+{
+    return gPcOtvoren[playerid];
+}
+
 PcZatvori(playerid)
 {
     if (!gPcOtvoren[playerid]) return;
@@ -1151,26 +1192,32 @@ PcKlik(playerid, PlayerText:td)
 
 static PcDionicaTrgovina(playerid, bool:kupnja, n)
 {
-    new d = gPcDionica[playerid], ima = PcKomada(playerid, d), cijena = gDionica[d];
+    new d = gPcDionica[playerid], ima = PcKomada(playerid, d), cijena = gDionica[d], poruka[128];
     if (n <= 0) return 1;
     if (kupnja)
     {
         new iznos = DionicaKupnja(n, cijena);
-        if (ima + n > DIONICA_MAX_KOM) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najvise %d dionica po tvrtki."), DIONICA_MAX_KOM);
+        if (ima + n > DIONICA_MAX_KOM)
+        {
+            format(poruka, sizeof poruka, T(playerid, "Najvise %d dionica po tvrtki."), DIONICA_MAX_KOM);
+            return PcJavi(playerid, true, poruka);
+        }
         if (!BankaPromijeni(playerid, -iznos)) return 1;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO stock_holdings (account, stock, shares, cost) VALUES (%d, %d, %d, %d)", gAccountId[playerid], d, ima + n, gPcTrosak[playerid][d] + iznos));
         gPcKomadaPamti[playerid][d] = ima + n;
         gPcTrosak[playerid][d] += iznos;
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
+        format(poruka, sizeof poruka, T(playerid, "Kupili ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
+        return PcJavi(playerid, false, poruka);
     }
-    if (n > ima) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko dionica."));
+    if (n > ima) return PcJavi(playerid, true, T(playerid, "Nemate toliko dionica."));
     new iznos = DionicaProdaja(n, cijena);
     if (!BankaPromijeni(playerid, iznos)) return 1;
     if (ima == n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM stock_holdings WHERE account = %d AND stock = %d", gAccountId[playerid], d));
     gPcTrosak[playerid][d] = ima == n ? 0 : gPcTrosak[playerid][d] - gPcTrosak[playerid][d] * n / ima;
     if (ima != n) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET shares = %d, cost = %d WHERE account = %d AND stock = %d", ima - n, gPcTrosak[playerid][d], gAccountId[playerid], d));
     gPcKomadaPamti[playerid][d] = ima - n;
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
+    format(poruka, sizeof poruka, T(playerid, "Prodali ste %d dionica (%s) za $%d."), n, gDionicaIme[d], iznos);
+    return PcJavi(playerid, false, poruka);
 }
 
 static KladKoef(o, out[], size)
@@ -1525,7 +1572,9 @@ static KladDodaj(playerid, const id[], const ime[], tip, koef, linija)
     {
         if (gKladN[playerid] >= KLAD_PAROVA)
         {
-            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Na listicu moze biti najvise %d parova."), KLAD_PAROVA);
+            new poruka[96];
+            format(poruka, sizeof poruka, T(playerid, "Na listicu moze biti najvise %d parova."), KLAD_PAROVA);
+            PcJavi(playerid, true, poruka);
             return;
         }
         k = gKladN[playerid]++;
@@ -1550,14 +1599,14 @@ static KladMakni(playerid, k)
 
 static KladUplati(playerid)
 {
-    if (!gKladN[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Listic je prazan. Odaberite utakmice."));
+    if (!gKladN[playerid]) return PcJavi(playerid, true, T(playerid, "Listic je prazan. Odaberite utakmice."));
     new ulog = gKladUlozi[gKladUlog[playerid]], koef = 100;
     for (new i = 0; i < gKladN[playerid]; i++)
     {
         new DBResult:res = DB_ExecuteQuery(gDB, "SELECT CASE %d WHEN 1 THEN odd1 WHEN 2 THEN oddx WHEN 3 THEN odd2 WHEN 4 THEN odd_over WHEN 5 THEN odd_under WHEN 6 THEN odd_sph ELSE odd_spa END, CASE %d WHEN 4 THEN tline WHEN 5 THEN tline WHEN 6 THEN sline WHEN 7 THEN -sline ELSE 0 END FROM bet_events WHERE id = '%q' AND status = 0 AND start > %d", gKladTip[playerid][i], gKladTip[playerid][i], gKladPar[playerid][i], gettime() + KLAD_ZATVARA_S);
         new o = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0, linija = DB_GetRowCount(res) ? DB_GetFieldInt(res, 1) : 0;
         DB_FreeResultSet(res);
-        if (o <= 100) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Jedna od utakmica je vec pocela. Uklonite je s listica."));
+        if (o <= 100) return PcJavi(playerid, true, T(playerid, "Jedna od utakmica je vec pocela. Uklonite je s listica."));
         gKladKoefPar[playerid][i] = o;
         gKladLin[playerid][i] = linija;
         koef = KladPomnozi(koef, o);
@@ -1572,7 +1621,9 @@ static KladUplati(playerid)
     for (new i = 0; i < gKladN[playerid]; i++)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_legs (slip, event, pick, odd, line) VALUES (%d, '%q', %d, %d, %d)", listic, gKladPar[playerid][i], gKladTip[playerid][i], gKladKoefPar[playerid][i], gKladLin[playerid][i]));
     gKladN[playerid] = 0;
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Listic #%d uplacen: ulog $%d, moguci dobitak $%d."), listic, ulog, dobitak);
+    new poruka[128];
+    format(poruka, sizeof poruka, T(playerid, "Listic #%d uplacen: ulog $%d, moguci dobitak $%d."), listic, ulog, dobitak);
+    return PcJavi(playerid, false, poruka);
 }
 
 static KladKlik(playerid, PlayerText:td)
@@ -1732,7 +1783,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
         case PC_BANKA_OTPLATI:
         {
             new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 9 ? strval(inputtext) : 0;
-            if (BankaOtplati(playerid, n)) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Transakcija uspjesna."));
+            if (BankaOtplati(playerid, n)) PcJavi(playerid, false, T(playerid, "Transakcija uspjesna."));
         }
         case PC_KOLICINA:
         {
@@ -1745,7 +1796,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
             new tekst[OBJAVA_LEN + 1], sad = gettime();
             if (sad - gObjavaZadnja[playerid] < OBJAVA_PAUZA)
             {
-                SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte jos %d s."), OBJAVA_PAUZA - (sad - gObjavaZadnja[playerid]));
+                PcPricekaj(playerid, OBJAVA_PAUZA - (sad - gObjavaZadnja[playerid]));
                 return PcNatrag(playerid);
             }
             strcat(tekst, inputtext);
@@ -1753,13 +1804,15 @@ DLG:pc_unos(playerid, response, const inputtext[])
             if (!tekst[0]) return PcNatrag(playerid);
             gObjavaZadnja[playerid] = sad;
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_posts (account, text, created) VALUES (%d, '%q', %d)", gAccountId[playerid], tekst, sad));
+            LsOsvjezi(LS_FEED, -1, playerid);
+            LsOsvjezi(LS_PROFIL, gAccountId[playerid], playerid);
         }
         case PC_OGLAS:
         {
             new tekst[OGLAS_LEN + 1], broj[16] = "-", sad = gettime();
             if (sad - gOglasZadnji[playerid] < OGLAS_PAUZA)
             {
-                SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte jos %d s."), OGLAS_PAUZA - (sad - gOglasZadnji[playerid]));
+                PcPricekaj(playerid, OGLAS_PAUZA - (sad - gOglasZadnji[playerid]));
                 return PcNatrag(playerid);
             }
             strcat(tekst, inputtext);

@@ -21,18 +21,23 @@
 #define BILIJAR_DOMET       2.5
 #define BILIJAR_NAPUSTI     12.0
 #define BILIJAR_BIJELA_X    0.5
+#define BILIJAR_RUB          0.45
+#define BILIJAR_SKRIJ_Z      3.0
 
 enum { BF_CEKA, BF_IGRA, BF_ANIM }
 enum { BG_OTVORENO, BG_PUNE, BG_POLA }
 enum E_BILIJAR { bool:bsIma, bsDb, Float:bsX, Float:bsY, Float:bsZ, Float:bsA, bsInt, bsSvijet, STREAMER_TAG_OBJECT:bsStol, STREAMER_TAG_3D_TEXT_LABEL:bsTekst,
     bsFaza, bsIgrac[2], bsNaPotezu, bsGrupa[2], bool:bsUbacena[BILIJAR_KUGLI], Float:bsKx[BILIJAR_KUGLI], Float:bsKy[BILIJAR_KUGLI], STREAMER_TAG_OBJECT:bsKugla[BILIJAR_KUGLI],
-    STREAMER_TAG_OBJECT:bsStap, bsNisani, Float:bsKut, Float:bsSnaga, bool:bsSnagaGore, bsOkvir, bsOkvira, bsPrva, bsToken }
+    STREAMER_TAG_OBJECT:bsStap, bsNisani, Float:bsKut, Float:bsSnaga, bool:bsSnagaGore, bsOkvir, bsOkvira, bsPrva, bsToken,
+    STREAMER_TAG_ACTOR:bsKlon, bsKlonPoza, Float:bsSx, Float:bsSy }
 
 static const gBilijarModel[BILIJAR_KUGLI] = { 3003, 3002, 3100, 3101, 3102, 3103, 3104, 3105, 3106, 2995, 2996, 2997, 2998, 2999, 3000, 3001 };
 static const Float:gBilijarSlaganje[BILIJAR_KUGLI][2] = {
     { 0.5, 0.0 }, { -0.3, 0.0 }, { -0.525, -0.04 }, { -0.375, 0.044 }, { -0.6, 0.079 }, { -0.525, 0.118 }, { -0.6, -0.157 }, { -0.45, -0.079 },
     { -0.45, 0.0 }, { -0.375, -0.044 }, { -0.45, 0.079 }, { -0.525, -0.118 }, { -0.6, -0.079 }, { -0.6, 0.0 }, { -0.6, 0.157 }, { -0.525, 0.04 }
 };
+static const gBilijarPoza[][] = { "POOL_Short_Start", "POOL_Med_Start", "POOL_Long_Start", "POOL_XLong_Start" };
+static const gBilijarUdarac[][] = { "POOL_Short_Shot", "POOL_Med_Shot", "POOL_Long_Shot", "POOL_XLong_Shot" };
 static const Float:gBilijarRupe[][2] = { { 0.955, 0.51 }, { 0.955, -0.49 }, { 0.005, 0.55 }, { 0.007, -0.535 }, { -0.945, 0.513 }, { -0.945, -0.49 } };
 
 static gBilijar[BILIJAR_MAX][E_BILIJAR], Float:gBilijarPut[BILIJAR_MAX][BILIJAR_OKVIRA][BILIJAR_KUGLI][2], gBilijarIgrac[MAX_PLAYERS] = { -1, ... }, gApBilijar[MAX_PLAYERS][BILIJAR_MAX];
@@ -122,19 +127,63 @@ static BilijarPoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, drugi = INVALI
     }
 }
 
+static BilijarStajaliste(s, &Float:wx, &Float:wy)
+{
+    new Float:h = gBilijar[s][bsKut], Float:c = floatcos(gBilijar[s][bsA], degrees), Float:sn = floatsin(gBilijar[s][bsA], degrees);
+    new Float:dx = -floatsin(h, degrees), Float:dy = floatcos(h, degrees), Float:lx = gBilijar[s][bsKx][0], Float:ly = gBilijar[s][bsKy][0];
+    new Float:ldx = dx * c + dy * sn, Float:ldy = -dx * sn + dy * c, Float:t = 10.0, Float:k;
+    if (ldx > 0.001) { k = (lx - BILIJAR_X1) / ldx; if (k < t) t = k; }
+    else if (ldx < -0.001) { k = (lx - BILIJAR_X2) / ldx; if (k < t) t = k; }
+    if (ldy > 0.001) { k = (ly - BILIJAR_Y1) / ldy; if (k < t) t = k; }
+    else if (ldy < -0.001) { k = (ly - BILIJAR_Y2) / ldy; if (k < t) t = k; }
+    if (t < 0.0) t = 0.0;
+    t += BILIJAR_RUB;
+    BilijarSvijet(s, lx - t * ldx, ly - t * ldy, wx, wy);
+    return t < 0.75 ? 0 : t < 1.1 ? 1 : t < 1.5 ? 2 : 3;
+}
+
+static BilijarKlon(s)
+{
+    new p = gBilijar[s][bsNisani], Float:wx, Float:wy, Float:z = gBilijar[s][bsZ] + 1.0, poza = BilijarStajaliste(s, wx, wy);
+    gBilijar[s][bsSx] = wx;
+    gBilijar[s][bsSy] = wy;
+    if (!gBilijar[s][bsKlon])
+    {
+        gBilijar[s][bsKlon] = CreateDynamicActor(GetPlayerSkin(p), wx, wy, z, gBilijar[s][bsKut], true, 100.0, gBilijar[s][bsSvijet], gBilijar[s][bsInt], -1, 50.0);
+        Streamer_ToggleItem(p, STREAMER_TYPE_ACTOR, gBilijar[s][bsKlon], 0);
+        gBilijar[s][bsKlonPoza] = -1;
+    }
+    else
+    {
+        SetDynamicActorPos(gBilijar[s][bsKlon], wx, wy, z);
+        SetDynamicActorFacingAngle(gBilijar[s][bsKlon], gBilijar[s][bsKut]);
+    }
+    if (poza == gBilijar[s][bsKlonPoza]) return;
+    gBilijar[s][bsKlonPoza] = poza;
+    ApplyDynamicActorAnimation(gBilijar[s][bsKlon], "POOL", gBilijarPoza[poza], 4.1, 0, 0, 0, 1, 0);
+}
+
 static BilijarNisanKraj(s)
 {
-    new p = gBilijar[s][bsNisani];
+    new p = gBilijar[s][bsNisani], poza = gBilijar[s][bsKlonPoza];
     gBilijar[s][bsNisani] = INVALID_PLAYER_ID;
     if (gBilijar[s][bsStap])
     {
         DestroyDynamicObject(gBilijar[s][bsStap]);
         gBilijar[s][bsStap] = STREAMER_TAG_OBJECT:0;
     }
-    if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p)) return;
+    if (gBilijar[s][bsKlon])
+    {
+        DestroyDynamicActor(gBilijar[s][bsKlon]);
+        gBilijar[s][bsKlon] = STREAMER_TAG_ACTOR:0;
+    }
+    if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p)) return -1;
+    SetPlayerPos(p, gBilijar[s][bsSx], gBilijar[s][bsSy], gBilijar[s][bsZ] + 1.0);
+    SetPlayerFacingAngle(p, gBilijar[s][bsKut]);
     PlayerTextDrawDestroy(p, gBilijarTd[p]);
     TogglePlayerControllable(p, true);
     SetCameraBehindPlayer(p);
+    return poza < 0 ? 2 : poza;
 }
 
 static BilijarKraj(s)
@@ -246,6 +295,7 @@ static BilijarNisanPostavi(s)
     if (gBilijar[s][bsStap]) SetDynamicObjectPos(gBilijar[s][bsStap], bx - dx * 0.085, by - dy * 0.085, z);
     else gBilijar[s][bsStap] = CreateDynamicObject(BILIJAR_STAP, bx - dx * 0.085, by - dy * 0.085, z, 7.0, 0.0, h + 180.0, gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
     SetDynamicObjectRot(gBilijar[s][bsStap], 7.0, 0.0, h + 180.0);
+    BilijarKlon(s);
     SetPlayerCameraPos(p, bx - dx * 0.55, by - dy * 0.55, z + 0.22);
     SetPlayerCameraLookAt(p, bx + dx * 2.0, by + dy * 2.0, z - 0.05);
     new tekst[64], crte = floatround(gBilijar[s][bsSnaga] / 5.0);
@@ -299,8 +349,7 @@ BilijarTipke(playerid, KEY:newkeys, KEY:oldkeys)
         gBilijar[s][bsSnaga] = 0.0;
         gBilijar[s][bsSnagaGore] = true;
         TogglePlayerControllable(playerid, false);
-        SetPlayerFacingAngle(playerid, gBilijar[s][bsKut]);
-        ApplyAnimation(playerid, "POOL", "POOL_Long_Start", 4.1, false, true, true, true, 0);
+        SetPlayerPos(playerid, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ] - BILIJAR_SKRIJ_Z);
         gBilijarTd[playerid] = CreatePlayerTextDraw(playerid, 320.0, 380.0, "_");
         PlayerTextDrawAlignment(playerid, gBilijarTd[playerid], TEXT_DRAW_ALIGN_CENTER);
         PlayerTextDrawLetterSize(playerid, gBilijarTd[playerid], 0.3, 1.3);
@@ -315,8 +364,7 @@ BilijarTipke(playerid, KEY:newkeys, KEY:oldkeys)
     if (gBilijar[s][bsNisani] == playerid && !(newkeys & KEY_FIRE) && (oldkeys & KEY_FIRE))
     {
         new Float:brzina = 0.4 + gBilijar[s][bsSnaga] / 100.0 * 4.1, Float:h = gBilijar[s][bsKut];
-        BilijarNisanKraj(s);
-        ApplyAnimation(playerid, "POOL", "POOL_Long_Shot", 4.1, false, true, true, false, 0);
+        ApplyAnimation(playerid, "POOL", gBilijarUdarac[BilijarNisanKraj(s)], 4.1, false, true, true, false, 0);
         PlayerPlaySound(playerid, 31810, 0.0, 0.0, 0.0);
         new Float:c = floatcos(gBilijar[s][bsA], degrees), Float:sn = floatsin(gBilijar[s][bsA], degrees), Float:wx = -floatsin(h, degrees) * brzina, Float:wy = floatcos(h, degrees) * brzina;
         BilijarSimuliraj(s, wx * c + wy * sn, -wx * sn + wy * c);
