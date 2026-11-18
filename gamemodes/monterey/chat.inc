@@ -138,6 +138,7 @@ SendLong(playerid, color, const tekst[])
 
 public OnPlayerText(playerid, text[])
 {
+    AfkAktivan(playerid);
     if (!gUlogiran[playerid]) return 0;
     RemoveBoje(text);
     if (MobitelText(playerid, text)) return 0;
@@ -260,7 +261,7 @@ CMD:showme(playerid, params[])
 #define SKOLA_Z             18.8
 #define JEZICI_SERVER       "127.0.0.1:7780/t?f=%s&t=%s"
 
-static const gJezikCode[BROJ_JEZIKA][] = { "hr", "en", "ru", "es", "tr" };
+new const gJezikCode[BROJ_JEZIKA][] = { "hr", "en", "ru", "es", "tr" };
 static const gJezikName[BROJ_JEZIKA][] = { "Hrvatski / Srpski / Bosanski", "English", "Russkiy", "Espanol", "Turkce" };
 
 new gJezik[MAX_PLAYERS];
@@ -283,6 +284,7 @@ JezikConnect(playerid)
     gNauceniJezici[playerid] = 1;
     gOdabranJezik[playerid] = LANG_NONE;
     gUciJezik[playerid] = LANG_NONE;
+    OznakeIgrac(playerid);
 }
 
 bool:UcitajJezik(playerid)
@@ -295,6 +297,7 @@ bool:UcitajJezik(playerid)
         gNauceniJezici[playerid] = DB_GetFieldInt(res, 1) | (1 << lang);
         gOdabranJezik[playerid] = DB_GetFieldInt(res, 2);
         gUciJezik[playerid] = DB_GetFieldInt(res, 3);
+        OznakeIgrac(playerid);
     }
     DB_FreeResultSet(res);
     if (lang < 0 || lang >= BROJ_JEZIKA) return false;
@@ -322,6 +325,7 @@ DLG:jezik(playerid, response, listitem)
 {
     if (!response || listitem < 0 || listitem >= BROJ_JEZIKA) return KickTimer(playerid);
     gJezik[playerid] = listitem;
+    OznakeIgrac(playerid);
     gNauceniJezici[playerid] = 1 << listitem;
     SpremiJezik(playerid);
     return ZavrsiLogin(playerid);
@@ -334,6 +338,7 @@ JezikPromijeni(playerid, jezik)
     if (gOdabranJezik[playerid] == gJezik[playerid] || gOdabranJezik[playerid] == jezik) gOdabranJezik[playerid] = LANG_NONE;
     if (gUciJezik[playerid] == jezik) gUciJezik[playerid] = LANG_NONE;
     gJezik[playerid] = jezik;
+    OznakeIgrac(playerid);
     SpremiJezik(playerid);
     SendClientMessage(playerid, COLOR_ME, T(playerid, "Jezik je promijenjen: %s."), gJezikName[jezik]);
 }

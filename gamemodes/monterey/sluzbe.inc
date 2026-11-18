@@ -1006,7 +1006,7 @@ MehanicarPozovi(playerid)
     new v = GetPlayerVehicleID(playerid), Float:zdravlje, Float:x, Float:y, Float:z, Float:d;
     if (!v) return MehanicarOdvozPoziv(playerid);
     GetVehicleHealth(v, zdravlje);
-    if (VoziloImaGoriva(v) && zdravlje >= MEHANICAR_STETA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vase vozilo ne treba mehanicara."));
+    if (VoziloPunSpremnik(v) && zdravlje >= MEHANICAR_STETA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vase vozilo ne treba mehanicara."));
     for (new s = 0; s < SLUCAJ_MAX; s++)
         if (gSlucaj[s][slStanje] && gSlucaj[s][slStanje] < SL_ODLAZI && gSlucaj[s][slTip] == ORG_MEHANICAR && gSlucaj[s][slPacijent] == playerid)
             return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar je vec na putu."));

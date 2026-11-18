@@ -186,6 +186,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     KurvaPotrubiKey(playerid, newkeys, oldkeys);
     PolicijaKey(playerid, newkeys, oldkeys);
     PrikolicaAlt(playerid, newkeys, oldkeys);
+    TuningNitroKey(playerid, newkeys, oldkeys);
     if (BilijarTipke(playerid, newkeys, oldkeys) || KosTipke(playerid, newkeys, oldkeys) || PikadoTipke(playerid, newkeys, oldkeys) || KuglanjeTipke(playerid, newkeys, oldkeys)) return 1;
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) Interakcija(playerid);
     if ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK) && !IsRanjen(playerid) && !KosKey(playerid) && !BacenoPodigni(playerid)) KosPodigni(playerid);
@@ -219,6 +220,7 @@ public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hi
 
 public OnPlayerUpdate(playerid)
 {
+    AfkUpdate(playerid);
     SpecUpdate(playerid);
     IkoneUpdate(playerid);
     RanjenUpdate(playerid);
@@ -247,6 +249,7 @@ public OnPlayerUpdate(playerid)
 
 public OnPlayerCommandText(playerid, cmdtext[])
 {
+    AfkAktivan(playerid);
     new cmd[32] = "cmd_", pos = 1, len = 4;
     while (cmdtext[pos] && cmdtext[pos] != ' ')
     {

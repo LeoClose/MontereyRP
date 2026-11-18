@@ -1043,11 +1043,6 @@ VoziloZakljucaj(v, bool:zakljucano)
     VoziloSet(v, VP_VRATA, zakljucano ? 1 : 0);
 }
 
-VoziloImaGoriva(v)
-{
-    return gGorivo[v] > 0.0 ? 1 : 0;
-}
-
 Float:VoziloTank(v)
 {
     return VOZILO_TANK * (1.0 + 0.5 * float(TuningRezervoar(v)));
@@ -1900,6 +1895,11 @@ static GorivoPitaj(playerid, nacin, item, maks, const upozorenje[] = "")
 static VoziloProstor(v)
 {
     return floatround(VoziloTank(v) - gGorivo[v], floatround_floor);
+}
+
+VoziloPunSpremnik(v)
+{
+    return VoziloProstor(v) < 1;
 }
 
 static KanisterNapuni(playerid, litara)

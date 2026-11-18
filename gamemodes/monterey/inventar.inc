@@ -312,7 +312,13 @@ DLG:inventar_predmet(playerid, response, listitem)
     if (!response) return PrikaziInventar(playerid);
     switch (listitem)
     {
-        case 0: { KoristiItem(playerid, gInvItem[playerid]); return PredmetOpcije(playerid); }
+        case 0:
+        {
+            new item = gInvItem[playerid];
+            KoristiItem(playerid, item);
+            if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return 1;
+            return PredmetOpcije(playerid);
+        }
         case 1: return PrikaziDialog(playerid, DLG_INVENTAR_DAJ, DIALOG_STYLE_INPUT, T(playerid, "Daj igracu"), T(playerid, "Unesite: [id/ime] [kolicina]\nIgrac mora biti blizu vas."), T(playerid, "Daj"), T(playerid, "Natrag"));
         case 2: return PrikaziDialog(playerid, DLG_INVENTAR_BACI, DIALOG_STYLE_INPUT, T(playerid, "Baci"), T(playerid, "Unesite kolicinu koju bacate:"), T(playerid, "Baci"), T(playerid, "Natrag"));
     }

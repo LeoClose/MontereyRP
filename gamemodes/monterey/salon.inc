@@ -451,6 +451,7 @@ DLG:salon_kupi(playerid, response)
 
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
+    AfkAktivan(playerid);
     if (AtcKlik(playerid, playertextid) || OruzarnicaKlik(playerid, playertextid) || NamjestajKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid) || KazinoKlik(playerid, playertextid) || ArkadaKlik(playerid, playertextid) || PokerKlik(playerid, playertextid) || PcKlik(playerid, playertextid)) return 1;
     new s = gUSalonu[playerid];
     if (s == -1) return 0;
@@ -471,6 +472,7 @@ public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 
 public OnPlayerClickTextDraw(playerid, Text:clickedid)
 {
+    AfkAktivan(playerid);
     if (clickedid == INVALID_TEXT_DRAW)
     {
         OruzarnicaZatvori(playerid);

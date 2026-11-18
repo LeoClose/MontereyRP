@@ -7,6 +7,52 @@ new gStatsStranica[MAX_PLAYERS];
 new bool:gStatsImaSljedecu[MAX_PLAYERS];
 
 #define STATS_KUCA_PO_STRANICI 40
+#define AFK_PAUZA_MS        10000
+#define AFK_MIROVANJE_S     300
+#define AFK_KICK_S          1800
+
+static gAfkUpdate[MAX_PLAYERS], gAfkAktivno[MAX_PLAYERS], gAfkOd[MAX_PLAYERS], gAfkZnak[MAX_PLAYERS];
+
+AfkAktivan(playerid)
+{
+    gAfkAktivno[playerid] = gettime();
+}
+
+AfkUpdate(playerid)
+{
+    gAfkUpdate[playerid] = GetTickCount();
+}
+
+bool:IgracAfk(playerid)
+{
+    if (GetTickCount() - gAfkUpdate[playerid] > AFK_PAUZA_MS) return true;
+    if (ImaLisice(playerid) || IsRanjen(playerid) || ZatvorProvjera(playerid)) return false;
+    return gettime() - gAfkAktivno[playerid] >= AFK_MIROVANJE_S;
+}
+
+static AfkProvjeri(playerid)
+{
+    new KEY:k, KEY:ud, KEY:lr, Float:x, Float:y, Float:z, Float:cx, Float:cy, Float:cz, sad = gettime();
+    GetPlayerKeys(playerid, k, ud, lr);
+    GetPlayerPos(playerid, x, y, z);
+    GetPlayerCameraFrontVector(playerid, cx, cy, cz);
+    new znak = _:k * 31 + _:ud * 7 + _:lr + floatround(x * 4.0) * 131 + floatround(y * 4.0) * 17 + floatround(z * 4.0) + floatround(cx * 50.0) * 1009 + floatround(cy * 50.0) * 53;
+    if (znak != gAfkZnak[playerid])
+    {
+        gAfkZnak[playerid] = znak;
+        gAfkAktivno[playerid] = sad;
+    }
+    if (!IgracAfk(playerid))
+    {
+        gAfkOd[playerid] = 0;
+        return;
+    }
+    if (!gAfkOd[playerid]) gAfkOd[playerid] = sad;
+    if (sad - gAfkOd[playerid] < AFK_KICK_S || gAdmin[playerid]) return;
+    gAfkOd[playerid] = 0;
+    SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Izbaceni ste jer ste bili AFK 30 minuta."));
+    SetTimerEx("KickajIgraca", 500, false, "i", playerid);
+}
 
 InitStats()
 {
@@ -51,6 +97,9 @@ StatsConnect(playerid)
     gStatsPlaytime[playerid] = 0;
     gStatsLastUpdate[playerid] = 0;
     gStatsUnsaved[playerid] = 0;
+    gAfkUpdate[playerid] = GetTickCount();
+    gAfkAktivno[playerid] = gettime();
+    gAfkOd[playerid] = 0;
     gStatsStranica[playerid] = 0;
     gStatsImaSljedecu[playerid] = false;
 }
@@ -99,6 +148,7 @@ StatsUpdate(playerid)
     new now = gettime(), elapsed = now - gStatsLastUpdate[playerid];
     if (elapsed <= 0) return;
     gStatsLastUpdate[playerid] = now;
+    if (IgracAfk(playerid)) return;
     new sati = gStatsPlaytime[playerid] / 3600;
     gStatsPlaytime[playerid] += elapsed;
     gStatsUnsaved[playerid] += elapsed;
@@ -120,6 +170,7 @@ StatsTick()
     for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
     {
         if (!gUlogiran[playerid]) continue;
+        AfkProvjeri(playerid);
         StatsUpdate(playerid);
         if (gStatsUnsaved[playerid] >= 60) StatsSave(playerid);
     }

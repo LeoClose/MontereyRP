@@ -2091,7 +2091,39 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~Vlasnik grupe", "~y~Group owner", "~y~Владелец группы", "~y~Dueno del grupo", "~y~Grup sahibi" },
     { "Nemate kamp prikolicu.", "You have no camper trailer.", "У вас нет жилого прицепа.", "No tienes caravana.", "Karavaniniz yok." },
     { "Pozicija racunala je spremljena.", "Computer position saved.", "Позиция компьютера сохранена.", "Posicion del ordenador guardada.", "Bilgisayar konumu kaydedildi." },
-    { "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje.", "Computer placed. Move it and click the floppy disk to save.", "Компьютер установлен. Переместите его и нажмите на дискету для сохранения.", "Ordenador colocado. Muevelo y pulsa el disquete para guardar.", "Bilgisayar yerlestirildi. Tasiyin ve kaydetmek icin diskete tiklayin." }
+    { "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje.", "Computer placed. Move it and click the floppy disk to save.", "Компьютер установлен. Переместите его и нажмите на дискету для сохранения.", "Ordenador colocado. Muevelo y pulsa el disquete para guardar.", "Bilgisayar yerlestirildi. Tasiyin ve kaydetmek icin diskete tiklayin." },
+    { "{F39C12}Kosarka", "{F39C12}Basketball", "{F39C12}Баскетбол", "{F39C12}Baloncesto", "{F39C12}Basketbol" },
+    { "Oruzarnica", "Gun shop", "Оружейный магазин", "Armeria", "Silah dukkani" },
+    { "Dovezite svoje vozilo i pritisnite Y za prodaju", "Bring your vehicle and press Y to sell it", "Пригоните машину и нажмите Y для продажи", "Trae tu vehiculo y pulsa Y para venderlo", "Aracinizi getirin ve satmak icin Y'ye basin" },
+    { "Depo", "Depot", "Депо", "Deposito", "Depo" },
+    { "Tuning", "Tuning", "Тюнинг", "Tuning", "Tuning" },
+    { "Otvori", "Open", "Открыть", "Abrir", "Ac" },
+    { "(dopuna)", "(refill)", "(заправка)", "(recarga)", "(dolum)" },
+    { "Igrac: %s (%d)\nPrijavljeni: %s (%d)\n\n%s", "Player: %s (%d)\nReported: %s (%d)\n\n%s", "Игрок: %s (%d)\nНа кого жалоба: %s (%d)\n\n%s", "Jugador: %s (%d)\nReportado: %s (%d)\n\n%s", "Oyuncu: %s (%d)\nSikayet edilen: %s (%d)\n\n%s" },
+    { "Igrac: %s (%d)\n\n%s", "Player: %s (%d)\n\n%s", "Игрок: %s (%d)\n\n%s", "Jugador: %s (%d)\n\n%s", "Oyuncu: %s (%d)\n\n%s" },
+    { "Izbaceni ste jer ste bili AFK 30 minuta.", "You were kicked for being AFK for 30 minutes.", "Вы были кикнуты за 30 минут AFK.", "Fuiste expulsado por estar AFK 30 minutos.", "30 dakika AFK kaldiginiz icin atildiniz." },
+    { "Koristenje: /pitaj [pitanje]", "Usage: /pitaj [question]", "Использование: /pitaj [вопрос]", "Uso: /pitaj [pregunta]", "Kullanim: /pitaj [soru]" },
+    { "Koristenje: /report [id/ime] [razlog]", "Usage: /report [id/name] [reason]", "Использование: /report [id/имя] [причина]", "Uso: /report [id/nombre] [motivo]", "Kullanim: /report [id/isim] [sebep]" },
+    { "Nema otvorenih upita.", "No open requests.", "Открытых запросов нет.", "No hay solicitudes abiertas.", "Acik talep yok." },
+    { "Odgovorite s /tiketi.", "Answer with /tiketi.", "Ответьте через /tiketi.", "Responde con /tiketi.", "/tiketi ile cevaplayin." },
+    { "Ovo je bilo zadnje punjenje nitra. Dopunite ga u tuning garazi.", "That was the last nitro charge. Refill it at a tuning garage.", "Это был последний заряд нитро. Заправьте его в тюнинг-гараже.", "Esa fue la ultima carga de nitro. Recargalo en un taller de tuning.", "Bu son nitro dolumuydu. Tuning garajinda doldurun." },
+    { "Previse otvorenih upita, pokusajte kasnije.", "Too many open requests, try later.", "Слишком много открытых запросов, попробуйте позже.", "Demasiadas solicitudes abiertas, intentalo luego.", "Cok fazla acik talep var, sonra deneyin." },
+    { "Pricekajte %d s prije novog upita.", "Wait %d s before a new request.", "Подождите %d с перед новым запросом.", "Espera %d s antes de otra solicitud.", "Yeni talep icin %d sn bekleyin." },
+    { "Pricekajte malo prije ponovnog ulaska u garazu.", "Wait a bit before entering the garage again.", "Подождите немного, прежде чем снова заехать в гараж.", "Espera un poco antes de volver a entrar al garaje.", "Garaja tekrar girmeden once biraz bekleyin." },
+    { "Prijevod:", "Translation:", "Перевод:", "Traduccion:", "Ceviri:" },
+    { "Upisite odgovor (prazno = zatvori bez odgovora):", "Type an answer (empty = close without answering):", "Введите ответ (пусто = закрыть без ответа):", "Escribe una respuesta (vacio = cerrar sin responder):", "Cevap yazin (bos = cevapsiz kapat):" },
+    { "Upit #%d", "Request #%d", "Запрос #%d", "Solicitud #%d", "Talep #%d" },
+    { "Upit vise ne postoji.", "The request no longer exists.", "Запрос больше не существует.", "La solicitud ya no existe.", "Talep artik yok." },
+    { "Upiti igraca", "Player requests", "Запросы игроков", "Solicitudes de jugadores", "Oyuncu talepleri" },
+    { "Vas upit je poslan adminima (#%d).", "Your request was sent to the admins (#%d).", "Ваш запрос отправлен администраторам (#%d).", "Tu solicitud fue enviada a los admins (#%d).", "Talebiniz adminlere gonderildi (#%d)." },
+    { "Vozilo nije vase, mozete ga samo popraviti.", "This vehicle isn't yours, you can only repair it.", "Это не ваша машина, её можно только починить.", "El vehiculo no es tuyo, solo puedes repararlo.", "Arac sizin degil, sadece tamir edebilirsiniz." },
+    { "[Pitanje #%d] %s (%d): %s", "[Question #%d] %s (%d): %s", "[Вопрос #%d] %s (%d): %s", "[Pregunta #%d] %s (%d): %s", "[Soru #%d] %s (%d): %s" },
+    { "[Prijava #%d] %s (%d) prijavljuje %s (%d): %s", "[Report #%d] %s (%d) reports %s (%d): %s", "[Жалоба #%d] %s (%d) жалуется на %s (%d): %s", "[Reporte #%d] %s (%d) reporta a %s (%d): %s", "[Sikayet #%d] %s (%d), %s (%d) oyuncusunu bildiriyor: %s" },
+    { "{8AB4F8}[Pitanje]{FFFFFF}", "{8AB4F8}[Question]{FFFFFF}", "{8AB4F8}[Вопрос]{FFFFFF}", "{8AB4F8}[Pregunta]{FFFFFF}", "{8AB4F8}[Soru]{FFFFFF}" },
+    { "{FF6347}[Prijava]{FFFFFF}", "{FF6347}[Report]{FFFFFF}", "{FF6347}[Жалоба]{FFFFFF}", "{FF6347}[Reporte]{FFFFFF}", "{FF6347}[Sikayet]{FFFFFF}" },
+    { "(( Admin %s odgovara: %s ))", "(( Admin %s replies: %s ))", "(( Админ %s отвечает: %s ))", "(( Admin %s responde: %s ))", "(( Admin %s cevapliyor: %s ))" },
+    { "Admin %s je odgovorio na upit #%d.", "Admin %s answered request #%d.", "Админ %s ответил на запрос #%d.", "El admin %s respondio la solicitud #%d.", "Admin %s #%d talebini cevapladi." },
+    { "Admin %s je zatvorio upit #%d.", "Admin %s closed request #%d.", "Админ %s закрыл запрос #%d.", "El admin %s cerro la solicitud #%d.", "Admin %s #%d talebini kapatti." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
@@ -2114,7 +2146,14 @@ TekstPokreni()
 
 T(playerid, const hr[])
 {
-    new ret[TEKST_LEN], l = gJezik[playerid];
+    new ret[TEKST_LEN];
+    strcat(ret, TJ(gJezik[playerid], hr));
+    return ret;
+}
+
+TJ(l, const hr[])
+{
+    new ret[TEKST_LEN];
     if (l > 0 && l < BROJ_JEZIKA && hr[0])
     {
         for (new h = HashTeksta(hr), id; (id = gTekstHash[h]) != -1; h = (h + 1) & (TEKST_HASH - 1))

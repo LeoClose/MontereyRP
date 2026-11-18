@@ -1162,6 +1162,7 @@ static LsKlik(playerid, PlayerText:td)
                 {
                     if (i) return LsOtvori(playerid, LS_GRUPA, cilj);
                     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_group_members WHERE grp = %d AND account = %d", cilj, me));
+                    LsOsvjezi(LS_CLANOVI, cilj, playerid);
                     PcJavi(playerid, false, T(playerid, "Napustili ste grupu."));
                     return LsOtvori(playerid, LS_GRUPE);
                 }
@@ -1173,6 +1174,7 @@ static LsKlik(playerid, PlayerText:td)
                     {
                         if (!PcPotvrdi(playerid, i, PP_CLAN)) return 1;
                         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_group_members WHERE grp = %d AND account = %d", cilj, odabran));
+                        LsOsvjezi(LS_CLANOVI, cilj, playerid);
                         new t = IgracRacuna(odabran);
                         if (t != INVALID_PLAYER_ID && gPcOtvoren[t] && gPcEkran[t] == PCE_LIFESTALKER && gLsCilj[t] == cilj && (gLsPogled[t] == LS_GRUPA || gLsPogled[t] == LS_CLANOVI)) PcLifeStalker(t);
                         PcJavi(playerid, false, T(playerid, "Clan je uklonjen iz grupe."));
@@ -1306,6 +1308,8 @@ static LsUnos(playerid, akcija, const inputtext[])
             if (LsOdnos(me, acc) != LS_PRIJATELJ) return PcJavi(playerid, true, T(playerid, "U grupu mozete dodati samo prijatelje."));
             if (LsClan(grp, acc)) return PcJavi(playerid, true, T(playerid, "Korisnik je vec u grupi."));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO social_group_members (grp, account) VALUES (%d, %d)", grp, acc));
+            LsOsvjezi(LS_CLANOVI, grp, playerid);
+            LsOsvjezi(LS_GRUPA, grp, playerid);
             new t = IgracRacuna(acc);
             if (t != INVALID_PLAYER_ID && gPcOtvoren[t])
             {

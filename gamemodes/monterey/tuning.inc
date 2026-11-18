@@ -17,6 +17,10 @@
 #define TUNING_CEKAJ_MS     350
 #define TUNING_PONOVI_MS    120
 #define TUNING_ULAZ_MS      1500
+#define TUNING_NITRO_PUNJENJA 5
+#define TUNING_NITRO_DOPUNA 40
+#define TUNING_NITRO_MS     4000
+#define PS_PAUZA_MS         15000
 #define TUNING_TRUBA        1500
 #define TUNING_ISKRE        4000
 #define TUNING_ZATAMNJENJE  2500
@@ -498,7 +502,7 @@ static const Float:gPs[][8] = {
 };
 static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], Float:gTunPovratak[MAX_PLAYERS][4];
 static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
-static gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
+static gTunNitro[MAX_VEHICLES], gTunNitroDo[MAX_VEHICLES], bool:gTunSamo[MAX_PLAYERS], gPsPauza[MAX_PLAYERS], gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
 static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS], bool:gTunTrubaTipka[MAX_PLAYERS];
 static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], gTunNatpisObj[MAX_VEHICLES];
@@ -533,6 +537,9 @@ InitTuning()
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis_boja INTEGER NOT NULL DEFAULT 0"));
     }
     SetTimer("TuningImena", 1000, true);
+    stupac = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM pragma_table_info('vehicle_tuning') WHERE name = 'nitro'");
+    if (!DB_GetFieldInt(stupac, 0)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN nitro INTEGER NOT NULL DEFAULT 0"));
+    DB_FreeResultSet(stupac);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM tuning_garages ORDER BY id LIMIT %d", TUNING_MAX);
     for (new g = 0, n = DB_GetRowCount(res); g < n; g++, DB_SelectNextRow(res))
     {
@@ -585,10 +592,40 @@ static PsVrati(playerid, v)
     if (IsPlayerConnected(playerid)) PostaviNovac(playerid, gNovac[playerid], false);
 }
 
-static PsVani(playerid, &Float:x, &Float:y)
+static PsVani(playerid, k, &Float:x, &Float:y, &Float:a)
 {
-    x = gPsUlaz[playerid][0] - PS_VANI * floatsin(-gPsUlaz[playerid][3], degrees);
-    y = gPsUlaz[playerid][1] - PS_VANI * floatcos(-gPsUlaz[playerid][3], degrees);
+    new Float:cx = (gPs[k][0] + gPs[k][2] + gPs[k][4] - gPs[k][0]) / 2.0, Float:cy = (gPs[k][1] + gPs[k][3] + gPs[k][5] - gPs[k][1]) / 2.0;
+    new Float:dx = gPsUlaz[playerid][0] - cx, Float:dy = gPsUlaz[playerid][1] - cy, Float:d = VectorSize(dx, dy, 0.0);
+    if (d < 0.1)
+    {
+        dx = floatsin(gPsUlaz[playerid][3], degrees);
+        dy = -floatcos(gPsUlaz[playerid][3], degrees);
+        d = 1.0;
+    }
+    dx /= d;
+    dy /= d;
+    x = gPsUlaz[playerid][0] + dx * PS_VANI;
+    y = gPsUlaz[playerid][1] + dy * PS_VANI;
+    a = atan2(-dx, dy);
+}
+
+TuningNitroKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (!(newkeys & KEY_FIRE) || (oldkeys & KEY_FIRE) || gTunU[playerid] != -1 || GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return;
+    new v = GetPlayerVehicleID(playerid), sad = GetTickCount();
+    if (!gTunMod[v][_:CARMODTYPE_NITRO] || gTunNitro[v] <= 0 || sad - gTunNitroDo[v] < TUNING_NITRO_MS) return;
+    gTunNitroDo[v] = sad;
+    gTunNitro[v]--;
+    if (VlasnikDb(v)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE vehicle_tuning SET nitro = %d WHERE vehicle = %d", gTunNitro[v], VlasnikDb(v)));
+    if (gTunNitro[v]) return;
+    SetTimerEx("TuningNitroPrazno", TUNING_NITRO_MS, false, "ii", v, gTunMod[v][_:CARMODTYPE_NITRO]);
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Ovo je bilo zadnje punjenje nitra. Dopunite ga u tuning garazi."));
+}
+
+forward TuningNitroPrazno(v, c);
+public TuningNitroPrazno(v, c)
+{
+    if (GetVehicleModel(v) && !gTunNitro[v] && GetVehicleComponentInSlot(v, CARMODTYPE_NITRO) == c) RemoveVehicleComponent(v, c);
 }
 
 public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
@@ -597,21 +634,23 @@ public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
     for (new k = 0; k < sizeof gPs; k++)
     {
         if (areaid != gPsZona[k]) continue;
-        new v = GetPlayerVehicleID(playerid);
+        new v = GetPlayerVehicleID(playerid), Float:x, Float:y, Float:a;
         PsSnimi(playerid, v);
         gPsU[playerid] = k + 1;
-        new Float:x, Float:y;
-        PsVani(playerid, x, y);
-        if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid])
+        PsVani(playerid, k, x, y, a);
+        if (GetTickCount() < gPsPauza[playerid])
         {
             if (k == sizeof gPs - 1)
             {
                 SetVehicleVelocity(v, 0.0, 0.0, 0.0);
                 SetVehiclePos(v, x, y, gPsUlaz[playerid][2] + 0.3);
+                SetVehicleZAngle(v, a);
             }
-            return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
+            return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pricekajte malo prije ponovnog ulaska u garazu.")), 1;
         }
-        TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2] + 0.5, gPsUlaz[playerid][3] + 180.0);
+        gTunSamo[playerid] = !VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid];
+        if (gTunSamo[playerid]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo nije vase, mozete ga samo popraviti."));
+        TuningOtvori(playerid, TUNING_MAX + k, x, y, gPsUlaz[playerid][2] + 0.5, a);
         return 1;
     }
     return 1;
@@ -789,9 +828,9 @@ static TuningVrati(v)
 {
     for (new s = 0; s < 14; s++)
     {
-        new c = GetVehicleComponentInSlot(v, CARMODTYPE:s);
-        if (c && c != gTunMod[v][s]) RemoveVehicleComponent(v, c);
-        if (gTunMod[v][s] && c != gTunMod[v][s]) AddVehicleComponent(v, gTunMod[v][s]);
+        new c = GetVehicleComponentInSlot(v, CARMODTYPE:s), zeli = s == _:CARMODTYPE_NITRO && !gTunNitro[v] ? 0 : gTunMod[v][s];
+        if (c && c != zeli) RemoveVehicleComponent(v, c);
+        if (zeli && c != zeli) AddVehicleComponent(v, zeli);
     }
     ChangeVehiclePaintjob(v, gTunPaint[v]);
     ChangeVehicleColours(v, gTunBoja[v][0], gTunBoja[v][1]);
@@ -802,6 +841,7 @@ static TuningVrati(v)
 TuningPrimijeni(v)
 {
     new db = VlasnikDb(v);
+    gTunNitro[v] = 0;
     if (!db) return 0;
     for (new s = 0; s < 14; s++) gTunMod[v][s] = 0;
     gTunPaint[v] = 3;
@@ -816,7 +856,7 @@ TuningPrimijeni(v)
     gTunNatpis[v][0] = EOS;
     gTunNatpisFont[v] = 0;
     gTunNatpisBoja[v] = 0;
-    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0), IFNULL(t.oklop, 0), IFNULL(t.rezervoar, 0), IFNULL(t.truba, 0), IFNULL(t.plamen, 0), IFNULL(t.zatamnjeno, 0), IFNULL(t.natpis, ''), IFNULL(t.natpis_font, 0), IFNULL(t.natpis_boja, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
+    new mods[160], DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.c1, p.c2, IFNULL(t.mods, ''), IFNULL(t.paintjob, 3), IFNULL(t.neon, 0), IFNULL(t.motor, 0), IFNULL(t.oklop, 0), IFNULL(t.rezervoar, 0), IFNULL(t.truba, 0), IFNULL(t.plamen, 0), IFNULL(t.zatamnjeno, 0), IFNULL(t.natpis, ''), IFNULL(t.natpis_font, 0), IFNULL(t.natpis_boja, 0), IFNULL(t.nitro, 0) FROM player_vehicles p LEFT JOIN vehicle_tuning t ON t.vehicle = p.id WHERE p.id = %d", db);
     if (!DB_GetRowCount(res))
     {
         DB_FreeResultSet(res);
@@ -836,6 +876,7 @@ TuningPrimijeni(v)
     DB_GetFieldString(res, 11, gTunNatpis[v], TUNING_NATPIS_DUZ + 1);
     gTunNatpisFont[v] = clamp(DB_GetFieldInt(res, 12), 0, sizeof gTuningFont - 1);
     gTunNatpisBoja[v] = clamp(DB_GetFieldInt(res, 13), 0, sizeof gTuningNatpisArgb - 1);
+    gTunNitro[v] = clamp(DB_GetFieldInt(res, 14), 0, TUNING_NITRO_PUNJENJA);
     DB_FreeResultSet(res);
     for (new i = 0, c = 0; ; i++)
     {
@@ -875,7 +916,7 @@ static TuningSpremi(v)
         format(dio, sizeof dio, "%d ", gTunMod[v][s]);
         strcat(mods, dio);
     }
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor, oklop, rezervoar, truba, plamen, zatamnjeno, natpis, natpis_font, natpis_boja) VALUES (%d, '%q', %d, %d, %d, %d, %d, %d, %d, %d, '%q', %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v], gTunOklop[v], gTunRezervoar[v], gTunTruba[v], gTunIskre[v], gTunZatamnjeno[v], gTunNatpis[v], gTunNatpisFont[v], gTunNatpisBoja[v]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO vehicle_tuning (vehicle, mods, paintjob, neon, motor, oklop, rezervoar, truba, plamen, zatamnjeno, natpis, natpis_font, natpis_boja, nitro) VALUES (%d, '%q', %d, %d, %d, %d, %d, %d, %d, %d, '%q', %d, %d, %d)", VlasnikDb(v), mods, gTunPaint[v], gTunNeon[v], gTunMotor[v], gTunOklop[v], gTunRezervoar[v], gTunTruba[v], gTunIskre[v], gTunZatamnjeno[v], gTunNatpis[v], gTunNatpisFont[v], gTunNatpisBoja[v], gTunNitro[v]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET c1 = %d, c2 = %d WHERE id = %d", gTunBoja[v][0], gTunBoja[v][1], VlasnikDb(v)));
 }
 
@@ -1039,8 +1080,10 @@ static TuningStavka(playerid, i, &vrijednost, &cijena, ime[], size = sizeof (ime
         default:
         {
             vrijednost = i ? gTunDijelovi[playerid][i - 1] : 0;
-            cijena = !i ? 0 : kat - TK_DIO == 5 ? TuningNitroCijena(vrijednost) : gTuningDioCijena[kat - TK_DIO];
-            if (i) format(ime, size, "%s %d", T(playerid, gTuningDio[kat - TK_DIO]), i);
+            new bool:dopuna = kat - TK_DIO == _:CARMODTYPE_NITRO && i && vrijednost == gTunMod[gTunV[playerid]][_:CARMODTYPE_NITRO] && !gTunNitro[gTunV[playerid]];
+            cijena = !i ? 0 : kat - TK_DIO == _:CARMODTYPE_NITRO ? TuningNitroCijena(vrijednost) * (dopuna ? TUNING_NITRO_DOPUNA : 100) / 100 : gTuningDioCijena[kat - TK_DIO];
+            if (dopuna) format(ime, size, "%s %d %s", T(playerid, gTuningDio[kat - TK_DIO]), i, T(playerid, "(dopuna)"));
+            else if (i) format(ime, size, "%s %d", T(playerid, gTuningDio[kat - TK_DIO]), i);
             else format(ime, size, T(playerid, "Tvornicki"));
         }
     }
@@ -1062,6 +1105,7 @@ static bool:TuningUgradeno(playerid, vrijednost)
         case TK_ISKRE: return gTunIskre[v] == vrijednost;
         case TK_ZATAMNJENJE: return gTunZatamnjeno[v] == vrijednost;
     }
+    if (kat - TK_DIO == _:CARMODTYPE_NITRO && vrijednost) return gTunMod[v][kat - TK_DIO] == vrijednost && gTunNitro[v] > 0;
     return gTunMod[v][kat - TK_DIO] == vrijednost;
 }
 
@@ -1183,6 +1227,11 @@ static TuningIzbornik(playerid)
 {
     new v = gTunV[playerid], model = GetVehicleModel(v), n = 0;
     gTunKategorije[playerid][n++] = TK_POPRAVAK;
+    if (gTunSamo[playerid])
+    {
+        gTunKatBroj[playerid] = n;
+        return;
+    }
     gTunKategorije[playerid][n++] = TK_BOJA1;
     gTunKategorije[playerid][n++] = TK_BOJA2;
     if (TuningPaintjoba(model)) gTunKategorije[playerid][n++] = TK_PAINTJOB;
@@ -1197,7 +1246,7 @@ static TuningIzbornik(playerid)
     {
         for (new c = 1000; c <= 1193; c++)
         {
-            if (s == _:CARMODTYPE_NITRO || _:GetVehicleComponentType(c) != s || !VehicleCanHaveComponent(model, c)) continue;
+            if (_:GetVehicleComponentType(c) != s || !VehicleCanHaveComponent(model, c)) continue;
             gTunKategorije[playerid][n++] = TK_DIO + s;
             break;
         }
@@ -1278,8 +1327,9 @@ TuningZatvori(playerid, bool:uVozilo = true)
     gTunTdBroj[playerid] = 0;
     if (gTunMis[playerid]) CancelSelectTextDraw(playerid);
     gTunMis[playerid] = false;
+    if (g >= TUNING_MAX) gPsPauza[playerid] = GetTickCount() + PS_PAUZA_MS;
     if (!GetVehicleModel(v)) return;
-    TuningVrati(v);
+    if (!gTunSamo[playerid]) TuningVrati(v);
     new e, l, a, d, bn, bt, o;
     GetVehicleParamsEx(v, e, l, a, d, bn, bt, o);
     SetVehicleParamsEx(v, gTunMotorRadi[playerid], l, a, d, bn, bt, o);
@@ -1299,8 +1349,9 @@ TuningZatvori(playerid, bool:uVozilo = true)
 TuningStateChange(playerid, PLAYER_STATE:oldstate)
 {
     if (oldstate == PLAYER_STATE_DRIVER) TuningTrubaStani(playerid);
-    if (gTunU[playerid] == -1 || oldstate != PLAYER_STATE_DRIVER || GetTickCount() - gTunOd[playerid] < TUNING_ULAZ_MS) return;
-    TuningZatvori(playerid, false);
+    if (gTunU[playerid] == -1 || oldstate != PLAYER_STATE_DRIVER) return;
+    if (GetVehicleModel(gTunV[playerid])) PutPlayerInVehicle(playerid, gTunV[playerid], 0);
+    else TuningZatvori(playerid, false);
 }
 
 static TuningTipkovnica(playerid)
@@ -1363,7 +1414,15 @@ static TuningKupi(playerid)
         case TK_TRUBA: gTunTruba[v] = vrijednost;
         case TK_ISKRE: gTunIskre[v] = vrijednost;
         case TK_ZATAMNJENJE: gTunZatamnjeno[v] = vrijednost;
-        default: gTunMod[v][kat - TK_DIO] = vrijednost;
+        default:
+        {
+            gTunMod[v][kat - TK_DIO] = vrijednost;
+            if (kat - TK_DIO == _:CARMODTYPE_NITRO)
+            {
+                gTunNitro[v] = vrijednost ? TUNING_NITRO_PUNJENJA : 0;
+                if (vrijednost) AddVehicleComponent(v, vrijednost);
+            }
+        }
     }
     if (kat != TK_POPRAVAK) TuningSpremi(v);
     PlayerPlaySound(playerid, 1133, 0.0, 0.0, 0.0);
@@ -1560,7 +1619,8 @@ TuningUlaz(playerid)
     {
         if (!gTuning[g][tgIma] || !IsPlayerInRangeOfPoint(playerid, TUNING_DOMET, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ])) continue;
         new v = GetPlayerVehicleID(playerid);
-        if (!VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Tuning je dostupan samo za vlastita vozila.")), 1;
+        gTunSamo[playerid] = !VlasnikDb(v) || VlasnikVozila(v) != gAccountId[playerid];
+        if (gTunSamo[playerid]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo nije vase, mozete ga samo popraviti."));
         TuningOtvori(playerid, g, gTuning[g][tgX], gTuning[g][tgY], gTuning[g][tgZ], gTuning[g][tgA]);
         return 1;
     }
