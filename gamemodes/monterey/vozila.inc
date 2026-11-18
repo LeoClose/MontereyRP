@@ -1255,7 +1255,6 @@ static KradjaKorak(playerid)
 #define DASH_CRTICA         9
 #define DASH_KAZ            6
 #define DASH_KUT_KORAK      3
-#define DASH_TRAKA          44.0
 #define DASH_TD             (DT_LAMPICE + sizeof gDashDio)
 #define DASH_BOJA_SLABO     0x2A3644CC
 #define DASH_BOJA_LABEL     0x8AA0B6FF
@@ -1273,8 +1272,8 @@ static KradjaKorak(playerid)
 enum { DT_POZADINA, DT_RUB, DT_T_PRSTEN, DT_T_LICE, DT_S_PRSTEN, DT_S_LICE,
     DT_T_CRTICA, DT_S_CRTICA = DT_T_CRTICA + DASH_CRTICA, DT_T_BROJ = DT_S_CRTICA + DASH_CRTICA, DT_S_BROJ = DT_T_BROJ + DASH_CRTICA,
     DT_T_KAZ = DT_S_BROJ + DASH_CRTICA, DT_S_KAZ = DT_T_KAZ + DASH_KAZ, DT_T_GLAVA = DT_S_KAZ + DASH_KAZ, DT_S_GLAVA, DT_T_OZNAKA, DT_S_OZNAKA,
-    DT_SAT, DT_MJENJAC, DT_GOR_TXT, DT_GOR_POZ, DT_GOR, DT_MOT_TXT, DT_MOT_POZ, DT_MOT, DT_KM, DT_LAMPICE }
-enum { DS_GORIVO_BOJA, DS_LAMPICE, DS_T_KUT, DS_S_KUT, DS_GORIVO, DS_MOTOR, DS_KM, DS_MJENJAC, DS_SAT, DS_SKALA, DS_BROJ }
+    DT_SAT, DT_KM, DT_LAMPICE }
+enum { DS_GORIVO_BOJA, DS_LAMPICE, DS_T_KUT, DS_S_KUT, DS_KM, DS_SAT, DS_SKALA, DS_BROJ }
 static const gDashDio[][5] = {
     { 0, 1, 0, 5, 1 }, { 0, 1, 1, 1, 3 }, { 0, 5, 1, 1, 3 }, { 0, 1, 4, 5, 5 }, { 0, 0, 9, 7, 1 }, { 0, 6, 5, 1, 1 }, { 0, 7, 2, 1, 4 }, { 0, 7, 1, 2, 1 },
     { 1, 2, 3, 6, 5 }, { 1, 3, 1, 4, 1 }, { 1, 4, 2, 2, 1 }, { 1, 0, 4, 2, 3 }, { 1, 8, 4, 1, 3 }, { 1, 9, 3, 1, 5 },
@@ -1282,7 +1281,6 @@ static const gDashDio[][5] = {
     { 3, 4, 0, 2, 2 }, { 3, 3, 3, 3, 4 }, { 3, 3, 7, 5, 2 }, { 3, 7, 9, 2, 1 }, { 3, 1, 2, 1, 7 },
     { 4, 3, 0, 4, 1 }, { 4, 2, 1, 1, 3 }, { 4, 7, 1, 1, 3 }, { 4, 1, 4, 8, 6 }
 };
-static const Float:gDashLampa[5][2] = { { 227.0, 428.0 }, { 243.0, 428.0 }, { 383.0, 428.0 }, { 395.0, 428.0 }, { 407.0, 428.0 } };
 static PlayerText:gDash[MAX_PLAYERS][DASH_TD], gDashV[MAX_PLAYERS], gDashStanje[MAX_PLAYERS][DS_BROJ];
 
 static PlayerText:DashSlika(playerid, Float:x, Float:y, Float:w, Float:h, boja, const slika[] = "LD_SPAC:white")
@@ -1380,23 +1378,13 @@ static DashPokazi(playerid, v)
     gDash[playerid][DT_S_GLAVA] = DashKrug(playerid, DASH_SX, DASH_GY, 3.0, DASH_BOJA_PRSTEN);
     gDash[playerid][DT_T_OZNAKA] = DashTekst(playerid, DASH_TX, DASH_GY + 5.0, "x1000 rpm", DASH_BOJA_LABEL, 0.1, 0.45);
     gDash[playerid][DT_S_OZNAKA] = DashTekst(playerid, DASH_SX, DASH_GY + 5.0, "km/h", DASH_BOJA_LABEL, 0.1, 0.45);
-    gDash[playerid][DT_SAT] = DashTekst(playerid, 320.0, 397.0, "_", 0xFFFFFFFF, 0.14, 0.65);
-    gDash[playerid][DT_MJENJAC] = DashTekst(playerid, 320.0, 405.0, "P", DASH_BOJA_AKCENT, 0.34, 1.5, TEXT_DRAW_ALIGN_CENTER, TEXT_DRAW_FONT_3, 1);
-    gDash[playerid][DT_GOR_TXT] = DashTekst(playerid, 288.0, 423.5, T(playerid, "GORIVO"), DASH_BOJA_LABEL, 0.1, 0.45, TEXT_DRAW_ALIGN_LEFT);
-    gDash[playerid][DT_GOR_POZ] = DashSlika(playerid, 308.0, 425.0, DASH_TRAKA, 2.5, DASH_BOJA_SLABO);
-    gDash[playerid][DT_GOR] = DashSlika(playerid, 308.0, 425.0, 0.0, 2.5, DASH_BOJA_ZELENO);
-    gDash[playerid][DT_MOT_TXT] = DashTekst(playerid, 288.0, 430.0, T(playerid, "MOTOR"), DASH_BOJA_LABEL, 0.1, 0.45, TEXT_DRAW_ALIGN_LEFT);
-    gDash[playerid][DT_MOT_POZ] = DashSlika(playerid, 308.0, 431.5, DASH_TRAKA, 2.5, DASH_BOJA_SLABO);
-    gDash[playerid][DT_MOT] = DashSlika(playerid, 308.0, 431.5, 0.0, 2.5, DASH_BOJA_ZELENO);
-    gDash[playerid][DT_KM] = DashTekst(playerid, 320.0, 437.0, "_", DASH_BOJA_CRTICA, 0.13, 0.6);
+    gDash[playerid][DT_SAT] = DashTekst(playerid, 320.0, 399.0, "_", 0xFFFFFFFF, 0.14, 0.65);
+    gDash[playerid][DT_KM] = DashTekst(playerid, 320.0, 430.0, "_", DASH_BOJA_CRTICA, 0.13, 0.6);
     for (new d = 0; d < sizeof gDashDio; d++)
-    {
-        new l = gDashDio[d][0];
-        gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, gDashLampa[l][0] + float(gDashDio[d][1]), gDashLampa[l][1] + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
-    }
+        gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, 288.0 + 13.5 * float(gDashDio[d][0]) + float(gDashDio[d][1]), 413.0 + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
     for (new t = 0; t < DASH_TD; t++)
     {
-        if (t == DT_GOR || t == DT_MOT || (t >= DT_T_KAZ && t < DT_T_GLAVA)) continue;
+        if (t >= DT_T_KAZ && t < DT_T_GLAVA) continue;
         PlayerTextDrawShow(playerid, gDash[playerid][t]);
     }
 }
@@ -1421,16 +1409,6 @@ static DashBoja(boja)
         case DASH_BOJA_CRVENO: return 4;
     }
     return 0;
-}
-
-static DashTraka(playerid, td, Float:maks, postotak, boja)
-{
-    new PlayerText:t = gDash[playerid][td];
-    PlayerTextDrawHide(playerid, t);
-    if (postotak <= 0) return;
-    PlayerTextDrawTextSize(playerid, t, maks * float(postotak) / 100.0, 2.5);
-    PlayerTextDrawColour(playerid, t, boja);
-    PlayerTextDrawShow(playerid, t);
 }
 
 static bool:DashPromjena(playerid, k, vrijednost)
@@ -1481,20 +1459,9 @@ static DashOsvjezi(playerid, v)
     if (DashPromjena(playerid, DS_S_KUT, kut / DASH_KUT_KORAK * DASH_KUT_KORAK)) DashKazaljka(playerid, DASH_SX, DT_S_KAZ, gDashStanje[playerid][DS_S_KUT]);
     kut = -120 + 240 * DashOkretaji(v, kmh, mjenjac) * 7 / 800;
     if (DashPromjena(playerid, DS_T_KUT, kut / DASH_KUT_KORAK * DASH_KUT_KORAK)) DashKazaljka(playerid, DASH_TX, DT_T_KAZ, gDashStanje[playerid][DS_T_KUT]);
-    if (DashPromjena(playerid, DS_MJENJAC, mjenjac))
-    {
-        if (mjenjac >= '1' && mjenjac <= '9') format(tekst, sizeof tekst, "D%c", mjenjac);
-        else format(tekst, sizeof tekst, "%c", mjenjac);
-        PlayerTextDrawSetString(playerid, gDash[playerid][DT_MJENJAC], tekst);
-    }
-    new Float:tank = VoziloTank(v), gorivo = tank > 0.0 ? floatround(gGorivo[v] * 100.0 / tank) : 0;
-    new boja = gGorivo[v] <= VOZILO_REZERVA ? DASH_BOJA_CRVENO : gGorivo[v] <= tank * 0.5 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
+    new boja = gGorivo[v] <= VOZILO_REZERVA ? DASH_BOJA_CRVENO : gGorivo[v] <= VoziloTank(v) * 0.5 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
     if (DashPromjena(playerid, DS_GORIVO_BOJA, boja)) DashIkona(playerid, 0, boja);
-    if (DashPromjena(playerid, DS_GORIVO, gorivo)) DashTraka(playerid, DT_GOR, DASH_TRAKA, gorivo, boja == DASH_BOJA_SLABO ? DASH_BOJA_ZELENO : boja);
     GetVehicleHealth(v, zdravlje);
-    new stanje = floatround((zdravlje - 250.0) * 100.0 / 750.0);
-    stanje = stanje > 100 ? 100 : stanje < 0 ? 0 : stanje;
-    if (DashPromjena(playerid, DS_MOTOR, stanje)) DashTraka(playerid, DT_MOT, DASH_TRAKA, stanje, zdravlje < VOZILO_KVAR_ZDRAVLJE ? DASH_BOJA_CRVENO : zdravlje < 650.0 ? DASH_BOJA_ZUTO : DASH_BOJA_ZELENO);
     VoziloKmUcitaj(v);
     if (DashPromjena(playerid, DS_KM, floatround(gVoziloKm[v] / 1000.0, floatround_floor)))
     {
