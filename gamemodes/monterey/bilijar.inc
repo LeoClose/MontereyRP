@@ -29,7 +29,7 @@ enum { BG_OTVORENO, BG_PUNE, BG_POLA }
 enum E_BILIJAR { bool:bsIma, bsDb, Float:bsX, Float:bsY, Float:bsZ, Float:bsA, bsInt, bsSvijet, STREAMER_TAG_OBJECT:bsStol, STREAMER_TAG_3D_TEXT_LABEL:bsTekst,
     bsFaza, bsIgrac[2], bsNaPotezu, bsGrupa[2], bool:bsUbacena[BILIJAR_KUGLI], Float:bsKx[BILIJAR_KUGLI], Float:bsKy[BILIJAR_KUGLI], STREAMER_TAG_OBJECT:bsKugla[BILIJAR_KUGLI],
     STREAMER_TAG_OBJECT:bsStap, bsNisani, Float:bsKut, Float:bsSnaga, bool:bsSnagaGore, bsOkvir, bsOkvira, bsPrva, bsToken,
-    STREAMER_TAG_ACTOR:bsKlon, bsKlonPoza, Float:bsSx, Float:bsSy }
+    STREAMER_TAG_ACTOR:bsKlon, bsKlonPoza, Float:bsSx, Float:bsSy, Float:bsKlonKut }
 
 static const gBilijarModel[BILIJAR_KUGLI] = { 3003, 3002, 3100, 3101, 3102, 3103, 3104, 3105, 3106, 2995, 2996, 2997, 2998, 2999, 3000, 3001 };
 static const Float:gBilijarSlaganje[BILIJAR_KUGLI][2] = {
@@ -144,6 +144,8 @@ static BilijarStajaliste(s, &Float:wx, &Float:wy)
 
 static BilijarKlon(s)
 {
+    if (gBilijar[s][bsKlon] && floatabs(gBilijar[s][bsKut] - gBilijar[s][bsKlonKut]) < 0.5) return;
+    gBilijar[s][bsKlonKut] = gBilijar[s][bsKut];
     new p = gBilijar[s][bsNisani], Float:wx, Float:wy, Float:z = gBilijar[s][bsZ] + 1.0, poza = BilijarStajaliste(s, wx, wy);
     gBilijar[s][bsSx] = wx;
     gBilijar[s][bsSy] = wy;

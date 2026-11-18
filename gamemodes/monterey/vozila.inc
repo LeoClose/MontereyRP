@@ -1099,7 +1099,7 @@ VoziloUpdate(playerid)
     if (VoziloPrebrzo(playerid, v, vx, vy)) return;
     new razina = TuningMotor(v), model = GetVehicleModel(v);
     TuningVozac(v);
-    TuningTrubaSync(playerid, v);
+    TuningTrubaSync(playerid);
     if (razina && model >= 400 && model <= 611 && GetTickCount() - gVoziloMotorMs[v] >= VOZILO_MOTOR_MS)
     {
         new KEY:tipke, gore, strana, Float:a, Float:ravno = VectorSize(vx, vy, 0.0), Float:kmh = ravno * 180.0;

@@ -711,9 +711,8 @@ bool:TuningTrubaKljuc(playerid, v, bool:pritisnuta)
     return true;
 }
 
-TuningTrubaSync(playerid, v)
+TuningTrubaSync(playerid)
 {
-    #pragma unused v
     new pritisnuta = gTunTrubaTipka[playerid];
     if (pritisnuta && !gTunTrubaStaro[playerid])
     {
