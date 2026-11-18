@@ -139,7 +139,7 @@ TrgovinaUpdate(playerid)
     new s = TrgovinaIgraca(playerid);
     if (s == -1 || !gTrg[s][tgImaAktor] || GetPlayerTargetActor(playerid) != gTrg[s][tgAktor]) return;
     new WEAPON:w = GetPlayerWeapon(playerid), sad = gettime();
-    if (w < WEAPON_COLT45 || w > WEAPON_MINIGUN || sad - gTrg[s][tgPljackano] < TRGOVINA_PLJACKA_S || sad - gTrgPoruka[playerid] < 10) return;
+    if (w < WEAPON_COLT45 || w > WEAPON_MINIGUN || !OruzjeLegit(playerid, w) || sad - gTrg[s][tgPljackano] < TRGOVINA_PLJACKA_S || sad - gTrgPoruka[playerid] < 10) return;
     if (!gOrg[playerid] || GetOrgTip(gOrg[playerid]) != TRGOVINA_BANDA)
     {
         gTrgPoruka[playerid] = sad;

@@ -200,6 +200,7 @@ static Interakcija(playerid)
 public OnPlayerWeaponShot(playerid, WEAPON:weaponid, BULLET_HIT_TYPE:hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
     if (TaserPogodak(playerid, weaponid, hittype, hitid)) return 0;
+    if (!OruzjePucanj(playerid, weaponid)) return 0;
     RanjenPogodak(playerid, hittype, hitid);
     HeliPucnjava(playerid, hittype);
     if (IsShootingBlocked(playerid))
@@ -223,15 +224,16 @@ public OnPlayerUpdate(playerid)
     ZlataraUpdate(playerid);
     TaksiPovratak(playerid);
     new WEAPON:w = GetPlayerWeapon(playerid);
-    if (w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN)
+    if (w != WEAPON_FIST && w != WEAPON:-1 && gUlogiran[playerid])
     {
-        new sad = GetTickCount();
+        new sad = GetTickCount(), bool:puska = w >= WEAPON_COLT45 && w <= WEAPON_MINIGUN;
         if (sad - gOruzjeProvjera[playerid] >= ORUZJE_PROVJERA_MS)
         {
             gOruzjeProvjera[playerid] = sad;
-            gOruzjeBlok[playerid] = IsShootingBlocked(playerid);
+            if (puska) gOruzjeBlok[playerid] = IsShootingBlocked(playerid);
+            OruzjeNadzor(playerid, w);
         }
-        if (gOruzjeBlok[playerid]) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
+        if (puska && gOruzjeBlok[playerid]) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
     }
     if (w != WEAPON_FIST && ImaLisice(playerid)) SetPlayerArmedWeapon(playerid, WEAPON_FIST);
     return 1;

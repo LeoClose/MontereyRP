@@ -210,7 +210,7 @@ BankaUpdate(playerid)
 {
     if (!gUlogiran[playerid] || !gOrg[playerid]) return;
     new s = BankaIgraca(playerid), WEAPON:w = GetPlayerWeapon(playerid);
-    if (s == -1 || gBanka[s][bkPljacka] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN) return;
+    if (s == -1 || gBanka[s][bkPljacka] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN || !OruzjeLegit(playerid, w)) return;
     new meta = GetPlayerTargetPlayer(playerid), bool:cilj = gBanka[s][bkImaAktor] && GetPlayerTargetActor(playerid) == gBanka[s][bkAktor];
     if (!cilj && meta != INVALID_PLAYER_ID && gNpcBanka[meta] != -1 && gNpcBanka[meta] / BANKA_CUVARI == s) cilj = true;
     if (!cilj || BankaEkipa(playerid, s) < BANKA_PLJACKASA) return;

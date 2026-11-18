@@ -485,7 +485,7 @@ ZlataraUpdate(playerid)
 {
     if (!gUlogiran[playerid] || !gOrg[playerid]) return;
     new s = ZlataraIgraca(playerid), WEAPON:w = GetPlayerWeapon(playerid);
-    if (s == -1 || gZl[s][zlPljacka] || !gZl[s][zlImaAktor] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN || GetPlayerTargetActor(playerid) != gZl[s][zlAktor]) return;
+    if (s == -1 || gZl[s][zlPljacka] || !gZl[s][zlImaAktor] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN || !OruzjeLegit(playerid, w) || GetPlayerTargetActor(playerid) != gZl[s][zlAktor]) return;
     new sad = gettime();
     if (ZlataraEkipa(playerid, s) < ZLATARA_PLJACKASA)
     {

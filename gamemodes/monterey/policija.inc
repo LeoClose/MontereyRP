@@ -126,6 +126,12 @@ NaDuznosti(playerid)
     return gOnDuty[playerid] ? 1 : 0;
 }
 
+bool:SluzbenoOruzje(playerid, WEAPON:w)
+{
+    if (w == WEAPON_SILENCED) return gTaser[playerid];
+    return w == WEAPON_FIREEXTINGUISHER && gOnDuty[playerid];
+}
+
 bool:PolicajacNaDuznosti(playerid)
 {
     return gOnDuty[playerid] && GetOrgTip(gOrg[playerid]) == ORG_LSPD;

@@ -261,11 +261,11 @@ static bool:ac_ACAllow[] =
 	false,	//10 Anti-SpeedHack (in vehicle)
 	true,	//11 Anti-Health hack (in vehicle)
 	false,	//12 Anti-Health hack (onfoot)
-	true,	//13 Anti-Armour hack
-	true,	//14 Anti-Money hack
-	true,	//15 Anti-Weapon hack
-	true,	//16 Anti-Ammo hack (add)
-	true,	//17 Anti-Ammo hack (infinite)
+	false,	//13 Anti-Armour hack
+	false,	//14 Anti-Money hack
+	false,	//15 Anti-Weapon hack
+	false,	//16 Anti-Ammo hack (add)
+	false,	//17 Anti-Ammo hack (infinite)
 	true,	//18 Anti-Special actions hack
 	false,	//19 Anti-GodMode from bullets (onfoot)
 	false,	//20 Anti-GodMode from bullets (in vehicle)
@@ -4654,21 +4654,6 @@ public OnPlayerUpdate(playerid)
 									ACInfo[playerid][acWeapon][ac_s] = ac_w;
 									ACInfo[playerid][acAmmo][ac_s] = ac_a;
 								}
-								else if(ACInfo[playerid][acACAllow][15] && ACInfo[playerid][acSetWeapon][ac_s] == -1)
-								{
-									#if defined DEBUG
-										printf("[Nex-AC debug] AC weaponid: %d, AC ammo: %d, weaponid: %d, ammo: %d",
-										ACInfo[playerid][acWeapon][ac_s], ACInfo[playerid][acAmmo][ac_s], ac_w, ac_a);
-									#endif
-									#if defined OnCheatDetected
-										ac_KickWithCode(playerid, "", 0, 15, 1);
-										if(ACInfo[playerid][acKicked] > 0) return 0;
-										ACInfo[playerid][acWeapon][ac_s] = ac_w;
-										ACInfo[playerid][acAmmo][ac_s] = ac_a;
-									#else
-										return ac_KickWithCode(playerid, "", 0, 15, 1);
-									#endif
-								}
 							#if AC_USE_AMMUNATIONS
 								}
 							#endif
@@ -4681,21 +4666,6 @@ public OnPlayerUpdate(playerid)
 				!(_:PLAYER_STATE_DRIVER <= ac_sa <= _:PLAYER_STATE_PASSENGER) && 7 <= ac_s <= 9 &&
 				ac_w != _:WEAPON_MINIGUN && ACInfo[playerid][acGiveAmmo][ac_s] == -65535)
 				{
-					if(ACInfo[playerid][acACAllow][16] &&
-					(ACInfo[playerid][acAmmo][ac_s] == 0 || ac_a > ACInfo[playerid][acAmmo][ac_s] ||
-					ac_a < 0 < ACInfo[playerid][acAmmo][ac_s]))
-					{
-						#if defined DEBUG
-							printf("[Nex-AC debug] AC ammo: %d, ammo: %d, weaponid: %d",
-							ACInfo[playerid][acAmmo][ac_s], ac_a, ac_w);
-						#endif
-						#if defined OnCheatDetected
-							ac_KickWithCode(playerid, "", 0, 16, 1);
-							if(ACInfo[playerid][acKicked] > 0) return 0;
-						#else
-							return ac_KickWithCode(playerid, "", 0, 16, 1);
-						#endif
-					}
 					ACInfo[playerid][acAmmo][ac_s] = ac_a;
 				}
 			}
@@ -4819,32 +4789,6 @@ public OnPlayerUpdate(playerid)
 				{
 					ac_armour += ACInfo[playerid][acArmour] - (ACInfo[playerid][acArmour] % 256) - 256;
 					if(ACInfo[playerid][acArmour] - ac_armour > 255) ac_armour += 256;
-				}
-				if(ACInfo[playerid][acACAllow][13] && ac_armour > ACInfo[playerid][acArmour])
-				{
-					#if AC_USE_AMMUNATIONS
-						if(ac_armour == 100 && ac_InAmmuNation(playerid, ACInfo[playerid][acInt]))
-						{
-							ACInfo[playerid][acCheatCount][20] = 0;
-							if(ACInfo[playerid][acSet][10] != -1) ACInfo[playerid][acSet][10] += 200;
-							else ACInfo[playerid][acSet][10] = 200;
-							ACInfo[playerid][acGtc][17] = ac_gtc + 2650;
-						}
-						else
-						{
-					#endif
-						#if defined DEBUG
-							printf("[Nex-AC debug] AC armour: %d, armour: %d", ACInfo[playerid][acArmour], ac_armour);
-						#endif
-						#if defined OnCheatDetected
-							ac_KickWithCode(playerid, "", 0, 13);
-							if(ACInfo[playerid][acKicked] > 0) return 0;
-						#else
-							return ac_KickWithCode(playerid, "", 0, 13);
-						#endif
-					#if AC_USE_AMMUNATIONS
-						}
-					#endif
 				}
 			}
 			if(ACInfo[playerid][acSet][5] != -1 && ac_gtc - ACInfo[playerid][acGtc][11] > ac_gpp)
@@ -6731,64 +6675,6 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 			}
 			if(GetPlayerWeaponState(playerid) == WEAPONSTATE_LAST_BULLET) ACInfo[playerid][acReloadTick] = ac_gtc;
 		}
-		if(ACInfo[playerid][acACAllow][17] && ac_t != _:PLAYER_STATE_PASSENGER &&
-		ACInfo[playerid][acGiveAmmo][ac_s] == -65535 && ac_gtc - ACInfo[playerid][acGtc][6] > ac_gpp)
-		{
-			ac_t = GetPlayerAmmo(playerid);
-			if(ACInfo[playerid][acAmmo][ac_s] == 0)
-			{
-				#if defined DEBUG
-					printf("[Nex-AC debug] Weaponid: %d, AC ammo: %d, ammo: %d", weaponid, ACInfo[playerid][acAmmo][ac_s], ac_t);
-				#endif
-				#if defined OnCheatDetected
-					ac_KickWithCode(playerid, "", 0, 17, 1);
-					if(ACInfo[playerid][acKicked] > 0) return 0;
-					ACInfo[playerid][acAmmo][ac_s] = ac_t;
-				#else
-					return ac_KickWithCode(playerid, "", 0, 17, 1);
-				#endif
-			}
-			else if(ACInfo[playerid][acAmmo][ac_s] < ac_t)
-			{
-				if(weaponid == WEAPON_MINIGUN)
-				{
-					if(++ACInfo[playerid][acCheatCount][7] > 9)
-					{
-						#if defined DEBUG
-							printf("[Nex-AC debug] Weaponid: %d, AC ammo: %d, ammo: %d, acCheatCount[7]: %d",
-							weaponid, ACInfo[playerid][acAmmo][ac_s], ac_t, ACInfo[playerid][acCheatCount][7]);
-						#endif
-						#if defined OnCheatDetected
-							ac_KickWithCode(playerid, "", 0, 17, 2);
-							if(ACInfo[playerid][acKicked] > 0) return 0;
-							ACInfo[playerid][acCheatCount][7] = 0;
-							ACInfo[playerid][acAmmo][ac_s] = ac_t;
-						#else
-							return ac_KickWithCode(playerid, "", 0, 17, 2);
-						#endif
-					}
-					#if defined OnCheatWarning
-						else OnCheatWarning(playerid, "", 0, 17, 2, ACInfo[playerid][acCheatCount][7]);
-					#endif
-				}
-				else if(ac_t - ACInfo[playerid][acAmmo][ac_s] > 6)
-				{
-					#if defined DEBUG
-						printf("[Nex-AC debug] Weaponid: %d, AC ammo: %d, ammo: %d",
-						weaponid, ACInfo[playerid][acAmmo][ac_s], ac_t);
-					#endif
-					#if defined OnCheatDetected
-						ac_KickWithCode(playerid, "", 0, 17, 3);
-						if(ACInfo[playerid][acKicked] > 0) return 0;
-						ACInfo[playerid][acCheatCount][7] = 0;
-						ACInfo[playerid][acAmmo][ac_s] = ac_t;
-					#else
-						return ac_KickWithCode(playerid, "", 0, 17, 3);
-					#endif
-				}
-			}
-			else ACInfo[playerid][acCheatCount][7] = 0;
-		}
 		if(ACInfo[playerid][acAmmo][ac_s] != 0) ACInfo[playerid][acAmmo][ac_s]--;
 		if(ACInfo[playerid][acAmmo][ac_s] < -32768) ACInfo[playerid][acAmmo][ac_s] += 65536;
 		ACInfo[playerid][acShotWeapon] = weaponid;
@@ -8539,21 +8425,6 @@ ac_fpublic ac_Timer(playerid)
 										ACInfo[playerid][acWeapon][ac_i] = ac_w;
 										ACInfo[playerid][acAmmo][ac_i] = ac_a;
 									}
-									else if(ACInfo[playerid][acACAllow][15] && (!ac_IsWeaponSlotWithAmmo(ac_i) || ac_a != 0))
-									{
-										#if defined DEBUG
-											printf("[Nex-AC debug] AC weaponid: %d, AC ammo: %d, weaponid: %d, ammo: %d",
-											ACInfo[playerid][acWeapon][ac_i], ACInfo[playerid][acAmmo][ac_i], ac_w, ac_a);
-										#endif
-										ac_KickWithCode(playerid, "", 0, 15, 2);
-										#if defined OnCheatDetected
-											if(ACInfo[playerid][acKicked] < 1)
-											{
-												ACInfo[playerid][acWeapon][ac_i] = ac_w;
-												ACInfo[playerid][acAmmo][ac_i] = ac_a;
-											}
-										#endif
-									}
 								#if AC_USE_PICKUP_WEAPONS
 									}
 								#endif
@@ -8603,19 +8474,6 @@ ac_fpublic ac_Timer(playerid)
 							else if(ac_IsWeaponSlotWithAmmo(ac_i))
 							{
 								if(ac_a == 0) ACInfo[playerid][acAmmo][ac_i] = 0;
-								else if(ACInfo[playerid][acACAllow][16] &&
-								(ac_a > ACInfo[playerid][acAmmo][ac_i] || ac_a < 0 <= ACInfo[playerid][acAmmo][ac_i]) &&
-								(!ac_LagCompMode || !ac_IsBulletWeapon(ac_w) || ac_gtc - ACInfo[playerid][acShotTick] > 3850))
-								{
-									#if defined DEBUG
-										printf("[Nex-AC debug] AC ammo: %d, ammo: %d, weaponid: %d",
-										ACInfo[playerid][acAmmo][ac_i], ac_a, ac_w);
-									#endif
-									ac_KickWithCode(playerid, "", 0, 16, 2);
-									#if defined OnCheatDetected
-										if(ACInfo[playerid][acKicked] < 1) ACInfo[playerid][acAmmo][ac_i] = ac_a;
-									#endif
-								}
 							}
 						}
 					}
@@ -8638,17 +8496,6 @@ ac_fpublic ac_Timer(playerid)
 									else
 									{
 								#endif
-									if(ACInfo[playerid][acACAllow][16] && (!ac_LagCompMode || ac_gtc - ACInfo[playerid][acShotTick] > 3850))
-									{
-										#if defined DEBUG
-											printf("[Nex-AC debug] AC ammo: %d, ammo: %d, weaponid: %d",
-											ACInfo[playerid][acAmmo][ac_i], ac_a, ac_w);
-										#endif
-										ac_KickWithCode(playerid, "", 0, 16, 3);
-										#if defined OnCheatDetected
-											if(ACInfo[playerid][acKicked] < 1) ACInfo[playerid][acAmmo][ac_i] = ac_a;
-										#endif
-									}
 								#if AC_USE_AMMUNATIONS
 									}
 								#endif
@@ -8720,24 +8567,7 @@ ac_fpublic ac_Timer(playerid)
 					ACInfo[playerid][acMoney] - ac_t >= ACInfo[playerid][acSet][10]) ACInfo[playerid][acSet][10] = -1;
 					else if(ac_gtc - ACInfo[playerid][acGtc][17] > ac_gpp)
 					{
-						if(ACInfo[playerid][acACAllow][15])
-						{
-							if(++ACInfo[playerid][acCheatCount][20] > AC_MAX_NOP_TIMER_WARNINGS)
-							{
-								#if defined DEBUG
-									printf("[Nex-AC debug] Money: %d, old money: %d, price: %d",
-									ac_t, ACInfo[playerid][acMoney], ACInfo[playerid][acSet][10]);
-								#endif
-								ac_KickWithCode(playerid, "", 0, 15, 3);
-								#if defined OnCheatDetected
-									ACInfo[playerid][acSet][10] = -1;
-								#endif
-							}
-							#if defined OnCheatWarning
-								else OnCheatWarning(playerid, "", 0, 15, 3, ACInfo[playerid][acCheatCount][20]);
-							#endif
-						}
-						else if(++ACInfo[playerid][acCheatCount][20] > AC_MAX_NOP_TIMER_WARNINGS) ACInfo[playerid][acSet][10] = -1;
+						if(++ACInfo[playerid][acCheatCount][20] > AC_MAX_NOP_TIMER_WARNINGS) ACInfo[playerid][acSet][10] = -1;
 					}
 				}
 			#endif
@@ -8816,27 +8646,6 @@ ac_fpublic ac_Timer(playerid)
 			if(ACInfo[playerid][acNOPCount][11] > 0) ACInfo[playerid][acNOPCount][11]--;
 			else
 			{
-				if(ACInfo[playerid][acACAllow][14] && ac_t > ACInfo[playerid][acMoney] &&
-				(!ACInfo[playerid][acStuntBonus] || ACInfo[playerid][acVeh] <= 0 && ac_gtc - ACInfo[playerid][acGtc][15] > ac_gpp))
-				{
-					#if AC_USE_CASINOS
-						if(!ac_InCasino(playerid, ACInfo[playerid][acInt]))
-						{
-					#endif
-						#if defined DEBUG
-							printf("[Nex-AC debug] AC money: %d, money: %d, stunt bonus: %d, veh: %d, playerid: %d",
-							ACInfo[playerid][acMoney], ac_t, ACInfo[playerid][acStuntBonus], ACInfo[playerid][acVeh], playerid);
-						#endif
-						#if defined OnCheatDetected
-							ac_KickWithCode(playerid, "", 0, 14);
-						#endif
-						ac_t = ACInfo[playerid][acMoney];
-						ResetPlayerMoney(playerid);
-						GivePlayerMoney(playerid, ac_t);
-					#if AC_USE_CASINOS
-						}
-					#endif
-				}
 				ACInfo[playerid][acMoney] = ac_t;
 			}
 		}

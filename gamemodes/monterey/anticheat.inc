@@ -8,7 +8,7 @@ enum { ACM_ISKLJUCENO, ACM_UPOZORI, ACM_IZBACI }
 
 static const gAcIme[AC_KODOVA][] = {
     "AirBreak (onfoot)", "AirBreak (vehicle)", "Teleport (onfoot)", "Teleport (vehicle)", "Teleport (into vehicle)", "Teleport (vehicle to player)", "Teleport (pickups)", "FlyHack (onfoot)", "FlyHack (vehicle)",
-    "SpeedHack (onfoot)", "", "Health hack (vehicle)", "", "Armour hack", "Money hack", "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)",
+    "SpeedHack (onfoot)", "", "Health hack (vehicle)", "", "", "", "Weapon hack", "Ammo hack (add)", "Ammo hack (infinite)",
     "Special action hack", "", "", "Invisible hack", "Lagcomp spoof", "Tuning hack", "", "", "Rapid fire",
     "Fake spawn", "Fake kill", "Pro Aim", "", "CarShot", "CarJack", "", "AFK Ghost", "",
     "", "", "High ping", "Dialog hack", "Sandbox", "Invalid version", "Rcon hack", "", "",
@@ -18,7 +18,7 @@ static const gAcIme[AC_KODOVA][] = {
 static const gAcZadano[AC_KODOVA] = {
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI,
     ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
-    ACM_IZBACI, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
+    ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI,
     ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_ISKLJUCENO, ACM_UPOZORI,
     ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_UPOZORI, ACM_UPOZORI, ACM_IZBACI, ACM_IZBACI, ACM_IZBACI, ACM_ISKLJUCENO, ACM_ISKLJUCENO,
     ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_ISKLJUCENO, ACM_IZBACI, ACM_ISKLJUCENO, ACM_IZBACI, ACM_IZBACI, ACM_UPOZORI
@@ -27,7 +27,7 @@ static const gAcZadano[AC_KODOVA] = {
 static const gAcNacinIme[3][] = { "{777777}Iskljuceno", "{F1C40F}Upozorenje", "{E74C3C}Izbacivanje" };
 
 static gAcNacin[AC_KODOVA], gAcZadnje[MAX_PLAYERS][AC_KODOVA], bool:gAcIzbacen[MAX_PLAYERS];
-static const gAcAdminKodovi[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 13, 21, 34 };
+static const gAcAdminKodovi[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 21, 34 };
 static gAcRed[MAX_PLAYERS][AC_KODOVA];
 
 InitAntiCheat()

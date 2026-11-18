@@ -501,13 +501,22 @@ AdminGiveItem(playerid, const params[])
 }
 
 #define ORUZJE_SLOTOVI        13
+#define ORUZJE_TRPLJENJE_MS   3000
+#define ORUZJE_MUNICIJA_VISAK 2
+#define AC_ORUZJE             15
+#define AC_MUNICIJA_DODANA    16
+#define AC_MUNICIJA_BESKRAJ   17
+
+forward bool:SluzbenoOruzje(playerid, WEAPON:w);
 
 static gEquipPredmet[MAX_PLAYERS][ORUZJE_SLOTOVI];
 static gEquipAmmo[MAX_PLAYERS][ORUZJE_SLOTOVI];
+static gOruzjeLoseOd[MAX_PLAYERS], gMunicijaLoseOd[MAX_PLAYERS];
 
 OruzjeConnect(playerid)
 {
     for (new s = 0; s < ORUZJE_SLOTOVI; s++) gEquipPredmet[playerid][s] = -1;
+    gOruzjeLoseOd[playerid] = gMunicijaLoseOd[playerid] = 0;
 }
 
 BrojOruzja(playerid)
@@ -523,7 +532,7 @@ StoreSlot(playerid, slot)
     GetPlayerWeaponData(playerid, WEAPON_SLOT:slot, weapon, ammo);
     gEquipPredmet[playerid][slot] = -1;
     if (ammoItem != -1 && _:weapon == gItems[item][ITEM_WEAPON])
-        GiveItem(playerid, ammoItem, min(min(ammo, gEquipAmmo[playerid][slot]), gItems[ammoItem][ITEM_MAX] - gInv[playerid][ammoItem]));
+        GiveItem(playerid, ammoItem, max(0, min(min(ammo, gEquipAmmo[playerid][slot]), gItems[ammoItem][ITEM_MAX] - gInv[playerid][ammoItem])));
     RemovePlayerWeapon(playerid, WEAPON:gItems[item][ITEM_WEAPON]);
 }
 
@@ -555,11 +564,54 @@ IzvadiOruzje(playerid, item)
 
 OruzjeLegit(playerid, WEAPON:w)
 {
-    if (w == WEAPON_FIST) return true;
+    if (w == WEAPON_FIST || w == WEAPON_PARACHUTE || SluzbenoOruzje(playerid, w)) return true;
     new slot = _:GetWeaponSlot(w);
     if (slot < 0 || slot >= ORUZJE_SLOTOVI) return false;
     new item = gEquipPredmet[playerid][slot];
-    return item != -1 && gItems[item][ITEM_WEAPON] == _:w;
+    return item != -1 && gItems[item][ITEM_WEAPON] == _:w && (gItems[item][ITEM_AMMO] == -1 || gEquipAmmo[playerid][slot] >= 0);
+}
+
+bool:OruzjePucanj(playerid, WEAPON:w)
+{
+    if (!OruzjeLegit(playerid, w)) return false;
+    new slot = _:GetWeaponSlot(w);
+    if (slot < 0 || slot >= ORUZJE_SLOTOVI) return true;
+    new item = gEquipPredmet[playerid][slot];
+    if (item == -1 || gItems[item][ITEM_WEAPON] != _:w || gItems[item][ITEM_AMMO] == -1) return true;
+    if (--gEquipAmmo[playerid][slot] >= 0) return true;
+    OnCheatDetected(playerid, "", 0, AC_MUNICIJA_BESKRAJ);
+    return false;
+}
+
+OruzjeNadzor(playerid, WEAPON:w)
+{
+    new sad = GetTickCount();
+    if (!OruzjeLegit(playerid, w))
+    {
+        gMunicijaLoseOd[playerid] = 0;
+        if (!gOruzjeLoseOd[playerid]) gOruzjeLoseOd[playerid] = sad;
+        else if (sad - gOruzjeLoseOd[playerid] >= ORUZJE_TRPLJENJE_MS)
+        {
+            gOruzjeLoseOd[playerid] = 0;
+            RemovePlayerWeapon(playerid, w);
+            OnCheatDetected(playerid, "", 0, AC_ORUZJE);
+        }
+        return;
+    }
+    gOruzjeLoseOd[playerid] = 0;
+    new slot = _:GetWeaponSlot(w), item = slot >= 0 && slot < ORUZJE_SLOTOVI ? gEquipPredmet[playerid][slot] : -1;
+    if (item == -1 || gItems[item][ITEM_WEAPON] != _:w || gItems[item][ITEM_AMMO] == -1 || GetPlayerAmmo(playerid) <= gEquipAmmo[playerid][slot] + ORUZJE_MUNICIJA_VISAK)
+    {
+        gMunicijaLoseOd[playerid] = 0;
+        return;
+    }
+    if (!gMunicijaLoseOd[playerid]) gMunicijaLoseOd[playerid] = sad;
+    else if (sad - gMunicijaLoseOd[playerid] >= ORUZJE_TRPLJENJE_MS)
+    {
+        gMunicijaLoseOd[playerid] = 0;
+        SetPlayerAmmo(playerid, w, gEquipAmmo[playerid][slot]);
+        OnCheatDetected(playerid, "", 0, AC_MUNICIJA_DODANA);
+    }
 }
 
 SpremiSvoOruzje(playerid)
