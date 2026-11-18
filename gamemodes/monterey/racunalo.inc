@@ -458,7 +458,7 @@ static LsOdnos(a, b)
 
 static LsBroj(const upit[], acc)
 {
-    new DBResult:res = DB_ExecuteQuery(gDB, upit, acc, acc), n = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    new DBResult:res = strfind(upit, "%d", false, strfind(upit, "%d") + 1) == -1 ? DB_ExecuteQuery(gDB, upit, acc) : DB_ExecuteQuery(gDB, upit, acc, acc), n = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
     DB_FreeResultSet(res);
     return n;
 }
@@ -623,7 +623,10 @@ static LsObjava(playerid)
     }
     DB_FreeResultSet(res);
     PcPostavi(playerid, PTD_SADRZAJ, "_");
-    LsAkcije(playerid, svida ? T(playerid, "Ne svidja mi se") : T(playerid, "Svidja mi se"), T(playerid, "Komentiraj"), T(playerid, "Podijeli"), gLsOdabran[playerid] ? T(playerid, "Obrisi komentar") : autor == me ? T(playerid, "Obrisi objavu") : (""));
+    new brisi[32];
+    if (gLsOdabran[playerid]) strcat(brisi, T(playerid, "Obrisi komentar"));
+    else if (autor == me) strcat(brisi, T(playerid, "Obrisi objavu"));
+    LsAkcije(playerid, svida ? T(playerid, "Ne svidja mi se") : T(playerid, "Svidja mi se"), T(playerid, "Komentiraj"), T(playerid, "Podijeli"), brisi);
     return 1;
 }
 
@@ -826,13 +829,17 @@ static LsClanovi(playerid)
         new acc = DB_GetFieldInt(res, 0);
         DB_GetFieldString(res, 1, ime, sizeof ime);
         TdCisti(ime);
-        format(red, sizeof red, "~b~%s%s~n~%s", ime, acc == gLsOdabran[playerid] ? (" ~r~<") : (""), acc == vlasnik ? T(playerid, "~y~Vlasnik grupe") : IgracRacuna(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
+        new opis[48], oznaka[64];
+        if (acc == vlasnik) strcat(opis, T(playerid, "~y~Vlasnik grupe"));
+        else strcat(opis, IgracRacuna(acc) != INVALID_PLAYER_ID ? ("~g~Online") : ("~l~Offline"));
+        if (acc == gLsOdabran[playerid]) strcat(oznaka, T(playerid, " ~r~Klikni opet za izbacivanje"));
+        if (vlasnik == me && acc != me) format(red, sizeof red, "~r~-  ~b~%s%s~n~%s", ime, oznaka, opis);
+        else format(red, sizeof red, "~b~%s~n~%s", ime, opis);
         LsRed(playerid, r, acc, acc, red);
     }
     DB_FreeResultSet(res);
     PcPostavi(playerid, PTD_SADRZAJ, "_");
-    if (vlasnik == me && gLsOdabran[playerid]) LsAkcije(playerid, T(playerid, "Dodaj clana"), T(playerid, "Ukloni clana"), T(playerid, "Obrisi grupu"), T(playerid, "Natrag"));
-    else if (vlasnik == me) LsAkcije(playerid, T(playerid, "Dodaj clana"), T(playerid, "Obrisi grupu"), T(playerid, "Natrag"));
+    if (vlasnik == me) LsAkcije(playerid, T(playerid, "Dodaj clana"), T(playerid, "Obrisi grupu"), T(playerid, "Natrag"));
     else LsAkcije(playerid, T(playerid, "Napusti"), T(playerid, "Natrag"));
 }
 
@@ -1083,11 +1090,22 @@ static LsKlik(playerid, PlayerText:td)
             case LS_CLANOVI:
             {
                 new naziv[LS_GRUPA_IME + 1];
-                if (LsGrupaPodaci(gLsCilj[playerid], naziv, sizeof naziv) != me || v == me) return LsOtvori(playerid, LS_PROFIL, v);
-                gLsOdabran[playerid] = gLsOdabran[playerid] == v ? 0 : v;
-                gPcPotvrda[playerid] = PP_NISTA;
+                new grp = gLsCilj[playerid];
+                if (LsGrupaPodaci(grp, naziv, sizeof naziv) != me || v == me) return LsOtvori(playerid, LS_PROFIL, v);
+                if (gLsOdabran[playerid] != v)
+                {
+                    gLsOdabran[playerid] = v;
+                    PcLifeStalker(playerid);
+                    return 1;
+                }
+                gLsOdabran[playerid] = 0;
+                DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_group_members WHERE grp = %d AND account = %d", grp, v));
                 PcLifeStalker(playerid);
-                return 1;
+                LsOsvjezi(LS_CLANOVI, grp, playerid);
+                LsOsvjezi(LS_DODAJ, grp, playerid);
+                new t = IgracRacuna(v);
+                if (t != INVALID_PLAYER_ID && gPcOtvoren[t] && gPcEkran[t] == PCE_LIFESTALKER && gLsCilj[t] == grp && gLsPogled[t] == LS_GRUPA) PcLifeStalker(t);
+                return PcJavi(playerid, false, T(playerid, "Clan je uklonjen iz grupe."));
             }
             case LS_PRIJATELJI:
             {
@@ -1217,20 +1235,10 @@ static LsKlik(playerid, PlayerText:td)
                     PcJavi(playerid, false, T(playerid, "Napustili ste grupu."));
                     return LsOtvori(playerid, LS_GRUPE);
                 }
-                new odabran = gLsOdabran[playerid], akcija = !i ? 0 : odabran ? i : i + 1;
+                new akcija = !i ? 0 : i + 1;
                 switch (akcija)
                 {
                     case 0: return LsOtvori(playerid, LS_DODAJ, cilj);
-                    case 1:
-                    {
-                        if (!PcPotvrdi(playerid, i, PP_CLAN)) return 1;
-                        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM social_group_members WHERE grp = %d AND account = %d", cilj, odabran));
-                        LsOsvjezi(LS_CLANOVI, cilj, playerid);
-                        new t = IgracRacuna(odabran);
-                        if (t != INVALID_PLAYER_ID && gPcOtvoren[t] && gPcEkran[t] == PCE_LIFESTALKER && gLsCilj[t] == cilj && (gLsPogled[t] == LS_GRUPA || gLsPogled[t] == LS_CLANOVI)) PcLifeStalker(t);
-                        PcJavi(playerid, false, T(playerid, "Clan je uklonjen iz grupe."));
-                        return LsOtvori(playerid, LS_CLANOVI, cilj);
-                    }
                     case 2:
                     {
                         if (!PcPotvrdi(playerid, i, PP_GRUPA)) return 1;

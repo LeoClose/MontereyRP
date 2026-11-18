@@ -1376,6 +1376,17 @@ DLG:ranjen(playerid, response)
     return 1;
 }
 
+RanjenAdmin(playerid)
+{
+    if (gRanjen[playerid] == RN_NE) return;
+    new s = SlucajPacijenta(playerid);
+    if (s != -1) SlucajKraj(s, true);
+    gRanjen[playerid] = RN_NE;
+    gRanjenPonuda[playerid] = 0;
+    TogglePlayerControllable(playerid, true);
+    ClearAnimations(playerid);
+}
+
 RanjenPrimijeni(playerid, bool:spasen)
 {
     gRanjen[playerid] = RN_NE;

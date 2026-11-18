@@ -2124,7 +2124,12 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "(( Admin %s odgovara: %s ))", "(( Admin %s replies: %s ))", "(( Админ %s отвечает: %s ))", "(( Admin %s responde: %s ))", "(( Admin %s cevapliyor: %s ))" },
     { "Admin %s je odgovorio na upit #%d.", "Admin %s answered request #%d.", "Админ %s ответил на запрос #%d.", "El admin %s respondio la solicitud #%d.", "Admin %s #%d talebini cevapladi." },
     { "Admin %s je zatvorio upit #%d.", "Admin %s closed request #%d.", "Админ %s закрыл запрос #%d.", "El admin %s cerro la solicitud #%d.", "Admin %s #%d talebini kapatti." },
-    { "Svi vasi prijatelji su vec u grupi.", "All your friends are already in the group.", "Все ваши друзья уже в группе.", "Todos tus amigos ya estan en el grupo.", "Tum arkadaslariniz zaten grupta." }
+    { "Svi vasi prijatelji su vec u grupi.", "All your friends are already in the group.", "Все ваши друзья уже в группе.", "Todos tus amigos ya estan en el grupo.", "Tum arkadaslariniz zaten grupta." },
+    { " ~r~Klikni opet za izbacivanje", " ~r~Click again to kick", " ~r~Нажмите ещё раз, чтобы исключить", " ~r~Haz clic otra vez para expulsar", " ~r~Atmak icin tekrar tiklayin" },
+    { "Admin vas je izlijecio.", "An admin healed you.", "Администратор вас вылечил.", "Un admin te curo.", "Bir admin sizi iyilestirdi." },
+    { "Izlijecili ste igraca %s.", "You healed %s.", "Вы вылечили игрока %s.", "Curaste a %s.", "%s oyuncusunu iyilestirdiniz." },
+    { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
+    { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

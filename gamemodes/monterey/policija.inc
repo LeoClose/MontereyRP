@@ -799,6 +799,7 @@ CMD:unjail(playerid, params[])
 
 CMD:heal(playerid, params[])
 {
+    if (gAdmin[playerid] >= ALVL_KICK) return AdminHeal(playerid, params);
     if (IsRanjen(playerid) || !DutyProvjera(playerid, ORG_VATROGASCI)) return 1;
     new target = SluzbaTarget(playerid, params);
     if (target == INVALID_PLAYER_ID) return 1;

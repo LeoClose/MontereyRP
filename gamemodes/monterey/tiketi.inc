@@ -92,7 +92,9 @@ static TiketPrikazi(playerid, const prijevod[])
     new t = gTiketOdabran[playerid];
     if (!TiketValjan(t)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Upit vise ne postoji."));
     new body[600], naslov[48];
-    if (gTiket[t][tkTip] == TIKET_PRIJAVA) format(body, sizeof body, T(playerid, "Igrac: %s (%d)\nPrijavljeni: %s (%d)\n\n%s"), GetRPIme(gTiket[t][tkIgrac]), gTiket[t][tkIgrac], IsPlayerConnected(gTiket[t][tkCilj]) ? GetRPIme(gTiket[t][tkCilj]) : ("-"), gTiket[t][tkCilj], gTiket[t][tkTekst]);
+    new prijavljeni[MAX_PLAYER_NAME + 1] = "-";
+    if (IsPlayerConnected(gTiket[t][tkCilj])) format(prijavljeni, sizeof prijavljeni, "%s", GetRPIme(gTiket[t][tkCilj]));
+    if (gTiket[t][tkTip] == TIKET_PRIJAVA) format(body, sizeof body, T(playerid, "Igrac: %s (%d)\nPrijavljeni: %s (%d)\n\n%s"), GetRPIme(gTiket[t][tkIgrac]), gTiket[t][tkIgrac], prijavljeni, gTiket[t][tkCilj], gTiket[t][tkTekst]);
     else format(body, sizeof body, T(playerid, "Igrac: %s (%d)\n\n%s"), GetRPIme(gTiket[t][tkIgrac]), gTiket[t][tkIgrac], gTiket[t][tkTekst]);
     if (prijevod[0])
     {

@@ -712,6 +712,29 @@ CMD:dozvola(playerid, params[])
     return 1;
 }
 
+AdminHeal(playerid, const params[])
+{
+    new target = params[0] ? FindPlayer(params) : playerid;
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden ili nije prijavljen."));
+    RanjenAdmin(target);
+    SetHP(target, 100.0);
+    SendClientMessage(target, COLOR_ADMIN, T(target, "Admin vas je izlijecio."));
+    if (target != playerid) SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Izlijecili ste igraca %s."), GetRPIme(target));
+    return 1;
+}
+
+CMD:kill(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!params[0]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /kill [id/ime]"));
+    new target = FindPlayer(params);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden ili nije prijavljen."));
+    RanjenAdmin(target);
+    SetPlayerHealth(target, 0.0);
+    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ubili ste igraca %s."), GetRPIme(target));
+    return 1;
+}
+
 CMD:wound(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
