@@ -1385,7 +1385,7 @@ static DashPokazi(playerid, v)
     gDash[playerid][DT_KM] = DashTekst(playerid, DASH_SX, DASH_GY + 13.3, "_", 0xFFFFFFFF, 0.12, 0.6);
     for (new d = 0; d < sizeof gDashDio; d++)
     {
-        new l = gDashDio[d][0], Float:x = l == 4 ? 315.0 : 308.5 + 13.0 * float(l % 2), Float:y = DASH_GY - 18.0 + 12.0 * float(l / 2);
+        new l = gDashDio[d][0], Float:x = l == 4 ? 315.0 : 308.5 + 13.0 * float(l % 2), Float:y = DASH_GY - 12.0 + 12.0 * float(l / 2);
         gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, x + float(gDashDio[d][1]), y + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
     }
     for (new t = 0; t < DASH_TD; t++)
@@ -1486,7 +1486,7 @@ static DashOsvjezi(playerid, v)
     else if (zdravlje < 650.0) boje[0] = DASH_BOJA_ZUTO;
     else boje[0] = DASH_BOJA_SLABO;
     boje[1] = VoziloGet(v, VP_SVJETLA) == 1 ? DASH_BOJA_PLAVO : DASH_BOJA_SLABO;
-    boje[2] = gPojas[playerid] ? DASH_BOJA_ZELENO : DASH_BOJA_CRVENO;
+    boje[2] = gPojas[playerid] ? DASH_BOJA_SLABO : DASH_BOJA_CRVENO;
     boje[3] = VoziloGet(v, VP_VRATA) == 1 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
     for (new l = 0; l < 4; l++) lamp = lamp * 5 + DashBoja(boje[l]);
     if (!DashPromjena(playerid, DS_LAMPICE, lamp)) return;
@@ -1500,23 +1500,20 @@ public VoziloDash()
     {
         if (!gUlogiran[i]) continue;
         new PLAYER_STATE:s = GetPlayerState(i), v = GetPlayerVehicleID(i);
-        if ((s != PLAYER_STATE_DRIVER && s != PLAYER_STATE_PASSENGER) || !v || BezMotora(GetVehicleModel(v)))
+        if (s != PLAYER_STATE_DRIVER || !v || BezMotora(GetVehicleModel(v)))
         {
             DashSakrij(i);
             continue;
         }
         if (v != gDashV[i]) DashPokazi(i, v);
-        if (s == PLAYER_STATE_DRIVER)
+        new Float:vx, Float:vy, Float:vz, Float:m;
+        GetVehicleVelocity(v, vx, vy, vz);
+        m = VectorSize(vx, vy, 0.0) * 50.0 * 0.25;
+        if (m > 0.05)
         {
-            new Float:vx, Float:vy, Float:vz, Float:m;
-            GetVehicleVelocity(v, vx, vy, vz);
-            m = VectorSize(vx, vy, 0.0) * 50.0 * 0.25;
-            if (m > 0.05)
-            {
-                VoziloKmUcitaj(v);
-                gVoziloKm[v] += m;
-                gVoziloKmStanje[v] = KM_PROMIJENJENO;
-            }
+            VoziloKmUcitaj(v);
+            gVoziloKm[v] += m;
+            gVoziloKmStanje[v] = KM_PROMIJENJENO;
         }
         DashOsvjezi(i, v);
     }
