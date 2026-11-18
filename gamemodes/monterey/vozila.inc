@@ -432,6 +432,7 @@ CMD:hood(playerid, params[])
 #define PRIKOLICA_OBJEKT    3174
 #define PRIKOLICA_OBJEKT_VELIKA 3175
 #define PRIKOLICA_OBJ_Y     -1.0
+#define PRIKOLICA_OBJ_Y_VELIKA -3.0
 #define PRIKOLICA_OBJ_Z     -0.8
 #define PRIKOLICA_DOMET     2.5
 #define PRIKOLICA_STRANA    -1.0
@@ -457,8 +458,9 @@ static bool:PrikolicaVrata(v, &Float:x, &Float:y, &Float:z)
     new Float:a;
     if (!GetVehiclePos(v, x, y, z)) return false;
     GetVehicleZAngle(v, a);
-    x += floatcos(a, degrees) * PRIKOLICA_STRANA * PRIKOLICA_VRATA - floatsin(a, degrees) * PRIKOLICA_OBJ_Y;
-    y += floatsin(a, degrees) * PRIKOLICA_STRANA * PRIKOLICA_VRATA + floatcos(a, degrees) * PRIKOLICA_OBJ_Y;
+    new Float:oy = GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Y_VELIKA : PRIKOLICA_OBJ_Y;
+    x += floatcos(a, degrees) * PRIKOLICA_STRANA * PRIKOLICA_VRATA - floatsin(a, degrees) * oy;
+    y += floatsin(a, degrees) * PRIKOLICA_STRANA * PRIKOLICA_VRATA + floatcos(a, degrees) * oy;
     return true;
 }
 
@@ -578,7 +580,7 @@ PrikolicaDodaj(v)
 {
     if (!JePrikolica(GetVehicleModel(v))) return;
     gPrikolicaObj[v] = CreateDynamicObject(GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJEKT_VELIKA : PRIKOLICA_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    AttachDynamicObjectToVehicle(gPrikolicaObj[v], v, 0.0, PRIKOLICA_OBJ_Y, GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Z_VELIKA : PRIKOLICA_OBJ_Z, 0.0, 0.0, 0.0);
+    AttachDynamicObjectToVehicle(gPrikolicaObj[v], v, 0.0, GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Y_VELIKA : PRIKOLICA_OBJ_Y, GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Z_VELIKA : PRIKOLICA_OBJ_Z, 0.0, 0.0, 0.0);
 }
 
 PrikolicaOtkaci(c)
@@ -622,11 +624,31 @@ static PrikolicaVuca(playerid, bool:javi)
     {
         t = gVozila[i];
         if (!JePrikolica(GetVehicleModel(t)) || GetVehicleVirtualWorld(t) || GetVehicleDistanceFromPoint(t, x, y, z) > PRIKOLICA_KUKA) continue;
-        AttachTrailerToVehicle(t, v);
+        new Float:a, Float:vx, Float:vy, Float:vz, Float:cx, Float:cy, Float:cz, Float:tx, Float:ty, Float:tz;
+        GetVehiclePos(v, vx, vy, vz);
+        GetVehicleZAngle(v, a);
+        GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, cx, cy, cz);
+        GetVehicleModelInfo(GetVehicleModel(t), VEHICLE_MODEL_INFO_SIZE, tx, ty, tz);
+        new Float:l = cy / 2.0 + ty / 2.0 + 0.3;
+        SetVehicleVelocity(v, 0.0, 0.0, 0.0);
+        SetVehicleVelocity(t, 0.0, 0.0, 0.0);
+        SetVehiclePos(t, vx + l * floatsin(a, degrees), vy - l * floatcos(a, degrees), vz + 0.2);
+        SetVehicleZAngle(t, a);
+        SetTimerEx("PrikolicaKvaci", 200, false, "ii", t, v);
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s kaci prikolicu.", GetRPIme(playerid), "", 1);
         return 1;
     }
     return javi && SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nema slobodne prikolice iza vozila."));
+}
+
+forward PrikolicaKvaci(t, v);
+public PrikolicaKvaci(t, v)
+{
+    if (!JePrikolica(GetVehicleModel(t)) || !GetVehicleModel(v) || GetVehicleTrailer(v) || GetVehicleDistanceFromPoint(t, 0.0, 0.0, 0.0) == 0.0) return;
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(v, x, y, z);
+    if (GetVehicleDistanceFromPoint(t, x, y, z) > PRIKOLICA_KUKA + 4.0) return;
+    AttachTrailerToVehicle(t, v);
 }
 
 PrikolicaAlt(playerid, KEY:newkeys, KEY:oldkeys)

@@ -464,7 +464,7 @@ DLG:namjestaj_prodaj(playerid, response)
 public OnPlayerEditDynamicObject(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
 {
     new db = gNamUredi[playerid];
-    if (db == -1) return 1;
+    if (db == -1) return KaficUredi(playerid, objectid, response, x, y, z, rz);
     new i = NamjestajSlot(db);
     if (i == -1 || gNamObj[i] != objectid)
     {

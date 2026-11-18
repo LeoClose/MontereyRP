@@ -2082,7 +2082,16 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Prodati kamp prikolicu za $%d? Namjestaj se vraca u skladiste.", "Sell the camper trailer for $%d? Furniture goes back to storage.", "Продать жилой прицеп за $%d? Мебель вернётся на склад.", "Vender la caravana por $%d? Los muebles vuelven al almacen.", "Karavan $%d karsiliginda satilsin mi? Mobilya depoya doner." },
     { "U prikolici je netko.", "Someone is inside the trailer.", "В прицепе кто-то есть.", "Hay alguien dentro de la caravana.", "Karavanin icinde biri var." },
     { "[%d] Kamp prikolice (%s) - obrisi", "[%d] Camper trailers (%s) - delete", "[%d] Жилые прицепы (%s) - удалить", "[%d] Caravanas (%s) - eliminar", "[%d] Karavanlar (%s) - sil" },
-    { "Prikolica je zakljucana.", "The trailer is locked.", "Прицеп заперт.", "La caravana esta cerrada.", "Karavan kilitli." }
+    { "Prikolica je zakljucana.", "The trailer is locked.", "Прицеп заперт.", "La caravana esta cerrada.", "Karavan kilitli." },
+    { "Dodaj clana", "Add member", "Добавить", "Agregar", "Uye ekle" },
+    { "Otkazi", "Cancel", "Отменить", "Cancelar", "Iptal" },
+    { "Potvrdi?", "Confirm?", "Подтвердить?", "Confirmar?", "Onayla?" },
+    { "Svi oglasi", "All ads", "Все объявления", "Todos los anuncios", "Tum ilanlar" },
+    { "Ukloni clana", "Remove member", "Удалить", "Quitar miembro", "Uyeyi cikar" },
+    { "~y~Vlasnik grupe", "~y~Group owner", "~y~Владелец группы", "~y~Dueno del grupo", "~y~Grup sahibi" },
+    { "Nemate kamp prikolicu.", "You have no camper trailer.", "У вас нет жилого прицепа.", "No tienes caravana.", "Karavaniniz yok." },
+    { "Pozicija racunala je spremljena.", "Computer position saved.", "Позиция компьютера сохранена.", "Posicion del ordenador guardada.", "Bilgisayar konumu kaydedildi." },
+    { "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje.", "Computer placed. Move it and click the floppy disk to save.", "Компьютер установлен. Переместите его и нажмите на дискету для сохранения.", "Ordenador colocado. Muevelo y pulsa el disquete para guardar.", "Bilgisayar yerlestirildi. Tasiyin ve kaydetmek icin diskete tiklayin." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

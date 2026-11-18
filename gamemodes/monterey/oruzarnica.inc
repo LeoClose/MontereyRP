@@ -1,4 +1,5 @@
 #define ORUZARNICA_MAX          16
+#define ORUZ_MAPA_INT           16
 #define ORUZARNICA_SVIJET       3500
 #define ORUZARNICA_DOMET        2.0
 #define ORUZARNICA_KASA_DOMET   2.5
@@ -17,8 +18,16 @@ static const gOruzarnicaInt[][E_ORUZ_INT] = {
     { "Ammu-Nation 2", 4, 286.800, -82.547, 1001.515 },
     { "Ammu-Nation 3", 6, 296.919, -108.071, 1001.515 },
     { "Ammu-Nation 4", 7, 314.820, -141.431, 999.601 },
-    { "Ammu-Nation 5", 6, 316.524, -167.706, 999.593 }
+    { "Ammu-Nation 5", 6, 316.524, -167.706, 999.593 },
+    { "Monterey Guns", ORUZ_MAPA_INT, 1390.5, -17.7, 1001.0 }
 };
+
+CMD:oruzarnicaint(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    PrebaciIgraca(playerid, ORUZ_MAPA_INT, 0, 1390.5, -17.7, 1001.0);
+    return 1;
+}
 
 static const gOruzarnicaZadano[][3] = {
     { ITEM_COLT, 1, 800 }, { ITEM_DEAGLE, 1, 1500 }, { ITEM_SACMARICA, 1, 2000 }, { ITEM_UZI, 1, 2500 },

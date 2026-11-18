@@ -4,12 +4,16 @@
 #define KAFIC_DOMET         2.5
 #define KAFIC_PC_DOMET      2.0
 #define KAFIC_VEZA          60.0
+#define KAFIC_MAPA_INT      15
+#define KAFIC_MAPA_X        1405.19
+#define KAFIC_MAPA_Y        1.25
+#define KAFIC_MAPA_Z        997.6
 
 enum E_KAFIC { bool:kfIma, kfDb, Float:kfX, Float:kfY, Float:kfZ, Float:kfA, kfInt, kfSvijet, kfAktor, STREAMER_TAG_3D_TEXT_LABEL:kfTekst }
 enum E_KAFIC_PC { bool:kpIma, kpDb, kpKafic, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, kpInt, kpSvijet, STREAMER_TAG_OBJECT:kpObjekt }
 static const gKaficMinuta[] = { 10, 20, 30, 60 };
 static const gKaficCijena[] = { 20, 35, 50, 90 };
-static gKafic[KAFIC_MAX][E_KAFIC], gKaficPc[KAFIC_PC_MAX][E_KAFIC_PC], gKaficIgrac[MAX_PLAYERS], gKaficDo[MAX_PLAYERS], gApKafic[MAX_PLAYERS][KAFIC_MAX + KAFIC_PC_MAX];
+static gKaficUredi[MAX_PLAYERS] = { -1, ... }, gKafic[KAFIC_MAX][E_KAFIC], gKaficPc[KAFIC_PC_MAX][E_KAFIC_PC], gKaficIgrac[MAX_PLAYERS], gKaficDo[MAX_PLAYERS], gApKafic[MAX_PLAYERS][KAFIC_MAX + KAFIC_PC_MAX];
 
 InitKafic()
 {
@@ -120,8 +124,36 @@ KaficTick()
     }
 }
 
+KaficUredi(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, Float:z, Float:rz)
+{
+    new p = gKaficUredi[playerid];
+    if (p == -1 || response == _:EDIT_RESPONSE_UPDATE) return 1;
+    gKaficUredi[playerid] = -1;
+    if (!gKaficPc[p][kpIma] || gKaficPc[p][kpObjekt] != objectid) return 1;
+    if (response == _:EDIT_RESPONSE_FINAL && gAdmin[playerid] >= ALVL_ORG)
+    {
+        gKaficPc[p][kpX] = x;
+        gKaficPc[p][kpY] = y;
+        gKaficPc[p][kpZ] = z;
+        gKaficPc[p][kpA] = rz;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE cafe_pcs SET x = %f, y = %f, z = %f, a = %f WHERE id = %d", x, y, z, rz, gKaficPc[p][kpDb]));
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Pozicija racunala je spremljena."));
+    }
+    SetDynamicObjectPos(objectid, gKaficPc[p][kpX], gKaficPc[p][kpY], gKaficPc[p][kpZ]);
+    SetDynamicObjectRot(objectid, 0.0, 0.0, gKaficPc[p][kpA]);
+    return 1;
+}
+
+CMD:kaficint(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    PrebaciIgraca(playerid, KAFIC_MAPA_INT, 0, KAFIC_MAPA_X, KAFIC_MAPA_Y, KAFIC_MAPA_Z);
+    return 1;
+}
+
 KaficDisconnect(playerid)
 {
+    gKaficUredi[playerid] = -1;
     gKaficDo[playerid] = 0;
     gKaficIgrac[playerid] = 0;
 }
@@ -202,8 +234,10 @@ DLG:apanel_kafic(playerid, response, listitem)
         gKaficPc[p][kpInt] = unutra;
         gKaficPc[p][kpSvijet] = svijet;
         KaficPcStvori(p);
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Racunalo internet kafica je postavljeno."));
-        return ShowKafici(playerid);
+        Streamer_Update(playerid, STREAMER_TYPE_OBJECT);
+        gKaficUredi[playerid] = p;
+        EditDynamicObject(playerid, gKaficPc[p][kpObjekt]);
+        return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje."));
     }
     new i = listitem - 2;
     if (i < 0 || i >= KAFIC_MAX + KAFIC_PC_MAX) return 1;
