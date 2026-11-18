@@ -102,7 +102,7 @@ static NamjestajPostaviObjekt(db, model, kuca, interijer, Float:x, Float:y, Floa
     {
         if (gNamObjDb[i]) continue;
         gNamObjDb[i] = db;
-        gNamObj[i] = CreateDynamicObject(model, x, y, z, rx, ry, rz, KUCA_SVIJET + kuca, interijer);
+        gNamObj[i] = CreateDynamicObject(model, x, y, z, rx, ry, rz, kuca > 0 ? KUCA_SVIJET + kuca : PrikolicaSvijet(VlasnikPoDb(-kuca)), interijer);
         return i;
     }
     return -1;
@@ -348,8 +348,24 @@ NamjestajMeni(playerid, kuca)
     return PrikaziDialog(playerid, DLG_NAMJESTAJ, DIALOG_STYLE_LIST, T(playerid, "Namjestaj"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
+NamjestajPrikolica(db, v)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, model, x, y, z, rx, ry, rz FROM furniture WHERE house = %d", -db);
+    for (new i = 0, n = DB_GetRowCount(res); i < n; i++, DB_SelectNextRow(res))
+    {
+        new o = NamjestajPostaviObjekt(DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 1), 0, PRIKOLICA_INT, DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), DB_GetFieldFloat(res, 5), DB_GetFieldFloat(res, 6), DB_GetFieldFloat(res, 7));
+        if (o != -1) Streamer_SetIntData(STREAMER_TYPE_OBJECT, gNamObj[o], E_STREAMER_WORLD_ID, PrikolicaSvijet(v));
+    }
+    DB_FreeResultSet(res);
+}
+
 static bool:NamjestajUKuci(playerid)
 {
+    if (gNamKuca[playerid] < 0)
+    {
+        new v = PrikolicaUnutra(playerid);
+        return v && VlasnikDb(v) == -gNamKuca[playerid] && VlasnikVozila(v) == gAccountId[playerid];
+    }
     return gNamKuca[playerid] && KucaIgracaDb(playerid) == gNamKuca[playerid];
 }
 

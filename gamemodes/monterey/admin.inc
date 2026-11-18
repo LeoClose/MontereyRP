@@ -632,7 +632,7 @@ static AdminStvoriVozilo(playerid, model, c1, c2)
     new Float:x, Float:y, Float:z, Float:a;
     GetPlayerPos(playerid, x, y, z);
     GetPlayerFacingAngle(playerid, a);
-    if (model == PRIKOLICA_MODEL)
+    if (JePrikolica(model))
     {
         x += 5.0 * floatsin(-a, degrees);
         y += 5.0 * floatcos(-a, degrees);
@@ -646,7 +646,7 @@ static AdminStvoriVozilo(playerid, model, c1, c2)
     gAdminVeh[playerid] = veh;
     SetVehicleVirtualWorld(veh, GetPlayerVirtualWorld(playerid));
     LinkVehicleToInterior(veh, GetPlayerInterior(playerid));
-    if (model != PRIKOLICA_MODEL) PutPlayerInVehicle(playerid, veh, 0);
+    if (!JePrikolica(model)) PutPlayerInVehicle(playerid, veh, 0);
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo %d stvoreno. Brise se u admin panelu (Vozila)."), model);
     return 1;
 }
@@ -829,9 +829,9 @@ enum
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade", "Pikado", "Kuglane", "Anticheat", "Droga"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade", "Pikado", "Kuglane", "Anticheat", "Droga", "Kamp prikolice"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MANAGE, ALVL_ORG };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MANAGE, ALVL_ORG, ALVL_ORG };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -993,6 +993,7 @@ static OtvoriStavku(playerid, stavka)
         case 38: return ShowKuglane(playerid);
         case 39: return ShowAntiCheat(playerid);
         case 40: return ShowDrogaAdmin(playerid);
+        case 41: return ShowKampove(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));

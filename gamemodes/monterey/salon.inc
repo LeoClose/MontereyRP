@@ -98,7 +98,7 @@ static SalonStvori(s)
     SalonPonuda(s);
 }
 
-static VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Float:a, cijena)
+VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Float:a, cijena)
 {
     new v = CreateVehicle(model, x, y, z, a, c1, c2, -1);
     if (v == INVALID_VEHICLE_ID) return v;
@@ -113,6 +113,7 @@ static VlasnickoStvori(db, owner, model, c1, c2, Float:x, Float:y, Float:z, Floa
     for (new i = 0; i < 4; i++) gVlasnikOstecenja[v][i] = 0;
     gVlasnikGaraza[v] = 0;
     TuningPrimijeni(v);
+    if (JePrikolica(model)) NamjestajPrikolica(db, v);
     return v;
 }
 

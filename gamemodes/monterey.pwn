@@ -212,7 +212,6 @@ public OnGameModeInit()
     MapaIdlewoodFlatsUkloni(INVALID_PLAYER_ID);
     MapaMarica();
     MapaHitna();
-    MapaKuglana();
     MapaOpstina();
     MapaIdlewood();
     MapaIdlewoodFlats();
@@ -261,6 +260,7 @@ public OnGameModeInit()
     InitArkada();
     InitPikado();
     InitKuglanje();
+    InitKamp();
     InitAntiCheat();
     InitSync();
     InitPoker();
@@ -367,6 +367,7 @@ public OnGameModeExit()
 #define ALVL_KICK           1
 #define ALVL_VEH            1
 #define PRIKOLICA_MODEL     611
+#define PRIKOLICA_VELIKA    607
 #define ALVL_BAN            2
 #define ALVL_ORG            3
 #define ALVL_MONEY          4
@@ -423,12 +424,12 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/sync.inc"
 #include "monterey/namjestaj.inc"
 #include "monterey/salon.inc"
+#include "monterey/kamp.inc"
 #include "monterey/pijaca.inc"
 #include "monterey/opstina.inc"
 #include "monterey/mape/mapa.inc"
 #include "monterey/mape/mapa_marica.inc"
 #include "monterey/mape/mapa_hitna.inc"
-#include "monterey/mape/mapa_kuglana.inc"
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"

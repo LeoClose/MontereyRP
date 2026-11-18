@@ -430,6 +430,7 @@ CMD:hood(playerid, params[])
 #define PRIKOLICA_INT       2
 #define PRIKOLICA_KUKA      8.0
 #define PRIKOLICA_OBJEKT    3174
+#define PRIKOLICA_OBJEKT_VELIKA 3175
 #define PRIKOLICA_OBJ_Y     -1.0
 #define PRIKOLICA_OBJ_Z     -0.8
 #define PRIKOLICA_DOMET     2.5
@@ -477,7 +478,7 @@ static bool:PrikolicaVrata(v, &Float:x, &Float:y, &Float:z)
 
 static bool:MaricaBehind(v, &Float:x, &Float:y, &Float:z)
 {
-    if (GetVehicleModel(v) == PRIKOLICA_MODEL) return PrikolicaVrata(v, x, y, z);
+    if (JePrikolica(GetVehicleModel(v))) return PrikolicaVrata(v, x, y, z);
     new Float:a, Float:sirina, Float:duzina, Float:visina;
     if (!GetVehiclePos(v, x, y, z)) return false;
     GetVehicleZAngle(v, a);
@@ -512,7 +513,7 @@ static MaricaExit(playerid)
     PrebaciIgraca(playerid, 0, 0, x, y, z);
     new Float:a;
     GetVehicleZAngle(gPrikolicaVuce[gMaricaU[playerid]] ? gPrikolicaVuce[gMaricaU[playerid]] : gMaricaU[playerid], a);
-    SetPlayerFacingAngle(playerid, GetVehicleModel(gMaricaU[playerid]) == PRIKOLICA_MODEL ? a - 90.0 * PRIKOLICA_STRANA : a + 180.0);
+    SetPlayerFacingAngle(playerid, JePrikolica(GetVehicleModel(gMaricaU[playerid])) ? a - 90.0 * PRIKOLICA_STRANA : a + 180.0);
     MaricaReset(playerid);
     if (!ImaLisice(playerid)) ApplyAnimation(playerid, "PED", "CAR_getout_LHS", 4.1, false, false, false, false, 0);
 }
@@ -527,7 +528,7 @@ static UdjiUMaricu(playerid, v)
         y = 1229.4;
         z = -0.2;
     }
-    else if (model == PRIKOLICA_MODEL)
+    else if (JePrikolica(model))
     {
         unutra = PRIKOLICA_INT;
         x = 0.3440;
@@ -550,10 +551,47 @@ MaricaEnter(playerid, PLAYER_STATE:newstate)
     if (model == MARICA_MODEL || model == HITNA_MODEL) UdjiUMaricu(playerid, v);
 }
 
+forward bool:PrikolicaZakljucana(v);
+
+JePrikolica(model)
+{
+    return model == PRIKOLICA_MODEL || model == PRIKOLICA_VELIKA;
+}
+
+PrikolicaUnutra(playerid)
+{
+    new v = gMaricaU[playerid];
+    return v && JePrikolica(GetVehicleModel(v)) && GetPlayerVirtualWorld(playerid) == MARICA_SVIJET + v ? v : 0;
+}
+
+PrikolicaSvijet(v)
+{
+    return MARICA_SVIJET + v;
+}
+
+bool:PrikolicaPrazna(v)
+{
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gMaricaU[i] == v && GetPlayerVirtualWorld(i) == MARICA_SVIJET + v) return false;
+    return true;
+}
+
+PrikolicaKodVrata(playerid)
+{
+    if (GetPlayerVirtualWorld(playerid) || GetPlayerInterior(playerid)) return 0;
+    new Float:vx, Float:vy, Float:vz;
+    for (new i = 0; i < gVozilaCount; i++)
+    {
+        new v = gVozila[i];
+        if (!JePrikolica(GetVehicleModel(v)) || (!gPrikolicaVuce[v] && GetVehicleVirtualWorld(v)) || !PrikolicaVrata(v, vx, vy, vz) || !IsPlayerInRangeOfPoint(playerid, PRIKOLICA_DOMET, vx, vy, vz)) continue;
+        return v;
+    }
+    return 0;
+}
+
 PrikolicaDodaj(v)
 {
-    if (GetVehicleModel(v) != PRIKOLICA_MODEL) return;
-    gPrikolicaObj[v] = CreateDynamicObject(PRIKOLICA_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    if (!JePrikolica(GetVehicleModel(v))) return;
+    gPrikolicaObj[v] = CreateDynamicObject(GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJEKT_VELIKA : PRIKOLICA_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     AttachDynamicObjectToVehicle(gPrikolicaObj[v], v, 0.0, PRIKOLICA_OBJ_Y, PRIKOLICA_OBJ_Z, 0.0, 0.0, 0.0);
 }
 
@@ -588,23 +626,21 @@ static PrikolicaZakaci(t, c)
 PrikolicaMakni(v)
 {
     PrikolicaOtkaci(v);
-    if (GetVehicleModel(v) != PRIKOLICA_MODEL) return;
+    if (!JePrikolica(GetVehicleModel(v))) return;
     gPrikolicaZakacena[gPrikolicaVuce[v]] = 0;
     gPrikolicaVuce[v] = 0;
     DestroyDynamicObject(gPrikolicaObj[v]);
+    if (VlasnikDb(v)) NamjestajKucaIsprazni(-VlasnikDb(v));
 }
 
 PrikolicaUlaz(playerid)
 {
-    if (GetPlayerVirtualWorld(playerid) || GetPlayerInterior(playerid) || ImaLisice(playerid)) return 0;
-    new Float:vx, Float:vy, Float:vz;
-    for (new i = 0; i < gVozilaCount; i++)
-    {
-        if (GetVehicleModel(gVozila[i]) != PRIKOLICA_MODEL || (!gPrikolicaVuce[gVozila[i]] && GetVehicleVirtualWorld(gVozila[i])) || !PrikolicaVrata(gVozila[i], vx, vy, vz) || !IsPlayerInRangeOfPoint(playerid, PRIKOLICA_DOMET, vx, vy, vz)) continue;
-        UdjiUMaricu(playerid, gVozila[i]);
-        return 1;
-    }
-    return 0;
+    if (ImaLisice(playerid)) return 0;
+    new v = PrikolicaKodVrata(playerid);
+    if (!v) return 0;
+    if (PrikolicaZakljucana(v) && !ImaKljuc(playerid, v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prikolica je zakljucana.")), 1;
+    UdjiUMaricu(playerid, v);
+    return 1;
 }
 
 CMD:zakaci(playerid, params[])
@@ -624,7 +660,7 @@ CMD:zakaci(playerid, params[])
     for (new i = 0; i < gVozilaCount; i++)
     {
         new t = gVozila[i];
-        if (GetVehicleModel(t) != PRIKOLICA_MODEL || gPrikolicaVuce[t] || GetVehicleVirtualWorld(t) || GetVehicleDistanceFromPoint(t, x, y, z) > PRIKOLICA_KUKA) continue;
+        if (!JePrikolica(GetVehicleModel(t)) || gPrikolicaVuce[t] || GetVehicleVirtualWorld(t) || GetVehicleDistanceFromPoint(t, x, y, z) > PRIKOLICA_KUKA) continue;
         PrikolicaZakaci(t, v);
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s kaci prikolicu.", GetRPIme(playerid), "", 1);
         return 1;
@@ -1553,7 +1589,7 @@ static VoziloBlizu(playerid)
 static bool:MozeKljuc(v)
 {
     new model = GetVehicleModel(v);
-    return VlasnikVozila(v) != VLASNIK_PIJACA && !BezKrova(model) && model != MARICA_MODEL && model != HITNA_MODEL && model != PRIKOLICA_MODEL && TaksiPoVozilu(v) == -1 && !JeKamion(v);
+    return VlasnikVozila(v) != VLASNIK_PIJACA && !BezKrova(model) && model != MARICA_MODEL && model != HITNA_MODEL && (!JePrikolica(model) || VlasnikVozila(v)) && TaksiPoVozilu(v) == -1 && !JeKamion(v);
 }
 
 ImaKljuc(playerid, v)
@@ -1988,3 +2024,13 @@ CMD:belt(playerid, params[]) return cmd_pojas(playerid, params);
 CMD:window(playerid, params[]) return cmd_prozor(playerid, params);
 CMD:vinfo(playerid, params[]) return cmd_prometna(playerid, params);
 CMD:refuel(playerid, params[]) return cmd_tankaj(playerid, params);
+
+bool:PrikolicaZakljucana(v)
+{
+    return VoziloGet(v, VP_VRATA) == 1;
+}
+
+PrikolicaZakljucaj(v, bool:zakljucano)
+{
+    VoziloSet(v, VP_VRATA, zakljucano ? 1 : 0);
+}
