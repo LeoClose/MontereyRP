@@ -65,7 +65,8 @@ static bool:SyncPrvoLice(w)
 
 static bool:SyncBrzinaOk(Float:x, Float:y, Float:z, Float:najvise)
 {
-    return VectorSize(x, y, z) <= najvise;
+    new Float:v = VectorSize(x, y, z);
+    return v == v && v <= najvise;
 }
 
 InitSync()
