@@ -1247,9 +1247,10 @@ static KradjaKorak(playerid)
     }
 }
 
-#define DASH_TX             240.0
-#define DASH_SX             400.0
-#define DASH_GY             414.0
+#define DASH_TX             272.0
+#define DASH_SX             368.0
+#define DASH_GY             417.0
+#define DASH_EKRAN          0x16202BFF
 #define DASH_R              31.0
 #define DASH_ASP            1.07
 #define DASH_CRTICA         9
@@ -1272,7 +1273,7 @@ static KradjaKorak(playerid)
 enum { DT_POZADINA, DT_RUB, DT_T_PRSTEN, DT_T_LICE, DT_S_PRSTEN, DT_S_LICE,
     DT_T_CRTICA, DT_S_CRTICA = DT_T_CRTICA + DASH_CRTICA, DT_T_BROJ = DT_S_CRTICA + DASH_CRTICA, DT_S_BROJ = DT_T_BROJ + DASH_CRTICA,
     DT_T_KAZ = DT_S_BROJ + DASH_CRTICA, DT_S_KAZ = DT_T_KAZ + DASH_KAZ, DT_T_GLAVA = DT_S_KAZ + DASH_KAZ, DT_S_GLAVA, DT_T_OZNAKA, DT_S_OZNAKA,
-    DT_SAT, DT_KM, DT_LAMPICE }
+    DT_SAT_POZ, DT_SAT, DT_KM_POZ, DT_KM, DT_LAMPICE }
 enum { DS_GORIVO_BOJA, DS_LAMPICE, DS_T_KUT, DS_S_KUT, DS_KM, DS_SAT, DS_SKALA, DS_BROJ }
 static const gDashDio[][5] = {
     { 0, 1, 0, 5, 1 }, { 0, 1, 1, 1, 3 }, { 0, 5, 1, 1, 3 }, { 0, 1, 4, 5, 5 }, { 0, 0, 9, 7, 1 }, { 0, 6, 5, 1, 1 }, { 0, 7, 2, 1, 4 }, { 0, 7, 1, 2, 1 },
@@ -1365,8 +1366,8 @@ static DashPokazi(playerid, v)
     for (new k = 0; k < DS_BROJ; k++) gDashStanje[playerid][k] = -1;
     new skala = DashSkala(v);
     gDashStanje[playerid][DS_SKALA] = skala;
-    gDash[playerid][DT_POZADINA] = DashSlika(playerid, DASH_TX, 392.0, DASH_SX - DASH_TX, 56.0, DASH_BOJA_POZADINA);
-    gDash[playerid][DT_RUB] = DashSlika(playerid, DASH_TX, 392.0, DASH_SX - DASH_TX, 1.0, DASH_BOJA_PRSTEN);
+    gDash[playerid][DT_POZADINA] = DashSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 448.0 - DASH_GY + 20.0, DASH_BOJA_POZADINA);
+    gDash[playerid][DT_RUB] = DashSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 1.0, DASH_BOJA_PRSTEN);
     DashBrojcanik(playerid, DASH_TX, DT_T_PRSTEN, DT_T_LICE, DT_T_CRTICA, DT_T_BROJ, 1, 7);
     DashBrojcanik(playerid, DASH_SX, DT_S_PRSTEN, DT_S_LICE, DT_S_CRTICA, DT_S_BROJ, skala / 8, DASH_CRTICA);
     for (new i = 0; i < DASH_KAZ; i++)
@@ -1376,12 +1377,17 @@ static DashPokazi(playerid, v)
     }
     gDash[playerid][DT_T_GLAVA] = DashKrug(playerid, DASH_TX, DASH_GY, 3.0, DASH_BOJA_PRSTEN);
     gDash[playerid][DT_S_GLAVA] = DashKrug(playerid, DASH_SX, DASH_GY, 3.0, DASH_BOJA_PRSTEN);
-    gDash[playerid][DT_T_OZNAKA] = DashTekst(playerid, DASH_TX, DASH_GY + 5.0, "x1000 rpm", DASH_BOJA_LABEL, 0.1, 0.45);
-    gDash[playerid][DT_S_OZNAKA] = DashTekst(playerid, DASH_SX, DASH_GY + 5.0, "km/h", DASH_BOJA_LABEL, 0.1, 0.45);
-    gDash[playerid][DT_SAT] = DashTekst(playerid, 320.0, 399.0, "_", 0xFFFFFFFF, 0.14, 0.65);
-    gDash[playerid][DT_KM] = DashTekst(playerid, 320.0, 430.0, "_", DASH_BOJA_CRTICA, 0.13, 0.6);
+    gDash[playerid][DT_T_OZNAKA] = DashTekst(playerid, DASH_TX, DASH_GY - 12.0, "x1000 rpm", DASH_BOJA_LABEL, 0.1, 0.45);
+    gDash[playerid][DT_S_OZNAKA] = DashTekst(playerid, DASH_SX, DASH_GY - 12.0, "km/h", DASH_BOJA_LABEL, 0.1, 0.45);
+    gDash[playerid][DT_SAT_POZ] = DashSlika(playerid, DASH_TX - 11.0, DASH_GY + 12.5, 22.0, 7.0, DASH_EKRAN);
+    gDash[playerid][DT_SAT] = DashTekst(playerid, DASH_TX, DASH_GY + 13.3, "_", 0xFFFFFFFF, 0.13, 0.6);
+    gDash[playerid][DT_KM_POZ] = DashSlika(playerid, DASH_SX - 15.0, DASH_GY + 12.5, 30.0, 7.0, DASH_EKRAN);
+    gDash[playerid][DT_KM] = DashTekst(playerid, DASH_SX, DASH_GY + 13.3, "_", 0xFFFFFFFF, 0.12, 0.6);
     for (new d = 0; d < sizeof gDashDio; d++)
-        gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, 288.0 + 13.5 * float(gDashDio[d][0]) + float(gDashDio[d][1]), 413.0 + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
+    {
+        new l = gDashDio[d][0], Float:x = l == 4 ? 315.0 : 308.5 + 13.0 * float(l % 2), Float:y = DASH_GY - 18.0 + 12.0 * float(l / 2);
+        gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, x + float(gDashDio[d][1]), y + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
+    }
     for (new t = 0; t < DASH_TD; t++)
     {
         if (t >= DT_T_KAZ && t < DT_T_GLAVA) continue;
@@ -1478,7 +1484,7 @@ static DashOsvjezi(playerid, v)
     new boje[4], lamp = 0;
     if (zdravlje < VOZILO_KVAR_ZDRAVLJE) boje[0] = DASH_BOJA_CRVENO;
     else if (zdravlje < 650.0) boje[0] = DASH_BOJA_ZUTO;
-    else boje[0] = motor ? DASH_BOJA_ZELENO : DASH_BOJA_SLABO;
+    else boje[0] = DASH_BOJA_SLABO;
     boje[1] = VoziloGet(v, VP_SVJETLA) == 1 ? DASH_BOJA_PLAVO : DASH_BOJA_SLABO;
     boje[2] = gPojas[playerid] ? DASH_BOJA_ZELENO : DASH_BOJA_CRVENO;
     boje[3] = VoziloGet(v, VP_VRATA) == 1 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
