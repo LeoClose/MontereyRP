@@ -21,7 +21,7 @@ enum { UK_NEMA, UK_LOBBY, UK_ODBROJ, UK_VOZI }
 enum E_UTRKA { ukStanje, ukDomacin, ukRacun, STREAMER_TAG_RACE_CP:ukCp, ukPot, ukStart, ukIme[UTRKA_IME], ukBroj, ukOdbroj, ukRok, ukPrvi, ukPlasman, ukGrid, ukObjava }
 
 static gUk[UTRKA_AKTIVNIH][E_UTRKA], Float:gUkTocke[UTRKA_AKTIVNIH][UTRKA_TOCAKA][3];
-static gUv[MAX_PLAYERS], gUvStanje[MAX_PLAYERS], gUvCp[MAX_PLAYERS], gUvUlog[MAX_PLAYERS], gUvMjesto[MAX_PLAYERS], STREAMER_TAG_MAP_ICON:gUvIkona[MAX_PLAYERS];
+static bool:gUvUlogDan[MAX_PLAYERS], gUv[MAX_PLAYERS], gUvStanje[MAX_PLAYERS], gUvCp[MAX_PLAYERS], gUvUlog[MAX_PLAYERS], gUvMjesto[MAX_PLAYERS], STREAMER_TAG_MAP_ICON:gUvIkona[MAX_PLAYERS];
 static bool:gUrIma[MAX_PLAYERS], bool:gUrIme[MAX_PLAYERS], gUrBroj[MAX_PLAYERS], Float:gUrTocke[MAX_PLAYERS][UTRKA_TOCAKA][3], STREAMER_TAG_OBJECT:gUrObjekt[MAX_PLAYERS][UTRKA_TOCAKA];
 static gUlBroj[MAX_PLAYERS], gUlId[MAX_PLAYERS][UTRKA_MAX_PO_IGRACU], gUlIme[MAX_PLAYERS][UTRKA_MAX_PO_IGRACU][UTRKA_IME];
 
@@ -171,6 +171,12 @@ static UtrkaUrediCilj(playerid)
 
 UtrkaChat(playerid, const text[])
 {
+    new u = gUv[playerid] - 1;
+    if (u >= 0 && gUk[u][ukStanje] == UK_LOBBY && !gUvUlogDan[playerid] && ProvjeriBroj(text) && strlen(text) <= 6)
+    {
+        UtrkaUlog(playerid, u, strval(text));
+        return 1;
+    }
     if (!gUrIme[playerid]) return 0;
     new len = strlen(text);
     if (len < 1 || len >= UTRKA_IME || strfind(text, "~") != -1)
@@ -230,7 +236,6 @@ static UtrkaIzbaci(playerid, bool:makniObavijest = true)
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUv[i] == u + 1 && i != playerid && gUvIkona[i]) Streamer_RemoveArrayData(STREAMER_TYPE_MAP_ICON, gUvIkona[i], E_STREAMER_PLAYER_ID, playerid);
     if (makniObavijest) IgraObavijestUkloni(playerid);
-    UpitMakni(playerid, UPIT_UTRKA);
     gUv[playerid] = 0;
     gUvStanje[playerid] = UV_NE;
 }
@@ -345,20 +350,19 @@ public OnPlayerEnterDynamicRaceCP(playerid, STREAMER_TAG_RACE_CP:checkpointid)
     gUvUlog[playerid] = 0;
     gUvMjesto[playerid] = 0;
     gUvCp[playerid] = 0;
+    gUvUlogDan[playerid] = false;
     UtrkaNaGrid(playerid, u);
-    new info[96];
-    format(info, sizeof info, T(playerid, "Utrka: %s"), gUk[u][ukIme]);
-    UpitKolicina(playerid, UPIT_UTRKA, u, gUk[u][ukRacun], T(playerid, "Utrka - ulog na sebe"), info);
     return 1;
 }
 
-UtrkaUlog(playerid, u, racun, ulog)
+static UtrkaUlog(playerid, u, ulog)
 {
-    if (u < 0 || u >= UTRKA_AKTIVNIH || gUv[playerid] != u + 1 || gUk[u][ukStanje] != UK_LOBBY || gUk[u][ukRacun] != racun) return ObavijestGreska(playerid, T(playerid, "Utrka vise ne prima uloge."));
     if (ulog < 0 || ulog > UTRKA_MAX_ULOG) return ObavijestGreska(playerid, T(playerid, "Ulog mora biti od $0 do $100000."));
-    if (!ulog) return 1;
-    if (!DajNovac(playerid, -ulog)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
+    if (ulog && !DajNovac(playerid, -ulog)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
+    gUvUlogDan[playerid] = true;
     gUvUlog[playerid] = ulog;
+    UtrkaLobbyPanel(u);
+    if (!ulog) return 1;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUv[i] == u + 1) SendClientMessage(i, COLOR_INFO, T(i, "%s ulaze $%d na sebe."), GetRPIme(playerid), ulog);
     return 1;
@@ -375,12 +379,22 @@ static UtrkaNaGrid(playerid, u)
     new Float:strana = s % 2 ? 2.8 : -2.8, Float:nazad = 4.0 + float(red) * 8.0;
     new Float:x = gUkTocke[u][0][0] - dx * nazad - dy * strana, Float:y = gUkTocke[u][0][1] - dy * nazad + dx * strana, Float:z = gUkTocke[u][0][2], Float:hx, Float:hy, Float:hz;
     if (Kolizija_Zraka(x, y, z + 6.0, x, y, z - 20.0, hx, hy, hz)) z = hz + 1.0;
-    SetVehiclePos(v, x, y, z);
-    SetVehicleZAngle(v, atan2(dy, dx) - 90.0);
-    SetVehicleVelocity(v, 0.0, 0.0, 0.0);
+    new Float:a = atan2(dy, dx) - 90.0;
     TogglePlayerControllable(playerid, false);
+    UtrkaPoravnaj(playerid, v, x, y, z, a, 0);
     gUvStanje[playerid] = UV_GRID;
     UtrkaLobbyPanel(u);
+}
+
+forward UtrkaPoravnaj(playerid, v, Float:x, Float:y, Float:z, Float:a, korak);
+public UtrkaPoravnaj(playerid, v, Float:x, Float:y, Float:z, Float:a, korak)
+{
+    if (!gUv[playerid] || gUvStanje[playerid] != UV_GRID || GetPlayerVehicleID(playerid) != v) return;
+    SetVehicleVelocity(v, 0.0, 0.0, 0.0);
+    SetVehicleZAngle(v, a);
+    SetVehiclePos(v, x, y, z);
+    SetVehicleZAngle(v, a);
+    if (korak < 2) SetTimerEx("UtrkaPoravnaj", 400, false, "iiffffi", playerid, v, x, y, z, a, korak + 1);
 }
 
 static UtrkaLobbyPanel(u)
@@ -396,8 +410,17 @@ static UtrkaLobbyPanel(u)
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gUv[i] != u + 1) continue;
-        new tekst[512];
+        new tekst[640], red[96];
+        if (!gUvUlogDan[i]) strcat(tekst, T(i, "Upisite ulog na sebe u chat (0 = bez uloga)."));
+        else
+        {
+            format(red, sizeof red, T(i, "Vas ulog: $%d"), gUvUlog[i]);
+            strcat(tekst, red);
+        }
+        strcat(tekst, "~n~");
         strcat(tekst, i == gUk[u][ukDomacin] ? T(i, "~y~Y~w~ - pokreni utrku") : T(i, "Cekamo da domacin pokrene utrku."));
+        strcat(tekst, "~n~");
+        strcat(tekst, T(i, "~y~N~w~ - napusti utrku"));
         strcat(tekst, popis);
         format(naslov, sizeof naslov, T(i, "Utrka: %s"), gUk[u][ukIme]);
         IgraObavijestPanel(i, naslov, UTRKA_BOJA, tekst);
@@ -425,7 +448,6 @@ static UtrkaOdbroj(u)
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gUv[i] != u + 1) continue;
-        UpitMakni(i, UPIT_UTRKA);
         IgraObavijestUkloni(i);
         new Float:x, Float:y, Float:z, ostali[UTRKA_VOZACA], n = 0;
         for (new j = 0, jZadnji = gIgracZadnji; j <= jZadnji && n < UTRKA_VOZACA; j++) if (gUv[j] == u + 1 && j != i) ostali[n++] = j;
@@ -556,6 +578,13 @@ UtrkaTick()
 
 UtrkaKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
+    new u = gUv[playerid] - 1;
+    if (u >= 0 && gUk[u][ukStanje] == UK_LOBBY && (newkeys & KEY_NO) && !(oldkeys & KEY_NO))
+    {
+        UtrkaNapusti(playerid);
+        ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Napustili ste utrku."));
+        return 1;
+    }
     if (!gUrIma[playerid]) return (newkeys & KEY_YES) && !(oldkeys & KEY_YES) ? UtrkaDomacinKreni(playerid) : 0;
     new PLAYER_STATE:st = GetPlayerState(playerid);
     new bool:alt = st == PLAYER_STATE_ONFOOT ? ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK)) : ((newkeys & KEY_CROUCH) && !(oldkeys & KEY_CROUCH));

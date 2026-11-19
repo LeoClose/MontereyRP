@@ -2188,7 +2188,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Utrka %s je otkazana, ulog je vracen.", "Race %s was cancelled, your bet was returned.", "Гонка %s отменена, ставка возвращена.", "La carrera %s fue cancelada, se devolvio la apuesta.", "%s yarisi iptal edildi, bahis iade edildi." },
     { "Utrka %s je spremljena.", "Race %s saved.", "Гонка %s сохранена.", "Carrera %s guardada.", "%s yarisi kaydedildi." },
     { "Utrka %s je zavrsena. Vase mjesto: %d.", "Race %s is over. Your place: %d.", "Гонка %s окончена. Ваше место: %d.", "La carrera %s termino. Tu puesto: %d.", "%s yarisi bitti. Siraniz: %d." },
-    { "Utrka - ulog na sebe", "Race - bet on yourself", "Гонка - ставка на себя", "Carrera - apuesta por ti", "Yaris - kendine bahis" },
     { "Utrka je puna.", "The race is full.", "Гонка заполнена.", "La carrera esta llena.", "Yaris dolu." },
     { "Utrka nema dovoljno markera.", "The race does not have enough markers.", "В гонке недостаточно маркеров.", "La carrera no tiene suficientes marcadores.", "Yarista yeterli isaret yok." },
     { "Utrka: %s", "Race: %s", "Гонка: %s", "Carrera: %s", "Yaris: %s" },
@@ -2202,12 +2201,13 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~Y~w~ - pokreni utrku", "~y~Y~w~ - start the race", "~y~Y~w~ - начать гонку", "~y~Y~w~ - iniciar la carrera", "~y~Y~w~ - yarisi baslat" },
     { "Start je postavljen. Tko ude u start vozilom, ulazi u utrku. Kad ste na startu, Y pokrece utrku.", "The start is set. Whoever drives into the start joins the race. Once you are on the start, Y starts the race.", "Старт установлен. Кто въедет в старт на машине, участвует в гонке. На старте Y запускает гонку.", "La salida esta lista. Quien entre en la salida con un vehiculo se une. En la salida, Y inicia la carrera.", "Baslangic kuruldu. Baslangica aracla giren yarisa katilir. Baslangictayken Y yarisi baslatir." },
     { "Cekamo da domacin pokrene utrku.", "Waiting for the host to start the race.", "Ждём, пока хозяин запустит гонку.", "Esperando a que el anfitrion inicie la carrera.", "Ev sahibinin yarisi baslatmasi bekleniyor." },
-    { "Utrka vise ne prima uloge.", "The race no longer accepts bets.", "Гонка больше не принимает ставки.", "La carrera ya no acepta apuestas.", "Yaris artik bahis kabul etmiyor." },
     { "%s ulaze $%d na sebe.", "%s bets $%d on themselves.", "%s ставит $%d на себя.", "%s apuesta $%d por si mismo.", "%s kendine $%d bahis yatiriyor." },
     { "Utrka je zatvorena.", "The race was closed.", "Гонка закрыта.", "La carrera se cerro.", "Yaris kapatildi." },
     { "~y~ALT~w~ / ~y~H~w~ (vozilo) - postavi / ukloni marker~n~~y~Y~w~ - cilj i ime utrke~n~~y~N~w~ - odustani~n~Markera: %d/%d", "~y~ALT~w~ / ~y~H~w~ (vehicle) - place / remove marker~n~~y~Y~w~ - finish and race name~n~~y~N~w~ - cancel~n~Markers: %d/%d", "~y~ALT~w~ / ~y~H~w~ (в машине) - поставить / убрать маркер~n~~y~Y~w~ - финиш и название~n~~y~N~w~ - отмена~n~Маркеры: %d/%d", "~y~ALT~w~ / ~y~H~w~ (vehiculo) - poner / quitar marcador~n~~y~Y~w~ - meta y nombre~n~~y~N~w~ - cancelar~n~Marcadores: %d/%d", "~y~ALT~w~ / ~y~H~w~ (arac) - isaret koy / kaldir~n~~y~Y~w~ - bitis ve yaris adi~n~~y~N~w~ - iptal~n~Isaretler: %d/%d" },
     { "1. mjesto: %d~n~2. mjesto: %d~n~3. mjesto: %d~n~Ostala mjesta: %d~n~DNF: %d~n~Zarada: $%d", "1st place: %d~n~2nd place: %d~n~3rd place: %d~n~Other places: %d~n~DNF: %d~n~Earned: $%d", "1 место: %d~n~2 место: %d~n~3 место: %d~n~Другие места: %d~n~DNF: %d~n~Заработок: $%d", "1er puesto: %d~n~2do puesto: %d~n~3er puesto: %d~n~Otros puestos: %d~n~DNF: %d~n~Ganancias: $%d", "1. sira: %d~n~2. sira: %d~n~3. sira: %d~n~Diger siralar: %d~n~DNF: %d~n~Kazanc: $%d" },
-    { "Utrka %s je zavrsena. DNF - niste stigli do cilja.", "Race %s is over. DNF - you did not reach the finish.", "Гонка %s окончена. DNF - вы не доехали до финиша.", "La carrera %s termino. DNF - no llegaste a la meta.", "%s yarisi bitti. DNF - bitise ulasamadiniz." }
+    { "Utrka %s je zavrsena. DNF - niste stigli do cilja.", "Race %s is over. DNF - you did not reach the finish.", "Гонка %s окончена. DNF - вы не доехали до финиша.", "La carrera %s termino. DNF - no llegaste a la meta.", "%s yarisi bitti. DNF - bitise ulasamadiniz." },
+    { "Upisite ulog na sebe u chat (0 = bez uloga).", "Type your bet on yourself in the chat (0 = no bet).", "Введите ставку на себя в чат (0 = без ставки).", "Escribe tu apuesta por ti en el chat (0 = sin apuesta).", "Kendinize bahsinizi sohbete yazin (0 = bahis yok)." },
+    { "~y~N~w~ - napusti utrku", "~y~N~w~ - leave the race", "~y~N~w~ - покинуть гонку", "~y~N~w~ - abandonar la carrera", "~y~N~w~ - yaristan ayril" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
