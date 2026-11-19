@@ -213,12 +213,12 @@ CMD:pikadotest(playerid, params[])
         return 1;
     }
     new const Float:t[][] = {
-        { 40.0, 60.0, 100.0, 100.0, 0.0, 0.0 },
-        { 160.0, 60.0, 200.0, 100.0, 0.0, 0.0 },
-        { 380.0, 60.0, 100.0, 200.0, 0.0, 0.0 },
-        { 500.0, 60.0, 100.0, 100.0, 0.0, 30.0 },
-        { 40.0, 280.0, 100.0, 100.0, 90.0, 0.0 },
-        { 160.0, 280.0, 100.0, 100.0, 0.0, 90.0 }
+        { 40.0, 60.0, 100.0, 100.0, 0.0, 30.0, 90.0 },
+        { 160.0, 60.0, 100.0, 100.0, 0.0, 60.0, 90.0 },
+        { 280.0, 60.0, 100.0, 100.0, 30.0, 0.0, 90.0 },
+        { 400.0, 60.0, 100.0, 100.0, 90.0, 0.0, 0.0 },
+        { 40.0, 280.0, 100.0, 100.0, 90.0, 30.0, 0.0 },
+        { 160.0, 280.0, 100.0, 100.0, 90.0, 0.0, 30.0 }
     };
     for (new i = 0; i < sizeof gPikadoTest; i++)
     {
@@ -226,9 +226,9 @@ CMD:pikadotest(playerid, params[])
         TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
         TextDrawTextSize(td, t[i][2], t[i][3]);
         TextDrawBackgroundColour(td, 0x3050A0FF);
-        TextDrawColour(td, i == 5 ? 0x000000FF : 0xFFFFFFFF);
+        TextDrawColour(td, 0xFFFFFFFF);
         TextDrawSetPreviewModel(td, 18656);
-        TextDrawSetPreviewRot(td, 0.0, t[i][5], t[i][4], 1.0);
+        TextDrawSetPreviewRot(td, t[i][4], t[i][5], t[i][6], 1.0);
         TextDrawShowForPlayer(playerid, td);
         gPikadoTest[i] = td;
     }
