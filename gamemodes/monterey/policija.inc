@@ -801,8 +801,26 @@ CMD:heal(playerid, params[])
 {
     if (gAdmin[playerid] >= ALVL_KICK) return AdminHeal(playerid, params);
     if (IsRanjen(playerid) || !DutyProvjera(playerid, ORG_VATROGASCI)) return 1;
-    new target = SluzbaTarget(playerid, params);
-    if (target == INVALID_PLAYER_ID) return 1;
+    new target = INVALID_PLAYER_ID, Float:bd = PD_BLIZU, Float:x, Float:y, Float:z;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (i == playerid || !gUlogiran[i] || IsPlayerNPC(i) || GetPlayerVirtualWorld(i) != GetPlayerVirtualWorld(playerid)) continue;
+        GetPlayerPos(i, x, y, z);
+        new Float:d = GetPlayerDistanceFromPoint(playerid, x, y, z);
+        if (d < bd || (d < PD_BLIZU && IsRanjen(i) && (target == INVALID_PLAYER_ID || !IsRanjen(target))))
+        {
+            bd = d;
+            target = i;
+        }
+    }
+    new npc = KupacNajbliziRanjen(playerid, PD_BLIZU);
+    if (npc != INVALID_PLAYER_ID && (target == INVALID_PLAYER_ID || !IsRanjen(target)))
+    {
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pruza prvu pomoc ranjenom prolazniku.", GetRPIme(playerid), "", 1);
+        HitnaNpcIzlijecen(npc, playerid);
+        return 1;
+    }
+    if (target == INVALID_PLAYER_ID) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U blizini nema nikoga kome treba pomoc."));
     if (IsRanjen(target))
     {
         RanjenPonudi(target, playerid);

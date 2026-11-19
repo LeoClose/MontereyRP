@@ -417,7 +417,7 @@ public OnNPCDeath(npcid, killerid, WEAPON:reason)
 {
     new k = gNpcTer[npcid];
     TaksiNpcDead(npcid);
-    KupacSmrt(npcid);
+    KupacSmrt(npcid, killerid);
     if (k != -1) gTerMrtav[k / MAX_TER_NPC][k % MAX_TER_NPC] = true;
     return 1;
 }

@@ -411,6 +411,8 @@ DLG:inventar_baci(playerid, response, const inputtext[])
 #define BACENO_DOMET        1.5
 #define BACENO_STREAM       30.0
 #define BACENO_NAPRIJED     0.6
+#define BACENO_NOVAC        -1
+#define BACENO_NOVAC_MODEL  1212
 
 enum E_BACENO { bnPredmet, bnKolicina, STREAMER_TAG_OBJECT:bnObjekt, Float:bnX, Float:bnY, Float:bnZ, bnSvijet }
 static gBaceno[BACENO_MAX][E_BACENO];
@@ -436,6 +438,22 @@ static BaciNaPod(playerid, item, amount)
     gBaceno[b][bnObjekt] = CreateDynamicObject(gItems[item][ITEM_MODEL], px, py, z, gItems[item][ITEM_WEAPON] ? 90.0 : 0.0, 0.0, a, gBaceno[b][bnSvijet], GetPlayerInterior(playerid), -1, BACENO_STREAM, BACENO_STREAM);
 }
 
+BaciNovac(Float:x, Float:y, Float:z, svijet, unutra, iznos)
+{
+    if (iznos <= 0) return;
+    new b = gBacenoSljedeci;
+    gBacenoSljedeci = (b + 1) % BACENO_MAX;
+    if (gBaceno[b][bnKolicina]) DestroyDynamicObject(gBaceno[b][bnObjekt]);
+    z = HodTlo(x, y, z) - 0.95;
+    gBaceno[b][bnPredmet] = BACENO_NOVAC;
+    gBaceno[b][bnKolicina] = iznos;
+    gBaceno[b][bnX] = x;
+    gBaceno[b][bnY] = y;
+    gBaceno[b][bnZ] = z;
+    gBaceno[b][bnSvijet] = svijet;
+    gBaceno[b][bnObjekt] = CreateDynamicObject(BACENO_NOVAC_MODEL, x, y, z + 0.1, 0.0, 0.0, float(random(360)), svijet, unutra, -1, BACENO_STREAM, BACENO_STREAM);
+}
+
 bool:BacenoPodigni(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return false;
@@ -448,6 +466,20 @@ bool:BacenoPodigni(playerid)
     }
     if (b == -1) return false;
     new item = gBaceno[b][bnPredmet], amount = gBaceno[b][bnKolicina];
+    if (item == BACENO_NOVAC)
+    {
+        if (!DajNovac(playerid, amount))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete primiti toliko novca."));
+            return true;
+        }
+        gBaceno[b][bnKolicina] = 0;
+        DestroyDynamicObject(gBaceno[b][bnObjekt]);
+        ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Podigli ste $%d."), amount);
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s nesto podize s poda.", GetRPIme(playerid), "", 1);
+        return true;
+    }
     if (!GiveItem(playerid, item, amount))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));

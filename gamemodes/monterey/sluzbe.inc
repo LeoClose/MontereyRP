@@ -469,6 +469,12 @@ SlucajNpcStigao(npcid)
         }
         if (!vatra)
         {
+            if (KupacJeRanjen(gSlucaj[s][slPacijent]))
+            {
+                gSlucaj[s][slStanje] = SL_GASI;
+                NPC_ApplyAnimation(npcid, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
+                return;
+            }
             gSlucaj[s][slStanje] = SL_PRISTANAK;
             RanjenPonudi(gSlucaj[s][slPacijent], RANJEN_NPC);
             return;
@@ -712,6 +718,7 @@ static SlucajKraj(s, bool:ok, ko = INVALID_PLAYER_ID)
         return;
     }
     if (tip == ORG_VATROGASCI) DestroyDynamicObject(gSlucaj[s][slObjekt]);
+    else if (KupacJeRanjen(p)) KupacOzivi(p, ok);
     else RanjenPrimijeni(p, ok);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM orgs WHERE type = %d", tip);
     if (DB_GetRowCount(res)) do PromijeniScore(DB_GetFieldInt(res, 0), ok ? 1 : -1); while (DB_SelectNextRow(res));
@@ -806,6 +813,22 @@ SlucajTick()
         new ko = gSlucaj[s][slTip] == ORG_VATROGASCI ? SlucajKoPrska(s) : INVALID_PLAYER_ID;
         if ((st == SL_GASI || ko != INVALID_PLAYER_ID) && ++gSlucaj[s][slGasenje] >= SLUCAJ_GASENJE_S) SlucajKraj(s, true, ko);
     }
+}
+
+HitnaZaNpc(npcid, Float:x, Float:y, Float:z)
+{
+    return SlucajNovi(ORG_MEDICINSKA, x, y, z, npcid);
+}
+
+HitnaNpcIzlijecen(npcid, medic)
+{
+    for (new s = 0; s < SLUCAJ_MAX; s++)
+    {
+        if (!gSlucaj[s][slStanje] || gSlucaj[s][slStanje] >= SL_ODLAZI || gSlucaj[s][slTip] != ORG_MEDICINSKA || gSlucaj[s][slPacijent] != npcid) continue;
+        SlucajKraj(s, true, medic);
+        return;
+    }
+    KupacOzivi(npcid, true);
 }
 
 static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)

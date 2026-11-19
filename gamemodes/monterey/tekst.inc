@@ -2284,7 +2284,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Kupac je otisao nezadovoljan.", "The customer left unhappy.", "Покупатель ушёл недовольным.", "El cliente se fue descontento.", "Musteri memnuniyetsiz ayrildi." },
     { "Stand je trenutno zatvoren.", "The stand is closed right now.", "Стенд сейчас закрыт.", "El puesto esta cerrado ahora.", "Stant su an kapali." },
     { "Vec jedete.", "You are already eating.", "Вы уже едите.", "Ya estas comiendo.", "Zaten yemek yiyorsunuz." },
-    { "Kupili ste %s za $%d.", "You bought %s for $%d.", "Вы купили %s за $%d.", "Compraste %s por $%d.", "%s urununu $%d karsiliginda aldiniz." }
+    { "Kupili ste %s za $%d.", "You bought %s for $%d.", "Вы купили %s за $%d.", "Compraste %s por $%d.", "%s urununu $%d karsiliginda aldiniz." },
+    { "Podigli ste $%d.", "You picked up $%d.", "Вы подобрали $%d.", "Recogiste $%d.", "$%d aldiniz." },
+    { "Kupac je platio $%d i ostavio napojnicu od $%d.", "The customer paid $%d and left a $%d tip.", "Покупатель заплатил $%d и оставил $%d чаевых.", "El cliente pago $%d y dejo $%d de propina.", "Musteri $%d odedi ve $%d bahsis birakti." },
+    { "U blizini nema nikoga kome treba pomoc.", "There is nobody nearby who needs help.", "Рядом нет никого, кому нужна помощь.", "No hay nadie cerca que necesite ayuda.", "Yakinda yardima ihtiyaci olan kimse yok." },
+    { "* %s pruza prvu pomoc ranjenom prolazniku.", "* %s gives first aid to an injured passerby.", "* %s оказывает первую помощь раненому прохожему.", "* %s da primeros auxilios a un transeunte herido.", "* %s yarali bir yoldasa ilk yardim yapiyor." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
