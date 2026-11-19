@@ -490,7 +490,7 @@ static MobitelOtvori(playerid)
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 100.0, 0xDCE4ECFF);
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 11.0, 0x2E4A68FF);
     MobitelTekst(playerid, 14.0, 21.5, "LS", 0xFFFFFFFF, 0.15, 0.75);
-    for (new i = 0; i < 3; i++) MobitelKutija(playerid, 27.0 + 2.5 * float(i), 27.0 - 1.5 * float(i), 1.5, 1.5 + 1.5 * float(i), 0xFFFFFFFF);
+    for (new i = 0; i < 3; i++) MobitelKutija(playerid, 27.0 + 2.5 * float(i), 26.0 - 1.5 * float(i), 1.5, 1.5 + 1.5 * float(i), 0xFFFFFFFF);
     MobitelTekst(playerid, 37.0, 22.0, "4G", 0xFFFFFFFF, 0.12, 0.65);
     gMobitelSatTd[playerid] = MobitelTekst(playerid, 93.0, 21.5, vrijeme, 0xFFFFFFFF, 0.15, 0.75, TEXT_DRAW_ALIGN_RIGHT);
     MobitelKutija(playerid, 97.0, 23.5, 7.0, 3.5, 0xFFFFFFFF);

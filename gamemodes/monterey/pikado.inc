@@ -27,6 +27,7 @@
 #define PIKADO_SNOP_POLA    5.0
 #define PIKADO_SNOP_AX      0.9375
 #define PIKADO_SNOP_NAGIB   0.022
+#define PIKADO_PRSTEN_GORE  0.04
 #define PIKADO_KREM_DUZ     1.0
 #define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
 #define PIKADO_PRSTEN_ZELENA 0x22E05AFF
@@ -92,7 +93,8 @@ static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
     new Float:fi = atan2(floatsin(kut, degrees) / PIKADO_SNOP_AX, floatcos(kut, degrees));
     new Float:e = floatsqroot(floatpower(PIKADO_SNOP_AX * floatsin(fi, degrees), 2.0) + floatpower(floatcos(fi, degrees), 2.0));
-    new Float:t = 1.0 - PIKADO_SNOP_NAGIB * (1.0 + floatcos(kut, degrees)) / 2.0;
+    new Float:gore = (1.0 + floatcos(kut, degrees)) / 2.0;
+    new Float:t = 1.0 - PIKADO_SNOP_NAGIB * gore - (rz == 90.0 ? PIKADO_PRSTEN_GORE * gore * gore : 0.0);
     new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : PIKADO_KREM_DUZ) / (e * t), Float:w = h * PIKADO_AX;
     new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
