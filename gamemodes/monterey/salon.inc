@@ -1,6 +1,7 @@
 #define SALON_MAX           8
 #define SALON_PONUDA        24
 #define SALON_DOMET         2.0
+#define SALON_SKIN          147
 #define SALON_SVIJET        7000
 #define SALON_INT           1
 #define SALON_TD            5
@@ -10,7 +11,7 @@
 
 enum { STD_LIJEVO, STD_DESNO, STD_INFO, STD_KUPI, STD_IZLAZ }
 enum E_SALON { bool:slIma, slDb, Float:slX, Float:slY, Float:slZ, Float:slA, Float:slSx, Float:slSy, Float:slSz, Float:slSa,
-    slBroj, slModel[SALON_PONUDA], slCijena[SALON_PONUDA], STREAMER_TAG_PICKUP:slPickup, STREAMER_TAG_3D_TEXT_LABEL:slTekst }
+    slBroj, slModel[SALON_PONUDA], slCijena[SALON_PONUDA], STREAMER_TAG_PICKUP:slAktor, STREAMER_TAG_3D_TEXT_LABEL:slTekst }
 
 static gSalon[SALON_MAX][E_SALON];
 static gApSalon[MAX_PLAYERS];
@@ -80,8 +81,10 @@ static SalonPonuda(s)
 static SalonStvori(s)
 {
     gSalon[s][slIma] = true;
-    gSalon[s][slPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ], 0, 0);
-    gSalon[s][slTekst] = CreateDynamic3DTextLabel("Salon automobila\n[Y]", COLOR_ORG, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gSalon[s][slAktor] = CreateActor(SALON_SKIN, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ], gSalon[s][slA]);
+    SetActorInvulnerable(gSalon[s][slAktor], true);
+    gSalon[s][slTekst] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gSalon[s][slTekst], 3.0);
     SalonPonuda(s);
 }
 
@@ -335,8 +338,13 @@ SalonUlaz(playerid)
     for (new s = 0; s < SALON_MAX; s++)
     {
         if (!gSalon[s][slIma] || !IsPlayerInRangeOfPoint(playerid, SALON_DOMET, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ])) continue;
-        if (!gSalon[s][slBroj]) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Salon trenutno nema vozila u ponudi."));
-        else SalonOtvori(playerid, s);
+        if (!gSalon[s][slBroj])
+        {
+            AktorKaze(playerid, gSalon[s][slAktor], "Prodavac", "Nazalost, trenutno nemamo vozila u ponudi.");
+            return 1;
+        }
+        AktorKaze(playerid, gSalon[s][slAktor], "Prodavac", "Dobrodosli! Pogledajte nasu ponudu.");
+        SalonOtvori(playerid, s);
         return 1;
     }
     return 0;
@@ -469,7 +477,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
         TuningMisIskljuci(playerid);
         KazinoZatvori(playerid);
         PcZatvori(playerid);
-        ArkadaEsc(playerid);
+        ArkadaEsc(playerid, true);
         PokerEsc(playerid);
     }
     if (clickedid == INVALID_TEXT_DRAW && gUSalonu[playerid] != -1) SalonZatvori(playerid);
@@ -520,7 +528,7 @@ static SalonNovi(playerid)
 static SalonObrisi(s)
 {
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUSalonu[i] == s) SalonZatvori(i);
-    DestroyDynamicPickup(gSalon[s][slPickup]);
+    DestroyActor(gSalon[s][slAktor]);
     DestroyDynamic3DTextLabel(gSalon[s][slTekst]);
     gSalon[s][slIma] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM dealership_cars WHERE dealer = %d", gSalon[s][slDb]));

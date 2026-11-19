@@ -116,12 +116,12 @@ static KucaTlo(k)
 
 static KucaNatpis(k, natpis[], velicina = sizeof natpis)
 {
-    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, "Kuca na prodaju\n$%d\n[Y]", gKuca[k][kuCijena]);
+    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, "Kuca na prodaju\n$%d\n[F]", gKuca[k][kuCijena]);
     new ime[MAX_PLAYER_NAME + 1];
     strcopy(ime, gKuca[k][kuVlasnikIme]);
     for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
-    if (gKuca[k][kuNajam]) return format(natpis, velicina, "Kuca\nVlasnik: %s\nNajam: $%d/dan\n[Y]", ime, gKuca[k][kuNajam]);
-    return format(natpis, velicina, "Kuca\nVlasnik: %s\n[Y]", ime);
+    if (gKuca[k][kuNajam]) return format(natpis, velicina, "Kuca\nVlasnik: %s\nNajam: $%d/dan\n[F]", ime, gKuca[k][kuNajam]);
+    return format(natpis, velicina, "Kuca\nVlasnik: %s\n[F]", ime);
 }
 
 static KucaStvori(k)

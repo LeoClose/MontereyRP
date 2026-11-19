@@ -164,9 +164,9 @@ static NamjestajStvori(s)
     new svijet = NAMJESTAJ_SVIJET + s, i = gNam[s][nmInt];
     gNam[s][nmIma] = true;
     gNam[s][nmPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ], 0, 0);
-    gNam[s][nmTekst] = CreateDynamic3DTextLabel("Namjestaj\n[Y]", COLOR_ORG, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gNam[s][nmTekst] = CreateDynamic3DTextLabel("Namjestaj\n[F]", COLOR_ORG, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gNam[s][nmPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ], svijet, gNamjestajInt[i][niInt]);
-    gNam[s][nmTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[i][niInt]);
+    gNam[s][nmTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[i][niInt]);
 }
 
 static NamjestajAktor(s)
@@ -175,7 +175,8 @@ static NamjestajAktor(s)
     gNam[s][nmImaAktor] = true;
     gNam[s][nmAktor] = CreateActor(NAMJESTAJ_SKIN, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz], gNam[s][nmAa]);
     SetActorVirtualWorld(gNam[s][nmAktor], svijet);
-    gNam[s][nmTekstA] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[gNam[s][nmInt]][niInt]);
+    gNam[s][nmTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[gNam[s][nmInt]][niInt]);
+    InterakcijaOznaka(gNam[s][nmTekstA]);
 }
 
 static NamjestajMakniAktor(s)
@@ -294,7 +295,7 @@ NamjestajKlik(playerid, PlayerText:td)
     {
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO furniture (owner, model, name, price) VALUES (%d, %d, '%q', %d)", gAccountId[playerid], gNamRobaModel[s][r], gNamRobaIme[s][r], cijena));
         PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d). Postavite ga u kuci (Y na ulazu, Namjestaj)."), gNamRobaIme[s][r], cijena);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d). Postavite ga u kuci (F na ulazu, Namjestaj)."), gNamRobaIme[s][r], cijena);
     }
     return 1;
 }

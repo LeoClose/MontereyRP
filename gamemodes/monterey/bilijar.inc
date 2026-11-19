@@ -78,7 +78,7 @@ InitBilijar()
 static BilijarOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Bilijar\n{FFFFFF}[Y] $%d", BILIJAR_CIJENA);
+    format(tekst, sizeof tekst, "Bilijar\n{FFFFFF}[ALT] $%d", BILIJAR_CIJENA);
     return tekst;
 }
 
@@ -89,6 +89,7 @@ static BilijarStvori(s)
     gBilijar[s][bsNisani] = INVALID_PLAYER_ID;
     gBilijar[s][bsStol] = CreateDynamicObject(BILIJAR_STOL, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ], 0.0, 0.0, gBilijar[s][bsA], gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
     gBilijar[s][bsTekst] = CreateDynamic3DTextLabel(BilijarOznaka(), 0xF39C12FF, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ] + 1.3, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
+    InterakcijaOznaka(gBilijar[s][bsTekst]);
     BilijarSlozi(s);
 }
 
@@ -239,6 +240,7 @@ BilijarIgracOdlazi(playerid)
         return;
     }
     if (gBilijar[s][bsNisani] == playerid) BilijarNisanKraj(s);
+    if (gBilijar[s][bsFaza] == BF_CEKA && DajNovac(playerid, BILIJAR_CIJENA)) BlagajnaDodaj(-BILIJAR_CIJENA);
     gBilijar[s][bsIgrac][i] = INVALID_PLAYER_ID;
     gBilijarIgrac[playerid] = -1;
     OkladaIzadi(playerid, true);
@@ -272,6 +274,12 @@ static BilijarPotez(s)
     }
 }
 
+BilijarCilja(playerid)
+{
+    new s = gBilijarIgrac[playerid];
+    return s != -1 && gBilijar[s][bsNisani] == playerid;
+}
+
 BilijarKey(playerid)
 {
     if (gBilijarIgrac[playerid] == -1 && BilijarBlizu(playerid, BILIJAR_DOMET) == -1) return 0;
@@ -295,10 +303,9 @@ BilijarKey(playerid)
     }
     if (!OkladaUdi(playerid, OK_BILIJAR, s)) return DajNovac(playerid, BILIJAR_CIJENA), 1;
     BlagajnaDodaj(BILIJAR_CIJENA);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BILIJAR_CIJENA);
     gBilijar[s][bsIgrac][i] = playerid;
     gBilijarIgrac[playerid] = s;
-    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
+    if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (ALT za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     BilijarSlozi(s);
     gBilijar[s][bsFaza] = BF_IGRA;
     gBilijar[s][bsNaPotezu] = random(2);

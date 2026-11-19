@@ -602,12 +602,12 @@ static KreirajHq(i)
 {
     new ime[MAX_ORG_NAME], natpis[MAX_ORG_NAME + 16], svijet = HQ_SVIJET + gHq[i][hOrg];
     GetOrgIme(gHq[i][hOrg], ime);
-    format(natpis, sizeof natpis, "%s HQ\n[Y]", ime);
+    format(natpis, sizeof natpis, "%s HQ\n[F]", ime);
     gHq[i][hPickup] = CreatePickup(HQ_PICKUP, 1, gHq[i][hX], gHq[i][hY], gHq[i][hZ], 0);
     gHq[i][hIkona] = GetOrgTip(gHq[i][hOrg]) == ORG_LSPD ? MapaIkona(gHq[i][hX], gHq[i][hY], gHq[i][hZ], 30) : 0;
     gHq[i][hLabel] = Create3DTextLabel(natpis, COLOR_ORG, gHq[i][hX], gHq[i][hY], gHq[i][hZ] + 0.5, 15.0, 0);
     gHq[i][hPickupU] = CreatePickup(HQ_PICKUP, 1, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz], svijet);
-    gHq[i][hLabelU] = Create3DTextLabel("[Y]", COLOR_ORG, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz] + 0.5, 15.0, svijet);
+    gHq[i][hLabelU] = Create3DTextLabel("[F]", COLOR_ORG, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz] + 0.5, 15.0, svijet);
 }
 
 static UkloniHq(i)

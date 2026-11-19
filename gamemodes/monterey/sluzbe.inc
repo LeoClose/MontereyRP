@@ -979,7 +979,6 @@ DLG:mehanicar_odvoz(playerid, response, listitem)
     SetVehicleVirtualWorld(v, MEHANICAR_ODVOZ_SVIJET);
     SetVehiclePos(v, 1477.0 + float(v % 10) * 6.0, 1350.0 + float((v / 10) % 10) * 8.0, 11.0);
     SetTimerEx("MehanicarOdvozGotov", MEHANICAR_ODVOZ_MS, false, "ii", v, VlasnikDb(v));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), MEHANICAR_ODVOZ);
     return 1;
 }
 
@@ -1072,7 +1071,6 @@ DLG:mehanicar(playerid, response, listitem)
         MehanicarPonudi(playerid, s);
         return 1;
     }
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
     if (listitem == 2)
     {
         for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
@@ -1447,7 +1445,7 @@ DLG:bolnica(playerid, response, listitem)
     TogglePlayerControllable(playerid, false);
     Fade(playerid, 0);
     SetTimerEx("BolnicaPrebaci", FADE_SLOJEVA * FADE_KORAK_MS + BOLNICA_CRNO_MS, false, "ii", playerid, gAccountId[playerid]);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BOLNICA_SPAWN_CIJENA);
+    return 1;
 }
 
 forward BolnicaPrebaci(playerid, racun);

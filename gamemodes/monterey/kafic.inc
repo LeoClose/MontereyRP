@@ -54,7 +54,8 @@ static KaficStvori(k)
     gKafic[k][kfAktor] = CreateActor(KAFIC_SKIN, gKafic[k][kfX], gKafic[k][kfY], gKafic[k][kfZ], gKafic[k][kfA]);
     SetActorVirtualWorld(gKafic[k][kfAktor], gKafic[k][kfSvijet]);
     SetActorInvulnerable(gKafic[k][kfAktor], true);
-    gKafic[k][kfTekst] = CreateDynamic3DTextLabel("Internet kafic\n[Y]", COLOR_ORG, gKafic[k][kfX], gKafic[k][kfY], gKafic[k][kfZ] + 1.1, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKafic[k][kfSvijet], gKafic[k][kfInt]);
+    gKafic[k][kfTekst] = CreateDynamic3DTextLabel("Internet kafic\n[ALT]", COLOR_ORG, gKafic[k][kfX], gKafic[k][kfY], gKafic[k][kfZ] + 1.1, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKafic[k][kfSvijet], gKafic[k][kfInt]);
+    InterakcijaOznaka(gKafic[k][kfTekst]);
 }
 
 static KaficPcStvori(p)

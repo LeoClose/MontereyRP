@@ -467,6 +467,7 @@ static MobitelOtvori(playerid)
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMobitelOtvoren[playerid] = true;
     gMobitelURuci[playerid] = false;
+    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ApplyAnimation(playerid, "PED", "IDLE_stance", 4.1, true, false, false, false, 0, SYNC_ALL);
     gMobitelEkran[playerid] = MOBITEL_IZBORNIK;
     gMobitelOdabir[playerid] = 0;
     gMobitelUlaz[playerid] = GetTickCount() - MOBITEL_ULAZ_MS;
@@ -479,7 +480,7 @@ static MobitelOtvori(playerid)
     gMobitelStaroGore[playerid] = 0;
     gMobitelStaraStrana[playerid] = 0;
     gMobitelAnim[playerid] = -1;
-    gMobitelAnimOd[playerid] = GetTickCount() - MOBITEL_ANIM_MS;
+    gMobitelAnimOd[playerid] = GetTickCount();
     gMobitelBroj[playerid] = 0;
     MobitelKutija(playerid, -1.5, 38.0, 1.5, 18.0, 0x1A1A1AFF);
     MobitelKutija(playerid, 120.0, 44.0, 1.5, 12.0, 0x1A1A1AFF);

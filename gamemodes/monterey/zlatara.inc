@@ -30,7 +30,7 @@ enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:pp
 static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
 static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 400 }, { ITEM_ZLATNE_NAOCALE, 1200 } };
 
-static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC];
+static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC], STREAMER_TAG_AREA:gPpZona[PREPRODAVAC_MAX];
 static gZlato, gZlatoSat, gApZlatara[MAX_PLAYERS], gZlataraOdabir[MAX_PLAYERS][sizeof gZlataraRoba], gSatNosi[MAX_PLAYERS], gOgrNosi[MAX_PLAYERS], gZlataraPoruka[MAX_PLAYERS];
 
 static ZlatoNovo(cijena, pomak)
@@ -106,9 +106,9 @@ static ZlataraStvori(s)
     gZl[s][zlPljacka] = 0;
     gZl[s][zlPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 0, 0);
     gZl[s][zlIkona] = MapaIkona(gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 21);
-    gZl[s][zlTekst] = CreateDynamic3DTextLabel("Zlatara\n[Y]", COLOR_ORG, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gZl[s][zlTekst] = CreateDynamic3DTextLabel("Zlatara\n[F]", COLOR_ORG, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gZl[s][zlPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2], svijet, ZLATARA_INT);
-    gZl[s][zlTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    gZl[s][zlTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
 }
 
 static ZlataraAktor(s)
@@ -118,7 +118,8 @@ static ZlataraAktor(s)
     gZl[s][zlAktor] = CreateActor(ZLATARA_SKIN, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz], gZl[s][zlAa]);
     SetActorVirtualWorld(gZl[s][zlAktor], svijet);
     SetActorInvulnerable(gZl[s][zlAktor], true);
-    gZl[s][zlTekstA] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    gZl[s][zlTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    InterakcijaOznaka(gZl[s][zlTekstA]);
 }
 
 static ZlataraMakniAktor(s)
@@ -135,7 +136,7 @@ static PreprodavacStvori(p)
     gPp[p][ppAktor] = CreateActor(PREPRODAVAC_SKIN, gPp[p][ppX], gPp[p][ppY], gPp[p][ppZ], gPp[p][ppA]);
     SetActorVirtualWorld(gPp[p][ppAktor], gPp[p][ppSvijet]);
     SetActorInvulnerable(gPp[p][ppAktor], true);
-    gPp[p][ppTekst] = CreateDynamic3DTextLabel("[Y]", 0xAAAAAAFF, gPp[p][ppX], gPp[p][ppY], gPp[p][ppZ] + 1.2, 4.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gPp[p][ppSvijet], gPp[p][ppInt]);
+    gPpZona[p] = InterakcijaZona(gPp[p][ppX], gPp[p][ppY], gPp[p][ppZ], 2.5, gPp[p][ppSvijet], gPp[p][ppInt]);
 }
 
 static ZlataraIgraca(playerid)
@@ -294,37 +295,34 @@ PreprodavacKey(playerid)
     for (new p = 0; p < PREPRODAVAC_MAX; p++)
     {
         if (!gPp[p][ppIma] || GetPlayerVirtualWorld(playerid) != gPp[p][ppSvijet] || GetPlayerInterior(playerid) != gPp[p][ppInt] || !IsPlayerInRangeOfPoint(playerid, ZLATARA_KASA_DOMET, gPp[p][ppX], gPp[p][ppY], gPp[p][ppZ])) continue;
-        new n = gInv[playerid][ITEM_UKRADENI_NAKIT], body[128];
+        new n = gInv[playerid][ITEM_UKRADENI_NAKIT], info[128];
         if (!n)
         {
             AktorKaze(playerid, gPp[p][ppAktor], "Preprodavac", "Nemas nista za mene. Gubi se.");
             return 1;
         }
-        format(body, sizeof body, T(playerid, "Ukradeni nakit: %d kom.~n~Preprodavac nudi $%d po komadu, ukupno $%d."), n, PREPRODAVAC_CIJENA, n * PREPRODAVAC_CIJENA);
-        for (new i = 0; body[i]; i++) if (body[i] == '~' && body[i + 1] == 'n' && body[i + 2] == '~')
-        {
-            body[i] = '\n';
-            strdel(body, i + 1, i + 3);
-        }
+        format(info, sizeof info, T(playerid, "Ukradeni nakit: %d kom. Preprodavac nudi $%d po komadu."), n, PREPRODAVAC_CIJENA);
         AktorKaze(playerid, gPp[p][ppAktor], "Preprodavac", "Sto imas za mene?");
-        PrikaziDialog(playerid, DLG_PREPRODAVAC, DIALOG_STYLE_MSGBOX, T(playerid, "Preprodavac"), body, T(playerid, "Prodaj"), T(playerid, "Odustani"));
+        UpitKolicina(playerid, UPIT_PREPRODAVAC, p, 0, T(playerid, "Preprodavac"), info);
         return 1;
     }
     return 0;
 }
 
-DLG:preprodavac(playerid, response)
+PreprodavacUpit(playerid, p, kolicina)
 {
-    new n = gInv[playerid][ITEM_UKRADENI_NAKIT];
-    if (!response || !n) return 1;
-    if (!GiveItem(playerid, ITEM_UKRADENI_NAKIT, -n)) return 1;
-    if (!DajNovac(playerid, n * PREPRODAVAC_CIJENA))
+    if (p < 0 || p >= PREPRODAVAC_MAX || !gPp[p][ppIma] || !IsPlayerInRangeOfPoint(playerid, ZLATARA_KASA_DOMET, gPp[p][ppX], gPp[p][ppY], gPp[p][ppZ])) return 1;
+    new n = gInv[playerid][ITEM_UKRADENI_NAKIT], poruka[144];
+    if (kolicina <= 0 || kolicina > n) return format(poruka, sizeof poruka, T(playerid, "Imate samo %d komada."), n), ObavijestGreska(playerid, poruka);
+    if (!GiveItem(playerid, ITEM_UKRADENI_NAKIT, -kolicina)) return 1;
+    if (!DajNovac(playerid, kolicina * PREPRODAVAC_CIJENA))
     {
-        GiveItem(playerid, ITEM_UKRADENI_NAKIT, n);
-        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
+        GiveItem(playerid, ITEM_UKRADENI_NAKIT, kolicina);
+        return ObavijestGreska(playerid, T(playerid, "Ne mozete nositi toliko."));
     }
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s predaje paket preprodavacu.", GetRPIme(playerid), "", 1);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %d komada ukradenog nakita za $%d."), n, n * PREPRODAVAC_CIJENA);
+    format(poruka, sizeof poruka, T(playerid, "Prodali ste %d komada ukradenog nakita za $%d."), kolicina, kolicina * PREPRODAVAC_CIJENA);
+    return ObavijestInfo(playerid, T(playerid, "Preprodavac"), poruka);
 }
 
 static ZlataraSatPrikaci(playerid, item, const Float:p[9])
@@ -602,7 +600,7 @@ DLG:apanel_zlatara(playerid, response, listitem)
     {
         if (!gPp[p][ppIma] || --n) continue;
         DestroyActor(gPp[p][ppAktor]);
-        DestroyDynamic3DTextLabel(gPp[p][ppTekst]);
+        DestroyDynamicArea(gPpZona[p]);
         gPp[p][ppIma] = false;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM fences WHERE id = %d", gPp[p][ppDb]));
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Preprodavac obrisan."));

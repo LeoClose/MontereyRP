@@ -134,9 +134,9 @@ static OdjecaStvori(s)
     new t = gOdj[s][odTip], svijet = ODJECA_SVIJET + s;
     gOdj[s][odIma] = true;
     gOdj[s][odPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ], 0, 0);
-    gOdj[s][odTekst] = CreateDynamic3DTextLabel(t == ODJ_FRIZER ? ("Frizer\n[Y]") : ("Odjeca\n[Y]"), COLOR_ORG, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gOdj[s][odTekst] = CreateDynamic3DTextLabel(t == ODJ_FRIZER ? ("Frizer\n[F]") : ("Odjeca\n[F]"), COLOR_ORG, gOdj[s][odX], gOdj[s][odY], gOdj[s][odZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gOdj[s][odPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2], svijet, gOdjecaInterijer[t]);
-    gOdj[s][odTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
+    gOdj[s][odTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
 }
 
 static OdjecaAktor(s)
@@ -145,7 +145,8 @@ static OdjecaAktor(s)
     gOdj[s][odImaAktor] = true;
     gOdj[s][odAktor] = CreateActor(gOdjecaSkin[t], gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz], gOdj[s][odAa]);
     SetActorVirtualWorld(gOdj[s][odAktor], svijet);
-    gOdj[s][odTekstA] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
+    gOdj[s][odTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
+    InterakcijaOznaka(gOdj[s][odTekstA]);
 }
 
 static OdjecaMakniAktor(s)

@@ -105,7 +105,7 @@ InitKazino()
     }
     DB_FreeResultSet(ulazi);
     CreateDynamicPickup(HQ_PICKUP, 1, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2], KAZINO_SVIJET, KAZINO_MAPA_INT);
-    CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, KAZINO_SVIJET, KAZINO_MAPA_INT);
+    CreateDynamic3DTextLabel("[F]", COLOR_ORG, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, KAZINO_SVIJET, KAZINO_MAPA_INT);
     new k1[] = { 0, 25 }, k2[] = { 13, 39, 8 }, k3[] = { 9, 18, 45 };
     assert(BjVrijednost(k1, 2) == 21 && BjVrijednost(k2, 3) == 21 && BjVrijednost(k3, 3) == 23);
     new r1[] = { 0, 9, 10, 11, 12 }, r2[] = { 0, 1, 2, 3, 17 }, r3[] = { 10, 23, 4, 5, 7 }, r4[] = { 1, 14, 27, 4, 17 }, r5[] = { 9, 22, 2, 16, 30 }, r6[] = { 5, 18, 7, 20, 32 };
@@ -135,7 +135,7 @@ static KazinoUlazStvori(u)
     gKu[u][kuIma] = true;
     gKu[u][kuPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 0, 0);
     gKu[u][kuIkona] = MapaIkona(gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 25);
-    gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino\n[Y]", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino\n[F]", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 }
 
 KazinoUlaz(playerid)
@@ -202,8 +202,9 @@ static KazinoStvori(k)
         SetActorVirtualWorld(gKaz[k][kzAktor], gKaz[k][kzSvijet]);
         SetActorInvulnerable(gKaz[k][kzAktor], true);
     }
-    format(tekst, sizeof tekst, "%s\n[Y]", gKzIme[gKaz[k][kzTip]]);
+    format(tekst, sizeof tekst, "%s\n[ALT]", gKzIme[gKaz[k][kzTip]]);
     gKaz[k][kzTekst] = CreateDynamic3DTextLabel(tekst, COLOR_ORG, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ] + (KazinoMasina(gKaz[k][kzTip]) ? 0.5 : 1.2), 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKaz[k][kzSvijet], gKaz[k][kzInt]);
+    InterakcijaOznaka(gKaz[k][kzTekst]);
     if (gKaz[k][kzTip] == KZ_HOLDEM) PokerStvori(k, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ], gKaz[k][kzA], gKaz[k][kzInt], gKaz[k][kzSvijet], gKaz[k][kzAktor]);
 }
 

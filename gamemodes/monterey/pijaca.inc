@@ -13,8 +13,6 @@
 enum E_PMJESTO { bool:pmIma, pmDb, Float:pmX, Float:pmY, Float:pmZ, Float:pmA, pmVozilo, STREAMER_TAG_3D_TEXT_LABEL:pmTekst }
 
 static gPijacaMj[PIJACA_MJESTA][E_PMJESTO];
-static bool:gPijacaIma, Float:gPijacaPos[3], STREAMER_TAG_PICKUP:gPijacaPickup, STREAMER_TAG_3D_TEXT_LABEL:gPijacaTekst;
-static gPijacaVozilo[MAX_PLAYERS];
 enum { PS_NISTA, PS_PJESKE, PS_VOZILO }
 static bool:gPijacaAktorIma, gPijacaAktor, Float:gPijacaAktorPos[3], STREAMER_TAG_3D_TEXT_LABEL:gPijacaAktorTekst, gPijacaPozdrav[MAX_PLAYERS], gPijacaStanje[MAX_PLAYERS];
 static const gPijacaVozilom[][] = {
@@ -30,16 +28,11 @@ static const gPijacaPozdravi[][] = {
 
 InitPijaca()
 {
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS market (id INTEGER PRIMARY KEY CHECK (id = 1), x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS market_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     SetTimer("PijacaTick", PIJACA_TICK_MS, true);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS market_seller (id INTEGER PRIMARY KEY CHECK (id = 1), x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
 
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z FROM market WHERE id = 1");
-    if (DB_GetRowCount(res)) PijacaTocka(DB_GetFieldFloat(res, 0), DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2));
-    DB_FreeResultSet(res);
-
-    res = DB_ExecuteQuery(gDB, "SELECT x, y, z, a FROM market_seller WHERE id = 1");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, a FROM market_seller WHERE id = 1");
     if (DB_GetRowCount(res)) PijacaAktor(DB_GetFieldFloat(res, 0), DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3));
     DB_FreeResultSet(res);
 
@@ -67,21 +60,6 @@ InitPijaca()
     DB_FreeResultSet(res);
 }
 
-static PijacaTocka(Float:x, Float:y, Float:z)
-{
-    if (gPijacaIma)
-    {
-        DestroyDynamicPickup(gPijacaPickup);
-        DestroyDynamic3DTextLabel(gPijacaTekst);
-    }
-    gPijacaIma = true;
-    gPijacaPos[0] = x;
-    gPijacaPos[1] = y;
-    gPijacaPos[2] = z;
-    gPijacaPickup = CreateDynamicPickup(HQ_PICKUP, 1, x, y, z, 0, 0);
-    gPijacaTekst = CreateDynamic3DTextLabel("Auto pijaca\nDovezite svoje vozilo i pritisnite Y za prodaju", COLOR_ORG, x, y, z + 0.5, 20.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
-}
-
 // Aktor
 
 static PijacaAktorMakni()
@@ -102,7 +80,8 @@ static PijacaAktor(Float:x, Float:y, Float:z, Float:a)
     gPijacaAktorPos[2] = z;
     gPijacaAktor = CreateActor(PIJACA_SKIN, x, y, z, a);
     SetActorVirtualWorld(gPijacaAktor, 0);
-    gPijacaAktorTekst = CreateDynamic3DTextLabel("Prodavac", COLOR_ORG, x, y, z + 1.2, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gPijacaAktorTekst = CreateDynamic3DTextLabel("Auto pijaca\n[ALT]", COLOR_ORG, x, y, z + 1.2, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gPijacaAktorTekst, 3.0);
 }
 
 static bool:PijacaReci(playerid, const recenica[])
@@ -165,7 +144,7 @@ static PijacaNaMjesto(m, v)
 {
     new natpis[96];
     gPijacaMj[m][pmVozilo] = v;
-    format(natpis, sizeof natpis, "Auto pijaca\n%s\n$%d\n[Y] kupi", gImenaVozila[GetVehicleModel(v) - 400], PijacaCijena(v));
+    format(natpis, sizeof natpis, "Auto pijaca\n%s\n$%d\n[ALT] kupi", gImenaVozila[GetVehicleModel(v) - 400], PijacaCijena(v));
     gPijacaMj[m][pmTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, 0.0, 0.0, 1.2, 15.0, INVALID_PLAYER_ID, v, 0, 0, 0);
     VoziloZakljucaj(v, true);
 }
@@ -216,7 +195,7 @@ static PijacaAutoBlizu(playerid)
 
 static bool:PijacaKodTocke(playerid)
 {
-    return gPijacaIma && !GetPlayerVirtualWorld(playerid) && !GetPlayerInterior(playerid) && IsPlayerInRangeOfPoint(playerid, PIJACA_DOMET, gPijacaPos[0], gPijacaPos[1], gPijacaPos[2]);
+    return gPijacaAktorIma && !GetPlayerVirtualWorld(playerid) && !GetPlayerInterior(playerid) && IsPlayerInRangeOfPoint(playerid, PIJACA_DOMET, gPijacaAktorPos[0], gPijacaAktorPos[1], gPijacaAktorPos[2]);
 }
 
 PijacaKey(playerid)
@@ -226,64 +205,71 @@ PijacaKey(playerid)
     if (st == PLAYER_STATE_DRIVER && PijacaKodTocke(playerid))
     {
         new v = GetPlayerVehicleID(playerid), otkup = VlasnikCijena(v) / 3;
+        ApplyActorAnimation(gPijacaAktor, "PED", "IDLE_CHAT", 4.1, false, false, false, false, 2500);
         if (gOrgVehOrg[v])
         {
-            if (!PijacaReci(playerid, "Vozila organizacija ne otkupljujem, zao mi je.")) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca ne otkupljuje vozila organizacija."));
+            if (!PijacaReci(playerid, "Vozila organizacija ne otkupljujem, zao mi je.")) ObavijestGreska(playerid, T(playerid, "Pijaca ne otkupljuje vozila organizacija."));
             return 1;
         }
-        if (VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo nije vase vozilo.")), 1;
-        if (otkup < 1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca ne otkupljuje ovo vozilo.")), 1;
-        gPijacaVozilo[playerid] = v;
-        format(body, sizeof body, T(playerid, "Prodati %s pijaci za $%d?\nPijaca ce ga dalje prodavati za $%d."), gImenaVozila[GetVehicleModel(v) - 400], otkup, PijacaCijena(v));
-        PrikaziDialog(playerid, DLG_PIJACA_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Auto pijaca"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
+        if (VlasnikVozila(v) != gAccountId[playerid]) return ObavijestGreska(playerid, T(playerid, "Ovo nije vase vozilo.")), 1;
+        if (otkup < 1) return ObavijestGreska(playerid, T(playerid, "Pijaca ne otkupljuje ovo vozilo.")), 1;
+        format(body, sizeof body, T(playerid, "Prodati %s pijaci za $%d? Pijaca ce ga dalje prodavati za $%d."), gImenaVozila[GetVehicleModel(v) - 400], otkup, PijacaCijena(v));
+        UpitDaNe(playerid, UPIT_PIJACA, v, 1, T(playerid, "Auto pijaca"), body);
         return 1;
     }
     if (st != PLAYER_STATE_ONFOOT) return 0;
     new v = PijacaAutoBlizu(playerid);
     if (!v) return 0;
-    gPijacaVozilo[playerid] = v;
     format(body, sizeof body, T(playerid, "Kupiti %s za $%d?"), gImenaVozila[GetVehicleModel(v) - 400], PijacaCijena(v));
-    PrikaziDialog(playerid, DLG_PIJACA_KUPI, DIALOG_STYLE_MSGBOX, T(playerid, "Auto pijaca"), body, T(playerid, "Kupi"), T(playerid, "Natrag"));
+    UpitDaNe(playerid, UPIT_PIJACA, v, 2, T(playerid, "Auto pijaca"), body);
     return 1;
 }
 
-DLG:pijaca_prodaj(playerid, response)
+PijacaUpit(playerid, v, opcija, bool:da)
 {
-    new v = gPijacaVozilo[playerid];
-    if (!response || GetPlayerVehicleID(playerid) != v || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || !PijacaKodTocke(playerid)) return 1;
-    if (VlasnikVozila(v) != gAccountId[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo nije vase vozilo."));
-    new otkup = VlasnikCijena(v) / 3, model = GetVehicleModel(v);
-    if (otkup < 1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca ne otkupljuje ovo vozilo."));
-    if (!DajNovac(playerid, otkup)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete primiti toliko novca."));
+    if (!da) return 1;
+    return opcija == 1 ? PijacaProdaj(playerid, v) : PijacaKupi(playerid, v);
+}
+
+static PijacaProdaj(playerid, v)
+{
+    if ( GetPlayerVehicleID(playerid) != v || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || !PijacaKodTocke(playerid)) return 1;
+    if (VlasnikVozila(v) != gAccountId[playerid]) return ObavijestGreska(playerid, T(playerid, "Ovo nije vase vozilo."));
+    new otkup = VlasnikCijena(v) / 3, model = GetVehicleModel(v), poruka[144];
+    if (otkup < 1) return ObavijestGreska(playerid, T(playerid, "Pijaca ne otkupljuje ovo vozilo."));
+    if (!DajNovac(playerid, otkup)) return ObavijestGreska(playerid, T(playerid, "Ne mozete primiti toliko novca."));
     ClearGepek(v);
     new m = PijacaSlobodno();
     if (m == -1)
     {
         VlasnikOtpad(v);
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %s za $%d. Pijaca je puna, pa je vozilo otislo na otpad."), gImenaVozila[model - 400], otkup);
+        format(poruka, sizeof poruka, T(playerid, "Prodali ste %s za $%d. Pijaca je puna, pa je vozilo otislo na otpad."), gImenaVozila[model - 400], otkup);
+        return ObavijestInfo(playerid, T(playerid, "Auto pijaca"), poruka);
     }
     VlasnikPrenesi(v, VLASNIK_PIJACA);
     VlasnikParkiraj(v, gPijacaMj[m][pmX], gPijacaMj[m][pmY], gPijacaMj[m][pmZ], gPijacaMj[m][pmA]);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET spot = %d WHERE id = %d", gPijacaMj[m][pmDb], VlasnikDb(v)));
     SetVehicleToRespawn(v); // takes the seller out and puts the car on its spot (VlasnickoSpawn), repaired
     PijacaNaMjesto(m, v);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prodali ste %s pijaci za $%d."), gImenaVozila[model - 400], otkup);
+    format(poruka, sizeof poruka, T(playerid, "Prodali ste %s pijaci za $%d."), gImenaVozila[model - 400], otkup);
+    ObavijestInfo(playerid, T(playerid, "Auto pijaca"), poruka);
     PijacaReci(playerid, "Hvala, ovaj ce se brzo prodati.");
     return 1;
 }
 
-DLG:pijaca_kupi(playerid, response)
+static PijacaKupi(playerid, v)
 {
-    new v = gPijacaVozilo[playerid], m = PijacaMjestoVozila(v);
-    if (!response || m == -1 || VlasnikVozila(v) != VLASNIK_PIJACA || PijacaAutoBlizu(playerid) != v) return 1;
+    new m = PijacaMjestoVozila(v), poruka[144];
+    if ( m == -1 || VlasnikVozila(v) != VLASNIK_PIJACA || PijacaAutoBlizu(playerid) != v) return 1;
     new cijena = PijacaCijena(v);
-    if (BrojVlasnistava(gAccountId[playerid]) >= VLASNISTVO_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d vozila."), VLASNISTVO_MAX);
-    if (!DajNovac(playerid, -cijena)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    if (BrojVlasnistava(gAccountId[playerid]) >= VLASNISTVO_MAX) return format(poruka, sizeof poruka, T(playerid, "Mozete imati najvise %d vozila."), VLASNISTVO_MAX), ObavijestGreska(playerid, poruka);
+    if (!DajNovac(playerid, -cijena)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
     VlasnikPrenesi(v, gAccountId[playerid]);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE player_vehicles SET spot = 0 WHERE id = %d", VlasnikDb(v)));
     PijacaOslobodi(m);
     VoziloZakljucaj(v, false);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste %s za $%d. Odvezite ga s pijace i parkirajte s /parkiraj."), gImenaVozila[GetVehicleModel(v) - 400], cijena);
+    format(poruka, sizeof poruka, T(playerid, "Kupili ste %s za $%d. Odvezite ga s pijace i parkirajte s /parkiraj."), gImenaVozila[GetVehicleModel(v) - 400], cijena);
+    ObavijestInfo(playerid, T(playerid, "Auto pijaca"), poruka);
     PijacaReci(playerid, "Odlican izbor! Sretno na cesti.");
     return 1;
 }
@@ -296,7 +282,7 @@ ShowPijacaAdmin(playerid)
     for (new m = 0; m < PIJACA_MJESTA; m++) if (gPijacaMj[m][pmIma]) n++;
     format(title, sizeof title, T(playerid, "Auto pijaca (%d/%d mjesta)"), n, PIJACA_MJESTA);
     return PrikaziDialog(playerid, DLG_APANEL_PIJACA, DIALOG_STYLE_LIST, title,
-        T(playerid, "Postavi mjesto otkupa ovdje\nDodaj parking mjesto ovdje (vozilo u kojem sjedite ili vasa pozicija)\nUkloni najblize parking mjesto\nPostavi prodavaca ovdje\nUkloni prodavaca"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
+        T(playerid, "Dodaj parking mjesto ovdje (vozilo u kojem sjedite ili vasa pozicija)\nUkloni najblize parking mjesto\nPostavi prodavaca ovdje\nUkloni prodavaca"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 static PijacaDodajMjesto(playerid)
@@ -340,22 +326,10 @@ DLG:apanel_pijaca(playerid, response, listitem)
         case 0:
         {
             if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca se postavlja samo izvana."));
-            else
-            {
-                new Float:x, Float:y, Float:z;
-                GetPlayerPos(playerid, x, y, z);
-                DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO market (id, x, y, z) VALUES (1, %f, %f, %f)", x, y, z));
-                PijacaTocka(x, y, z);
-                SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Mjesto otkupa je postavljeno."));
-            }
-        }
-        case 1:
-        {
-            if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca se postavlja samo izvana."));
             else PijacaDodajMjesto(playerid);
         }
-        case 2: PijacaUkloniMjesto(playerid);
-        case 3:
+        case 1: PijacaUkloniMjesto(playerid);
+        case 2:
         {
             if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pijaca se postavlja samo izvana."));
             else
@@ -368,7 +342,7 @@ DLG:apanel_pijaca(playerid, response, listitem)
                 SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prodavac stoji na vasem mjestu."));
             }
         }
-        case 4:
+        case 3:
         {
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM market_seller WHERE id = 1"));
             if (PijacaAktorMakni()) SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prodavac je uklonjen."));

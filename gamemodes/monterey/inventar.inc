@@ -24,11 +24,52 @@ UcitajNovac(playerid)
     PostaviNovac(playerid, amount, false);
 }
 
+static PlayerText:gNovacTd[MAX_PLAYERS] = { PlayerText:INVALID_TEXT_DRAW, ... }, gNovacPromjena[MAX_PLAYERS], gNovacToken[MAX_PLAYERS];
+
+static NovacPromjena(playerid, amount)
+{
+    if (!amount || IsPlayerNPC(playerid)) return;
+    if (gNovacTd[playerid] == PlayerText:INVALID_TEXT_DRAW)
+    {
+        gNovacTd[playerid] = CreatePlayerTextDraw(playerid, 608.0, 101.0, "_");
+        PlayerTextDrawFont(playerid, gNovacTd[playerid], TEXT_DRAW_FONT_3);
+        PlayerTextDrawLetterSize(playerid, gNovacTd[playerid], 0.5, 1.8);
+        PlayerTextDrawAlignment(playerid, gNovacTd[playerid], TEXT_DRAW_ALIGN_RIGHT);
+        PlayerTextDrawSetOutline(playerid, gNovacTd[playerid], 2);
+        PlayerTextDrawBackgroundColour(playerid, gNovacTd[playerid], 0x000000FF);
+        PlayerTextDrawSetProportional(playerid, gNovacTd[playerid], true);
+        gNovacPromjena[playerid] = 0;
+    }
+    gNovacPromjena[playerid] += amount;
+    new tekst[24];
+    format(tekst, sizeof tekst, gNovacPromjena[playerid] < 0 ? ("-$%d") : ("+$%d"), gNovacPromjena[playerid] < 0 ? -gNovacPromjena[playerid] : gNovacPromjena[playerid]);
+    PlayerTextDrawSetString(playerid, gNovacTd[playerid], tekst);
+    PlayerTextDrawColour(playerid, gNovacTd[playerid], gNovacPromjena[playerid] < 0 ? 0xB4191DFF : 0x36682CFF);
+    PlayerTextDrawShow(playerid, gNovacTd[playerid]);
+    SetTimerEx("NovacSakrij", 3000, false, "ii", playerid, ++gNovacToken[playerid]);
+}
+
+forward NovacSakrij(playerid, token);
+public NovacSakrij(playerid, token)
+{
+    if (token != gNovacToken[playerid] || gNovacTd[playerid] == PlayerText:INVALID_TEXT_DRAW) return;
+    PlayerTextDrawHide(playerid, gNovacTd[playerid]);
+    gNovacPromjena[playerid] = 0;
+}
+
+NovacDisconnect(playerid)
+{
+    gNovacTd[playerid] = PlayerText:INVALID_TEXT_DRAW;
+    gNovacPromjena[playerid] = 0;
+    gNovacToken[playerid]++;
+}
+
 bool:DajNovac(playerid, amount)
 {
     new total = gNovac[playerid] + amount;
     if (total < 0 || total > MAX_KES) return false;
     PostaviNovac(playerid, total);
+    NovacPromjena(playerid, amount);
     return true;
 }
 

@@ -42,7 +42,7 @@ enum E_DOB { bool:dbIma, dbDb, Float:dbX, Float:dbY, Float:dbZ, Float:dbA, dbInt
 enum E_UVOZ { bool:uvIma, uvDb, Float:uvX, Float:uvY, Float:uvZ }
 
 static gBiljka[BILJKA_MAX][E_BILJKA], gDob[DOB_MAX][E_DOB], gUvoz[UVOZ_MAX][E_UVOZ];
-static gDrogaBiljka[MAX_PLAYERS], gDrogaDob[MAX_PLAYERS], gDrogaKupuje[MAX_PLAYERS], gDrogaUvoz[MAX_PLAYERS] = { -1, ... }, gDrogaUvozToken[MAX_PLAYERS];
+static gDrogaBiljka[MAX_PLAYERS], gDrogaDob[MAX_PLAYERS], gDrogaUvoz[MAX_PLAYERS] = { -1, ... }, gDrogaUvozToken[MAX_PLAYERS];
 static gDrogaUvozOrg[MAX_PLAYERS], gDrogaUvozVrsta[MAX_PLAYERS], gDrogaUvozZadnji[MAX_HQ][3], gApDroga[MAX_PLAYERS][DOB_MAX + UVOZ_MAX];
 static bool:gMeth[MAX_PLAYERS], Float:gMethTemp[MAX_PLAYERS], Float:gMethBrzina[MAX_PLAYERS], gMethOd[MAX_PLAYERS], gMethDobro[MAX_PLAYERS], gMethUkupno[MAX_PLAYERS], gMethVruce[MAX_PLAYERS], gMethToken[MAX_PLAYERS];
 static PlayerText:gMethTd[MAX_PLAYERS][5];
@@ -251,7 +251,8 @@ static DobStvori(p)
     gDob[p][dbAktor] = CreateActor(DOB_SKIN, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ], gDob[p][dbA]);
     SetActorVirtualWorld(gDob[p][dbAktor], gDob[p][dbSvijet]);
     SetActorInvulnerable(gDob[p][dbAktor], true);
-    gDob[p][dbTekst] = CreateDynamic3DTextLabel("[Y]", 0xAAAAAAFF, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ] + 1.2, 4.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gDob[p][dbSvijet], gDob[p][dbInt]);
+    gDob[p][dbTekst] = CreateDynamic3DTextLabel("[ALT]", 0xAAAAAAFF, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ] + 1.2, 4.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gDob[p][dbSvijet], gDob[p][dbInt]);
+    InterakcijaOznaka(gDob[p][dbTekst]);
 }
 
 static DobZaliha(p)
@@ -299,25 +300,24 @@ DLG:dobavljac(playerid, response, listitem)
         return DobMeni(playerid, p);
     }
     if (listitem >= 2) return DrogaUvozKreni(playerid, listitem == 3);
-    gDrogaKupuje[playerid] = listitem;
-    return PrikaziDialog(playerid, DLG_DOBAVLJAC_KOL, DIALOG_STYLE_INPUT, T(playerid, "Dobavljac"), T(playerid, "Unesite kolicinu:"), T(playerid, "Kupi"), T(playerid, "Natrag"));
+    new info[96], bool:kem = listitem == 1;
+    format(info, sizeof info, T(playerid, "%s: $%d/%s, zaliha %d."), T(playerid, gItems[kem ? ITEM_KEMIKALIJE : ITEM_SJEME][ITEM_NAME]), kem ? DOB_KEM_CIJENA : DOB_SJEME_CIJENA, T(playerid, gItems[kem ? ITEM_KEMIKALIJE : ITEM_SJEME][ITEM_UNIT]), kem ? gDob[p][dbKem] : gDob[p][dbSjeme]);
+    return UpitKolicina(playerid, UPIT_DOB, p, listitem, T(playerid, "Dobavljac"), info);
 }
 
-DLG:dobavljac_kol(playerid, response, const inputtext[])
+DobUpit(playerid, p, opcija, n)
 {
-    new p = gDrogaDob[playerid];
-    if (p < 0 || p >= DOB_MAX || !gDob[p][dbIma]) return 1;
-    if (!response) return DobMeni(playerid, p);
+    if (p < 0 || p >= DOB_MAX || !gDob[p][dbIma] || !IsPlayerInRangeOfPoint(playerid, DOB_DOMET, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ])) return 1;
     DobZaliha(p);
-    new bool:kem = gDrogaKupuje[playerid] == 1, n = strval(inputtext), zaliha = kem ? gDob[p][dbKem] : gDob[p][dbSjeme], cijena = kem ? DOB_KEM_CIJENA : DOB_SJEME_CIJENA, item = kem ? ITEM_KEMIKALIJE : ITEM_SJEME;
-    if (n <= 0 || n > zaliha) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dobavljac nema toliko (zaliha: %d)."), zaliha), DobMeni(playerid, p);
-    if (gInv[playerid][item] + n > gItems[item][ITEM_MAX]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko (najvise %d)."), gItems[item][ITEM_MAX]), DobMeni(playerid, p);
-    if (!DajNovac(playerid, -n * cijena)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca.")), DobMeni(playerid, p);
+    new bool:kem = opcija == 1, zaliha = kem ? gDob[p][dbKem] : gDob[p][dbSjeme], cijena = kem ? DOB_KEM_CIJENA : DOB_SJEME_CIJENA, item = kem ? ITEM_KEMIKALIJE : ITEM_SJEME, poruka[144];
+    if (n <= 0 || n > zaliha) return format(poruka, sizeof poruka, T(playerid, "Dobavljac nema toliko (zaliha: %d)."), zaliha), ObavijestGreska(playerid, poruka);
+    if (gInv[playerid][item] + n > gItems[item][ITEM_MAX]) return format(poruka, sizeof poruka, T(playerid, "Ne mozete nositi toliko (najvise %d)."), gItems[item][ITEM_MAX]), ObavijestGreska(playerid, poruka);
+    if (!DajNovac(playerid, -n * cijena)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
     GiveItem(playerid, item, n);
     if (kem) gDob[p][dbKem] -= n;
     else gDob[p][dbSjeme] -= n;
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste %d %s %s za $%d."), n, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]), n * cijena);
-    return 1;
+    format(poruka, sizeof poruka, T(playerid, "Kupili ste %d %s %s za $%d."), n, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]), n * cijena);
+    return ObavijestInfo(playerid, T(playerid, "Dobavljac"), poruka);
 }
 
 static bool:DrogaHq(org, &Float:x, &Float:y, &Float:z)

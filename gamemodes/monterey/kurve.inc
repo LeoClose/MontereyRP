@@ -15,7 +15,7 @@
 
 enum { PR_NEMA, PR_STOJI, PR_DOLAZI, PR_PONUDA, PR_ULAZI, PR_USLUGA, PR_IZLAZI, PR_ODLAZI, PR_KRAJ, PR_ULICA_PONUDA, PR_ULICA }
 enum E_KURVA { prStanje, prDb, prSkin, prNpc, prKupac, prVozilo, prRok, bool:prAnim, Float:prX, Float:prY, Float:prZ, Float:prA }
-static gKurva[MAX_KURVI][E_KURVA];
+static gKurva[MAX_KURVI][E_KURVA], STREAMER_TAG_AREA:gKurvaZona[MAX_KURVI];
 static gKurvaOd[MAX_PLAYERS];
 static gNpcKurva[MAX_PLAYERS];
 static gApKurvaDb[MAX_PLAYERS];
@@ -28,6 +28,7 @@ static KurvaStvori(i)
     new npc = NPC_Create(ime);
     gKurva[i][prNpc] = npc;
     if (npc == INVALID_PLAYER_ID) return;
+    if (!gKurvaZona[i]) gKurvaZona[i] = InterakcijaZona(gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], KURVA_PJESKE, 0, 0);
     gNpcKurva[npc] = i + 1;
     NPC_Spawn(npc);
 }
@@ -78,15 +79,14 @@ KurvaUlica(playerid)
     for (new i = 0; i < MAX_KURVI; i++)
     {
         if (gKurva[i][prStanje] != PR_STOJI || gKurva[i][prNpc] == INVALID_PLAYER_ID || GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, KURVA_PJESKE, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) continue;
-        new cijena[12], body[64];
+        new cijena[12];
         gKurva[i][prStanje] = PR_ULICA_PONUDA;
         gKurva[i][prKupac] = playerid;
         gKurva[i][prRok] = GetTickCount() + KURVA_PONUDA_MS;
         gKurvaOd[playerid] = i + 1;
         valstr(cijena, KURVA_CIJENA);
         Govor(playerid, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
-        format(body, sizeof body, T(playerid, "Cijena: $%d"), KURVA_CIJENA);
-        PrikaziDialog(playerid, DLG_KURVA, DIALOG_STYLE_MSGBOX, T(playerid, "Kurva"), body, T(playerid, "Prihvati"), T(playerid, "Odbij"));
+        KurvaPitaj(playerid);
         return 1;
     }
     return 0;
@@ -198,7 +198,7 @@ KurvaPomak(npcid)
     if (i < 0) return;
     if (gKurva[i][prStanje] == PR_ODLAZI) gKurva[i][prStanje] = PR_KRAJ;
     if (gKurva[i][prStanje] != PR_DOLAZI) return;
-    new p = gKurva[i][prKupac], cijena[12], body[64], Float:nx, Float:ny, Float:nz, Float:vx, Float:vy, Float:vz;
+    new p = gKurva[i][prKupac], cijena[12], Float:nx, Float:ny, Float:nz, Float:vx, Float:vy, Float:vz;
     gKurva[i][prStanje] = PR_PONUDA;
     gKurva[i][prRok] = GetTickCount() + KURVA_PONUDA_MS;
     NPC_GetPos(npcid, nx, ny, nz);
@@ -206,12 +206,28 @@ KurvaPomak(npcid)
     NPC_SetFacingAngle(npcid, atan2(vy - ny, vx - nx) - 90.0);
     valstr(cijena, KURVA_CIJENA);
     Govor(p, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
-    format(body, sizeof body, T(p, "Cijena: $%d"), KURVA_CIJENA);
-    PrikaziDialog(p, DLG_KURVA, DIALOG_STYLE_MSGBOX, T(p, "Kurva"), body, T(p, "Prihvati"), T(p, "Odbij"));
+    KurvaPitaj(p);
 }
 
-DLG:kurva(playerid, response)
+static KurvaPitaj(playerid)
 {
+    new body[96];
+    format(body, sizeof body, T(playerid, "Cijena: $%d~n~Y - prihvati, N - odbij"), KURVA_CIJENA);
+    IgraObavijest(playerid, T(playerid, "Kurva"), 0xE84393FF, body, 0);
+}
+
+KurvaOdgovorKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    new i = gKurvaOd[playerid] - 1;
+    if (i < 0 || gKurva[i][prKupac] != playerid || (gKurva[i][prStanje] != PR_ULICA_PONUDA && gKurva[i][prStanje] != PR_PONUDA)) return 0;
+    if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) return KurvaOdgovor(playerid, true), 1;
+    if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO)) return KurvaOdgovor(playerid, false), 1;
+    return 0;
+}
+
+static KurvaOdgovor(playerid, response)
+{
+    IgraObavijestUkloni(playerid);
     new i = gKurvaOd[playerid] - 1;
     if (i >= 0 && gKurva[i][prStanje] == PR_ULICA_PONUDA && gKurva[i][prKupac] == playerid)
     {
@@ -275,7 +291,8 @@ KurvaTick()
         new st = gKurva[i][prStanje], p = gKurva[i][prKupac], npc = gKurva[i][prNpc];
         if (st == PR_ULICA_PONUDA || st == PR_ULICA)
         {
-            if (sad - gKurva[i][prRok] < 0) continue;
+            if (sad - gKurva[i][prRok] < 0 && (st == PR_ULICA || IsPlayerInRangeOfPoint(p, KURVA_PJESKE * 2.0, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ]))) continue;
+            if (st == PR_ULICA_PONUDA) IgraObavijestUkloni(p);
             Govor(p, st == PR_ULICA ? ("Kurva kaze: Hvala, dragi. Navrati opet.") : ("Kurva kaze: Nemam cijelu noc, dragi."));
             KurvaUlicaKraj(i);
         }
@@ -408,6 +425,8 @@ DLG:apanel_kurve_brisi(playerid, response)
         NPC_Destroy(gKurva[i][prNpc]);
     }
     gKurva[i][prStanje] = PR_NEMA;
+    if (gKurvaZona[i]) DestroyDynamicArea(gKurvaZona[i]);
+    gKurvaZona[i] = STREAMER_TAG_AREA:0;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM hooker_spots WHERE id = %d", gApKurvaDb[playerid]));
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Kurva obrisana."));
     return ShowKurve(playerid);

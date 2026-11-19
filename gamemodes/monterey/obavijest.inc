@@ -25,6 +25,16 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
     return 1;
 }
 
+ObavijestGreska(playerid, const tekst[])
+{
+    return IgraObavijest(playerid, T(playerid, "Greska"), OBAVIJEST_GRESKA, tekst);
+}
+
+ObavijestInfo(playerid, const naslov[], const tekst[])
+{
+    return IgraObavijest(playerid, naslov, 0x27AE60E6, tekst);
+}
+
 IgraObavijestPanel(playerid, const naslov[], boja, const tekst[])
 {
     gObOd[playerid] = 0;

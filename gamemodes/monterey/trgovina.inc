@@ -50,9 +50,9 @@ static TrgovinaStvori(s)
     gTrg[s][tgIma] = true;
     gTrg[s][tgPljackano] = 0;
     gTrg[s][tgPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ], 0, 0);
-    gTrg[s][tgTekst] = CreateDynamic3DTextLabel("24/7\n[Y]", COLOR_ORG, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gTrg[s][tgTekst] = CreateDynamic3DTextLabel("24/7\n[F]", COLOR_ORG, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gTrg[s][tgPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2], svijet, TRGOVINA_INT);
-    gTrg[s][tgTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
+    gTrg[s][tgTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gTrgovinaUlaz[0], gTrgovinaUlaz[1], gTrgovinaUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
 }
 
 static TrgovinaAktor(s)
@@ -61,7 +61,8 @@ static TrgovinaAktor(s)
     gTrg[s][tgImaAktor] = true;
     gTrg[s][tgAktor] = CreateActor(TRGOVINA_SKIN, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz], gTrg[s][tgAa]);
     SetActorVirtualWorld(gTrg[s][tgAktor], svijet);
-    gTrg[s][tgTekstA] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
+    gTrg[s][tgTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
+    InterakcijaOznaka(gTrg[s][tgTekstA]);
 }
 
 static TrgovinaMakniAktor(s)

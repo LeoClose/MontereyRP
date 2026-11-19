@@ -179,7 +179,7 @@ static KuglanjeKuglaNazad(s)
 static KuglanjeOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Kuglanje\n{FFFFFF}[Y] $%d", KUGLANJE_CIJENA);
+    format(tekst, sizeof tekst, "Kuglanje\n{FFFFFF}[ALT] $%d", KUGLANJE_CIJENA);
     return tekst;
 }
 
@@ -190,6 +190,7 @@ static KuglanjeStvori(s)
     gKg[s][kgNisani] = INVALID_PLAYER_ID;
     gKg[s][kgFaza] = KG_CEKA;
     gKg[s][kgTekst] = CreateDynamic3DTextLabel(KuglanjeOznaka(), 0xF39C12FF, gKg[s][kgX], gKg[s][kgY], gKg[s][kgZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKg[s][kgSvijet], gKg[s][kgInt]);
+    InterakcijaOznaka(gKg[s][kgTekst]);
     KuglanjePostavi(s);
     KuglanjeKuglaNazad(s);
 }
@@ -337,6 +338,12 @@ static KuglanjePotez(s)
     }
 }
 
+KuglanjeCilja(playerid)
+{
+    new s = gKuglanjeIgrac[playerid];
+    return s != -1 && gKg[s][kgNisani] == playerid;
+}
+
 KuglanjeKey(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
@@ -359,10 +366,9 @@ KuglanjeKey(playerid)
     }
     if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return DajNovac(playerid, KUGLANJE_CIJENA), 1;
     BlagajnaDodaj(KUGLANJE_CIJENA);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), KUGLANJE_CIJENA);
     gKg[s][kgIgrac][i] = playerid;
     gKuglanjeIgrac[playerid] = s;
-    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
+    if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (ALT za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     gKg[s][kgSam] = false;
     gKgN[s][0] = gKgN[s][1] = 0;
     gKg[s][kgNaPotezu] = random(2);

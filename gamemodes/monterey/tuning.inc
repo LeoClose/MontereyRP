@@ -607,6 +607,7 @@ public TuningNitroPrazno(v, c)
 
 public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
 {
+    if (InterakcijaUsao(playerid, areaid)) return 1;
     if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER || gTunU[playerid] != -1 || gPsU[playerid]) return 1;
     for (new k = 0; k < sizeof gPs; k++)
     {

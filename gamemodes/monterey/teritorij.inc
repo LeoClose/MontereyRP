@@ -26,6 +26,7 @@ enum E_TER
 static gTer[MAX_TER][E_TER];
 static gTerNpc[MAX_TER][MAX_TER_NPC];
 static gTerNpcDb[MAX_TER][MAX_TER_NPC];
+static STREAMER_TAG_AREA:gTerNpcZona[MAX_TER][MAX_TER_NPC];
 static Float:gTerNpcPos[MAX_TER][MAX_TER_NPC][4];
 static gTerNpcSkin[MAX_TER][MAX_TER_NPC];
 static gNpcTer[MAX_PLAYERS] = { -1, ... };
@@ -186,6 +187,7 @@ static KreirajNPCa(t, n)
     gTerNpc[t][n] = npc;
     gNpcTer[npc] = t * MAX_TER_NPC + n;
     NPC_Spawn(npc);
+    if (!gTerNpcZona[t][n]) gTerNpcZona[t][n] = InterakcijaZona(gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], TER_NPC_RANGE, 0, 0);
 }
 
 static ObrisiNPCa(t, n)
@@ -200,6 +202,8 @@ static ObrisiNPCa(t, n)
 static MakniDilera(t, n)
 {
     ObrisiNPCa(t, n);
+    if (gTerNpcZona[t][n]) DestroyDynamicArea(gTerNpcZona[t][n]);
+    gTerNpcZona[t][n] = STREAMER_TAG_AREA:0;
     gTerNpcDb[t][n] = 0;
 }
 
@@ -539,10 +543,15 @@ DilerKey(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
     new k = NpcBlizu(playerid);
     if (k == -1) return 0;
-    new t = k / MAX_TER_NPC, item = DrogaTeritorija(t), body[144];
-    format(body, sizeof body, T(playerid, "%s: $%d/%s, na zalihi %d. Unesite kolicinu:"), T(playerid, gItems[item][ITEM_NAME]), gTer[t][terCijena], T(playerid, gItems[item][ITEM_UNIT]), gTer[t][terZaliha]);
-    PrikaziDialog(playerid, DLG_DILER, DIALOG_STYLE_INPUT, T(playerid, "Diler"), body, T(playerid, "Kupi"), T(playerid, "Zatvori"));
-    return 1;
+    new t = k / MAX_TER_NPC, item = DrogaTeritorija(t), info[96];
+    format(info, sizeof info, T(playerid, "%s: $%d/%s, na zalihi %d."), T(playerid, gItems[item][ITEM_NAME]), gTer[t][terCijena], T(playerid, gItems[item][ITEM_UNIT]), gTer[t][terZaliha]);
+    return UpitKolicina(playerid, UPIT_DILER, k, 0, T(playerid, "Diler"), info);
+}
+
+DilerUpit(playerid, k, n)
+{
+    if (NpcBlizu(playerid) != k) return ObavijestGreska(playerid, T(playerid, "Niste kod dilera."));
+    return DilerKupi(playerid, n);
 }
 
 CMD:diler(playerid, params[])
@@ -551,26 +560,15 @@ CMD:diler(playerid, params[])
     return 1;
 }
 
-DLG:diler(playerid, response, const inputtext[])
-{
-    if (!response) return 1;
-    if (!ProvjeriBroj(inputtext) || strlen(inputtext) > 5)
-    {
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravna kolicina."));
-        return DilerKey(playerid);
-    }
-    return DilerKupi(playerid, strval(inputtext));
-}
-
 static DilerKupi(playerid, amount)
 {
     new k = NpcBlizu(playerid);
-    if (k == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod dilera."));
-    new t = k / MAX_TER_NPC, item = DrogaTeritorija(t);
-    if (!amount || amount > gTer[t][terZaliha]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Diler nema toliko (zaliha: %d)."), gTer[t][terZaliha]);
+    if (k == -1) return ObavijestGreska(playerid, T(playerid, "Niste kod dilera."));
+    new t = k / MAX_TER_NPC, item = DrogaTeritorija(t), poruka[144];
+    if (!amount || amount > gTer[t][terZaliha]) return format(poruka, sizeof poruka, T(playerid, "Diler nema toliko (zaliha: %d)."), gTer[t][terZaliha]), ObavijestGreska(playerid, poruka);
     new cost = amount * gTer[t][terCijena];
-    if (gNovac[playerid] < cost) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca ($%d)."), cost);
-    if (!GiveItem(playerid, item, amount)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
+    if (gNovac[playerid] < cost) return format(poruka, sizeof poruka, T(playerid, "Nemate dovoljno novca ($%d)."), cost), ObavijestGreska(playerid, poruka);
+    if (!GiveItem(playerid, item, amount)) return ObavijestGreska(playerid, T(playerid, "Ne mozete nositi toliko."));
     DajNovac(playerid, -cost);
     gTer[t][terZaliha] -= amount;
     gTer[t][terProfit] = min(gTer[t][terProfit] + cost, MAX_KES);
@@ -583,7 +581,8 @@ static DilerKupi(playerid, amount)
     ApplyAnimation(playerid, "DEALER", "DEALER_DEAL", 4.1, false, false, false, false, 0, SYNC_ALL);
     NPC_ApplyAnimation(gTerNpc[t][n], "DEALER", "DEALER_DEAL", 4.1, false, false, false, false, 0);
     SetTimerEx("DilerDone", 3000, false, "i", k);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste %d %s %s za $%d."), amount, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]), cost);
+    format(poruka, sizeof poruka, T(playerid, "Kupili ste %d %s %s za $%d."), amount, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]), cost);
+    return ObavijestInfo(playerid, T(playerid, "Diler"), poruka);
 }
 
 forward DilerDone(k);

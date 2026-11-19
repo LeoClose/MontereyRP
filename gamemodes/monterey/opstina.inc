@@ -26,7 +26,7 @@ enum E_OPINT { oiIme[32], oiInt, Float:oiX, Float:oiY, Float:oiZ, Float:oiA }
 static const gOpstinaInt[][E_OPINT] = {
     { "City Planning", 3, 384.808, 173.804, 1008.382, 90.0 }
 };
-static const gSalterNatpis[SALTER_BROJ][] = { "Opstina\nKazne i promjena imena\n[Y]", "Opstina\nProdaja vozila\n[Y]" };
+static const gSalterNatpis[SALTER_BROJ][] = { "Opstina\nKazne i promjena imena\n[ALT]", "Opstina\nProdaja vozila\n[ALT]" };
 
 static bool:ImeIspravno(const ime[])
 {
@@ -105,6 +105,7 @@ static SalterStvori(s)
     SetActorVirtualWorld(gSalter[s][stAktor], gSalter[s][stSvijet]);
     gSalter[s][stTekst] = CreateDynamic3DTextLabel(gSalterNatpis[s], COLOR_ORG, gSalter[s][stX], gSalter[s][stY], gSalter[s][stZ] + 1.2, 8.0,
         INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gSalter[s][stSvijet], gSalter[s][stInt]);
+    InterakcijaOznaka(gSalter[s][stTekst]);
 }
 
 static SalterUkloni(s)
@@ -146,9 +147,9 @@ static VrataStvori()
     gVrata[vrIma] = true;
     gVrata[vrPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrX], gVrata[vrY], gVrata[vrZ], 0, 0);
     gVrata[vrIkona] = MapaIkona(gVrata[vrX], gVrata[vrY], gVrata[vrZ], 53);
-    gVrata[vrTekst] = CreateDynamic3DTextLabel("Opstina\n[Y]", COLOR_ORG, gVrata[vrX], gVrata[vrY], gVrata[vrZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gVrata[vrTekst] = CreateDynamic3DTextLabel("Opstina\n[F]", COLOR_ORG, gVrata[vrX], gVrata[vrY], gVrata[vrZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gVrata[vrPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz], OPSTINA_SVIJET, gVrata[vrInt]);
-    gVrata[vrTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, OPSTINA_SVIJET, gVrata[vrInt]);
+    gVrata[vrTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, OPSTINA_SVIJET, gVrata[vrInt]);
 }
 
 static OpstinaUnutra(playerid)

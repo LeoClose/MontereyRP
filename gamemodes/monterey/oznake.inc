@@ -1,6 +1,9 @@
 #define OZNAKA_MAX          8192
 
-static STREAMER_TAG_3D_TEXT_LABEL:gOznakaKopija[OZNAKA_MAX][BROJ_JEZIKA], bool:gOznakaIma[OZNAKA_MAX];
+static STREAMER_TAG_3D_TEXT_LABEL:gOznakaKopija[OZNAKA_MAX][BROJ_JEZIKA], bool:gOznakaIma[OZNAKA_MAX], STREAMER_TAG_AREA:gOznakaZona[OZNAKA_MAX];
+static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MAX_PLAYERS];
+
+#define INTERAKCIJA_ZONA    0x494E54
 
 static OznakaPrevedi(l, const hr[], out[], len)
 {
@@ -58,6 +61,11 @@ STREAMER_TAG_3D_TEXT_LABEL:OznakaStvori(const text[], color, Float:x, Float:y, F
 
 OznakaUnisti(STREAMER_TAG_3D_TEXT_LABEL:id)
 {
+    if (_:id > 0 && _:id < OZNAKA_MAX && gOznakaZona[_:id])
+    {
+        DestroyDynamicArea(gOznakaZona[_:id]);
+        gOznakaZona[_:id] = STREAMER_TAG_AREA:0;
+    }
     if (_:id > 0 && _:id < OZNAKA_MAX && gOznakaIma[_:id])
     {
         gOznakaIma[_:id] = false;
@@ -78,6 +86,36 @@ OznakaTekst(STREAMER_TAG_3D_TEXT_LABEL:id, color, const text[])
         }
     }
     return UpdateDynamic3DTextLabelText(id, color, text);
+}
+
+STREAMER_TAG_AREA:InterakcijaZona(Float:x, Float:y, Float:z, Float:r, svijet = -1, interijer = -1)
+{
+    new STREAMER_TAG_AREA:a = CreateDynamicSphere(x, y, z, r, svijet, interijer);
+    Streamer_SetIntData(STREAMER_TYPE_AREA, a, E_STREAMER_EXTRA_ID, INTERAKCIJA_ZONA);
+    return a;
+}
+
+InterakcijaOznaka(STREAMER_TAG_3D_TEXT_LABEL:id, Float:r = 2.5)
+{
+    if (_:id <= 0 || _:id >= OZNAKA_MAX) return;
+    new Float:x, Float:y, Float:z, svijet[1], interijer[1];
+    Streamer_GetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_X, x);
+    Streamer_GetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_Y, y);
+    Streamer_GetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_Z, z);
+    Streamer_GetArrayData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_WORLD_ID, svijet);
+    Streamer_GetArrayData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_INTERIOR_ID, interijer);
+    gOznakaZona[_:id] = InterakcijaZona(x, y, z - 1.0, r, svijet[0], interijer[0]);
+}
+
+InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
+{
+    if (Streamer_GetIntData(STREAMER_TYPE_AREA, areaid, E_STREAMER_EXTRA_ID) != INTERAKCIJA_ZONA || !gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
+    new sad = GetTickCount();
+    if (areaid == gInterakcijaZadnja[playerid] && sad - gInterakcijaVrijeme[playerid] < 30000) return 1;
+    gInterakcijaZadnja[playerid] = areaid;
+    gInterakcijaVrijeme[playerid] = sad;
+    IgraObavijest(playerid, T(playerid, "Interakcija"), 0xF39C12FF, T(playerid, "Pritisnite ALT za interakciju."), 3000);
+    return 1;
 }
 
 OznakeIgrac(playerid)

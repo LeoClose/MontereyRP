@@ -210,7 +210,7 @@ PikadoConnect(playerid)
 static PikadoOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Pikado\n{FFFFFF}[Y] $%d", PIKADO_CIJENA);
+    format(tekst, sizeof tekst, "Pikado\n{FFFFFF}[ALT] $%d", PIKADO_CIJENA);
     return tekst;
 }
 
@@ -221,6 +221,7 @@ static PikadoStvori(s)
     gPikado[s][pkNisani] = INVALID_PLAYER_ID;
     gPikado[s][pkFaza] = PF_CEKA;
     gPikado[s][pkTekst] = CreateDynamic3DTextLabel(PikadoOznaka(), 0xF39C12FF, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gPikado[s][pkSvijet], gPikado[s][pkInt]);
+    InterakcijaOznaka(gPikado[s][pkTekst]);
 }
 
 static PikadoPoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, a = 0, b = 0)
@@ -332,9 +333,9 @@ static PikadoStrelicaCrtaj(playerid, d, Float:mx, Float:my)
 static PikadoInfo(s, playerid)
 {
     new tekst[256], n = gPikado[s][pkNaPotezu];
-    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~WASD nisan (ALT fino), drzi/pusti LMB baci, RMB izlaz"),
+    if (gPikado[s][pkSam]) format(tekst, sizeof tekst, T(playerid, "~w~Preostalo: ~y~%d~w~  |  Strelica: %d/%d  |  Ukupno bacanja: %d~n~WASD nisan, drzi/pusti LMB baci, RMB izlaz"),
         gPikado[s][pkBodovi][n], gPikado[s][pkBacio], PIKADO_STRELICA, gPikado[s][pkUkupno]);
-    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d~n~WASD nisan (ALT fino), drzi/pusti LMB baci, RMB izlaz"),
+    else format(tekst, sizeof tekst, T(playerid, "~w~%s: ~y~%d~w~  |  %s: ~y~%d~n~~w~Strelica: %d/%d~n~WASD nisan, drzi/pusti LMB baci, RMB izlaz"),
         GetRPIme(gPikado[s][pkIgrac][n]), gPikado[s][pkBodovi][n], GetRPIme(gPikado[s][pkIgrac][1 - n]), gPikado[s][pkBodovi][1 - n], gPikado[s][pkBacio], PIKADO_STRELICA);
     PlayerTextDrawSetString(playerid, gPkTd[playerid][PTD_INFO], tekst);
 }
@@ -427,6 +428,12 @@ static PikadoPotez(s)
     }
 }
 
+PikadoCilja(playerid)
+{
+    new s = gPikadoIgrac[playerid];
+    return s != -1 && gPikado[s][pkNisani] == playerid;
+}
+
 PikadoKey(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
@@ -449,10 +456,9 @@ PikadoKey(playerid)
     }
     if (!OkladaUdi(playerid, OK_PIKADO, s)) return DajNovac(playerid, PIKADO_CIJENA), 1;
     BlagajnaDodaj(PIKADO_CIJENA);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), PIKADO_CIJENA);
     gPikado[s][pkIgrac][i] = playerid;
     gPikadoIgrac[playerid] = s;
-    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;
+    if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (ALT za odlazak, /oklada [iznos] za ulog)."), 0), 1;
     gPikado[s][pkSam] = false;
     gPikado[s][pkBodovi][0] = gPikado[s][pkBodovi][1] = PIKADO_POCETNO;
     gPikado[s][pkNaPotezu] = random(2);

@@ -47,7 +47,7 @@ static const gArkSmjerY[] = { -1, 0, 1, 0 };
 
 static gArk[ARK_MAX][E_ARK], gArkZmija[ARK_MAX][ARK_CELIJA], bool:gArkPolje[ARK_MAX][ARK_CELIJA];
 static Float:gArkCx[ARK_MAX], Float:gArkCy[ARK_MAX], gArkCod[ARK_MAX], gArkMt[ARK_MAX][ARK_METE], gArkMe[ARK_MAX][ARK_METE], gArkMod[ARK_MAX][ARK_METE];
-static gArkAutomat[MAX_PLAYERS] = { -1, ... }, PlayerText:gArkTd[MAX_PLAYERS][ARK_TD], gArkBr[MAX_PLAYERS], PlayerText:gArkBodTd[MAX_PLAYERS], PlayerText:gArkInfoTd[MAX_PLAYERS], gApArk[MAX_PLAYERS][ARK_MAX];
+static bool:gArkMisKraj[MAX_PLAYERS], bool:gArkBezMisa[MAX_PLAYERS], gArkAutomat[MAX_PLAYERS] = { -1, ... }, PlayerText:gArkTd[MAX_PLAYERS][ARK_TD], gArkBr[MAX_PLAYERS], PlayerText:gArkBodTd[MAX_PLAYERS], PlayerText:gArkInfoTd[MAX_PLAYERS], gApArk[MAX_PLAYERS][ARK_MAX];
 
 InitArkada()
 {
@@ -74,11 +74,12 @@ InitArkada()
 static ArkStvori(m)
 {
     new tekst[64];
-    format(tekst, sizeof tekst, "{F39C12}%s\n{FFFFFF}[Y] $%d", gArkIme[gArk[m][amIgra]], ARK_CIJENA);
+    format(tekst, sizeof tekst, "{F39C12}%s\n{FFFFFF}[ALT] $%d", gArkIme[gArk[m][amIgra]], ARK_CIJENA);
     gArk[m][amIma] = true;
     gArk[m][amIgrac] = INVALID_PLAYER_ID;
     gArk[m][amObj] = CreateDynamicObject(gArkModel[gArk[m][amIgra]], gArk[m][amX], gArk[m][amY], gArk[m][amZ], 0.0, 0.0, gArk[m][amA], gArk[m][amSvijet], gArk[m][amInt]);
     gArk[m][amTekst] = CreateDynamic3DTextLabel(tekst, 0xFFFFFFFF, gArk[m][amX], gArk[m][amY], gArk[m][amZ] + 2.1, 6.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gArk[m][amSvijet], gArk[m][amInt]);
+    InterakcijaOznaka(gArk[m][amTekst]);
 }
 
 static PlayerText:ArkKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja, bool:klik = false)
@@ -615,6 +616,11 @@ static ArkKraj(m)
     ArkKutija(p, 320.0 - 90.0, ARK_Y - 4.0, 180.0, 128.0, 0x000000E6);
     ArkTekst(p, 320.0, ARK_Y, tekst, 1.0, 0xFFFFFFFF);
     SetTimerEx("ArkZatvoriTimer", ARK_KRAJ_MS, false, "ii", m, gArk[m][amToken]);
+    if (gArk[m][amIgra] == AI_MEMORIJA && !gArkBezMisa[p])
+    {
+        gArkMisKraj[p] = true;
+        CancelSelectTextDraw(p);
+    }
 }
 
 forward ArkZatvoriTimer(m, token);
@@ -633,7 +639,8 @@ ArkZatvori(playerid)
     for (new i = 0; i < gArkBr[playerid]; i++) PlayerTextDrawDestroy(playerid, gArkTd[playerid][i]);
     gArkBr[playerid] = 0;
     if (!IsPlayerConnected(playerid)) return;
-    if (gArk[m][amIgra] == AI_MEMORIJA) CancelSelectTextDraw(playerid);
+    if (gArk[m][amIgra] == AI_MEMORIJA && !gArk[m][amKraj]) CancelSelectTextDraw(playerid);
+    gArkMisKraj[playerid] = false;
     TogglePlayerControllable(playerid, true);
 }
 
@@ -642,12 +649,23 @@ ArkadaIgra(playerid)
     return gArkAutomat[playerid] != -1;
 }
 
-ArkadaEsc(playerid)
+ArkadaEsc(playerid, bool:mis = false)
 {
     new m = gArkAutomat[playerid];
     if (m == -1) return;
-    if (gArk[m][amKraj]) ArkZatvori(playerid);
-    else ArkKraj(m);
+    if (mis && gArkMisKraj[playerid])
+    {
+        gArkMisKraj[playerid] = false;
+        return;
+    }
+    if (gArk[m][amKraj])
+    {
+        ArkZatvori(playerid);
+        return;
+    }
+    gArkBezMisa[playerid] = mis;
+    ArkKraj(m);
+    gArkBezMisa[playerid] = false;
 }
 
 bool:ArkadaTipke(playerid, KEY:newkeys, KEY:oldkeys)

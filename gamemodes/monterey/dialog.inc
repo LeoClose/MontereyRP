@@ -10,14 +10,14 @@ enum
     DLG_INVENTAR, DLG_INVENTAR_PREDMET, DLG_INVENTAR_DAJ, DLG_INVENTAR_BACI,
     DLG_TERITORIJ, DLG_TER_DROGA, DLG_TER_CIJENA, DLG_TER_ORUZJE, DLG_TER_MUNICIJA, DLG_TER_ORG,
     DLG_APANEL_KAT, DLG_APANEL, DLG_APANEL_ORGOVI, DLG_APANEL_TIP_ORG, DLG_APANEL_ORG, DLG_APANEL_BRISANJE_ORG, DLG_APANEL_UNOS,
-    DLG_APANEL_TER, DLG_APANEL_TER_MENI, DLG_APANEL_BRISANJE_TER, DLG_TAKSI, DLG_SLUCAJ, DLG_RANJEN, DLG_DILER, DLG_ANIM, DLG_APANEL_TAKSI, DLG_APANEL_TAKSI_BRISI, DLG_APANEL_KAMION, DLG_APANEL_KAMION_BRISI, DLG_KURVA, DLG_APANEL_KURVA, DLG_APANEL_KURVA_BRISI, DLG_FRISK, DLG_ORMAR, DLG_GEPEK, DLG_GEPEK_STAVI, DLG_GEPEK_KOLICINA, DLG_APANEL_HQ, DLG_APANEL_HQ_UNOS, DLG_APANEL_PUMPA, DLG_APANEL_PUMPA_BRISI,
+    DLG_APANEL_TER, DLG_APANEL_TER_MENI, DLG_APANEL_BRISANJE_TER, DLG_TAKSI, DLG_SLUCAJ, DLG_RANJEN, DLG_ANIM, DLG_APANEL_TAKSI, DLG_APANEL_TAKSI_BRISI, DLG_APANEL_KAMION, DLG_APANEL_KAMION_BRISI, DLG_APANEL_KURVA, DLG_APANEL_KURVA_BRISI, DLG_FRISK, DLG_ORMAR, DLG_GEPEK, DLG_GEPEK_STAVI, DLG_GEPEK_KOLICINA, DLG_APANEL_HQ, DLG_APANEL_HQ_UNOS, DLG_APANEL_PUMPA, DLG_APANEL_PUMPA_BRISI,
     DLG_GORIVO, DLG_TRGOVINA, DLG_APANEL_TRGOVINA, DLG_APANEL_TRGOVINA_MENI,
     DLG_SALON_KUPI, DLG_APANEL_SALON, DLG_APANEL_SALON_MENI, DLG_APANEL_SALON_DODAJ, DLG_APANEL_SALON_UKLONI,
     DLG_OPSTINA, DLG_OPSTINA_KAZNE, DLG_OPSTINA_IME, DLG_OPSTINA_VOZILA, DLG_OPSTINA_PRODAJA, DLG_OPSTINA_PONUDA, DLG_APANEL_OPSTINA, DLG_APANEL_OPSTINA_INT, DLG_APANEL_OPSTINA_UNOS,
-    DLG_PIJACA_PRODAJ, DLG_PIJACA_KUPI, DLG_APANEL_PIJACA, DLG_MEHANICAR, DLG_TAKSI_POZIV, DLG_APANEL_ORUZARNICA, DLG_APANEL_ORUZARNICA_INT, DLG_APANEL_ORUZARNICA_MENI, DLG_APANEL_ODJECA, DLG_APANEL_ODJECA_MENI, DLG_APANEL_ODJECA_KATALOG, DLG_APANEL_ODJECA_UNOS, DLG_APANEL_ORUZARNICA_KATALOG, DLG_APANEL_ORUZARNICA_UNOS, DLG_KUCA, DLG_APANEL_KUCA, DLG_APANEL_KUCA_VLASNIK, DLG_APANEL_KUCA_CIJENA, DLG_APANEL_KUCA_BRISI, DLG_KUCA_IZLAZ, DLG_KUCA_PREUREDI, DLG_KUCA_NAJAM, DLG_KUCA_NAJMI, DLG_OPSTINA_KUCA, DLG_OPSTINA_KUCA_POTVRDA, DLG_MDT_OSOBA, DLG_MDT_VOZILO, DLG_MDT_POTJERNICA, DLG_BANKA, DLG_BANKA_UNOS, DLG_BANKA_INFO, DLG_PC_UNOS, DLG_KAMP, DLG_TIKETI, DLG_TIKET, DLG_KAMP_KUPI, DLG_KAMP_PRODAJ, DLG_APANEL_KAMP, DLG_ZLATARA, DLG_ZLATARA_KUPI, DLG_ZLATARA_PRODAJ, DLG_ZLATARA_ZLATO, DLG_PREPRODAVAC, DLG_APANEL_ZLATARA, DLG_APANEL_ZLATARA_MENI, DLG_APANEL_BANKA, DLG_APANEL_BANKA_INT, DLG_APANEL_BANKA_MENI, DLG_APANEL_TUNING, DLG_APANEL_TUNING_BRISI, DLG_MEHANICAR_ODVOZ, DLG_GARAZA_KUPI, DLG_GARAZA_MENI, DLG_GARAZA_PRODAJ, DLG_APANEL_GARAZA, DLG_APANEL_GARAZA_MENI, DLG_APANEL_GARAZA_CIJENA, DLG_APANEL_GARAZA_BRISI, DLG_VOZILO_MENI, DLG_BOLNICA, DLG_TUNING_NATPIS, DLG_NAMJESTAJ, DLG_NAMJESTAJ_OPCIJE, DLG_NAMJESTAJ_PRODAJ, DLG_APANEL_NAMJESTAJ, DLG_APANEL_NAMJESTAJ_INT, DLG_APANEL_NAMJESTAJ_MENI, DLG_APANEL_NAMJESTAJ_KATALOG, DLG_APANEL_NAMJESTAJ_UNOS,
+    DLG_APANEL_PIJACA, DLG_MEHANICAR, DLG_TAKSI_POZIV, DLG_APANEL_ORUZARNICA, DLG_APANEL_ORUZARNICA_INT, DLG_APANEL_ORUZARNICA_MENI, DLG_APANEL_ODJECA, DLG_APANEL_ODJECA_MENI, DLG_APANEL_ODJECA_KATALOG, DLG_APANEL_ODJECA_UNOS, DLG_APANEL_ORUZARNICA_KATALOG, DLG_APANEL_ORUZARNICA_UNOS, DLG_KUCA, DLG_APANEL_KUCA, DLG_APANEL_KUCA_VLASNIK, DLG_APANEL_KUCA_CIJENA, DLG_APANEL_KUCA_BRISI, DLG_KUCA_IZLAZ, DLG_KUCA_PREUREDI, DLG_KUCA_NAJAM, DLG_KUCA_NAJMI, DLG_OPSTINA_KUCA, DLG_OPSTINA_KUCA_POTVRDA, DLG_MDT_OSOBA, DLG_MDT_VOZILO, DLG_MDT_POTJERNICA, DLG_BANKA, DLG_BANKA_UNOS, DLG_BANKA_INFO, DLG_PC_UNOS, DLG_KAMP, DLG_TIKETI, DLG_TIKET, DLG_KAMP_KUPI, DLG_KAMP_PRODAJ, DLG_APANEL_KAMP, DLG_ZLATARA, DLG_ZLATARA_KUPI, DLG_ZLATARA_PRODAJ, DLG_ZLATARA_ZLATO, DLG_APANEL_ZLATARA, DLG_APANEL_ZLATARA_MENI, DLG_APANEL_BANKA, DLG_APANEL_BANKA_INT, DLG_APANEL_BANKA_MENI, DLG_APANEL_TUNING, DLG_APANEL_TUNING_BRISI, DLG_MEHANICAR_ODVOZ, DLG_GARAZA_KUPI, DLG_GARAZA_MENI, DLG_GARAZA_PRODAJ, DLG_GARAZA_VOZILO, DLG_APANEL_GARAZA, DLG_APANEL_GARAZA_MENI, DLG_APANEL_GARAZA_CIJENA, DLG_APANEL_GARAZA_BRISI, DLG_VOZILO_MENI, DLG_BOLNICA, DLG_TUNING_NATPIS, DLG_NAMJESTAJ, DLG_NAMJESTAJ_OPCIJE, DLG_NAMJESTAJ_PRODAJ, DLG_APANEL_NAMJESTAJ, DLG_APANEL_NAMJESTAJ_INT, DLG_APANEL_NAMJESTAJ_MENI, DLG_APANEL_NAMJESTAJ_KATALOG, DLG_APANEL_NAMJESTAJ_UNOS,
     DLG_APANEL_KAZINO, DLG_APANEL_KAZINO_BRISI, DLG_APANEL_KAZINO_TIP, DLG_KAZINO_BLAGAJNA, DLG_KAZINO_BLAGAJNA_UNOS, DLG_STATS, DLG_LOKACIJE, DLG_LOKACIJE_LISTA, DLG_OPSTINA_POSAO, DLG_KAFIC, DLG_APANEL_KAFIC, DLG_APANEL_BILIJAR, DLG_APANEL_KOS, DLG_APANEL_ARKADA,
     DLG_APANEL_PIKADO, DLG_APANEL_KUGLANJE, DLG_APANEL_AC, DLG_APANEL_AC_LOG,
-    DLG_BILJKA, DLG_DOBAVLJAC, DLG_DOBAVLJAC_KOL, DLG_LAB, DLG_LAB_KOL, DLG_APANEL_DROGA, DLG_SEF, DLG_SEF_STAVI, DLG_SEF_KOL, DLG_ORG_DNEVNIK, DLG_OKLADA
+    DLG_BILJKA, DLG_DOBAVLJAC, DLG_LAB, DLG_LAB_KOL, DLG_APANEL_DROGA, DLG_SEF, DLG_SEF_STAVI, DLG_SEF_KOL, DLG_ORG_DNEVNIK, DLG_OKLADA
 }
 
 static gDlg[MAX_PLAYERS];
@@ -69,7 +69,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_APANEL_AC_LOG:         return Dlg_apanel_ac_log(playerid, response, listitem);
         case DLG_BILJKA:                return Dlg_biljka(playerid, response, listitem);
         case DLG_DOBAVLJAC:             return Dlg_dobavljac(playerid, response, listitem);
-        case DLG_DOBAVLJAC_KOL:         return Dlg_dobavljac_kol(playerid, response, inputtext);
         case DLG_LAB:                   return Dlg_lab(playerid, response, listitem);
         case DLG_LAB_KOL:               return Dlg_lab_kol(playerid, response, inputtext);
         case DLG_APANEL_DROGA:          return Dlg_apanel_droga(playerid, response, listitem);
@@ -117,13 +116,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_TAKSI:             return Dlg_taksi(playerid, response);
         case DLG_SLUCAJ:             return Dlg_slucaj(playerid, response);
         case DLG_RANJEN:            return Dlg_ranjen(playerid, response);
-        case DLG_DILER:             return Dlg_diler(playerid, response, inputtext);
         case DLG_ANIM:              return Dlg_anim(playerid, response, listitem);
         case DLG_APANEL_TAKSI:      return Dlg_apanel_taksi(playerid, response, listitem);
         case DLG_APANEL_TAKSI_BRISI: return Dlg_apanel_taksi_brisi(playerid, response);
         case DLG_APANEL_KAMION:     return Dlg_apanel_kamion(playerid, response, listitem);
         case DLG_APANEL_KAMION_BRISI: return Dlg_apanel_kamion_brisi(playerid, response);
-        case DLG_KURVA:       return Dlg_kurva(playerid, response);
         case DLG_FRISK:             return Dlg_frisk(playerid, response);
         case DLG_ORMAR:             return Dlg_ormar(playerid, response, listitem);
         case DLG_GEPEK:             return Dlg_gepek(playerid, response, listitem);
@@ -153,8 +150,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_APANEL_OPSTINA:    return Dlg_apanel_opstina(playerid, response, listitem);
         case DLG_APANEL_OPSTINA_INT: return Dlg_apanel_opstina_int(playerid, response, listitem);
         case DLG_APANEL_OPSTINA_UNOS: return Dlg_apanel_opstina_unos(playerid, response, inputtext);
-        case DLG_PIJACA_PRODAJ:     return Dlg_pijaca_prodaj(playerid, response);
-        case DLG_PIJACA_KUPI:       return Dlg_pijaca_kupi(playerid, response);
         case DLG_APANEL_PIJACA:     return Dlg_apanel_pijaca(playerid, response, listitem);
         case DLG_MEHANICAR:         return Dlg_mehanicar(playerid, response, listitem);
         case DLG_TAKSI_POZIV:       return Dlg_taksi_poziv(playerid, response);
@@ -195,7 +190,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_ZLATARA_KUPI:      return Dlg_zlatara_kupi(playerid, response, listitem);
         case DLG_ZLATARA_PRODAJ:    return Dlg_zlatara_prodaj(playerid, response, listitem);
         case DLG_ZLATARA_ZLATO:     return Dlg_zlatara_zlato(playerid, response, inputtext);
-        case DLG_PREPRODAVAC:       return Dlg_preprodavac(playerid, response);
         case DLG_APANEL_ZLATARA:    return Dlg_apanel_zlatara(playerid, response, listitem);
         case DLG_APANEL_ZLATARA_MENI: return Dlg_apanel_zlatara_meni(playerid, response, listitem);
         case DLG_APANEL_BANKA:      return Dlg_apanel_banka(playerid, response, listitem);
@@ -206,6 +200,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_MEHANICAR_ODVOZ:   return Dlg_mehanicar_odvoz(playerid, response, listitem);
         case DLG_GARAZA_KUPI:       return Dlg_garaza_kupi(playerid, response);
         case DLG_GARAZA_MENI:       return Dlg_garaza_meni(playerid, response, listitem);
+        case DLG_GARAZA_VOZILO:     return Dlg_garaza_vozilo(playerid, response, listitem);
         case DLG_GARAZA_PRODAJ:     return Dlg_garaza_prodaj(playerid, response);
         case DLG_APANEL_GARAZA:     return Dlg_apanel_garaza(playerid, response, listitem);
         case DLG_APANEL_GARAZA_MENI: return Dlg_apanel_garaza_meni(playerid, response, listitem);

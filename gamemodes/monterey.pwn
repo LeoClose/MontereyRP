@@ -351,6 +351,7 @@ public Sekunda()
     AvionAtcTick();
     DrogaTick();
     SpecTick();
+    UpitTick();
 }
 
 public OnGameModeExit()
@@ -411,6 +412,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kafic.inc"
 #include "monterey/oklada.inc"
 #include "monterey/obavijest.inc"
+#include "monterey/upit.inc"
 #include "monterey/bilijar.inc"
 #include "monterey/kosarka.inc"
 #include "monterey/arkada.inc"

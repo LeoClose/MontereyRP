@@ -747,7 +747,7 @@ static PokerSjedi(playerid, s, n)
     gPokerMjesto[playerid] = m;
     gPoMod[playerid] = PM_IGRA;
     PokerPoruka(s, "[Poker] %s sjeda za stol sa %d zetona.", playerid, n);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Y - vrati kursor, USTANI - napusti stol (zetoni se vracaju u inventar)."));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "ALT - vrati kursor, USTANI - napusti stol (zetoni se vracaju u inventar)."));
     if (gPo[s][poFaza] == PO_CEKA && !gPo[s][poPauza]) gPo[s][poPauza] = POKER_PAUZA_S;
     PokerOsvjezi(s);
     return 1;

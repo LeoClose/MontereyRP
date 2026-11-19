@@ -97,9 +97,9 @@ static OruzarnicaStvori(s)
     gOruz[s][orIma] = true;
     gOruz[s][orPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ], 0, 0);
     gOruz[s][orIkona] = MapaIkona(gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ], 6);
-    gOruz[s][orTekst] = CreateDynamic3DTextLabel("Oruzarnica\n[Y]", COLOR_ORG, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gOruz[s][orTekst] = CreateDynamic3DTextLabel("Oruzarnica\n[F]", COLOR_ORG, gOruz[s][orX], gOruz[s][orY], gOruz[s][orZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     gOruz[s][orPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ], svijet, gOruzarnicaInt[i][oiInt]);
-    gOruz[s][orTekstU] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[i][oiInt]);
+    gOruz[s][orTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gOruzarnicaInt[i][oiX], gOruzarnicaInt[i][oiY], gOruzarnicaInt[i][oiZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[i][oiInt]);
 }
 
 static OruzarnicaAktor(s)
@@ -108,7 +108,8 @@ static OruzarnicaAktor(s)
     gOruz[s][orImaAktor] = true;
     gOruz[s][orAktor] = CreateActor(ORUZARNICA_SKIN, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz], gOruz[s][orAa]);
     SetActorVirtualWorld(gOruz[s][orAktor], svijet);
-    gOruz[s][orTekstA] = CreateDynamic3DTextLabel("[Y]", COLOR_ORG, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[gOruz[s][orInt]][oiInt]);
+    gOruz[s][orTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[gOruz[s][orInt]][oiInt]);
+    InterakcijaOznaka(gOruz[s][orTekstA]);
 }
 
 static OruzarnicaMakniAktor(s)

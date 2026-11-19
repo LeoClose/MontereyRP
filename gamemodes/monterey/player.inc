@@ -87,6 +87,8 @@ public OnPlayerDisconnect(playerid, reason)
     OdjecaDisconnect(playerid);
     LoginDisconnect(playerid);
     TuningDisconnect(playerid);
+    NovacDisconnect(playerid);
+    UpitDisconnect(playerid);
     DostavaDisconnect(playerid);
     KaficDisconnect(playerid);
     BilijarIgracOdlazi(playerid);
@@ -180,6 +182,8 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
+    if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
+    if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
@@ -190,16 +194,32 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     PrikolicaAlt(playerid, newkeys, oldkeys);
     TuningNitroKey(playerid, newkeys, oldkeys);
     if (BilijarTipke(playerid, newkeys, oldkeys) || KosTipke(playerid, newkeys, oldkeys) || PikadoTipke(playerid, newkeys, oldkeys) || KuglanjeTipke(playerid, newkeys, oldkeys)) return 1;
+    if ((newkeys & KEY_SECONDARY_ATTACK) && !(oldkeys & KEY_SECONDARY_ATTACK)) InterakcijaF(playerid);
+    if ((newkeys & KEY_ACTION) && !(oldkeys & KEY_ACTION) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER) PijacaKey(playerid);
     if ((newkeys & KEY_YES) && !(oldkeys & KEY_YES)) Interakcija(playerid);
-    if ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK) && !IsRanjen(playerid) && !KosKey(playerid) && !BacenoPodigni(playerid)) KosPodigni(playerid);
+    if ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK) && !IsRanjen(playerid) && !KosKey(playerid) && !BacenoPodigni(playerid) && !InterakcijaAlt(playerid)) KosPodigni(playerid);
     return 1;
 }
 
 // Interakcija je na Y
+static InterakcijaF(playerid)
+{
+    if (!gUlogiran[playerid] || PrikolicaUnutra(playerid)) return;
+    if (GarazaKey(playerid)) return;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    if (HqUlazIzlaz(playerid)) return;
+    KucaKey(playerid);
+}
+
+static InterakcijaAlt(playerid)
+{
+    if (PikadoCilja(playerid) || KuglanjeCilja(playerid) || BilijarCilja(playerid)) return 1;
+    return KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid);
+}
+
 static Interakcija(playerid)
 {
-    if (gUlogiran[playerid] && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && HqUlazIzlaz(playerid)) return;
-    if (TuningUlaz(playerid) || GarazaKey(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || KucaKey(playerid) || OpstinaSalter(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid)) return;
+    if (TuningUlaz(playerid)) return;
     if (!gUlogiran[playerid] || IsRanjen(playerid) || MobitelOtvoren(playerid) || MdtOtvoren(playerid)) return;
     if (IsPlayerInAnyVehicle(playerid)) VoziloMeni(playerid);
     else if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && !VoziloMeni(playerid)) PrikaziInventar(playerid);
@@ -272,11 +292,11 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Chat: /me [radnja], /do [opis], /setme [opis lika], /showme [id/ime]"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Govor: /w (sapat), /s ili /shout (vika), /ooc (izvan uloge)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Bez prijevoda: /t (govor), /wt (sapat), /st (vika)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Pretres: /frisk [id/ime]. HQ: Y ili /ulaz"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Pretres: /frisk [id/ime]. HQ: F ili /ulaz"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Animacije: /anim (popis), /anim [broj], /anim 0 ili Space za prekid"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Kurva: Y ili /kurva kod nje, truba iz vozila"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Kurva: ALT ili /kurva kod nje, truba iz vozila"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
@@ -284,12 +304,12 @@ CMD:help(playerid, params[])
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /tankaj (kod pumpe), /ukradi (bez kljuceva). LSPD: /provjeripojas [id/ime]"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Teritoriji: Y ili /diler (kod dilera)"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Teritoriji: ALT ili /diler (kod dilera)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Trgovine: Y za ulaz i kod blagajne"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Salon automobila: Y kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Opstina: Y kod saltera (kazne, promjena imena, prodaja vozila)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Auto pijaca: Y u svom vozilu kod otkupa (1/3 cijene), Y kod vozila na prodaji (kupnja)"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Trgovine: F za ulaz, ALT kod blagajne"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Salon automobila: ALT kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Opstina: ALT kod saltera (kazne, promjena imena, prodaja vozila)"));
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ostalo: /admini"));
