@@ -231,7 +231,7 @@ static ZiviDileri(t)
 static SendNapad(t, const poruka[], const a[] = "", const b[] = "", const c[] = "")
 {
     new inner[144];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || !gUlogiran[i] || !gOrg[i] || (gOrg[i] != gTer[t][terOrg] && gOrg[i] != gTer[t][terNapadac])) continue;
         format(inner, sizeof inner, T(i, poruka), a, b, c);
@@ -261,7 +261,7 @@ static bool:IsUZoni(playerid, t, Float:rub = 0.0)
 static ClanoviUZoni(t, org, ids[], osim = INVALID_PLAYER_ID)
 {
     new count = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (i != osim && gUlogiran[i] && gOrg[i] == org && GetPlayerState(i) != PLAYER_STATE_WASTED && IsUZoni(i, t)) ids[count++] = i;
     return count;
 }
@@ -317,7 +317,7 @@ static FinishNapad(t, bool:zauzet)
         gTer[t][terOrg] = gTer[t][terNapadac];
     }
     else SendNapad(t, "Napad je propao.");
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gTerUmro[i] == t + 1) gTerUmro[i] = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gTerUmro[i] == t + 1) gTerUmro[i] = 0;
     gTer[t][terNapadac] = 0;
     gTer[t][terZastitaKraj] = GetTickCount() + TER_ZASTITA_MS;
     ShowZonu(t);
@@ -419,7 +419,7 @@ public OnNPCDeath(npcid, killerid, WEAPON:reason)
 static GetNearestNapadac(t, Float:x, Float:y, Float:z)
 {
     new best = INVALID_PLAYER_ID, Float:bestDist = TER_OBRANA_RANGE;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || gOrg[i] != gTer[t][terNapadac] || GetPlayerState(i) == PLAYER_STATE_WASTED || IsRanjen(i)) continue;
         new Float:d = GetPlayerDistanceFromPoint(i, x, y, z);

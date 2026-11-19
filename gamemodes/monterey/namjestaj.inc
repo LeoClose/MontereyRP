@@ -43,7 +43,7 @@ static gNamRobaModel[NAMJESTAJ_MAX][NAMJESTAJ_ROBA], gNamRobaCijena[NAMJESTAJ_MA
 enum { NMTD_LIJEVO, NMTD_DESNO, NMTD_INFO, NMTD_KUPI, NMTD_IZADI }
 static PlayerText:gNamTd[MAX_PLAYERS][NAMJESTAJ_TD], bool:gNamKatalog[MAX_PLAYERS], gNamU[MAX_PLAYERS] = { -1, ... }, gNamIdx[MAX_PLAYERS];
 static gNamPregled[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... }, gNamKupac[NAMJESTAJ_MAX] = { INVALID_PLAYER_ID, ... };
-static gNamObjDb[NAMJESTAJ_OBJEKATA], STREAMER_TAG_OBJECT:gNamObj[NAMJESTAJ_OBJEKATA];
+static gNamObjDb[NAMJESTAJ_OBJEKATA], STREAMER_TAG_OBJECT:gNamObj[NAMJESTAJ_OBJEKATA], gNamObjModel[NAMJESTAJ_OBJEKATA], gNamObjSvijet[NAMJESTAJ_OBJEKATA];
 static gNamPopis[MAX_PLAYERS][NAMJESTAJ_SKLADISTE], gNamPopisBroj[MAX_PLAYERS], gNamOdabran[MAX_PLAYERS], gNamKuca[MAX_PLAYERS], gNamUredi[MAX_PLAYERS] = { -1, ... };
 
 InitNamjestaj()
@@ -98,7 +98,9 @@ static NamjestajPostaviObjekt(db, model, kuca, interijer, Float:x, Float:y, Floa
     {
         if (gNamObjDb[i]) continue;
         gNamObjDb[i] = db;
-        gNamObj[i] = CreateDynamicObject(model, x, y, z, rx, ry, rz, kuca > 0 ? KUCA_SVIJET + kuca : PrikolicaSvijet(VlasnikPoDb(-kuca)), interijer);
+        gNamObjModel[i] = model;
+        gNamObjSvijet[i] = kuca > 0 ? KUCA_SVIJET + kuca : PrikolicaSvijet(VlasnikPoDb(-kuca));
+        gNamObj[i] = CreateDynamicObject(model, x, y, z, rx, ry, rz, gNamObjSvijet[i], interijer);
         return i;
     }
     return -1;
@@ -109,7 +111,7 @@ NamjestajModelBlizu(playerid, model, Float:domet)
     new svijet = GetPlayerVirtualWorld(playerid), Float:x, Float:y, Float:z;
     for (new i = 0; i < NAMJESTAJ_OBJEKATA; i++)
     {
-        if (!gNamObjDb[i] || Streamer_GetIntData(STREAMER_TYPE_OBJECT, gNamObj[i], E_STREAMER_MODEL_ID) != model || !Streamer_IsInArrayData(STREAMER_TYPE_OBJECT, gNamObj[i], E_STREAMER_WORLD_ID, svijet)) continue;
+        if (!gNamObjDb[i] || gNamObjModel[i] != model || gNamObjSvijet[i] != svijet) continue;
         GetDynamicObjectPos(gNamObj[i], x, y, z);
         if (IsPlayerInRangeOfPoint(playerid, domet, x, y, z)) return 1;
     }
@@ -350,7 +352,9 @@ NamjestajPrikolica(db, v)
     for (new i = 0, n = DB_GetRowCount(res); i < n; i++, DB_SelectNextRow(res))
     {
         new o = NamjestajPostaviObjekt(DB_GetFieldInt(res, 0), DB_GetFieldInt(res, 1), 0, PRIKOLICA_INT, DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), DB_GetFieldFloat(res, 5), DB_GetFieldFloat(res, 6), DB_GetFieldFloat(res, 7));
-        if (o != -1) Streamer_SetIntData(STREAMER_TYPE_OBJECT, gNamObj[o], E_STREAMER_WORLD_ID, PrikolicaSvijet(v));
+        if (o == -1) continue;
+        gNamObjSvijet[o] = PrikolicaSvijet(v);
+        Streamer_SetIntData(STREAMER_TYPE_OBJECT, gNamObj[o], E_STREAMER_WORLD_ID, gNamObjSvijet[o]);
     }
     DB_FreeResultSet(res);
 }
@@ -538,7 +542,7 @@ static NamjestajIzlog(playerid, s)
 
 static NamjestajObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && NamjestajIgraca(i) == s) NamjestajVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && NamjestajIgraca(i) == s) NamjestajVani(i, s);
     NamjestajMakniAktor(s);
     DestroyDynamicPickup(gNam[s][nmPickup]);
     DestroyDynamicPickup(gNam[s][nmPickupU]);

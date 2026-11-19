@@ -147,7 +147,7 @@ TrgovinaUpdate(playerid)
     ApplyActorAnimation(gTrg[s][tgAktor], "SHOP", "SHP_Rob_HandsUp", 4.1, false, false, false, true, 0);
     DodajWanted(playerid);
     SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pljacka je pocela! Ostanite u trgovini %d s dok blagajnik puni vrecu."), TRGOVINA_PREDAJA_MS / 1000);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, "Dojava: pljacka trgovine u tijeku, %s."), CestaZona(gTrg[s][tgX], gTrg[s][tgY]));
     SetTimerEx("TrgovinaPlijen", TRGOVINA_PREDAJA_MS, false, "iii", playerid, gAccountId[playerid], s);
 }
@@ -216,7 +216,7 @@ static TrgovinaBlagajnik(playerid, s)
 
 static TrgovinaObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && TrgovinaIgraca(i) == s) TrgovinaVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && TrgovinaIgraca(i) == s) TrgovinaVani(i, s);
     TrgovinaMakniAktor(s);
     DestroyDynamicPickup(gTrg[s][tgPickup]);
     DestroyDynamicPickup(gTrg[s][tgPickupU]);

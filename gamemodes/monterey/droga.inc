@@ -370,7 +370,7 @@ static DrogaUvozGotov(playerid)
 
 static DrogaPolicija(const poruka[], u)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, poruka), CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]));
 }
 
@@ -686,7 +686,7 @@ DLG:apanel_droga(playerid, response, listitem)
         if (!gUvoz[k][uvIma]) return ShowDrogaAdmin(playerid);
         gUvoz[k][uvIma] = false;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM drug_imports WHERE id = %d", gUvoz[k][uvDb]));
-        for (new p = 0; p < MAX_PLAYERS; p++) if (gDrogaUvoz[p] == k) DrogaUvozIstek(p, gDrogaUvozToken[p]);
+        for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++) if (gDrogaUvoz[p] == k) DrogaUvozIstek(p, gDrogaUvozToken[p]);
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Tocka uvoza obrisana."));
     }
     return ShowDrogaAdmin(playerid);

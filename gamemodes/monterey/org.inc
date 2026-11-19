@@ -140,13 +140,13 @@ bool:ZaduzenjeProvjera(playerid, perm)
 
 PosaljiOrg(org, const msg[], const a[] = "", const b[] = "", const c[] = "")
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (IsPlayerConnected(i) && gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ORG, T(i, msg), a, b, c);
 }
 
 PosaljiSvima(color, const msg[], const a[] = "", const b[] = "", const c[] = "", const d[] = "")
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (IsPlayerConnected(i) && gUlogiran[i]) SendClientMessage(i, color, T(i, msg), a, b, c, d);
 }
 
@@ -220,7 +220,7 @@ ShowOrgPanel(playerid)
     new len = strlen(list);
 
     new online[MAX_PLAYERS], count = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gOrg[i] == gOrg[playerid] && gUlogiran[i]) online[count++] = gAccountId[i];
 
     new DBResult:res = DB_ExecuteQuery(gDB, ORG_MEMBERS_SQL, gOrg[playerid]);
@@ -436,7 +436,7 @@ ObrisiOrg(playerid, const params[])
     if (!GetOrgIme(org, name)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Organizacija ne postoji."));
     for (new v = 1; v < MAX_VEHICLES; v++)
         if (gOrgVehOrg[v] == org) { DestroyVehicle(v); gOrgVehOrg[v] = 0; }
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (IsPlayerConnected(i) && gOrg[i] == org) { OrgConnect(i); SetPlayerSkin(i, DEFAULT_SKIN); SendClientMessage(i, COLOR_ORG, T(i, "Vasa organizacija je raspustena.")); }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org = 0, org_rank = '', org_perms = 0, org_skin = -1 WHERE org = %d", org));
     TeritorijOrgObrisana(org);
@@ -512,7 +512,7 @@ OrgSkin(playerid, const params[])
     {
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_skins WHERE org = %d AND skin = %d", org, skin));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET org_skin = -1 WHERE org = %d AND org_skin = %d", org, skin));
-        for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gOrg[i] == org && gOrgSkin[i] == skin) gOrgSkin[i] = -1;
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && gOrg[i] == org && gOrgSkin[i] == skin) gOrgSkin[i] = -1;
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Skin %d uklonjen iz organizacije %s."), skin, name);
     }
     else return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite: [org ID] [dodaj/ukloni] [skin 0-311]"));

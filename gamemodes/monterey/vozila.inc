@@ -559,7 +559,7 @@ PrikolicaSvijet(v)
 
 bool:PrikolicaPrazna(v)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gMaricaU[i] == v && GetPlayerVirtualWorld(i) == MARICA_SVIJET + v) return false;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gMaricaU[i] == v && GetPlayerVirtualWorld(i) == MARICA_SVIJET + v) return false;
     return true;
 }
 
@@ -1190,7 +1190,7 @@ VoziloUpdate(playerid)
     new Float:brzina = VectorSize(vx, vy, vz), Float:pad = gVoziloZadnja[v] - brzina;
     gVoziloZadnja[v] = brzina;
     if (pad < VOZILO_SUDAR_PAD) return;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || !IsPlayerInVehicle(i, v) || IsRanjen(i)) continue;
         new Float:zivot;
@@ -1505,7 +1505,7 @@ static DashOsvjezi(playerid, v)
 forward VoziloDash();
 public VoziloDash()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
         new PLAYER_STATE:s = GetPlayerState(i), v = GetPlayerVehicleID(i);
@@ -1530,7 +1530,7 @@ public VoziloDash()
 
 VoziloTick()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
         if (gKradja[i]) KradjaKorak(i);

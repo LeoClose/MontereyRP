@@ -1,4 +1,5 @@
 #define KUCA_MAX            1000
+#define KUCA_DB_MAPA        8192
 #define KUCA_DOMET          2.0
 #define KUCA_ADMIN_DOMET    15.0
 #define KUCA_PRODAJA        1273
@@ -24,7 +25,7 @@ static const gKucaInt[][E_KUCA_INT] = {
     { "Vila", 2, 5, 140.17, 1366.07, 1083.65, 180000 }
 };
 
-static gKuca[KUCA_MAX][E_KUCA];
+static gKuca[KUCA_MAX][E_KUCA], gKucaMapa[KUCA_DB_MAPA];
 static gKucaPonuda[MAX_PLAYERS], gApKuca[MAX_PLAYERS], gKucaSpawn[MAX_PLAYERS], gKucaMeni[MAX_PLAYERS], gKucaOtkup[MAX_PLAYERS];
 
 InitKuce()
@@ -128,6 +129,7 @@ static KucaStvori(k)
     new natpis[96];
     KucaNatpis(k, natpis);
     gKuca[k][kuIma] = true;
+    if (gKuca[k][kuDb] > 0 && gKuca[k][kuDb] < KUCA_DB_MAPA) gKucaMapa[gKuca[k][kuDb]] = k + 1;
     gKuca[k][kuPickup] = CreateDynamicPickup(gKuca[k][kuVlasnik] ? KUCA_PRODANA : KUCA_PRODAJA, 1, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ], 0, 0);
     gKuca[k][kuTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
 }
@@ -137,6 +139,7 @@ static KucaMakni(k)
     DestroyDynamicPickup(gKuca[k][kuPickup]);
     DestroyDynamic3DTextLabel(gKuca[k][kuTekst]);
     gKuca[k][kuIma] = false;
+    if (gKuca[k][kuDb] > 0 && gKuca[k][kuDb] < KUCA_DB_MAPA) gKucaMapa[gKuca[k][kuDb]] = 0;
 }
 
 static KucaOsvjezi(k)
@@ -173,6 +176,11 @@ static KucaNajbliza(Float:x, Float:y, Float:z, Float:domet)
 
 static KucaPoDb(db)
 {
+    if (db > 0 && db < KUCA_DB_MAPA)
+    {
+        new k = gKucaMapa[db] - 1;
+        return k >= 0 && gKuca[k][kuIma] && gKuca[k][kuDb] == db ? k : -1;
+    }
     for (new k = 0; k < KUCA_MAX; k++) if (gKuca[k][kuIma] && gKuca[k][kuDb] == db) return k;
     return -1;
 }
@@ -223,13 +231,13 @@ static KucaVani(playerid, k)
 
 static KucaIsprazni(k)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && KucaIgraca(i) == k) KucaVani(i, k);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && KucaIgraca(i) == k) KucaVani(i, k);
 }
 
 static KucaMakniSpawn(db)
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_spawn WHERE house = %d", db));
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gKucaSpawn[i] == db) gKucaSpawn[i] = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gKucaSpawn[i] == db) gKucaSpawn[i] = 0;
 }
 
 static KucaIsplati(racun, iznos)
@@ -527,7 +535,7 @@ DLG:kuca_preuredi(playerid, response, listitem)
     NamjestajKucaIsprazni(gKuca[k][kuDb]);
     gKuca[k][kuInt] = listitem;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET interior = %d WHERE id = %d", listitem, gKuca[k][kuDb]));
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == KUCA_SVIJET + gKuca[k][kuDb] && GetPlayerInterior(i) == gKucaInt[stari][kiInt]) KucaUdi(i, k);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste preuredenje ($%d)."), gKucaInt[listitem][kiCijena]);
 }
@@ -590,7 +598,7 @@ static KucaNaplati(playerid)
 forward KuceNajam();
 public KuceNajam()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i) && gUlogiran[i]) KucaNaplati(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i) && gUlogiran[i]) KucaNaplati(i);
 }
 
 KucaPrijava(playerid)

@@ -67,7 +67,7 @@ PlacaUcitaj(playerid)
 
 PlacaTick()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && NaDuznosti(i) && gPlacaDuty[i] < 3600) gPlacaDuty[i]++;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && NaDuznosti(i) && gPlacaDuty[i] < 3600) gPlacaDuty[i]++;
 }
 
 static PlacaImovina(racun)

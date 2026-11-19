@@ -465,7 +465,7 @@ ZlataraDisconnect(playerid)
 static ZlataraEkipa(playerid, s)
 {
     new n = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == gOrg[playerid] && ZlataraIgraca(i) == s && !IsRanjen(i)) n++;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == gOrg[playerid] && ZlataraIgraca(i) == s && !IsRanjen(i)) n++;
     return n;
 }
 
@@ -493,7 +493,7 @@ ZlataraUpdate(playerid)
     gZl[s][zlPljackaKraj] = sad + ZLATARA_PLJACKA_S;
     gZl[s][zlPljackano] = sad;
     ApplyActorAnimation(gZl[s][zlAktor], "SHOP", "SHP_Rob_HandsUp", 4.1, false, false, false, true, 0);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
         if (gOrg[i] == gOrg[playerid] && ZlataraIgraca(i) == s)
@@ -518,13 +518,13 @@ ZlataraTick()
     {
         if (!gZl[s][zlIma] || !gZl[s][zlPljacka]) continue;
         new org = gZl[s][zlPljacka], prisutni[MAX_PLAYERS], n = 0;
-        for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == org && ZlataraIgraca(i) == s && !IsRanjen(i)) prisutni[n++] = i;
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org && ZlataraIgraca(i) == s && !IsRanjen(i)) prisutni[n++] = i;
         if (n && sad < gZl[s][zlPljackaKraj]) continue;
         gZl[s][zlPljacka] = 0;
         if (gZl[s][zlImaAktor]) ClearActorAnimations(gZl[s][zlAktor]);
         if (!n)
         {
-            for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka zlatare je propala."));
+            for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka zlatare je propala."));
             continue;
         }
         for (new k = 0; k < n; k++)
@@ -627,7 +627,7 @@ DLG:apanel_zlatara_meni(playerid, response, listitem)
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prodavac je postavljen."));
         return ShowZlatare(playerid);
     }
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && ZlataraIgraca(i) == s) ZlataraVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && ZlataraIgraca(i) == s) ZlataraVani(i, s);
     ZlataraMakniAktor(s);
     DestroyDynamicPickup(gZl[s][zlPickup]);
     MapaIkonaMakni(gZl[s][zlIkona]);

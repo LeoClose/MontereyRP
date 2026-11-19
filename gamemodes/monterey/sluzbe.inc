@@ -241,18 +241,18 @@ static bool:JeUSluzbi(playerid, tip)
 
 static bool:SlucajImaIgraca(tip, osim)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (i != osim && JeUSluzbi(i, tip)) return true;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (i != osim && JeUSluzbi(i, tip)) return true;
     return false;
 }
 
 static SlucajOcistiPozive(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gSlucajPoziv[i] == s + 1) gSlucajPoziv[i] = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gSlucajPoziv[i] == s + 1) gSlucajPoziv[i] = 0;
 }
 
 static bool:SlucajImaPoziva(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gSlucajPoziv[i] == s + 1) return true;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gSlucajPoziv[i] == s + 1) return true;
     return false;
 }
 
@@ -301,7 +301,7 @@ static bool:KamionSlobodan(k)
     if (!gKamion[k][kIma] || gKamion[k][kSlucaj]) return false;
     GetVehiclePos(gKamion[k][kVozilo], x, y, z);
     if (VectorSize(x - gKamion[k][kX], y - gKamion[k][kY], z - gKamion[k][kZ]) > KAMION_PARKING) return false;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, gKamion[k][kVozilo]) && GetPlayerState(i) == PLAYER_STATE_DRIVER) return false;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, gKamion[k][kVozilo]) && GetPlayerState(i) == PLAYER_STATE_DRIVER) return false;
     return true;
 }
 
@@ -713,7 +713,7 @@ static SlucajKraj(s, bool:ok, ko = INVALID_PLAYER_ID)
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM orgs WHERE type = %d", tip);
     if (DB_GetRowCount(res)) do PromijeniScore(DB_GetFieldInt(res, 0), ok ? 1 : -1); while (DB_SelectNextRow(res));
     DB_FreeResultSet(res);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!JeUSluzbi(i, tip)) continue;
         new score = GetOrgScore(gOrg[i]);
@@ -745,7 +745,7 @@ static bool:SlucajPrska(i, s)
 
 static SlucajKoPrska(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && SlucajPrska(i, s)) return i;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && SlucajPrska(i, s)) return i;
     return INVALID_PLAYER_ID;
 }
 
@@ -838,7 +838,7 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slX] = x;
     gSlucaj[s][slY] = y;
     gSlucaj[s][slZ] = z;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!JeUSluzbi(i, tip) || i == pacijent) continue;
         new body[128], Float:px, Float:py, Float:pz, d;
@@ -974,7 +974,7 @@ DLG:mehanicar_odvoz(playerid, response, listitem)
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze (telefon): Dobar dan, odslepajte mi %s iz %s do parkinga u %s.", GetRPIme(playerid), model, 1, odakle, dokle);
     SetTimerEx("MehanicarOdvozOdgovor", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
     gOdvoz[v] = true;
     SetVehicleVirtualWorld(v, MEHANICAR_ODVOZ_SVIJET);
     SetVehiclePos(v, 1477.0 + float(v % 10) * 6.0, 1350.0 + float((v / 10) % 10) * 8.0, 11.0);
@@ -1075,7 +1075,7 @@ DLG:mehanicar(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), cijene[listitem]);
     if (listitem == 2)
     {
-        for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) RemovePlayerFromVehicle(i);
         new kamion = GetPlayerVehicleID(igrac);
         if (kamion && GetVehicleModel(kamion) == MEHANICAR_MODEL) AttachTrailerToVehicle(v, kamion);
         SendClientMessage(igrac, COLOR_ORG, T(igrac, "Musterija je platila slepanje. Odslepajte vozilo do radionice."));

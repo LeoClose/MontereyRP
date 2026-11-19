@@ -96,7 +96,7 @@ OkladaIsplati(v, s, const pobjednici[], n)
 {
     new banka = gOkladaBanka[v][s];
     gOkladaBanka[v][s] = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gOkV[i] == v && gOkS[i] == s) gOkV[i] = -1, gOkIznos[i] = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gOkV[i] == v && gOkS[i] == s) gOkV[i] = -1, gOkIznos[i] = 0;
     if (!banka) return;
     if (!n)
     {
@@ -118,7 +118,7 @@ OkladaIsplati(v, s, const pobjednici[], n)
 
 OkladaZatvori(v, s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gOkV[i] == v && gOkS[i] == s) OkladaIzadi(i, true);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gOkV[i] == v && gOkS[i] == s) OkladaIzadi(i, true);
     if (gOkladaBanka[v][s] > 0) BlagajnaDodaj(gOkladaBanka[v][s]);
     gOkladaBanka[v][s] = 0;
     gOkladaUlog[v][s] = 0;
@@ -126,7 +126,7 @@ OkladaZatvori(v, s)
 
 OkladaVratiSve()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gOkV[i] != -1) OkladaIzadi(i, true);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gOkV[i] != -1) OkladaIzadi(i, true);
 }
 
 static OkladaGdje(playerid, &v, &s)

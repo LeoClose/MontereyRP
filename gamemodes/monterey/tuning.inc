@@ -504,7 +504,7 @@ static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[M
 static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
 static gTunNitro[MAX_VEHICLES], gTunNitroDo[MAX_VEHICLES], bool:gTunSamo[MAX_PLAYERS], gPsPauza[MAX_PLAYERS], gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], STREAMER_TAG_OBJECT:gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
-static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS], bool:gTunTrubaTipka[MAX_PLAYERS];
+static gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS], bool:gTunTrubaTipka[MAX_PLAYERS];
 static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], STREAMER_TAG_OBJECT:gTunNatpisObj[MAX_VEHICLES];
 static gTunNTekst[MAX_PLAYERS][TUNING_NATPIS_DUZ + 1], gTunNFont[MAX_PLAYERS], gTunNBoja[MAX_PLAYERS], bool:gTunUnos[MAX_PLAYERS];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
@@ -663,15 +663,26 @@ static bool:TuningProzoriZatvoreni(v)
 forward TuningImena();
 public TuningImena()
 {
-    for (new p = 0; p < MAX_PLAYERS; p++)
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
     {
         if (!IsPlayerConnected(p)) continue;
-        new v = GetPlayerVehicleID(p), bool:skriven = v && gTunZatamnjeno[v] && TuningProzoriZatvoreni(v);
-        if (!skriven && !gTunSkriven[p]) continue;
+        new v = GetPlayerVehicleID(p), skriven = v && gTunZatamnjeno[v] && TuningProzoriZatvoreni(v) ? v : 0, staro = gTunSkriven[p];
+        if (skriven == staro) continue;
         gTunSkriven[p] = skriven;
-        for (new i = 0; i < MAX_PLAYERS; i++)
-            if (i != p && IsPlayerConnected(i)) ShowPlayerNameTagForPlayer(i, p, !skriven || IsPlayerInVehicle(i, v));
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        {
+            if (i == p || !IsPlayerConnected(i)) continue;
+            if (IsPlayerStreamedIn(p, i)) ShowPlayerNameTagForPlayer(i, p, !skriven || IsPlayerInVehicle(i, skriven));
+            if (gTunSkriven[i] && (gTunSkriven[i] == staro || gTunSkriven[i] == skriven || gTunSkriven[i] == v) && IsPlayerStreamedIn(i, p)) ShowPlayerNameTagForPlayer(p, i, IsPlayerInVehicle(p, gTunSkriven[i]));
+        }
     }
+}
+
+public OnPlayerStreamIn(playerid, forplayerid)
+{
+    new v = gTunSkriven[playerid];
+    if (v) ShowPlayerNameTagForPlayer(forplayerid, playerid, IsPlayerInVehicle(forplayerid, v));
+    return 1;
 }
 
 TuningRezervoar(v)
@@ -755,7 +766,7 @@ TuningTrubi(playerid)
     if (!zvuk || GetVehicleComponentInSlot(v, CARMODTYPE_HYDRAULICS) || GetTickCount() - gTunTrubaMs[v] < TUNING_TRUBA_MS) return;
     gTunTrubaMs[v] = GetTickCount();
     GetVehiclePos(v, x, y, z);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || GetPlayerVirtualWorld(i) != GetVehicleVirtualWorld(v) || !IsPlayerInRangeOfPoint(i, TUNING_TRUBA_DOMET, x, y, z)) continue;
         PlayerPlaySound(i, zvuk, x, y, z);
@@ -765,7 +776,7 @@ TuningTrubi(playerid)
 
 static TuningTrubaStani(playerid)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gTunTrubaSlusa[i] != playerid + 1) continue;
         gTunTrubaSlusa[i] = 0;
@@ -1331,6 +1342,7 @@ TuningMisIskljuci(playerid)
 
 TuningDisconnect(playerid)
 {
+    gTunSkriven[playerid] = 0;
     TuningTrubaStani(playerid);
     gTunTrubaSlusa[playerid] = 0;
     gTunUnos[playerid] = false;
@@ -1652,7 +1664,7 @@ DLG:apanel_tuning_brisi(playerid, response)
     new g = gApTuning[playerid];
     if (response && ProvjeriOvlasti(playerid, ALVL_ORG) && g >= 0 && g < TUNING_MAX && gTuning[g][tgIma])
     {
-        for (new i = 0; i < MAX_PLAYERS; i++) if (gTunU[i] == g) TuningZatvori(i);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gTunU[i] == g) TuningZatvori(i);
         DestroyDynamic3DTextLabel(gTuning[g][tgTekst]);
         MapaIkonaMakni(gTuning[g][tgIkona]);
         gTuning[g][tgIma] = false;

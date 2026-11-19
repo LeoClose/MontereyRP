@@ -31,7 +31,7 @@ static IkonaPostavi(playerid, k)
 
 static IkonaSvima(k)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) IkonaPostavi(i, k);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) IkonaPostavi(i, k);
 }
 
 MapaIkona(Float:x, Float:y, Float:z, tip)
@@ -74,7 +74,7 @@ IkoneUpdate(playerid)
 IkoneTick()
 {
     new sad = GetTickCount();
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || IsPlayerNPC(i) || gIkonaGlobalno[i] || sad - gIkonaUpdate[i] < IKONA_PAUZA_MS) continue;
         gIkonaGlobalno[i] = true;
@@ -89,7 +89,7 @@ TdCisti(tekst[])
 
 IgracRacuna(racun)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAccountId[i] == racun) return i;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gAccountId[i] == racun) return i;
     return INVALID_PLAYER_ID;
 }
 
@@ -116,7 +116,7 @@ PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[
 {
     new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid), tekst[160];
     GetPlayerPos(playerid, x, y, z);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || !gUlogiran[i]) continue;
         if (GetPlayerVirtualWorld(i) != vw || GetPlayerInterior(i) != interior) continue;

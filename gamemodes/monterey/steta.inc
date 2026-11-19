@@ -331,7 +331,7 @@ static StetaVoziloDio(v, Float:fx, Float:fy, Float:fz)
 
 static bool:StetaImaVozaca(v)
 {
-    for (new p = 0; p < MAX_PLAYERS; p++) if (IsPlayerConnected(p) && GetPlayerState(p) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(p) == v) return true;
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++) if (IsPlayerConnected(p) && GetPlayerState(p) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(p) == v) return true;
     return false;
 }
 
@@ -359,7 +359,7 @@ StetaTick()
         new v = gVozila[n];
         if (GetVehicleHealth(v, h) && h < STETA_VOZILO_MIN && !StetaImaVozaca(v)) SetVehicleHealth(v, STETA_VOZILO_MIN);
     }
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
         new PLAYER_STATE:st = GetPlayerState(i);

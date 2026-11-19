@@ -324,7 +324,7 @@ TaksiSnimi()
         gPrepVozilaM[i][1] = floatround(gPrepVozila[i][1]);
     }
     gPrepBroj = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || IsPlayerInAnyVehicle(i) || GetPlayerState(i) == PLAYER_STATE_SPECTATING) continue;
         GetPlayerPos(i, gPrepIgraci[gPrepBroj][0], gPrepIgraci[gPrepBroj][1], gPrepIgraci[gPrepBroj][2]);

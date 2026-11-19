@@ -28,7 +28,7 @@ static OznakaPrevedi(l, const hr[], out[], len)
 static OznakaVidljiva(STREAMER_TAG_3D_TEXT_LABEL:id, l)
 {
     new igraci[MAX_PLAYERS], n = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gJezik[i] == l) igraci[n++] = i;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && gJezik[i] == l) igraci[n++] = i;
     if (!n) igraci[n++] = INVALID_PLAYER_ID;
     Streamer_SetArrayData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_PLAYER_ID, igraci, n);
 }

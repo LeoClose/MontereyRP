@@ -5,8 +5,8 @@
 (_/\/\_)(_____)(_)\_) (__) (____)(_)\_)(____) (__)   (_)\_)(_____)(____)(____)(__)  (____)(__)(__)(__)
 
 */
-#define MAX_PLAYERS 150
-#define MAX_LJUDI 100
+#define MAX_PLAYERS 1000
+#define MAX_LJUDI 800
 #include <open.mp>
 #include <fastcmd>
 #include <streamer>
@@ -378,6 +378,7 @@ public OnGameModeExit()
 #define COLOR_ERROR         0xFF6347FF
 #define COLOR_INFO          0xCCCCCCFF
 new gAdmin[MAX_PLAYERS];
+new gIgracZadnji = -1;
 new bool:gPremium[MAX_PLAYERS];
 new gAdminVeh[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];

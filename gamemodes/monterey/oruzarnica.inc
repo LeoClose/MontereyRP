@@ -295,7 +295,7 @@ static OruzarnicaBlagajnik(playerid, s)
 
 static OruzarnicaObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && OruzarnicaIgraca(i) == s) OruzarnicaVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && OruzarnicaIgraca(i) == s) OruzarnicaVani(i, s);
     OruzarnicaMakniAktor(s);
     DestroyDynamicPickup(gOruz[s][orPickup]);
     MapaIkonaMakni(gOruz[s][orIkona]);

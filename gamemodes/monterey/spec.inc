@@ -115,7 +115,7 @@ SpecDisconnect(playerid)
 {
     gSpecMeta[playerid] = INVALID_PLAYER_ID;
     gSpecVraca[playerid] = false;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gSpecMeta[i] != playerid) continue;
         SpecStop(i);
@@ -125,7 +125,7 @@ SpecDisconnect(playerid)
 
 SpecTick()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gSpecMeta[i] == INVALID_PLAYER_ID) continue;
         SpecPrati(i);

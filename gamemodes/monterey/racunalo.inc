@@ -956,7 +956,7 @@ static PcPricekaj(playerid, sekundi)
 
 static LsOsvjezi(pogled, cilj, osim = INVALID_PLAYER_ID)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (i != osim && gPcOtvoren[i] && gPcEkran[i] == PCE_LIFESTALKER && gLsPogled[i] == pogled && (cilj == -1 || gLsCilj[i] == cilj)) PcLifeStalker(i);
 }
 
@@ -1492,7 +1492,7 @@ static PcEkran(playerid, ekran)
 RacunaloTick()
 {
     new sad = GetTickCount();
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gPcOtvoren[i] || !gPcObavijestDo[i] || sad - gPcObavijestDo[i] < 0) continue;
         gPcObavijestDo[i] = 0;
@@ -1529,7 +1529,7 @@ RacunaloTick()
         gDionicaKorak = 0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM stock_candles WHERE id NOT IN (SELECT id FROM stock_candles ORDER BY id DESC LIMIT %d)", SVIJECA * sizeof gDionicaIme));
     }
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gPcOtvoren[i] && gPcEkran[i] == PCE_DIONICE) PcGraf(i, zatvori);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gPcOtvoren[i] && gPcEkran[i] == PCE_DIONICE) PcGraf(i, zatvori);
 }
 
 static PcOtvori(playerid)
@@ -1653,7 +1653,7 @@ static PcOtvori(playerid)
 
 RacunaloSat(const vrijeme[], const datum[])
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gPcOtvoren[i]) continue;
         PlayerTextDrawSetString(i, gPc[i][PTD_SAT], vrijeme);
@@ -1850,7 +1850,7 @@ PcKlik(playerid, PlayerText:td)
                     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM ads WHERE id = %d AND account = %d", gPcOglasOdabran[playerid], gAccountId[playerid]));
                     gPcOglasOdabran[playerid] = 0;
                     PcJavi(playerid, false, T(playerid, "Oglas je obrisan."));
-                    for (new k = 0; k < MAX_PLAYERS; k++) if (gPcOtvoren[k] && gPcEkran[k] == PCE_OGLASI) PcEkran(k, PCE_OGLASI);
+                    for (new k = 0, kZadnji = gIgracZadnji; k <= kZadnji; k++) if (gPcOtvoren[k] && gPcEkran[k] == PCE_OGLASI) PcEkran(k, PCE_OGLASI);
                     return 1;
                 }
                 if (i)
@@ -2516,7 +2516,7 @@ DLG:pc_unos(playerid, response, const inputtext[])
             new DBResult:res = DB_ExecuteQuery(gDB, "SELECT number FROM phone_numbers WHERE account = %d", gAccountId[playerid]);
             if (DB_GetRowCount(res)) DB_GetFieldString(res, 0, broj, sizeof broj);
             DB_FreeResultSet(res);
-            for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i]) SendClientMessage(i, 0x7CB342FF, T(i, "[Oglas] %s (%s, tel. %s)"), tekst, GetRPIme(playerid), broj);
+            for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i]) SendClientMessage(i, 0x7CB342FF, T(i, "[Oglas] %s (%s, tel. %s)"), tekst, GetRPIme(playerid), broj);
         }
     }
     return PcNatrag(playerid);

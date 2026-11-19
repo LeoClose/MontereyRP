@@ -134,7 +134,7 @@ static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
 {
     new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], n = 0, svijet = GarazaSvijet(db), interijer = db ? GARAZA_INT : 0, Float:hx, Float:hy, Float:hz;
     if (!db && Kolizija_Zraka(x, y, z + 3.0, x, y, z - 20.0, hx, hy, hz)) z = hz + 1.0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerInVehicle(i, v)) continue;
         putnici[n] = i;
@@ -262,7 +262,7 @@ static GarazaIsprazni(g)
         VlasnikGaraza(v, 0, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], gGaraza[g][gaA]);
         if (GetVehicleVirtualWorld(v) == svijet) GarazaIzvezi(v, g);
     }
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == svijet && !IsPlayerInAnyVehicle(i)) GarazaVani(i, g);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && GetPlayerVirtualWorld(i) == svijet && !IsPlayerInAnyVehicle(i)) GarazaVani(i, g);
 }
 
 static GarazaPostaviVlasnika(g, racun, const ime[])

@@ -971,7 +971,7 @@ static KzRundaPoruka(playerid, const ishod[], ulog, isplata, bool:placeno)
 static KzRundaKreni(k)
 {
     new tip = gKaz[k][kzTip];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!KzGleda(i, k)) continue;
         new u = KzTablaUkupno(i);
@@ -1001,7 +1001,7 @@ static KzRundaKreni(k)
         for (new i = 0; i < sizeof gKonjIme; i++) gKr[k][krKonj][i] = 0;
     }
     gKr[k][krFaza] = KR_LETI;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!KzGleda(i, k)) continue;
         if (tip == KZ_AVIATOR) AvGraf(i, k);
@@ -1014,7 +1014,7 @@ static KzRundaKraj(k)
 {
     new tip = gKaz[k][kzTip], tekst[48];
     gKr[k][krZadnji] = tip == KZ_AVIATOR ? gKr[k][krM] : gKr[k][krPobjednik];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!KzSudjeluje(i, k)) continue;
         if (tip == KZ_AVIATOR)
@@ -1036,7 +1036,7 @@ static KzRundaKraj(k)
     }
     gKr[k][krFaza] = KR_CEKA;
     gKr[k][krKraj] = GetTickCount() + KZ_RUNDA_MS;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (KzGleda(i, k)) KzRundaCrtaj(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (KzGleda(i, k)) KzRundaCrtaj(i);
 }
 
 static bool:KzRundaKorak(k)
@@ -1051,7 +1051,7 @@ static bool:KzRundaKorak(k)
             gKr[k][krM] = gKr[k][krCrash];
             return false;
         }
-        for (new i = 0; i < MAX_PLAYERS; i++)
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         {
             if (!KzGleda(i, k)) continue;
             if (!(t % AV_TAKT) && t / AV_TAKT <= AV_STUPACA) AvStupac(i, t / AV_TAKT - 1, gKr[k][krM]);
@@ -1066,7 +1066,7 @@ static bool:KzRundaKorak(k)
         if (h != w && gKr[k][krKonj][h] > 98) gKr[k][krKonj][h] = 98;
     }
     if (gKr[k][krKonj][w] >= 100) gKr[k][krKonj][w] = 100;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!KzGleda(i, k)) continue;
         for (new h = 0; h < sizeof gKonjIme; h++) KonjPostavi(i, h, t + h);
@@ -1088,7 +1088,7 @@ public KazinoRunda(k, token)
         KzRundaKraj(k);
     }
     new gledatelja = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!KzGleda(i, k)) continue;
         gledatelja++;

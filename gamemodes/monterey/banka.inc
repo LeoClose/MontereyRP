@@ -182,7 +182,7 @@ static BankaEkipa(playerid, s)
 {
     if (!gOrg[playerid]) return 0;
     new n = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == gOrg[playerid] && BankaIgraca(i) == s && !IsRanjen(i)) n++;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == gOrg[playerid] && BankaIgraca(i) == s && !IsRanjen(i)) n++;
     return n;
 }
 
@@ -228,7 +228,7 @@ BankaUpdate(playerid)
     gBanka[s][bkPljackaKraj] = sad + BANKA_PLJACKA_S;
     gBanka[s][bkPljackano] = sad;
     if (gBanka[s][bkImaAktor]) ApplyActorAnimation(gBanka[s][bkAktor], "SHOP", "SHP_Rob_HandsUp", 4.1, false, false, false, true, 0);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
         if (gOrg[i] == gOrg[playerid] && BankaIgraca(i) == s)
@@ -247,10 +247,10 @@ static BankaPljackaTick()
     {
         if (!gBanka[s][bkIma] || !gBanka[s][bkPljacka]) continue;
         new org = gBanka[s][bkPljacka], prisutni[MAX_PLAYERS], n = 0;
-        for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == org && BankaIgraca(i) == s && !IsRanjen(i)) prisutni[n++] = i;
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org && BankaIgraca(i) == s && !IsRanjen(i)) prisutni[n++] = i;
         if (!n)
         {
-            for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka banke je propala."));
+            for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka banke je propala."));
             BankaPljackaStani(s);
             continue;
         }
@@ -414,7 +414,7 @@ BankaTick()
     if (++gBankaSat < 60) return;
     gBankaSat = 0;
     new sad = gettime();
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         new stanje, stednja, kredit, rata, rok, poruka[144];
         if (!gUlogiran[i] || !BankaUcitaj(gAccountId[i], stanje, stednja, kredit, rata, rok)) continue;
@@ -699,7 +699,7 @@ DLG:apanel_banka_int(playerid, response, listitem)
 
 static BankaObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
     gBanka[s][bkPljacka] = 0;
     for (new c = 0; c < BANKA_CUVARI; c++) BankaCuvarMakni(s, c);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_guards WHERE bank = %d", gBanka[s][bkDb]));
@@ -739,7 +739,7 @@ DLG:apanel_banka_meni(playerid, response, listitem)
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stanite u interijer koji zelite koristiti."));
             return ShowBanke(playerid);
         }
-        for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
         BankaMakniAktor(s);
         DestroyDynamicPickup(gBanka[s][bkPickup]);
         MapaIkonaMakni(gBanka[s][bkIkona]);

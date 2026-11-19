@@ -252,7 +252,7 @@ public OnCheatDetected(playerid, const ip_address[], type, code)
         BlockIpAddress(ip_address, AC_BLOK_MS);
         AcZapisi(INVALID_PLAYER_ID, ip_address, code, ACM_IZBACI);
         printf("[AC] IP %s blokiran: %s (#%03d)", ip_address, gAcIme[code], code);
-        for (new i = 0; i < MAX_PLAYERS; i++)
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
             if (IsPlayerConnected(i) && gAdmin[i] > 0) SendClientMessage(i, COLOR_ADMIN, T(i, "[AC] IP %s je blokiran na 10 minuta: %s (#%03d)."), ip_address, gAcIme[code], code);
         return 1;
     }
@@ -270,7 +270,7 @@ public OnCheatDetected(playerid, const ip_address[], type, code)
         else SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Izbaceni ste zbog sumnje na varanje (#%03d)."), code);
         KickTimer(playerid);
     }
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || gAdmin[i] < 1) continue;
         if (nacin == ACM_IZBACI) SendClientMessage(i, COLOR_ADMIN, T(i, "[AC] %s (%d) je izbacen: %s (#%03d)."), GetRPIme(playerid), playerid, gAcIme[code], code);
@@ -323,7 +323,7 @@ DLG:apanel_ac(playerid, response, listitem)
     if (c < 0) return 1;
     gAcNacin[c] = (gAcNacin[c] + 1) % 3;
     EnableAntiCheat(c, gAcNacin[c] != ACM_ISKLJUCENO);
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) AntiCheatAdmin(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) AntiCheatAdmin(i);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO ac_settings (code, mode) VALUES (%d, %d)", c, gAcNacin[c]));
     return ShowAntiCheat(playerid);
 }

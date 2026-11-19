@@ -398,7 +398,7 @@ static PokerOsvjeziIgraca(s, playerid)
 
 static PokerOsvjezi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gPoTdIma[i] && (gPokerStol[i] == s || (gPoMod[i] == PM_ULAZ && gPokerOdabran[i] == s))) PokerOsvjeziIgraca(s, i);
 }
 

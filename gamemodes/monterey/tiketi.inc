@@ -27,7 +27,7 @@ static TiketNovi(playerid, tip, cilj, const tekst[])
     strcat(gTiket[t][tkTekst], tekst, TIKET_LEN);
     RemoveBoje(gTiket[t][tkTekst]);
     new poruka[200];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || !gAdmin[i]) continue;
         if (tip == TIKET_PRIJAVA) format(poruka, sizeof poruka, T(i, "[Prijava #%d] %s (%d) prijavljuje %s (%d): %s"), gTiket[t][tkBroj], GetRPIme(playerid), playerid, GetRPIme(cilj), cilj, gTiket[t][tkTekst]);
@@ -149,7 +149,7 @@ DLG:tiket(playerid, response, const inputtext[])
     gTiket[t][tkIma] = false;
     gTiketOdabran[playerid] = -1;
     GetPlayerName(playerid, ime, sizeof ime);
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && gAdmin[i]) SendClientMessage(i, COLOR_ADMIN, T(i, inputtext[0] ? ("Admin %s je odgovorio na upit #%d.") : ("Admin %s je zatvorio upit #%d.")), ime, broj);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gAdmin[i]) SendClientMessage(i, COLOR_ADMIN, T(i, inputtext[0] ? ("Admin %s je odgovorio na upit #%d.") : ("Admin %s je zatvorio upit #%d.")), ime, broj);
     if (!inputtext[0]) return 1;
     gTiketOdgovor[playerid][0] = EOS;
     strcat(gTiketOdgovor[playerid], inputtext, TIKET_LEN);

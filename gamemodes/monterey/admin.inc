@@ -50,7 +50,7 @@ AdminPrijava(playerid)
 {
     new name[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, name, sizeof name);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || !gUlogiran[i] || gAdmin[i] < 1) continue;
         if (gAdmin[playerid])
@@ -164,7 +164,7 @@ RestParam(const src[], idx, dest[], size = sizeof (dest))
 FindPlayerByName(const name[])
 {
     new other[MAX_PLAYER_NAME + 1];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i)) continue;
         GetPlayerName(i, other, sizeof other);
@@ -181,7 +181,7 @@ FindPlayer(const s[])
         return (id < MAX_PLAYERS && IsPlayerConnected(id)) ? id : INVALID_PLAYER_ID;
     }
     new other[MAX_PLAYER_NAME + 1], found = INVALID_PLAYER_ID;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i)) continue;
         GetPlayerName(i, other, sizeof other);
@@ -217,7 +217,7 @@ CMD:a(playerid, params[])
     new msg[200], name[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, name, sizeof name);
     format(msg, sizeof msg, "[A] %s %s: %s", gRankName[gAdmin[playerid]], name, params);
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) SendLong(i, COLOR_ADMIN, msg);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && gAdmin[i] > 0) SendLong(i, COLOR_ADMIN, msg);
     return 1;
 }
 
@@ -327,7 +327,7 @@ CMD:admini(playerid, params[])
 {
     new name[MAX_PLAYER_NAME + 1], count = 0;
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Admini online:"));
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || gAdmin[i] < 1) continue;
         GetPlayerName(i, name, sizeof name);

@@ -161,7 +161,7 @@ static Float:HodOsobe(npc, Float:x, Float:y, Float:z, Float:px, Float:py)
 {
     new Float:ux = px - x, Float:uy = py - y, Float:dd = ux * ux + uy * uy, Float:najblize = 2.0, svijet = GetPlayerVirtualWorld(npc);
     if (dd < 0.0001) return najblize;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == npc || !IsPlayerConnected(i) || GetPlayerVirtualWorld(i) != svijet || IsPlayerInAnyVehicle(i)) continue;
         new Float:ox, Float:oy, Float:oz;
@@ -407,7 +407,7 @@ forward HodProvjera();
 public HodProvjera()
 {
     new sad = GetTickCount();
-    for (new npc = 0; npc < MAX_PLAYERS; npc++)
+    for (new npc = 0, npcZadnji = gIgracZadnji; npc <= npcZadnji; npc++)
     {
         if (!gHod[npc][hdHoda]) continue;
         if (!IsPlayerConnected(npc) || !IsPlayerNPC(npc) || IsPlayerInAnyVehicle(npc))

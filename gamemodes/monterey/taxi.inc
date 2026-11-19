@@ -257,14 +257,14 @@ InitTaksi()
 
 static bool:TaksiVidljivo(Float:x, Float:y, Float:z, Float:radijus = TAKSI_SKRIVENO)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && IsPlayerInRangeOfPoint(i, radijus, x, y, z)) return true;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && IsPlayerInRangeOfPoint(i, radijus, x, y, z)) return true;
     return false;
 }
 
 static bool:TaksiNaVidiku(Float:x, Float:y, Float:z, osimVozila = INVALID_VEHICLE_ID, Float:radijus = TAKSI_SKRIVENO)
 {
     new Float:cx, Float:cy, Float:cz, Float:fx, Float:fy, Float:fz;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || GetPlayerVehicleID(i) == osimVozila || !IsPlayerInRangeOfPoint(i, radijus, x, y, z)) continue;
         GetPlayerCameraPos(i, cx, cy, cz);
@@ -372,7 +372,7 @@ public Fade(playerid, korak)
 
 static TaksiIsprazni(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && IsPlayerInVehicle(i, gTaksi[s][tVozilo])) RemovePlayerFromVehicle(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && IsPlayerInVehicle(i, gTaksi[s][tVozilo])) RemovePlayerFromVehicle(i);
 }
 
 TaksiPrekini(s)
@@ -476,7 +476,7 @@ TaksiPozovi(playerid)
 static TaksiPonudiIgracima(playerid, Float:x, Float:y, Float:z)
 {
     new ima = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == playerid || !gUlogiran[i] || !gOrg[i] || GetOrgTip(gOrg[i]) != ORG_TAKSI || !NaDuznosti(i) || IsRanjen(i) || ImaLisice(i)) continue;
         new body[128];
@@ -493,7 +493,7 @@ static TaksiPonudiIgracima(playerid, Float:x, Float:y, Float:z)
 
 static TaksiOcistiPonude(playerid)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gTaksiPonuda[i] == playerid + 1) gTaksiPonuda[i] = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gTaksiPonuda[i] == playerid + 1) gTaksiPonuda[i] = 0;
 }
 
 forward TaksiBezIgraca(playerid, ceka);
@@ -974,7 +974,7 @@ static TaksiPocniSkok(s)
         gTaksi[s][tSkok] = i;
         gTaksi[s][tStanje] = TX_TELEPORT;
         TaksiFade(s, p, 0);
-        for (new o = 0; o < MAX_PLAYERS; o++) if (o != p && gUlogiran[o] && IsPlayerInVehicle(o, gTaksi[s][tVozilo])) TaksiFade(s, o, 0);
+        for (new o = 0, oZadnji = gIgracZadnji; o <= oZadnji; o++) if (o != p && gUlogiran[o] && IsPlayerInVehicle(o, gTaksi[s][tVozilo])) TaksiFade(s, o, 0);
         return;
     }
 }
@@ -990,12 +990,12 @@ static TaksiPreskoci(s, playerid)
         gTaksi[s][tZnak] = stariZnak;
         gTaksi[s][tStanje] = TX_VOZI;
         TaksiKorak(s);
-        for (new i = 0; i < MAX_PLAYERS; i++) if (i == playerid || (gUlogiran[i] && IsPlayerInVehicle(i, stari))) TaksiFade(s, i, FADE_SLOJEVA + 1);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (i == playerid || (gUlogiran[i] && IsPlayerInVehicle(i, stari))) TaksiFade(s, i, FADE_SLOJEVA + 1);
         return;
     }
     NPC_PutInVehicle(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
     TaksiMotor(s, 1);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == playerid || !gUlogiran[i] || !IsPlayerInVehicle(i, stari)) continue;
         SetTimerEx("TaksiPutnikSjedi", 600, false, "iiii", s, i, GetPlayerVehicleSeat(i), 0);

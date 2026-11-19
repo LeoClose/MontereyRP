@@ -513,7 +513,7 @@ OdjecaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid) || gOdjecaU[playerid]) return 0;
     new s = OdjecaIgraca(playerid);
     if (s == -1 || !gOdj[s][odImaAktor] || !IsPlayerInRangeOfPoint(playerid, ODJECA_KASA_DOMET, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz])) return 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == playerid || gOdjecaU[i] != s + 1) continue;
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, gOdj[s][odTip] == ODJ_FRIZER ? ("Frizer je zauzet, pricekajte.") : ("Kabina je zauzeta, pricekajte.")));
@@ -628,7 +628,7 @@ static OdjecaPostavi(playerid, s, bool:kabina)
 
 static OdjecaObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && OdjecaIgraca(i) == s) OdjecaVani(i, s);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && OdjecaIgraca(i) == s) OdjecaVani(i, s);
     OdjecaMakniAktor(s);
     DestroyDynamicPickup(gOdj[s][odPickup]);
     DestroyDynamicPickup(gOdj[s][odPickupU]);

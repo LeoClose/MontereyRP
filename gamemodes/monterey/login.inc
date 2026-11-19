@@ -69,7 +69,7 @@ LoginEkran(playerid, const naslov[], const podnaslov[])
     new registrirano, admina = 0, igraca = 0, DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM accounts");
     registrirano = DB_GetFieldInt(res, 0);
     DB_FreeResultSet(res);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || IsPlayerNPC(i)) continue;
         igraca++;

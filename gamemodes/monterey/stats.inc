@@ -131,7 +131,7 @@ StatsUpdate(playerid)
 
 StatsTick()
 {
-    for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
+    for (new playerid = 0, playeridZadnji = gIgracZadnji; playerid <= playeridZadnji; playerid++)
     {
         if (!gUlogiran[playerid]) continue;
         AfkProvjeri(playerid);
@@ -159,7 +159,7 @@ StatsSave(playerid)
 
 StatsSaveAll()
 {
-    for (new playerid = 0; playerid < MAX_PLAYERS; playerid++)
+    for (new playerid = 0, playeridZadnji = gIgracZadnji; playerid <= playeridZadnji; playerid++)
         if (gUlogiran[playerid]) StatsSave(playerid);
 }
 

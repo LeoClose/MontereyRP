@@ -5,6 +5,7 @@ static gOruzjeProvjera[MAX_PLAYERS], bool:gOruzjeBlok[MAX_PLAYERS];
 
 public OnPlayerConnect(playerid)
 {
+    if (playerid > gIgracZadnji) gIgracZadnji = playerid;
     KosConnect(playerid);
     IkoneIgracu(playerid);
     MapaOpstinaUkloni(playerid);
@@ -24,7 +25,7 @@ public OnPlayerConnect(playerid)
     BrodUkloni(playerid);
     if (IsPlayerNPC(playerid)) return 1;
     new ljudi = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) ljudi++;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) ljudi++;
     if (ljudi > MAX_LJUDI)
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Server je pun."));
@@ -68,6 +69,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
+    if (playerid == gIgracZadnji) do gIgracZadnji--; while (gIgracZadnji >= 0 && !IsPlayerConnected(gIgracZadnji));
     SpecDisconnect(playerid);
     SlucajDisconnect(playerid);
     gPrenosZamrz[playerid] = 0;

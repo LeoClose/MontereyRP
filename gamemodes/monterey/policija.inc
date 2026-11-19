@@ -193,7 +193,7 @@ static TragPrati(i)
 
 PolicijaTick()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gUlogiran[i] && !IsPlayerNPC(i)) TragPrati(i);
         if (gUlogiran[i] && gWanted[i] && !gJailTime[i] && ++gWantedSat[i] >= WANTED_PAD_S)
@@ -309,7 +309,7 @@ forward DragTick();
 public DragTick()
 {
     if (!gDragCount) return;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gDragging[i]) continue;
         new t = gDragging[i] - 1, Float:x, Float:y, Float:z, Float:a, Float:tx, Float:ty, Float:tz;
@@ -354,7 +354,7 @@ public DragTick()
 
 static bool:SjedaloSlobodno(v, sjedalo)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && IsPlayerInVehicle(i, v) && GetPlayerVehicleSeat(i) == sjedalo) return false;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && IsPlayerInVehicle(i, v) && GetPlayerVehicleSeat(i) == sjedalo) return false;
     return true;
 }
 
@@ -466,7 +466,7 @@ CMD:wanted(playerid, params[])
     if (!params[0])
     {
         new list[1024], row[64], len = 0;
-        for (new i = 0; i < MAX_PLAYERS; i++)
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         {
             if (!gUlogiran[i] || !gWanted[i]) continue;
             format(row, sizeof row, "%s - %d", GetRPIme(i), gWanted[i]);
@@ -709,7 +709,7 @@ CMD:lockerlog(playerid, params[])
 
 static GetVozac(v)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUlogiran[i] && GetPlayerState(i) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(i) == v) return i;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && GetPlayerState(i) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(i) == v) return i;
     return INVALID_PLAYER_ID;
 }
 

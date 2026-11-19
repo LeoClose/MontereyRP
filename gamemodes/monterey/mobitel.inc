@@ -235,7 +235,7 @@ static MobitelMojBroj(playerid, broj[], velicina = sizeof broj)
 static MobitelIgrac(const broj[])
 {
     new moj[MOBITEL_BROJ];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || IsPlayerNPC(i) || !gUlogiran[i]) continue;
         MobitelMojBroj(i, moj);
@@ -522,7 +522,7 @@ static MobitelOtvori(playerid)
 
 MobitelSat(const vrijeme[])
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gMobitelOtvoren[i]) PlayerTextDrawSetString(i, gMobitelSatTd[i], vrijeme);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gMobitelOtvoren[i]) PlayerTextDrawSetString(i, gMobitelSatTd[i], vrijeme);
 }
 
 MobitelZatvori(playerid)
@@ -854,7 +854,7 @@ MobitelGovor(playerid, const text[], vrsta)
     if (vrsta != CHAT_VIKANJE) return;
     new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid);
     GetPlayerPos(playerid, x, y, z);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == playerid || !IsPlayerConnected(i) || !MobitelURazgovoru(i)) continue;
         new r = gMobitelDrugi[i];

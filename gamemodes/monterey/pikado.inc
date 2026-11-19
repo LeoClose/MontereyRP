@@ -161,7 +161,7 @@ CMD:pikadorot(playerid, params[])
     for (new i = 0; i < gPikadoPlocaN; i++) TextDrawDestroy(gPikadoPloca[i]);
     gPikadoPlocaN = 0;
     PikadoPlocaStvori();
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f"), gPikadoRx, gPikadoRz, gPikadoDx, gPikadoDy, gPikadoPrsten);
 }
 

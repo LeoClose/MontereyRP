@@ -116,7 +116,7 @@ static VrijemeOsvjezi()
         gVrijemeMinuta = igra % 60;
     }
     SetWorldTime(gVrijemeSat);
-    for (new i = 0; i < MAX_PLAYERS; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) VrijemeIgrac(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) VrijemeIgrac(i);
 }
 
 VrijemeTick()

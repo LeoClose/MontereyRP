@@ -327,7 +327,7 @@ static MdtVozilo(playerid, const unos[])
 
 MdtSat(const vrijeme[])
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gMdtOtvoren[i]) PlayerTextDrawSetString(i, gMdt[i][MTD_SAT], vrijeme);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gMdtOtvoren[i]) PlayerTextDrawSetString(i, gMdt[i][MTD_SAT], vrijeme);
 }
 
 static MdtOtvori(playerid)

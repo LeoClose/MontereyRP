@@ -99,7 +99,7 @@ InitKosarka()
 static KosTereni()
 {
     for (new k = 0; k < KOS_MAX; k++) OkladaZatvori(OK_KOSARKA, k);
-    for (new p = 0; p < MAX_PLAYERS; p++) if (gKosTeren[p] != -1) KosNapusti(p, false);
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++) if (gKosTeren[p] != -1) KosNapusti(p, false);
     for (new k = 0; k < KOS_MAX; k++)
     {
         if (gKos[k][koFaza] == KF_NOSI) KosPusti(gKos[k][koNosi]);
@@ -196,7 +196,7 @@ static KosLoptaReset(k)
 static KosBroj(t, tim)
 {
     new n = 0;
-    for (new p = 0; p < MAX_PLAYERS; p++) if (gKosTeren[p] == t && gKosTim[p] == tim) n++;
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++) if (gKosTeren[p] == t && gKosTim[p] == tim) n++;
     return n;
 }
 
@@ -242,7 +242,7 @@ static KosKontrole(playerid)
 static KosHudOsvjezi(t)
 {
     new popis[2][256], ime[24];
-    for (new p = 0; p < MAX_PLAYERS; p++)
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
     {
         if (gKosTeren[p] != t) continue;
         format(ime, sizeof ime, "%s", GetRPIme(p));
@@ -251,7 +251,7 @@ static KosHudOsvjezi(t)
         strcat(popis[gKosTim[p]], ime);
     }
     for (new i = 0; i < 2; i++) if (!popis[i][0]) strcat(popis[i], "-");
-    for (new p = 0; p < MAX_PLAYERS; p++)
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
     {
         if (gKosTeren[p] != t) continue;
         new nas = gKosTim[p], naslov[96];
@@ -317,7 +317,7 @@ KosOkladaTeren(playerid)
 static KosPobjeda(t, tim)
 {
     new pobjednici[KOS_TIM_MAX], n = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gKosTeren[i] != t) continue;
         if (gKosTim[i] == tim && n < sizeof pobjednici) pobjednici[n++] = i;
@@ -330,7 +330,7 @@ static KosPobjeda(t, tim)
     }
     OkladaIsplati(OK_KOSARKA, t, pobjednici, n);
     gKos[t][koBod][0] = gKos[t][koBod][1] = 0;
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gKosTeren[i] != t || OkladaUdi(i, OK_KOSARKA, t, false)) continue;
         if (gKosDrzi[i] != -1) KosIspusti(i);
@@ -427,7 +427,7 @@ static KosObjavi(k)
         return;
     }
     new Float:x = gKos[t][koX], Float:y = gKos[t][koY], Float:z = gKos[t][koZ];
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || GetPlayerVirtualWorld(i) != gKos[k][koSvijet] || !IsPlayerInRangeOfPoint(i, 30.0, x, y, z)) continue;
         PlayerPlaySound(i, 1057, 0.0, 0.0, 0.0);
@@ -573,7 +573,7 @@ static KosDodaj(playerid)
     GetPlayerPos(playerid, px, py, pz);
     GetPlayerFacingAngle(playerid, a);
     KosNaprijed(a, fx, fy);
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i == playerid || gKosTeren[i] != gKosTeren[playerid] || gKosTim[i] != gKosTim[playerid] || gKosDrzi[i] != -1 || GetPlayerState(i) != PLAYER_STATE_ONFOOT || GetPlayerVirtualWorld(i) != GetPlayerVirtualWorld(playerid)) continue;
         new Float:x, Float:y, Float:z;
@@ -748,7 +748,7 @@ KosTick()
         }
         else if (GetPlayerState(p) != PLAYER_STATE_ONFOOT) KosIspusti(p);
     }
-    for (new p = 0; p < MAX_PLAYERS; p++)
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
     {
         new t = gKosTeren[p];
         if (t == -1 || gKosDrzi[p] != -1) continue;

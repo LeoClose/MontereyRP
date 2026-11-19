@@ -114,7 +114,7 @@ DLG:kafic(playerid, response, listitem)
 KaficTick()
 {
     new sad = gettime();
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gKaficDo[i] || gKaficDo[i] > sad) continue;
         gKaficDo[i] = 0;

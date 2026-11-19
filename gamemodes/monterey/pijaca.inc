@@ -125,7 +125,7 @@ public PijacaTick()
 {
     if (!gPijacaAktorIma) return;
     new sad = GetTickCount();
-    for (new i = 0; i < MAX_PLAYERS; i++)
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || IsRanjen(i) || GetPlayerVirtualWorld(i) || !IsPlayerInRangeOfPoint(i, PIJACA_PRICA_DOMET, gPijacaAktorPos[0], gPijacaAktorPos[1], gPijacaAktorPos[2])) continue;
         new PLAYER_STATE:st = GetPlayerState(i), stanje = st == PLAYER_STATE_ONFOOT ? PS_PJESKE : (st == PLAYER_STATE_DRIVER || st == PLAYER_STATE_PASSENGER) ? PS_VOZILO : PS_NISTA;

@@ -519,7 +519,7 @@ static SalonNovi(playerid)
 
 static SalonObrisi(s)
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUSalonu[i] == s) SalonZatvori(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUSalonu[i] == s) SalonZatvori(i);
     DestroyDynamicPickup(gSalon[s][slPickup]);
     DestroyDynamic3DTextLabel(gSalon[s][slTekst]);
     gSalon[s][slIma] = false;
@@ -621,7 +621,7 @@ DLG:apanel_salon_ukloni(playerid, response, listitem)
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
     if (listitem < 0 || listitem >= gSalon[s][slBroj]) return SalonPonudaPopis(playerid);
     new model = gSalon[s][slModel][listitem];
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gUSalonu[i] == s) SalonZatvori(i);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUSalonu[i] == s) SalonZatvori(i);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM dealership_cars WHERE dealer = %d AND model = %d", gSalon[s][slDb], model));
     SalonPonuda(s);
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "%s je uklonjen iz ponude."), gImenaVozila[model - 400]);
