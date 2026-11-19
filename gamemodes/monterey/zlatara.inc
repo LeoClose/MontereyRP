@@ -106,9 +106,11 @@ static ZlataraStvori(s)
     gZl[s][zlPljacka] = 0;
     gZl[s][zlPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 0, 0);
     gZl[s][zlIkona] = MapaIkona(gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ], 21);
-    gZl[s][zlTekst] = CreateDynamic3DTextLabel("Zlatara\n[F]", COLOR_ORG, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gZl[s][zlTekst] = CreateDynamic3DTextLabel("Zlatara", COLOR_ORG, gZl[s][zlX], gZl[s][zlY], gZl[s][zlZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gZl[s][zlTekst], ZLATARA_DOMET, SAVJET_ULAZ);
     gZl[s][zlPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2], svijet, ZLATARA_INT);
-    gZl[s][zlTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    gZl[s][zlTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gZlataraUlaz[0], gZlataraUlaz[1], gZlataraUlaz[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    InterakcijaOznaka(gZl[s][zlTekstU], ZLATARA_DOMET, SAVJET_IZLAZ);
 }
 
 static ZlataraAktor(s)

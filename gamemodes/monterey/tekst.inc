@@ -104,7 +104,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Izbaci clana", "Kick member", "Исключить участника", "Expulsar miembro", "Uyeyi at" },
     { "Izbaci igraca", "Kick player", "Кикнуть игрока", "Expulsar jugador", "Oyuncuyu at" },
     { "Izbaci", "Kick", "Исключить", "Expulsar", "At" },
-    { "Izlaz", "Quit", "Выход", "Salir", "Cikis" },
+    { "Izlaz", "Exit", "Выход", "Salir", "Cikis" },
     { "Iznos mora biti veci od 0.", "The amount must be more than 0.", "Сумма должна быть больше 0.", "La cantidad debe ser mayor que 0.", "Miktar 0'dan buyuk olmali." },
     { "Jezik vasih poruka", "Language of your messages", "Язык ваших сообщений", "Idioma de tus mensajes", "Mesajlarinizin dili" },
     { "Kokain", "Cocaine", "Кокаин", "Cocaina", "Kokain" },
@@ -2134,8 +2134,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "%s: $%d/%s, na zalihi %d.", "%s: $%d/%s, %d in stock.", "%s: $%d/%s, в наличии %d.", "%s: $%d/%s, %d en stock.", "%s: $%d/%s, stokta %d." },
     { "Upisite kolicinu u chat ili N za odbijanje.", "Type the amount in chat or press N to decline.", "Напишите количество в чат или нажмите N, чтобы отказаться.", "Escribe la cantidad en el chat o pulsa N para rechazar.", "Miktari sohbete yazin veya reddetmek icin N basin." },
     { "Cijena: $%d~n~Y - prihvati, N - odbij", "Price: $%d~n~Y - accept, N - decline", "Цена: $%d~n~Y - принять, N - отказаться", "Precio: $%d~n~Y - aceptar, N - rechazar", "Fiyat: $%d~n~Y - kabul, N - reddet" },
-    { "Izadi iz vozila", "Get out of the vehicle", "Выйти из машины", "Bajar del vehiculo", "Aractan in" },
-    { "Izvezi vozilo iz garaze", "Drive the vehicle out of the garage", "Выехать из гаража", "Sacar el vehiculo del garaje", "Araci garajdan cikar" },
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
@@ -2153,7 +2151,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Admin vas je vratio na spawn.", "An admin sent you back to spawn.", "Администратор вернул вас на спавн.", "Un admin te devolvio al spawn.", "Bir admin sizi spawna geri gonderdi." },
     { "~y~ALT~w~ - interakcija", "~y~ALT~w~ - interact", "~y~ALT~w~ - vzaimodejstvie", "~y~ALT~w~ - interactuar", "~y~ALT~w~ - etkilesim" },
     { "~y~2~w~ - upali motor~n~~y~Y~w~ - opcije", "~y~2~w~ - engine on~n~~y~Y~w~ - options", "~y~2~w~ - zapustit dvigatel~n~~y~Y~w~ - opcii", "~y~2~w~ - encender motor~n~~y~Y~w~ - opciones", "~y~2~w~ - motoru calistir~n~~y~Y~w~ - secenekler" },
-    { "~y~Y~w~ - opcije", "~y~Y~w~ - options", "~y~Y~w~ - opcii", "~y~Y~w~ - opciones", "~y~Y~w~ - secenekler" }
+    { "~y~Y~w~ - opcije", "~y~Y~w~ - options", "~y~Y~w~ - opcii", "~y~Y~w~ - opciones", "~y~Y~w~ - secenekler" },
+    { "~y~F~w~ - kuca", "~y~F~w~ - house", "~y~F~w~ - dom", "~y~F~w~ - casa", "~y~F~w~ - ev" },
+    { "~y~F~w~ - garaza", "~y~F~w~ - garage", "~y~F~w~ - garazh", "~y~F~w~ - garaje", "~y~F~w~ - garaj" },
+    { "~y~F~w~ - izlaz", "~y~F~w~ - exit", "~y~F~w~ - vyhod", "~y~F~w~ - salir", "~y~F~w~ - cikis" },
+    { "~y~F~w~ - ulaz", "~y~F~w~ - enter", "~y~F~w~ - vhod", "~y~F~w~ - entrar", "~y~F~w~ - giris" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

@@ -164,9 +164,11 @@ static NamjestajStvori(s)
     new svijet = NAMJESTAJ_SVIJET + s, i = gNam[s][nmInt];
     gNam[s][nmIma] = true;
     gNam[s][nmPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ], 0, 0);
-    gNam[s][nmTekst] = CreateDynamic3DTextLabel("Namjestaj\n[F]", COLOR_ORG, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gNam[s][nmTekst] = CreateDynamic3DTextLabel("Namjestaj", COLOR_ORG, gNam[s][nmX], gNam[s][nmY], gNam[s][nmZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gNam[s][nmTekst], NAMJESTAJ_DOMET, SAVJET_ULAZ);
     gNam[s][nmPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ], svijet, gNamjestajInt[i][niInt]);
-    gNam[s][nmTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[i][niInt]);
+    gNam[s][nmTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gNamjestajInt[i][niX], gNamjestajInt[i][niY], gNamjestajInt[i][niZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[i][niInt]);
+    InterakcijaOznaka(gNam[s][nmTekstU], NAMJESTAJ_DOMET, SAVJET_IZLAZ);
 }
 
 static NamjestajAktor(s)

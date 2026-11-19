@@ -1,5 +1,6 @@
 #define GARAZA_MAX          200
-#define GARAZA_DOMET        5.0
+#define GARAZA_DOMET        7.0
+#define GARAZA_VOZAC_MS     700
 #define GARAZA_PJESKE_DOMET 2.0
 #define GARAZA_ULAZ_DOMET   2.0
 #define GARAZA_SJEDNI_MS    400
@@ -15,17 +16,17 @@
 #define GARAZA_PRODANA      19607
 
 enum E_GARAZA { bool:gaIma, gaDb, Float:gaX, Float:gaY, Float:gaZ, Float:gaA, gaCijena, gaVlasnik, gaVlasnikIme[MAX_PLAYER_NAME + 1], bool:gaZakljucano,
-    STREAMER_TAG_PICKUP:gaPickup, STREAMER_TAG_3D_TEXT_LABEL:gaTekst, STREAMER_TAG_PICKUP:gaPickupU, STREAMER_TAG_3D_TEXT_LABEL:gaTekstU }
+    STREAMER_TAG_PICKUP:gaPickup, STREAMER_TAG_3D_TEXT_LABEL:gaTekst, STREAMER_TAG_PICKUP:gaPickupU, STREAMER_TAG_3D_TEXT_LABEL:gaTekstU, STREAMER_TAG_AREA:gaZona }
 
 static const Float:gGarazaUlaz[4] = { 612.2191, -123.9028, 997.9922, 270.0 };
 static const Float:gGarazaMjesta[GARAZA_VOZILA][4] = { { 615.3, -122.9, 997.6, 90.0 }, { 615.3, -125.6, 997.6, 90.0 } };
 
 static gGaraza[GARAZA_MAX][E_GARAZA];
-static gGarazaVozilo[MAX_PLAYERS];
 static gGarazaPonuda[MAX_PLAYERS], gApGaraza[MAX_PLAYERS];
 
 InitGaraze()
 {
+    InterakcijaZona(gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2], GARAZA_ULAZ_DOMET, -1, GARAZA_INT, SAVJET_IZLAZ);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS garages (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, price INTEGER NOT NULL, owner INTEGER NOT NULL DEFAULT 0, locked INTEGER NOT NULL DEFAULT 1)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT g.id, g.x, g.y, g.z, g.a, g.price, g.owner, IFNULL(a.name, ''), g.locked FROM garages g LEFT JOIN accounts a ON a.id = g.owner ORDER BY g.id LIMIT %d", GARAZA_MAX);
     for (new g = 0, n = DB_GetRowCount(res); g < n; g++, DB_SelectNextRow(res))
@@ -70,19 +71,20 @@ GarazaSmjesti(v, db)
 static GarazaStvori(g)
 {
     new natpis[96], ime[MAX_PLAYER_NAME + 1];
-    if (!gGaraza[g][gaVlasnik]) format(natpis, sizeof natpis, "Garaza na prodaju\n$%d\n[F]", gGaraza[g][gaCijena]);
+    if (!gGaraza[g][gaVlasnik]) format(natpis, sizeof natpis, "Garaza na prodaju\n$%d", gGaraza[g][gaCijena]);
     else
     {
         strcopy(ime, gGaraza[g][gaVlasnikIme]);
         for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
-        format(natpis, sizeof natpis, "Garaza\nVlasnik: %s\n[F]", ime);
+        format(natpis, sizeof natpis, "Garaza\nVlasnik: %s", ime);
     }
     gGaraza[g][gaIma] = true;
     gGaraza[g][gaPickup] = CreateDynamicPickup(gGaraza[g][gaVlasnik] ? GARAZA_PRODANA : GARAZA_PRODAJA, 1, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], 0, 0);
     gGaraza[g][gaTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
+    gGaraza[g][gaZona] = InterakcijaZona(gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ], GARAZA_PJESKE_DOMET, 0, 0, SAVJET_GARAZA);
     new svijet = GarazaSvijet(gGaraza[g][gaDb]);
     gGaraza[g][gaPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2], svijet, GARAZA_INT);
-    gGaraza[g][gaTekstU] = CreateDynamic3DTextLabel("Izlaz\n[F]", COLOR_ORG, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, GARAZA_INT);
+    gGaraza[g][gaTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, GARAZA_INT);
 }
 
 static GarazaMakni(g)
@@ -91,6 +93,7 @@ static GarazaMakni(g)
     DestroyDynamic3DTextLabel(gGaraza[g][gaTekst]);
     DestroyDynamicPickup(gGaraza[g][gaPickupU]);
     DestroyDynamic3DTextLabel(gGaraza[g][gaTekstU]);
+    DestroyDynamicArea(gGaraza[g][gaZona]);
     gGaraza[g][gaIma] = false;
 }
 
@@ -126,59 +129,37 @@ static GarazaNajbliza(playerid)
     return najbliza;
 }
 
-forward GarazaVoziloMeni(playerid, v, racun);
-public GarazaVoziloMeni(playerid, v, racun)
+forward GarazaVozac(playerid, v, racun, g, ulaz);
+public GarazaVozac(playerid, v, racun, g, ulaz)
 {
-    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || !GetVehicleModel(v) || GarazaIgraca(playerid) == -1) return;
-    if (GetPlayerVehicleID(playerid) != v) PutPlayerInVehicle(playerid, v, 0);
-    new list[96], len = 0;
-    DodajStupac(list, len, T(playerid, "Izadi iz vozila"));
-    DodajStupac(list, len, T(playerid, "Izvezi vozilo iz garaze"));
-    PrikaziDialog(playerid, DLG_GARAZA_VOZILO, DIALOG_STYLE_LIST, T(playerid, "Garaza"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
-}
-
-DLG:garaza_vozilo(playerid, response, listitem)
-{
-    new g = GarazaIgraca(playerid), v = gGarazaVozilo[playerid];
-    if (!response || g == -1 || !GetVehicleModel(v) || GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid)) return 1;
-    if (listitem == 0)
-    {
-        if (GetPlayerVehicleID(playerid) == v) RemovePlayerFromVehicle(playerid);
-        return 1;
-    }
-    GarazaIzveziIgraca(playerid, v, g);
-    return 1;
-}
-
-static GarazaIzveziIgraca(playerid, v, g)
-{
-    new bool:unutra = GetPlayerVehicleID(playerid) == v, Float:x, Float:y, Float:z;
-    GarazaIzvezi(v, g);
-    if (unutra) return;
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || !GetVehicleModel(v) || !gGaraza[g][gaIma]) return;
+    new Float:x, Float:y, Float:z;
     GetVehiclePos(v, x, y, z);
-    SetPlayerInterior(playerid, 0);
-    SetPlayerVirtualWorld(playerid, 0);
-    Streamer_UpdateEx(playerid, x, y, z, 0, 0);
-    SetPlayerPos(playerid, x, y, z + 1.0);
-    PutPlayerInVehicle(playerid, v, 0);
-    SetTimerEx("GarazaSjedni", GARAZA_SJEDNI_MS, false, "iiii", playerid, v, 0, 0);
+    if (GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, 6.0, x, y, z)) return;
+    if (ulaz) GarazaUvezi(playerid, g, v);
+    else GarazaIzvezi(v, g, playerid);
 }
 
-static GarazaIzvezi(v, g)
+static GarazaIzvezi(v, g, vozac = INVALID_PLAYER_ID)
 {
     new Float:a = gGaraza[g][gaA] + 180.0;
-    GarazaPrebaci(v, gGaraza[g][gaX] - GARAZA_IZLAZ_ODMAK * floatsin(a, degrees), gGaraza[g][gaY] + GARAZA_IZLAZ_ODMAK * floatcos(a, degrees), gGaraza[g][gaZ] + 0.5, a, 0);
+    GarazaPrebaci(v, gGaraza[g][gaX] - GARAZA_IZLAZ_ODMAK * floatsin(a, degrees), gGaraza[g][gaY] + GARAZA_IZLAZ_ODMAK * floatcos(a, degrees), gGaraza[g][gaZ] + 0.5, a, 0, vozac);
 }
 
-static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db)
+static GarazaPrebaci(v, Float:x, Float:y, Float:z, Float:a, db, vozac = INVALID_PLAYER_ID)
 {
     new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], n = 0, svijet = GarazaSvijet(db), interijer = db ? GARAZA_INT : 0, Float:hx, Float:hy, Float:hz;
     if (!db && Kolizija_Zraka(x, y, z + 3.0, x, y, z - 20.0, hx, hy, hz)) z = hz + 1.0;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
-        if (!IsPlayerInVehicle(i, v)) continue;
+        if (!IsPlayerInVehicle(i, v) || i == vozac) continue;
         putnici[n] = i;
         sjedala[n++] = GetPlayerVehicleSeat(i);
+    }
+    if (vozac != INVALID_PLAYER_ID)
+    {
+        putnici[n] = vozac;
+        sjedala[n++] = 0;
     }
     for (new i = 0; i < n; i++)
     {
@@ -265,7 +246,7 @@ static GarazaUvezi(playerid, g, v)
         a = gGarazaMjesta[m][3];
         VlasnikGaraza(v, db, x, y, z, a);
     }
-    GarazaPrebaci(v, x, y, z, a, db);
+    GarazaPrebaci(v, x, y, z, a, db, playerid);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo je parkirano u garazi. F za izlazak."));
 }
 
@@ -347,8 +328,7 @@ GarazaKey(playerid)
     {
         if (st == PLAYER_STATE_DRIVER)
         {
-            gGarazaVozilo[playerid] = GetPlayerVehicleID(playerid);
-            SetTimerEx("GarazaVoziloMeni", 700, false, "iii", playerid, gGarazaVozilo[playerid], gAccountId[playerid]);
+            SetTimerEx("GarazaVozac", GARAZA_VOZAC_MS, false, "iiiii", playerid, GetPlayerVehicleID(playerid), gAccountId[playerid], g, 0);
             return 1;
         }
         if (st != PLAYER_STATE_ONFOOT || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 0;
@@ -366,7 +346,7 @@ GarazaKey(playerid)
         if (!gGaraza[g][gaVlasnik]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Garaza je na prodaju. Izadite iz vozila da je kupite.")), 1;
         if (gGaraza[g][gaZakljucano] && !vlasnik) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Garaza je zakljucana.")), 1;
         if (!VlasnikDb(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U garazu se mogu parkirati samo vlastita vozila.")), 1;
-        GarazaUvezi(playerid, g, v);
+        SetTimerEx("GarazaVozac", GARAZA_VOZAC_MS, false, "iiiii", playerid, v, gAccountId[playerid], g, 1);
         return 1;
     }
     if (!gGaraza[g][gaVlasnik])
@@ -401,21 +381,7 @@ DLG:garaza_meni(playerid, response, listitem)
     new g = gGarazaPonuda[playerid] - 1;
     if (!response || g < 0 || !gGaraza[g][gaIma] || gGaraza[g][gaVlasnik] != gAccountId[playerid]) return 1;
     if (GarazaIgraca(playerid) != g || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET * 2.0, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 1;
-    if (listitem == 0)
-    {
-        new v = gGarazaVozilo[playerid], Float:x, Float:y, Float:z;
-        if (GetPlayerVehicleID(playerid)) v = GetPlayerVehicleID(playerid);
-        if (v && GetVehicleModel(v) && GetVehicleVirtualWorld(v) == GetPlayerVirtualWorld(playerid))
-        {
-            GetVehiclePos(v, x, y, z);
-            if (IsPlayerInRangeOfPoint(playerid, 6.0, x, y, z))
-            {
-                GarazaIzveziIgraca(playerid, v, g);
-                return 1;
-            }
-        }
-        GarazaVani(playerid, g);
-    }
+    if (listitem == 0) GarazaVani(playerid, g);
     else if (listitem == 1) GarazaPrebaciBravu(playerid, g);
     else if (listitem == 2)
     {

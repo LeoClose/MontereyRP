@@ -4,9 +4,10 @@ static STREAMER_TAG_3D_TEXT_LABEL:gOznakaKopija[OZNAKA_MAX][BROJ_JEZIKA], bool:g
 static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MAX_PLAYERS];
 
 #define INTERAKCIJA_ZONA    0x494E54
+enum { SAVJET_ALT, SAVJET_KUCA, SAVJET_GARAZA, SAVJET_IZLAZ, SAVJET_ULAZ }
 #define SAVJET_X            82.0
-#define SAVJET_DNO          312.0
-#define SAVJET_SIRINA       110.0
+#define SAVJET_DNO          319.0
+#define SAVJET_SIRINA       80.0
 
 static PlayerText:gSavjetTd[MAX_PLAYERS], bool:gSavjetIma[MAX_PLAYERS], gSavjetToken[MAX_PLAYERS];
 
@@ -21,7 +22,7 @@ Savjet(playerid, const tekst[], ms = 3000)
     new redova = 1;
     for (new p = strfind(tekst, "~n~"); p != -1; p = strfind(tekst, "~n~", false, p + 3)) redova++;
     if (gSavjetIma[playerid]) PlayerTextDrawDestroy(playerid, gSavjetTd[playerid]);
-    new PlayerText:td = TdTekst(playerid, SAVJET_X, SAVJET_DNO - float(redova) * 10.0, tekst, 0xFFFFFFFF, 0.22, 1.0, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    new PlayerText:td = TdTekst(playerid, SAVJET_X, SAVJET_DNO - float(redova) * 9.0, tekst, 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawUseBox(playerid, td, true);
     PlayerTextDrawBoxColour(playerid, td, 0x000000AA);
     PlayerTextDrawTextSize(playerid, td, 0.0, SAVJET_SIRINA);
@@ -122,14 +123,14 @@ OznakaTekst(STREAMER_TAG_3D_TEXT_LABEL:id, color, const text[])
     return UpdateDynamic3DTextLabelText(id, color, text);
 }
 
-STREAMER_TAG_AREA:InterakcijaZona(Float:x, Float:y, Float:z, Float:r, svijet = -1, interijer = -1)
+STREAMER_TAG_AREA:InterakcijaZona(Float:x, Float:y, Float:z, Float:r, svijet = -1, interijer = -1, tip = SAVJET_ALT)
 {
     new STREAMER_TAG_AREA:a = CreateDynamicSphere(x, y, z, r, svijet, interijer);
-    Streamer_SetIntData(STREAMER_TYPE_AREA, a, E_STREAMER_EXTRA_ID, INTERAKCIJA_ZONA);
+    Streamer_SetIntData(STREAMER_TYPE_AREA, a, E_STREAMER_EXTRA_ID, INTERAKCIJA_ZONA + tip);
     return a;
 }
 
-InterakcijaOznaka(STREAMER_TAG_3D_TEXT_LABEL:id, Float:r = 2.5)
+InterakcijaOznaka(STREAMER_TAG_3D_TEXT_LABEL:id, Float:r = 2.5, tip = SAVJET_ALT)
 {
     if (_:id <= 0 || _:id >= OZNAKA_MAX) return;
     new Float:x, Float:y, Float:z, svijet[1], interijer[1];
@@ -138,17 +139,26 @@ InterakcijaOznaka(STREAMER_TAG_3D_TEXT_LABEL:id, Float:r = 2.5)
     Streamer_GetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_Z, z);
     Streamer_GetArrayData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_WORLD_ID, svijet);
     Streamer_GetArrayData(STREAMER_TYPE_3D_TEXT_LABEL, id, E_STREAMER_INTERIOR_ID, interijer);
-    gOznakaZona[_:id] = InterakcijaZona(x, y, z - 1.0, r, svijet[0], interijer[0]);
+    gOznakaZona[_:id] = InterakcijaZona(x, y, z - 1.0, r, svijet[0], interijer[0], tip);
 }
 
 InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
 {
-    if (Streamer_GetIntData(STREAMER_TYPE_AREA, areaid, E_STREAMER_EXTRA_ID) != INTERAKCIJA_ZONA || !gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
+    new tip = Streamer_GetIntData(STREAMER_TYPE_AREA, areaid, E_STREAMER_EXTRA_ID) - INTERAKCIJA_ZONA;
+    if (tip < SAVJET_ALT || tip > SAVJET_ULAZ) return 0;
+    if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
     new sad = GetTickCount();
     if (areaid == gInterakcijaZadnja[playerid] && sad - gInterakcijaVrijeme[playerid] < 30000) return 1;
     gInterakcijaZadnja[playerid] = areaid;
     gInterakcijaVrijeme[playerid] = sad;
-    Savjet(playerid, T(playerid, "~y~ALT~w~ - interakcija"), 2000);
+    switch (tip)
+    {
+        case SAVJET_KUCA: Savjet(playerid, T(playerid, "~y~F~w~ - kuca"), 2000);
+        case SAVJET_GARAZA: Savjet(playerid, T(playerid, "~y~F~w~ - garaza"), 2000);
+        case SAVJET_IZLAZ: Savjet(playerid, T(playerid, "~y~F~w~ - izlaz"), 2000);
+        case SAVJET_ULAZ: Savjet(playerid, T(playerid, "~y~F~w~ - ulaz"), 2000);
+        default: Savjet(playerid, T(playerid, "~y~ALT~w~ - interakcija"), 2000);
+    }
     return 1;
 }
 

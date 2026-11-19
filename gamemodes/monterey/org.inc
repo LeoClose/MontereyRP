@@ -571,7 +571,7 @@ OrgUkloniVozilo(playerid)
 #define ORG_TAKSI           6
 #define ORG_MEHANICAR       7
 
-enum E_HQ { hOrg, hPickup, hPickupU, Text3D:hLabel, Text3D:hLabelU, hInt, Float:hX, Float:hY, Float:hZ, Float:hA, Float:hIx, Float:hIy, Float:hIz, hIkona }
+enum E_HQ { hOrg, hPickup, hPickupU, Text3D:hLabel, Text3D:hLabelU, STREAMER_TAG_AREA:hZona, STREAMER_TAG_AREA:hZonaU, hInt, Float:hX, Float:hY, Float:hZ, Float:hA, Float:hIx, Float:hIy, Float:hIz, hIkona }
 static gHq[MAX_HQ][E_HQ];
 static gHqOrg[MAX_PLAYERS];
 
@@ -602,12 +602,14 @@ static KreirajHq(i)
 {
     new ime[MAX_ORG_NAME], natpis[MAX_ORG_NAME + 16], svijet = HQ_SVIJET + gHq[i][hOrg];
     GetOrgIme(gHq[i][hOrg], ime);
-    format(natpis, sizeof natpis, "%s HQ\n[F]", ime);
+    format(natpis, sizeof natpis, "%s HQ", ime);
     gHq[i][hPickup] = CreatePickup(HQ_PICKUP, 1, gHq[i][hX], gHq[i][hY], gHq[i][hZ], 0);
     gHq[i][hIkona] = GetOrgTip(gHq[i][hOrg]) == ORG_LSPD ? MapaIkona(gHq[i][hX], gHq[i][hY], gHq[i][hZ], 30) : 0;
     gHq[i][hLabel] = Create3DTextLabel(natpis, COLOR_ORG, gHq[i][hX], gHq[i][hY], gHq[i][hZ] + 0.5, 15.0, 0);
     gHq[i][hPickupU] = CreatePickup(HQ_PICKUP, 1, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz], svijet);
-    gHq[i][hLabelU] = Create3DTextLabel("[F]", COLOR_ORG, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz] + 0.5, 15.0, svijet);
+    gHq[i][hLabelU] = Create3DTextLabel("Izlaz", COLOR_ORG, gHq[i][hIx], gHq[i][hIy], gHq[i][hIz] + 0.5, 15.0, svijet);
+    gHq[i][hZona] = InterakcijaZona(gHq[i][hX], gHq[i][hY], gHq[i][hZ], HQ_DOMET, 0, -1, SAVJET_ULAZ);
+    gHq[i][hZonaU] = InterakcijaZona(gHq[i][hIx], gHq[i][hIy], gHq[i][hIz], HQ_DOMET, svijet, -1, SAVJET_IZLAZ);
 }
 
 static UkloniHq(i)
@@ -617,6 +619,8 @@ static UkloniHq(i)
     DestroyPickup(gHq[i][hPickupU]);
     Delete3DTextLabel(gHq[i][hLabel]);
     Delete3DTextLabel(gHq[i][hLabelU]);
+    DestroyDynamicArea(gHq[i][hZona]);
+    DestroyDynamicArea(gHq[i][hZonaU]);
     gHq[i][hOrg] = 0;
 }
 

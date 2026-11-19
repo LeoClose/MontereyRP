@@ -94,9 +94,11 @@ static BankaStvori(s)
     gBanka[s][bkIma] = true;
     gBanka[s][bkPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], 0, 0);
     gBanka[s][bkIkona] = MapaIkona(gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], 52);
-    gBanka[s][bkTekst] = CreateDynamic3DTextLabel("Banka\n[F]", COLOR_ORG, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gBanka[s][bkTekst] = CreateDynamic3DTextLabel("Banka", COLOR_ORG, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gBanka[s][bkTekst], BANKA_DOMET, SAVJET_ULAZ);
     gBanka[s][bkPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz], svijet, gBanka[s][bkInt]);
-    gBanka[s][bkTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
+    gBanka[s][bkTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
+    InterakcijaOznaka(gBanka[s][bkTekstU], BANKA_DOMET, SAVJET_IZLAZ);
 }
 
 static BankaAktor(s)

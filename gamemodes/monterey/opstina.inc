@@ -147,9 +147,11 @@ static VrataStvori()
     gVrata[vrIma] = true;
     gVrata[vrPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrX], gVrata[vrY], gVrata[vrZ], 0, 0);
     gVrata[vrIkona] = MapaIkona(gVrata[vrX], gVrata[vrY], gVrata[vrZ], 53);
-    gVrata[vrTekst] = CreateDynamic3DTextLabel("Opstina\n[F]", COLOR_ORG, gVrata[vrX], gVrata[vrY], gVrata[vrZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gVrata[vrTekst] = CreateDynamic3DTextLabel("Opstina", COLOR_ORG, gVrata[vrX], gVrata[vrY], gVrata[vrZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gVrata[vrTekst], OPSTINA_VRATA_DOMET, SAVJET_ULAZ);
     gVrata[vrPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz], OPSTINA_SVIJET, gVrata[vrInt]);
-    gVrata[vrTekstU] = CreateDynamic3DTextLabel("[F]", COLOR_ORG, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, OPSTINA_SVIJET, gVrata[vrInt]);
+    gVrata[vrTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gVrata[vrIx], gVrata[vrIy], gVrata[vrIz] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, OPSTINA_SVIJET, gVrata[vrInt]);
+    InterakcijaOznaka(gVrata[vrTekstU], OPSTINA_VRATA_DOMET, SAVJET_IZLAZ);
 }
 
 static OpstinaUnutra(playerid)

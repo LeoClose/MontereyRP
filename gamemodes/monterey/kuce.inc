@@ -12,7 +12,7 @@
 #define KUCA_MAX_NAJAM      100000
 
 enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuVel, kuNajam, bool:kuZakljucano,
-    STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
+    STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst, STREAMER_TAG_AREA:kuZona }
 
 enum E_KUCA_INT { kiIme[16], kiVel, kiInt, Float:kiX, Float:kiY, Float:kiZ, kiCijena }
 static const gKucaInt[][E_KUCA_INT] = {
@@ -30,6 +30,7 @@ static gKucaPonuda[MAX_PLAYERS], gApKuca[MAX_PLAYERS], gKucaSpawn[MAX_PLAYERS], 
 
 InitKuce()
 {
+    for (new i = 0; i < sizeof gKucaInt; i++) InterakcijaZona(gKucaInt[i][kiX], gKucaInt[i][kiY], gKucaInt[i][kiZ], KUCA_DOMET, -1, gKucaInt[i][kiInt], SAVJET_IZLAZ);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, model INTEGER NOT NULL DEFAULT 0, price INTEGER NOT NULL, owner INTEGER NOT NULL DEFAULT 0, snap INTEGER NOT NULL DEFAULT 0, interior INTEGER NOT NULL DEFAULT -1, rent INTEGER NOT NULL DEFAULT 0, locked INTEGER NOT NULL DEFAULT 1, size INTEGER NOT NULL DEFAULT 1)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS house_renters (house INTEGER NOT NULL, account INTEGER NOT NULL, paid INTEGER NOT NULL, PRIMARY KEY (house, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_spawn (account INTEGER PRIMARY KEY, house INTEGER NOT NULL)"));
@@ -116,12 +117,12 @@ static KucaTlo(k)
 
 static KucaNatpis(k, natpis[], velicina = sizeof natpis)
 {
-    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, "Kuca na prodaju\n$%d\n[F]", gKuca[k][kuCijena]);
+    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, "Kuca na prodaju\n$%d", gKuca[k][kuCijena]);
     new ime[MAX_PLAYER_NAME + 1];
     strcopy(ime, gKuca[k][kuVlasnikIme]);
     for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
-    if (gKuca[k][kuNajam]) return format(natpis, velicina, "Kuca\nVlasnik: %s\nNajam: $%d/dan\n[F]", ime, gKuca[k][kuNajam]);
-    return format(natpis, velicina, "Kuca\nVlasnik: %s\n[F]", ime);
+    if (gKuca[k][kuNajam]) return format(natpis, velicina, "Kuca\nVlasnik: %s\nNajam: $%d/dan", ime, gKuca[k][kuNajam]);
+    return format(natpis, velicina, "Kuca\nVlasnik: %s", ime);
 }
 
 static KucaStvori(k)
@@ -132,12 +133,14 @@ static KucaStvori(k)
     if (gKuca[k][kuDb] > 0 && gKuca[k][kuDb] < KUCA_DB_MAPA) gKucaMapa[gKuca[k][kuDb]] = k + 1;
     gKuca[k][kuPickup] = CreateDynamicPickup(gKuca[k][kuVlasnik] ? KUCA_PRODANA : KUCA_PRODAJA, 1, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ], 0, 0);
     gKuca[k][kuTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
+    gKuca[k][kuZona] = InterakcijaZona(gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ], KUCA_DOMET, 0, 0, SAVJET_KUCA);
 }
 
 static KucaMakni(k)
 {
     DestroyDynamicPickup(gKuca[k][kuPickup]);
     DestroyDynamic3DTextLabel(gKuca[k][kuTekst]);
+    DestroyDynamicArea(gKuca[k][kuZona]);
     gKuca[k][kuIma] = false;
     if (gKuca[k][kuDb] > 0 && gKuca[k][kuDb] < KUCA_DB_MAPA) gKucaMapa[gKuca[k][kuDb]] = 0;
 }

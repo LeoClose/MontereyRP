@@ -105,7 +105,7 @@ InitKazino()
     }
     DB_FreeResultSet(ulazi);
     CreateDynamicPickup(HQ_PICKUP, 1, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2], KAZINO_SVIJET, KAZINO_MAPA_INT);
-    CreateDynamic3DTextLabel("[F]", COLOR_ORG, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, KAZINO_SVIJET, KAZINO_MAPA_INT);
+    InterakcijaOznaka(CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gKazinoUnutra[0], gKazinoUnutra[1], gKazinoUnutra[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, KAZINO_SVIJET, KAZINO_MAPA_INT), KAZINO_DOMET, SAVJET_IZLAZ);
     new k1[] = { 0, 25 }, k2[] = { 13, 39, 8 }, k3[] = { 9, 18, 45 };
     assert(BjVrijednost(k1, 2) == 21 && BjVrijednost(k2, 3) == 21 && BjVrijednost(k3, 3) == 23);
     new r1[] = { 0, 9, 10, 11, 12 }, r2[] = { 0, 1, 2, 3, 17 }, r3[] = { 10, 23, 4, 5, 7 }, r4[] = { 1, 14, 27, 4, 17 }, r5[] = { 9, 22, 2, 16, 30 }, r6[] = { 5, 18, 7, 20, 32 };
@@ -135,7 +135,8 @@ static KazinoUlazStvori(u)
     gKu[u][kuIma] = true;
     gKu[u][kuPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 0, 0);
     gKu[u][kuIkona] = MapaIkona(gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ], 25);
-    gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino\n[F]", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gKu[u][kuTekst] = CreateDynamic3DTextLabel("Diamond Casino", COLOR_ORG, gKu[u][kuX], gKu[u][kuY], gKu[u][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gKu[u][kuTekst], KAZINO_DOMET, SAVJET_ULAZ);
 }
 
 KazinoUlaz(playerid)
