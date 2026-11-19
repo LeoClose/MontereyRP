@@ -215,8 +215,6 @@ public OnGameModeInit()
     MapaIdlewood();
     MapaIdlewoodFlats();
     MapaDacoradiona();
-    MapaChinatownUkloni(INVALID_PLAYER_ID);
-    MapaChinatown();
     WilshirePdUkloni(INVALID_PLAYER_ID);
     WilshirePd();
     MapaBusTaxiUkloni(INVALID_PLAYER_ID);
@@ -256,6 +254,7 @@ public OnGameModeInit()
     InitRacunalo();
     LoginIpCheck();
     InitKafic();
+    InitUtrke();
     InitBilijar();
     InitKosarka();
     InitArkada();
@@ -351,6 +350,7 @@ public Sekunda()
     SatTick();
     AvionAtcTick();
     DrogaTick();
+    UtrkaTick();
     SpecTick();
     UpitTick();
 }
@@ -442,7 +442,6 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
-#include "monterey/mape/mapa_chinatown.inc" 
 #include "monterey/mape/mapa_pd.inc"
 #include "monterey/mape/wilshire_pd.inc"
 #include "monterey/mape/mapa_bus_taxi.inc"
@@ -462,6 +461,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/brod.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
+#include "monterey/utrke.inc"
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"

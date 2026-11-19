@@ -146,7 +146,7 @@ public OnPlayerText(playerid, text[])
     AfkAktivan(playerid);
     if (!gUlogiran[playerid]) return 0;
     RemoveBoje(text);
-    if (MobitelText(playerid, text) || UpitChat(playerid, text)) return 0;
+    if (UtrkaChat(playerid, text) || MobitelText(playerid, text) || UpitChat(playerid, text)) return 0;
     SendChat(playerid, text, CHAT_GOVOR);
     return 0;
 }

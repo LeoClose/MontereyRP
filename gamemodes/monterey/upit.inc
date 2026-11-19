@@ -1,7 +1,7 @@
 #define UPIT_DOMET          4.0
 #define UPIT_BOJA           0xF39C12FF
 
-enum { UPIT_NEMA, UPIT_DILER, UPIT_DOB, UPIT_PREPRODAVAC, UPIT_PIJACA, UPIT_TAKSI, UPIT_RANJEN }
+enum { UPIT_NEMA, UPIT_DILER, UPIT_DOB, UPIT_PREPRODAVAC, UPIT_PIJACA, UPIT_TAKSI, UPIT_RANJEN, UPIT_UTRKA }
 
 static gUpit[MAX_PLAYERS], gUpitMeta[MAX_PLAYERS], gUpitOpcija[MAX_PLAYERS], Float:gUpitPos[MAX_PLAYERS][3];
 
@@ -44,7 +44,7 @@ UpitMakni(playerid, tip)
 UpitChat(playerid, const text[])
 {
     new tip = gUpit[playerid];
-    if ((tip != UPIT_DILER && tip != UPIT_DOB && tip != UPIT_PREPRODAVAC) || !ProvjeriBroj(text) || strlen(text) > 5) return 0;
+    if ((tip != UPIT_DILER && tip != UPIT_DOB && tip != UPIT_PREPRODAVAC && tip != UPIT_UTRKA) || !ProvjeriBroj(text) || strlen(text) > 5) return 0;
     new meta = gUpitMeta[playerid], opcija = gUpitOpcija[playerid], n = strval(text);
     UpitPrekini(playerid);
     switch (tip)
@@ -52,6 +52,7 @@ UpitChat(playerid, const text[])
         case UPIT_DILER: DilerUpit(playerid, meta, n);
         case UPIT_DOB: DobUpit(playerid, meta, opcija, n);
         case UPIT_PREPRODAVAC: PreprodavacUpit(playerid, meta, n);
+        case UPIT_UTRKA: UtrkaUlog(playerid, meta, opcija, n);
     }
     return 1;
 }
@@ -77,7 +78,7 @@ UpitKey(playerid, KEY:newkeys, KEY:oldkeys)
 UpitTick()
 {
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
-        if (gUpit[i] && !IsPlayerInRangeOfPoint(i, UPIT_DOMET, gUpitPos[i][0], gUpitPos[i][1], gUpitPos[i][2])) UpitPrekini(i);
+        if (gUpit[i] && gUpit[i] != UPIT_UTRKA && !IsPlayerInRangeOfPoint(i, UPIT_DOMET, gUpitPos[i][0], gUpitPos[i][1], gUpitPos[i][2])) UpitPrekini(i);
 }
 
 UpitDisconnect(playerid)

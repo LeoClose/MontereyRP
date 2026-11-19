@@ -58,11 +58,17 @@
 #define MOBITEL_BANKA       30
 #define MOBITEL_HRANA       31
 #define MOBITEL_ODVOZ       32
+#define MOBITEL_UTRKE       33
+#define MOBITEL_UTRKE_POKRENI 34
+#define MOBITEL_UTRKE_OBRISI 35
+#define MOBITEL_UTRKE_STAT  36
+#define MOBITEL_UTRKA_POZIV 37
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
 static const gMobitelOpcije[][] = { "Nazovi", "Posalji poruku", "Preimenuj", "Obrisi" };
-static const gMobitelInternet[][] = { "Dostava hrane", "Lokacije", "Banka" };
+static const gMobitelInternet[][] = { "Dostava hrane", "Lokacije", "Banka", "Utrke" };
+static const gMobitelUtrke[][] = { "Pokreni utrku", "Napravi utrku", "Obrisi utrku", "Statistika" };
 static const gMobitelGrupe[][] = { "Trgovine", "Odjeca", "Frizeri", "Oruzarnice", "Saloni", "Ostalo" };
 static const gMobitelGrupeSql[][] = {
     "SELECT x, y, z, '' FROM shops ORDER BY id",
@@ -220,7 +226,7 @@ static PlayerText:MobitelTekst(playerid, Float:x, Float:y, const tekst[], boja, 
 
 static bool:MobitelUnosEkran(ekran)
 {
-    return ekran == MOBITEL_NAZOVI || ekran == MOBITEL_NOVI_BROJ || ekran == MOBITEL_NOVO_IME || ekran == MOBITEL_PREIMENUJ || ekran == MOBITEL_SMS_BROJ || ekran == MOBITEL_SMS_UNOS;
+    return ekran == MOBITEL_NAZOVI || ekran == MOBITEL_NOVI_BROJ || ekran == MOBITEL_NOVO_IME || ekran == MOBITEL_PREIMENUJ || ekran == MOBITEL_SMS_BROJ || ekran == MOBITEL_SMS_UNOS || ekran == MOBITEL_UTRKA_POZIV;
 }
 
 static bool:MobitelSkocni(ekran)
@@ -330,6 +336,8 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_GRUPE) return sizeof gMobitelGrupe;
     if (gMobitelEkran[playerid] == MOBITEL_LOKACIJE) return gMobitelLokBroj[playerid];
     if (gMobitelEkran[playerid] == MOBITEL_ODVOZ) return MehanicarOdvozBroj(playerid);
+    if (gMobitelEkran[playerid] == MOBITEL_UTRKE) return sizeof gMobitelUtrke + (UtrkaAktivna(playerid) ? 1 : 0);
+    if (gMobitelEkran[playerid] == MOBITEL_UTRKE_POKRENI || gMobitelEkran[playerid] == MOBITEL_UTRKE_OBRISI) return UtrkeBroj(playerid);
     return 0;
 }
 
@@ -394,6 +402,13 @@ static MobitelPrikazi(playerid)
         MobitelEkranPoruke(playerid, gMobitelPorukaIme[playerid][gMobitelCitam[playerid]], gMobitelPoruka[playerid], T(playerid, "Natrag"), T(playerid, "Odgovori"));
         return;
     }
+    if (ekran == MOBITEL_UTRKE_STAT)
+    {
+        new tekst[160];
+        UtrkeStatistika(playerid, tekst, sizeof tekst);
+        MobitelEkranPoruke(playerid, T(playerid, "Utrke"), tekst, T(playerid, "Natrag"), "_");
+        return;
+    }
     if (ekran == MOBITEL_BANKA)
     {
         new tekst[160];
@@ -418,6 +433,10 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Lokacije"));
     else if (ekran == MOBITEL_HRANA) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Dostava hrane"));
     else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelGrupe[gMobitelGrupa[playerid]]));
+    else if (ekran == MOBITEL_UTRKE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Utrke"));
+    else if (ekran == MOBITEL_UTRKE_POKRENI) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Pokreni utrku"));
+    else if (ekran == MOBITEL_UTRKE_OBRISI) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Obrisi utrku"));
+    else if (ekran == MOBITEL_UTRKA_POZIV) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Pozovi igraca (ID)"));
     else if (ekran == MOBITEL_ODVOZ)
     {
         new naslov[48];
@@ -453,6 +472,13 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_INTERNET) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelInternet[s]));
         else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelGrupe[s]));
         else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelLokIme[playerid][s]));
+        else if (ekran == MOBITEL_UTRKE) PlayerTextDrawSetString(playerid, td, s < sizeof gMobitelUtrke ? T(playerid, gMobitelUtrke[s]) : T(playerid, "Napusti utrku"));
+        else if (ekran == MOBITEL_UTRKE_POKRENI || ekran == MOBITEL_UTRKE_OBRISI)
+        {
+            new ime[32];
+            UtrkeIme(playerid, s, ime, sizeof ime);
+            PlayerTextDrawSetString(playerid, td, ime[0] ? ime : ("-"));
+        }
         else if (ekran == MOBITEL_ODVOZ)
         {
             new red[64];
@@ -946,12 +972,64 @@ static MobitelOdaberi(playerid)
     }
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
     else if (ekran == MOBITEL_ODVOZ) MehanicarOdvozOdaberi(playerid, odabir);
+    else if (ekran == MOBITEL_UTRKE)
+    {
+        if (odabir == sizeof gMobitelUtrke)
+        {
+            UtrkaNapusti(playerid);
+            SendClientMessage(playerid, COLOR_INFO, T(playerid, "Napustili ste utrku."));
+            MobitelZatvori(playerid);
+            return;
+        }
+        if (odabir == 1)
+        {
+            UtrkaNapravi(playerid);
+            return;
+        }
+        if (odabir == 3)
+        {
+            gMobitelEkran[playerid] = MOBITEL_UTRKE_STAT;
+            MobitelPrikazi(playerid);
+            return;
+        }
+        if (!UtrkeUcitaj(playerid))
+        {
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate napravljenih utrka."));
+            return;
+        }
+        gMobitelEkran[playerid] = odabir ? MOBITEL_UTRKE_OBRISI : MOBITEL_UTRKE_POKRENI;
+        gMobitelOdabir[playerid] = 0;
+    }
+    else if (ekran == MOBITEL_UTRKE_POKRENI)
+    {
+        if (UtrkaPokreni(playerid, odabir) == 1)
+        {
+            MobitelZatvori(playerid);
+            return;
+        }
+    }
+    else if (ekran == MOBITEL_UTRKE_OBRISI)
+    {
+        UtrkaObrisi(playerid, odabir);
+        if (!UtrkeBroj(playerid)) gMobitelEkran[playerid] = MOBITEL_UTRKE;
+        gMobitelOdabir[playerid] = 0;
+    }
+    else if (ekran == MOBITEL_UTRKA_POZIV && gMobitelUnos[playerid][0])
+    {
+        UtrkaPozovi(playerid, strval(gMobitelUnos[playerid]));
+        gMobitelUnos[playerid][0] = EOS;
+    }
     else if (ekran == MOBITEL_HRANA) HranaNarudzba(playerid);
     else if (ekran == MOBITEL_INTERNET)
     {
         if (odabir == 0)
         {
             gMobitelEkran[playerid] = MOBITEL_HRANA;
+            gMobitelOdabir[playerid] = 0;
+        }
+        else if (odabir == 3)
+        {
+            gMobitelEkran[playerid] = MOBITEL_UTRKE;
             gMobitelOdabir[playerid] = 0;
         }
         else if (odabir == 2)
@@ -1054,6 +1132,16 @@ static MobitelNatrag(playerid, ekran)
         {
             gMobitelEkran[playerid] = MOBITEL_GRUPE;
             gMobitelOdabir[playerid] = gMobitelGrupa[playerid];
+        }
+        case MOBITEL_UTRKE:
+        {
+            gMobitelEkran[playerid] = MOBITEL_INTERNET;
+            gMobitelOdabir[playerid] = 3;
+        }
+        case MOBITEL_UTRKE_POKRENI, MOBITEL_UTRKE_OBRISI, MOBITEL_UTRKE_STAT, MOBITEL_UTRKA_POZIV:
+        {
+            gMobitelOdabir[playerid] = ekran == MOBITEL_UTRKE_OBRISI ? 2 : ekran == MOBITEL_UTRKE_STAT ? 3 : 0;
+            gMobitelEkran[playerid] = MOBITEL_UTRKE;
         }
         case MOBITEL_JEZIK:
         {
@@ -1190,6 +1278,13 @@ MobitelUpdate(playerid)
         RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
         if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ClearAnimations(playerid);
     }
+}
+
+MobitelUtrkaPoziv(playerid)
+{
+    if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid);
+    MobitelUnos(playerid, MOBITEL_UTRKA_POZIV, "Pomoc: Upisite ID igraca u chat (T), pa pritisnite desnu strelicu (Odaberi). Vozaci se skupljaju na startu.");
+    MobitelPrikazi(playerid);
 }
 
 MobitelOdvoz(playerid)
