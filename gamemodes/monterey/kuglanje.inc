@@ -1,4 +1,5 @@
 #define KUGLANJE_MAX        16
+#define KUGLANJE_CIJENA     8
 #define KUGLANJE_BOJA       0x1E5AA8E6
 #define KUGLANJE_CUNJ       1509
 #define KUGLANJE_KUGLA      2114
@@ -341,7 +342,14 @@ KuglanjeKey(playerid)
     if (s == -1) return 0;
     new i = gKg[s][kgIgrac][0] == INVALID_PLAYER_ID ? 0 : gKg[s][kgIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
     if (i == -1 || gKg[s][kgFaza] != KG_CEKA) return IgraObavijest(playerid, T(playerid, "Kuglanje"), OBAVIJEST_GRESKA, T(playerid, "Na ovoj stazi se vec igra.")), 1;
-    if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return 1;
+    new poruka[96];
+    if (!DajNovac(playerid, -KUGLANJE_CIJENA))
+    {
+        format(poruka, sizeof poruka, T(playerid, "Igra kosta $%d."), KUGLANJE_CIJENA);
+        return IgraObavijest(playerid, T(playerid, "Kuglanje"), OBAVIJEST_GRESKA, poruka), 1;
+    }
+    if (!OkladaUdi(playerid, OK_KUGLANJE, s)) return DajNovac(playerid, KUGLANJE_CIJENA), 1;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), KUGLANJE_CIJENA);
     gKg[s][kgIgrac][i] = playerid;
     gKuglanjeIgrac[playerid] = s;
     if (gKg[s][kgIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "Pridruzili ste se kuglanju. Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;

@@ -2,6 +2,7 @@
 #define PIKADO_DOMET        1.5
 #define PIKADO_NAPUSTI      10.0
 #define PIKADO_POCETNO      301
+#define PIKADO_CIJENA       5
 #define PIKADO_STRELICA     3
 #define PIKADO_NISAN_MS     50
 #define PIKADO_POTEZ_MS     1500
@@ -16,7 +17,7 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        152
+#define PIKADO_PLOCA        192
 #define PIKADO_LOPTA        1.032
 #define PIKADO_SNOP_MODEL   18656
 #define PIKADO_SNOP_ZOOM    2.1
@@ -82,7 +83,7 @@ static PikadoKrugPloce(Float:rmm, boja)
 static PikadoSnop(Float:rmm, Float:kut, boja)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / (PIKADO_SNOP_DUZ * floatabs(floatsin(gPikadoRz, degrees))), Float:w = h * PIKADO_AX;
+    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ, Float:w = h * PIKADO_AX;
     new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
     TextDrawTextSize(td, w, h);
@@ -100,7 +101,7 @@ static PikadoSloj(Float:rmm, parna, neparna)
     {
         if (!(i % 2)) continue;
         new Float:s = float(i) * 18.0 - 9.0;
-        for (new d = neparna == PIKADO_ZELENA ? 2 : 1; d > 0; d--)
+        for (new d = 2; d > 0; d--)
         {
             PikadoSnop(rmm, s + PIKADO_SNOP_POLA, neparna);
             PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, neparna);
@@ -424,7 +425,14 @@ PikadoKey(playerid)
     if (s == -1) return 0;
     new i = gPikado[s][pkIgrac][0] == INVALID_PLAYER_ID ? 0 : gPikado[s][pkIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
     if (i == -1 || gPikado[s][pkFaza] != PF_CEKA) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Ovdje se vec igra.")), 1;
-    if (!OkladaUdi(playerid, OK_PIKADO, s)) return 1;
+    new poruka[96];
+    if (!DajNovac(playerid, -PIKADO_CIJENA))
+    {
+        format(poruka, sizeof poruka, T(playerid, "Igra kosta $%d."), PIKADO_CIJENA);
+        return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, poruka), 1;
+    }
+    if (!OkladaUdi(playerid, OK_PIKADO, s)) return DajNovac(playerid, PIKADO_CIJENA), 1;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), PIKADO_CIJENA);
     gPikado[s][pkIgrac][i] = playerid;
     gPikadoIgrac[playerid] = s;
     if (gPikado[s][pkIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Pikado"), PIKADO_ZELENA, T(playerid, "Pridruzili ste se pikadu (301). Ceka se protivnik ili RMB za igru sami (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;

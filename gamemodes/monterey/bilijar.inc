@@ -1,4 +1,5 @@
 #define BILIJAR_MAX         16
+#define BILIJAR_CIJENA      2
 #define BILIJAR_BOJA        0x16A085E6
 #define BILIJAR_KUGLI       16
 #define BILIJAR_STOL        2964
@@ -278,7 +279,14 @@ BilijarKey(playerid)
     if (s == -1) return 0;
     new i = gBilijar[s][bsIgrac][0] == INVALID_PLAYER_ID ? 0 : gBilijar[s][bsIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
     if (i == -1 || gBilijar[s][bsFaza] != BF_CEKA) return IgraObavijest(playerid, T(playerid, "Bilijar"), OBAVIJEST_GRESKA, T(playerid, "Za ovim stolom se vec igra.")), 1;
-    if (!OkladaUdi(playerid, OK_BILIJAR, s)) return 1;
+    new poruka[96];
+    if (!DajNovac(playerid, -BILIJAR_CIJENA))
+    {
+        format(poruka, sizeof poruka, T(playerid, "Igra kosta $%d."), BILIJAR_CIJENA);
+        return IgraObavijest(playerid, T(playerid, "Bilijar"), OBAVIJEST_GRESKA, poruka), 1;
+    }
+    if (!OkladaUdi(playerid, OK_BILIJAR, s)) return DajNovac(playerid, BILIJAR_CIJENA), 1;
+    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BILIJAR_CIJENA);
     gBilijar[s][bsIgrac][i] = playerid;
     gBilijarIgrac[playerid] = s;
     if (gBilijar[s][bsIgrac][1 - i] == INVALID_PLAYER_ID) return IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak, /oklada [iznos] za ulog)."), 0), 1;

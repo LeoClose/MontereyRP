@@ -2131,7 +2131,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
     { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." },
     { "Koristenje: /pikadorot [rx] [rz] [x] [y]", "Usage: /pikadorot [rx] [rz] [x] [y]", "Использование: /pikadorot [rx] [rz] [x] [y]", "Uso: /pikadorot [rx] [rz] [x] [y]", "Kullanim: /pikadorot [rx] [rz] [x] [y]" },
-    { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f" }
+    { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f" },
+    { "Igra kosta $%d.", "The game costs $%d.", "Игра стоит $%d.", "El juego cuesta $%d.", "Oyun $%d tutar." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
