@@ -241,6 +241,56 @@ CMD:pm(playerid, params[])
     return 1;
 }
 
+AdminPrebaci(playerid, interijer, svijet, Float:x, Float:y, Float:z)
+{
+    new v = GetPlayerVehicleID(playerid);
+    if (!v || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+    {
+        PrebaciIgraca(playerid, interijer, svijet, x, y, z);
+        return 1;
+    }
+    new putnici[MAX_PLAYERS], sjedala[MAX_PLAYERS], b = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) putnici[b] = i, sjedala[b++] = GetPlayerVehicleSeat(i);
+    SetVehiclePos(v, x, y, z);
+    LinkVehicleToInterior(v, interijer);
+    SetVehicleVirtualWorld(v, svijet);
+    for (new i = 0; i < b; i++)
+    {
+        SetPlayerInterior(putnici[i], interijer);
+        SetPlayerVirtualWorld(putnici[i], svijet);
+        Streamer_UpdateEx(putnici[i], x, y, z, svijet, interijer);
+        PutPlayerInVehicle(putnici[i], v, sjedala[i]);
+    }
+    return 1;
+}
+
+CMD:gethere(playerid, params[])
+{
+    new idx = 0, p1[32], Float:x, Float:y, Float:z;
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /gethere [id/ime]"));
+    new target = FindPlayer(p1);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    GetPlayerPos(playerid, x, y, z);
+    AdminPrebaci(target, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), x + 1.5, y, z + 0.5);
+    SendClientMessage(target, COLOR_ADMIN, T(target, "Admin vas je teleportirao do sebe."));
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirali ste igraca %s do sebe."), GetRPIme(target));
+}
+
+CMD:spawn(playerid, params[])
+{
+    new idx = 0, p1[32];
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /spawn [id/ime]"));
+    new target = FindPlayer(p1);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    if (IsPlayerInAnyVehicle(target)) RemovePlayerFromVehicle(target);
+    PrebaciIgraca(target, 0, 0, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
+    KucaSpawn(target);
+    SendClientMessage(target, COLOR_ADMIN, T(target, "Admin vas je vratio na spawn."));
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Igrac %s je vracen na spawn."), GetRPIme(target));
+}
+
 CMD:goto(playerid, params[])
 {
     new idx = 0, p1[32], Float:x, Float:y, Float:z;
@@ -249,7 +299,7 @@ CMD:goto(playerid, params[])
     new target = FindPlayer(p1);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
     GetPlayerPos(target, x, y, z);
-    PrebaciIgraca(playerid, GetPlayerInterior(target), GetPlayerVirtualWorld(target), x + 1.0, y, z + 0.5);
+    AdminPrebaci(playerid, GetPlayerInterior(target), GetPlayerVirtualWorld(target), x + 1.5, y, z + 0.5);
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste do igraca %s."), GetRPIme(target));
     return 1;
 }
@@ -260,8 +310,7 @@ CMD:goto(playerid, params[])
 CMD:pdint(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
-    if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stisni Enter da izadjes iz vozila."));
-    PrebaciIgraca(playerid, PD_MAPA_INT, 0, 1292.0, -1190.0, -28.8);
+    AdminPrebaci(playerid, PD_MAPA_INT, 0, 1292.0, -1190.0, -28.8);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste u PD enterijer."));
 }
 

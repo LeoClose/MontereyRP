@@ -2147,7 +2147,13 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Ukradeni nakit: %d kom. Preprodavac nudi $%d po komadu.", "Stolen jewelry: %d pcs. The fence offers $%d per piece.", "Краденые украшения: %d шт. Скупщик предлагает $%d за штуку.", "Joyas robadas: %d piezas. El perista ofrece $%d por pieza.", "Calinti mucevher: %d adet. Satici adet basi $%d teklif ediyor." },
     { "Prodati %s pijaci za $%d? Pijaca ce ga dalje prodavati za $%d.", "Sell the %s to the market for $%d? The market will resell it for $%d.", "Продать %s рынку за $%d? Рынок перепродаст его за $%d.", "Vender el %s al mercado por $%d? El mercado lo revendera por $%d.", "%s aracini pazara $%d karsiliginda satmak mi? Pazar onu $%d karsiliginda satacak." },
     { "Dobrodosli! Pogledajte nasu ponudu.", "Welcome! Take a look at our offer.", "Добро пожаловать! Посмотрите наше предложение.", "Bienvenido! Echa un vistazo a nuestra oferta.", "Hos geldiniz! Teklifimize bir goz atin." },
-    { "Nazalost, trenutno nemamo vozila u ponudi.", "Sorry, we have no vehicles on offer right now.", "К сожалению, сейчас у нас нет машин в продаже.", "Lo siento, ahora mismo no tenemos vehiculos a la venta.", "Maalesef su anda satista arac yok." }
+    { "Nazalost, trenutno nemamo vozila u ponudi.", "Sorry, we have no vehicles on offer right now.", "К сожалению, сейчас у нас нет машин в продаже.", "Lo siento, ahora mismo no tenemos vehiculos a la venta.", "Maalesef su anda satista arac yok." },
+    { "Igrac %s je vracen na spawn.", "Player %s was sent back to spawn.", "Игрок %s возвращен на спавн.", "El jugador %s fue devuelto al spawn.", "%s spawna geri gonderildi." },
+    { "Koristenje: /gethere [id/ime]", "Usage: /gethere [id/name]", "Использование: /gethere [id/имя]", "Uso: /gethere [id/nombre]", "Kullanim: /gethere [id/isim]" },
+    { "Koristenje: /spawn [id/ime]", "Usage: /spawn [id/name]", "Использование: /spawn [id/имя]", "Uso: /spawn [id/nombre]", "Kullanim: /spawn [id/isim]" },
+    { "Teleportirali ste igraca %s do sebe.", "You teleported %s to you.", "Вы телепортировали игрока %s к себе.", "Teletransportaste a %s hacia ti.", "%s oyuncusunu yaniniza isinladiniz." },
+    { "Admin vas je teleportirao do sebe.", "An admin teleported you to them.", "Администратор телепортировал вас к себе.", "Un admin te teletransporto hacia el.", "Bir admin sizi yanina isinladi." },
+    { "Admin vas je vratio na spawn.", "An admin sent you back to spawn.", "Администратор вернул вас на спавн.", "Un admin te devolvio al spawn.", "Bir admin sizi spawna geri gonderdi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

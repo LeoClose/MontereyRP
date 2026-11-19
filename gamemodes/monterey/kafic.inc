@@ -148,7 +148,7 @@ KaficUredi(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, F
 CMD:kaficint(playerid, params[])
 {
     if (!gAdmin[playerid]) return 0;
-    PrebaciIgraca(playerid, KAFIC_MAPA_INT, 0, KAFIC_MAPA_X, KAFIC_MAPA_Y, KAFIC_MAPA_Z);
+    AdminPrebaci(playerid, KAFIC_MAPA_INT, 0, KAFIC_MAPA_X, KAFIC_MAPA_Y, KAFIC_MAPA_Z);
     return 1;
 }
 

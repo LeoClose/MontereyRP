@@ -25,7 +25,7 @@ static const gOruzarnicaInt[][E_ORUZ_INT] = {
 CMD:oruzarnicaint(playerid, params[])
 {
     if (!gAdmin[playerid]) return 0;
-    PrebaciIgraca(playerid, ORUZ_MAPA_INT, 0, 1390.5, -17.7, 1001.0);
+    AdminPrebaci(playerid, ORUZ_MAPA_INT, 0, 1390.5, -17.7, 1001.0);
     return 1;
 }
 
