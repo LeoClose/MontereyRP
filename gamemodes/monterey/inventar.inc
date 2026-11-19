@@ -414,7 +414,7 @@ DLG:inventar_baci(playerid, response, const inputtext[])
 #define BACENO_NOVAC        -1
 #define BACENO_NOVAC_MODEL  1212
 
-enum E_BACENO { bnPredmet, bnKolicina, STREAMER_TAG_OBJECT:bnObjekt, Float:bnX, Float:bnY, Float:bnZ, bnSvijet }
+enum E_BACENO { bnPredmet, bnKolicina, STREAMER_TAG_OBJECT:bnObjekt, STREAMER_TAG_AREA:bnZona, Float:bnX, Float:bnY, Float:bnZ, bnSvijet }
 static gBaceno[BACENO_MAX][E_BACENO];
 static gBacenoSljedeci;
 
@@ -428,7 +428,7 @@ static BaciNaPod(playerid, item, amount)
     z = HodTlo(px, py, z) - 0.95;
     new b = gBacenoSljedeci;
     gBacenoSljedeci = (b + 1) % BACENO_MAX;
-    if (gBaceno[b][bnKolicina]) DestroyDynamicObject(gBaceno[b][bnObjekt]);
+    BacenoMakni(b);
     gBaceno[b][bnPredmet] = item;
     gBaceno[b][bnKolicina] = amount;
     gBaceno[b][bnX] = px;
@@ -436,6 +436,16 @@ static BaciNaPod(playerid, item, amount)
     gBaceno[b][bnZ] = z;
     gBaceno[b][bnSvijet] = GetPlayerVirtualWorld(playerid);
     gBaceno[b][bnObjekt] = CreateDynamicObject(gItems[item][ITEM_MODEL], px, py, z, gItems[item][ITEM_WEAPON] ? 90.0 : 0.0, 0.0, a, gBaceno[b][bnSvijet], GetPlayerInterior(playerid), -1, BACENO_STREAM, BACENO_STREAM);
+    gBaceno[b][bnZona] = InterakcijaZona(px, py, z + 0.95, BACENO_DOMET, gBaceno[b][bnSvijet], GetPlayerInterior(playerid), SAVJET_PODIGNI);
+}
+
+static BacenoMakni(b)
+{
+    if (!gBaceno[b][bnKolicina]) return;
+    DestroyDynamicObject(gBaceno[b][bnObjekt]);
+    if (gBaceno[b][bnZona]) DestroyDynamicArea(gBaceno[b][bnZona]);
+    gBaceno[b][bnZona] = STREAMER_TAG_AREA:0;
+    gBaceno[b][bnKolicina] = 0;
 }
 
 BaciNovac(Float:x, Float:y, Float:z, svijet, unutra, iznos)
@@ -443,7 +453,7 @@ BaciNovac(Float:x, Float:y, Float:z, svijet, unutra, iznos)
     if (iznos <= 0) return;
     new b = gBacenoSljedeci;
     gBacenoSljedeci = (b + 1) % BACENO_MAX;
-    if (gBaceno[b][bnKolicina]) DestroyDynamicObject(gBaceno[b][bnObjekt]);
+    BacenoMakni(b);
     z = HodTlo(x, y, z) - 0.95;
     gBaceno[b][bnPredmet] = BACENO_NOVAC;
     gBaceno[b][bnKolicina] = iznos;
@@ -452,6 +462,7 @@ BaciNovac(Float:x, Float:y, Float:z, svijet, unutra, iznos)
     gBaceno[b][bnZ] = z;
     gBaceno[b][bnSvijet] = svijet;
     gBaceno[b][bnObjekt] = CreateDynamicObject(BACENO_NOVAC_MODEL, x, y, z + 0.1, 0.0, 0.0, float(random(360)), svijet, unutra, -1, BACENO_STREAM, BACENO_STREAM);
+    gBaceno[b][bnZona] = InterakcijaZona(x, y, z + 0.95, BACENO_DOMET, svijet, unutra, SAVJET_PODIGNI);
 }
 
 bool:BacenoPodigni(playerid)
@@ -473,8 +484,8 @@ bool:BacenoPodigni(playerid)
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete primiti toliko novca."));
             return true;
         }
-        gBaceno[b][bnKolicina] = 0;
-        DestroyDynamicObject(gBaceno[b][bnObjekt]);
+        BacenoMakni(b);
+        SavjetMakni(playerid);
         ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Podigli ste $%d."), amount);
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s nesto podize s poda.", GetRPIme(playerid), "", 1);
@@ -485,8 +496,8 @@ bool:BacenoPodigni(playerid)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
         return true;
     }
-    gBaceno[b][bnKolicina] = 0;
-    DestroyDynamicObject(gBaceno[b][bnObjekt]);
+    BacenoMakni(b);
+    SavjetMakni(playerid);
     ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Podigli ste %d %s %s."), amount, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]));
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s nesto podize s poda.", GetRPIme(playerid), "", 1);

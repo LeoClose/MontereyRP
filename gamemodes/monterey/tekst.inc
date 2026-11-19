@@ -2288,7 +2288,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Podigli ste $%d.", "You picked up $%d.", "Вы подобрали $%d.", "Recogiste $%d.", "$%d aldiniz." },
     { "Kupac je platio $%d i ostavio napojnicu od $%d.", "The customer paid $%d and left a $%d tip.", "Покупатель заплатил $%d и оставил $%d чаевых.", "El cliente pago $%d y dejo $%d de propina.", "Musteri $%d odedi ve $%d bahsis birakti." },
     { "U blizini nema nikoga kome treba pomoc.", "There is nobody nearby who needs help.", "Рядом нет никого, кому нужна помощь.", "No hay nadie cerca que necesite ayuda.", "Yakinda yardima ihtiyaci olan kimse yok." },
-    { "* %s pruza prvu pomoc ranjenom prolazniku.", "* %s gives first aid to an injured passerby.", "* %s оказывает первую помощь раненому прохожему.", "* %s da primeros auxilios a un transeunte herido.", "* %s yarali bir yoldasa ilk yardim yapiyor." }
+    { "* %s pruza prvu pomoc ranjenom prolazniku.", "* %s gives first aid to an injured passerby.", "* %s оказывает первую помощь раненому прохожему.", "* %s da primeros auxilios a un transeunte herido.", "* %s yarali bir yoldasa ilk yardim yapiyor." },
+    { "~y~ALT~w~ - podigni", "~y~ALT~w~ - pick up", "~y~ALT~w~ - podnyat", "~y~ALT~w~ - recoger", "~y~ALT~w~ - al" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

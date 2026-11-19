@@ -638,6 +638,7 @@ public OnPlayerEnterDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
 
 public OnPlayerLeaveDynamicArea(playerid, STREAMER_TAG_AREA:areaid)
 {
+    if (InterakcijaIzasao(playerid, areaid)) return 1;
     new k = gPsU[playerid] - 1;
     if (k < 0 || areaid != gPsZona[k] || gTunU[playerid] != -1) return 1;
     PsVrati(playerid, GetPlayerVehicleID(playerid));

@@ -28,8 +28,9 @@
 #define KUPAC_CEKA_S         60
 #define KUPAC_SPAWN_S        2
 #define KUPAC_RANJEN_HP      25.0
-#define KUPAC_NOVAC_MIN      5
-#define KUPAC_NOVAC_MAX      40
+#define KUPAC_NOVAC_MIN      1
+#define KUPAC_NOVAC_MAX      8
+#define KUPAC_NOVAC_PAUZA_S  900
 #define STAND_NAPOJNICA_POSTO 30
 #define STAND_RADNIK_GRESKA  20
 #define KUPAC_BORBA_S        20
@@ -65,7 +66,7 @@ static gStand[STAND_MAX][E_STAND];
 static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
 enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI, KU_BORBA, KU_BJEZI, KU_RANJEN, KU_IZBJEGAVA }
-enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ, Float:kuPx, Float:kuPy, kuMirno, Float:kuTx, Float:kuTy, Float:kuTz, kuNapadac, kuNapadacRacun, kuStanjeOd }
+enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ, Float:kuPx, Float:kuPy, kuMirno, kuNovacDo, Float:kuTx, Float:kuTy, Float:kuTz, kuNapadac, kuNapadacRacun, kuStanjeOd }
 static gKupac[KUPAC_MAX][E_KUPAC], gNpcKupac[MAX_PLAYERS], gKupacRuta[STAZA_RUTA], gKupacZadnji;
 
 enum { SO_IME, SO_KASA, SO_ROBA, SO_RADNIK, SO_RADI }
@@ -712,6 +713,7 @@ static KupacNovi(cilj = -1)
     gKupac[k][kuNpc] = npc;
     gKupac[k][kuCilj] = s;
     gKupac[k][kuPosjeta] = 0;
+    gKupac[k][kuNovacDo] = 0;
     gKupac[k][kuStanje] = KU_SPAWN;
     gKupac[k][kuOd] = gettime();
     gKupac[k][kuPut] = -1;
@@ -812,7 +814,11 @@ static KupacRanjen(k)
     gKupac[k][kuStanje] = KU_RANJEN;
     gKupac[k][kuStanjeOd] = gettime();
     NPC_GetPos(npc, x, y, z);
-    BaciNovac(x + float(random(11) - 5) / 10.0, y + float(random(11) - 5) / 10.0, z, 0, 0, KUPAC_NOVAC_MIN + random(KUPAC_NOVAC_MAX - KUPAC_NOVAC_MIN + 1));
+    if (gettime() >= gKupac[k][kuNovacDo])
+    {
+        gKupac[k][kuNovacDo] = gettime() + KUPAC_NOVAC_PAUZA_S;
+        BaciNovac(x + float(random(11) - 5) / 10.0, y + float(random(11) - 5) / 10.0, z, 0, 0, KUPAC_NOVAC_MIN + random(KUPAC_NOVAC_MAX - KUPAC_NOVAC_MIN + 1));
+    }
     HitnaZaNpc(npc, x, y, z);
 }
 
