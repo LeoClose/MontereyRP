@@ -1,12 +1,15 @@
 #define OBAVIJEST_MS        4500
 #define OBAVIJEST_SPOJI_MS  1200
 #define OBAVIJEST_GRESKA    0xC0392BE6
+#define OBAVIJEST_ZVUK      1085
 
-static PlayerText:gObTd[MAX_PLAYERS][2], bool:gObIma[MAX_PLAYERS], gObToken[MAX_PLAYERS], gObOd[MAX_PLAYERS], gObTekst[MAX_PLAYERS][256];
+static PlayerText:gObTd[MAX_PLAYERS][2], bool:gObVidi[MAX_PLAYERS], gObZadnji[MAX_PLAYERS][256], bool:gObIma[MAX_PLAYERS], gObToken[MAX_PLAYERS], gObOd[MAX_PLAYERS], gObTekst[MAX_PLAYERS][256];
 
 IgraObavijestConnect(playerid)
 {
     gObIma[playerid] = false;
+    gObVidi[playerid] = false;
+    gObZadnji[playerid][0] = EOS;
     gObToken[playerid]++;
     gObOd[playerid] = 0;
 }
@@ -16,6 +19,10 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
     new i = strfind(tekst, "] ");
     if (tekst[0] == '[' && i != -1) i += 2;
     else i = 0;
+    if (gObVidi[playerid] && !strcmp(tekst[i], gObZadnji[playerid])) return 1;
+    gObZadnji[playerid][0] = EOS;
+    strcat(gObZadnji[playerid], tekst[i]);
+    PlayerPlaySound(playerid, OBAVIJEST_ZVUK, 0.0, 0.0, 0.0);
     if (gObOd[playerid] && GetTickCount() - gObOd[playerid] < OBAVIJEST_SPOJI_MS && strlen(gObTekst[playerid]) + strlen(tekst[i]) < sizeof gObTekst[] - 4) strcat(gObTekst[playerid], "~n~");
     else gObTekst[playerid][0] = EOS;
     strcat(gObTekst[playerid], tekst[i]);
@@ -74,6 +81,7 @@ static ObPrikazi(playerid, const naslov[], boja, const tekst[])
     PlayerTextDrawSetString(playerid, gObTd[playerid][1], tekst);
     PlayerTextDrawShow(playerid, gObTd[playerid][0]);
     PlayerTextDrawShow(playerid, gObTd[playerid][1]);
+    gObVidi[playerid] = true;
     gObToken[playerid]++;
     return 1;
 }
@@ -83,6 +91,8 @@ public IgraObavijestSkrij(playerid, token)
 {
     if (token != gObToken[playerid] || !gObIma[playerid]) return;
     gObOd[playerid] = 0;
+    gObVidi[playerid] = false;
+    gObZadnji[playerid][0] = EOS;
     PlayerTextDrawHide(playerid, gObTd[playerid][0]);
     PlayerTextDrawHide(playerid, gObTd[playerid][1]);
 }

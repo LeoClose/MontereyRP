@@ -55,7 +55,7 @@ enum { KT_BOK, KT_LISTIC, KT_TAB, KT_KAT = KT_TAB + 3, KT_LIGA = KT_KAT + 5, KT_
 enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA }
 enum { SV_O, SV_H, SV_L, SV_C }
 enum { PTD_START, PTD_TRAKA, PTD_PROZOR = PTD_TRAKA + 6, PTD_NASLOV = PTD_PROZOR + 3, PTD_PROZOR_MIN, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 17, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 4, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 6, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_KLAD = PTD_LSINFO + 1, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_KARTICA = PTD_JEZIK_MENI + BROJ_JEZIKA, PTD_MREZA = PTD_KARTICA + 5, PTD_IMENOVANI = PTD_MREZA + 3 }
+    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 4, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 6, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_LSEMOJI, PTD_KLAD = PTD_LSEMOJI + OBJAVA_REDOVA, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_KARTICA = PTD_JEZIK_MENI + BROJ_JEZIKA, PTD_MREZA = PTD_KARTICA + 5, PTD_IMENOVANI = PTD_MREZA + 3 }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
@@ -423,10 +423,26 @@ static LsPrije(playerid, vrijeme, out[], len)
     else format(out, len, T(playerid, "prije %d d"), m / 1440);
 }
 
+static const gLsEmoji[][2][] = { { ":)", "LD_CHAT:goodcha" }, { ":(", "LD_CHAT:badchat" }, { "(y)", "LD_CHAT:thumbup" }, { "(n)", "LD_CHAT:thumbdn" } };
+
 static LsRed(playerid, r, acc, podatak, const tekst[])
 {
     gPcObjava[playerid][r] = podatak;
-    PcPostavi(playerid, PTD_OBJAVA + r, tekst);
+    new prikaz[256], prvi = -1, prviPoz = cellmax;
+    strcat(prikaz, tekst);
+    for (new e = 0; e < sizeof gLsEmoji; e++)
+    {
+        new p = strfind(prikaz, gLsEmoji[e][0]);
+        if (p != -1 && p < prviPoz) prvi = e, prviPoz = p;
+        while ((p = strfind(prikaz, gLsEmoji[e][0])) != -1) strdel(prikaz, p, p + strlen(gLsEmoji[e][0]));
+    }
+    PcPostavi(playerid, PTD_OBJAVA + r, prikaz);
+    if (prvi == -1) PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSEMOJI + r]);
+    else
+    {
+        PlayerTextDrawSetString(playerid, gPc[playerid][PTD_LSEMOJI + r], gLsEmoji[prvi][1]);
+        PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSEMOJI + r]);
+    }
     PlayerTextDrawSetPreviewModel(playerid, gPc[playerid][PTD_LSAVATAR + r], LsSkin(acc));
     PlayerTextDrawShow(playerid, gPc[playerid][PTD_LSAVATAR + r]);
     gLsAvatara[playerid] = r + 1;
@@ -882,6 +898,7 @@ static PcLifeStalker(playerid)
         gPcObjava[playerid][r] = 0;
         PlayerTextDrawHide(playerid, gPc[playerid][PTD_OBJAVA + r]);
         PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSAVATAR + r]);
+        PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSEMOJI + r]);
     }
     PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSPROFIL]);
     PlayerTextDrawHide(playerid, gPc[playerid][PTD_LSINFO]);
@@ -1604,7 +1621,8 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_LSPOKRIV + 7] = PcKutija(playerid, 140.0, 36.0, 52.0, 170.0, 0xFFFFFFFF);
     gPc[playerid][PTD_LSINFO] = PcTekst(playerid, LS_PR_X + 32.0, 46.0, "_", 0x202020FF, 0.18, 0.95, TEXT_DRAW_FONT_1);
     KladStvori(playerid);
-    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_OBJAVA + r] = PcRed(playerid, LS_SLOT_X + 10.0, LS_RED_Y + float(r) * LS_RED_H, 374.0 - LS_SLOT_X - 10.0);
+    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_OBJAVA + r] = PcRed(playerid, LS_SLOT_X + 10.0, LS_RED_Y + float(r) * LS_RED_H, 360.0 - LS_SLOT_X - 10.0);
+    for (new r = 0; r < OBJAVA_REDOVA; r++) gPc[playerid][PTD_LSEMOJI + r] = PcSlika(playerid, 362.0, LS_RED_Y + float(r) * LS_RED_H + 1.0, 10.0, 10.0, 0xFFFFFFFF, "LD_CHAT:goodcha");
     for (new k = 0; k < sizeof gLsTab; k++) gPc[playerid][PTD_LSTAB + k] = PcGumb(playerid, 110.0, 46.0 + float(k) * 22.0, 56.0, 0xEEEEEEFF, "_", 0x202020FF);
     gPc[playerid][PTD_KOL] = PcGumb(playerid, 168.0, 174.0, 14.0, 0x0078D4FF, "~<~");
     gPc[playerid][PTD_KOL + 1] = PcGumb(playerid, 230.0, 174.0, 100.0, 0xDDDDDDFF, "_", 0x202020FF);
