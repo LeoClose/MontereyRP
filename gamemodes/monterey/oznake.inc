@@ -114,7 +114,7 @@ InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
     if (areaid == gInterakcijaZadnja[playerid] && sad - gInterakcijaVrijeme[playerid] < 30000) return 1;
     gInterakcijaZadnja[playerid] = areaid;
     gInterakcijaVrijeme[playerid] = sad;
-    IgraObavijest(playerid, T(playerid, "Interakcija"), 0xF39C12FF, T(playerid, "Pritisnite ALT za interakciju."), 3000);
+    IgraObavijest(playerid, T(playerid, "Interakcija"), 0xF39C12FF, T(playerid, "Pritisnite ALT za interakciju."), 1500);
     return 1;
 }
 

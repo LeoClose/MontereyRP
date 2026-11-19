@@ -80,7 +80,7 @@ static PijacaAktor(Float:x, Float:y, Float:z, Float:a)
     gPijacaAktorPos[2] = z;
     gPijacaAktor = CreateActor(PIJACA_SKIN, x, y, z, a);
     SetActorVirtualWorld(gPijacaAktor, 0);
-    gPijacaAktorTekst = CreateDynamic3DTextLabel("Auto pijaca\n[ALT]", COLOR_ORG, x, y, z + 1.2, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gPijacaAktorTekst = CreateDynamic3DTextLabel("Auto pijaca", COLOR_ORG, x, y, z + 1.2, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     InterakcijaOznaka(gPijacaAktorTekst, 3.0);
 }
 
@@ -144,7 +144,7 @@ static PijacaNaMjesto(m, v)
 {
     new natpis[96];
     gPijacaMj[m][pmVozilo] = v;
-    format(natpis, sizeof natpis, "Auto pijaca\n%s\n$%d\n[ALT] kupi", gImenaVozila[GetVehicleModel(v) - 400], PijacaCijena(v));
+    format(natpis, sizeof natpis, "Auto pijaca\n%s\n$%d", gImenaVozila[GetVehicleModel(v) - 400], PijacaCijena(v));
     gPijacaMj[m][pmTekst] = CreateDynamic3DTextLabel(natpis, COLOR_ORG, 0.0, 0.0, 1.2, 15.0, INVALID_PLAYER_ID, v, 0, 0, 0);
     VoziloZakljucaj(v, true);
 }

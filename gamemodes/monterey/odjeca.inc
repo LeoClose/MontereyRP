@@ -145,7 +145,7 @@ static OdjecaAktor(s)
     gOdj[s][odImaAktor] = true;
     gOdj[s][odAktor] = CreateActor(gOdjecaSkin[t], gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz], gOdj[s][odAa]);
     SetActorVirtualWorld(gOdj[s][odAktor], svijet);
-    gOdj[s][odTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
+    gOdj[s][odTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
     InterakcijaOznaka(gOdj[s][odTekstA]);
 }
 

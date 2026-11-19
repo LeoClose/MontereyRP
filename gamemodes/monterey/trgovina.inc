@@ -61,7 +61,7 @@ static TrgovinaAktor(s)
     gTrg[s][tgImaAktor] = true;
     gTrg[s][tgAktor] = CreateActor(TRGOVINA_SKIN, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz], gTrg[s][tgAa]);
     SetActorVirtualWorld(gTrg[s][tgAktor], svijet);
-    gTrg[s][tgTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
+    gTrg[s][tgTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, TRGOVINA_INT);
     InterakcijaOznaka(gTrg[s][tgTekstA]);
 }
 

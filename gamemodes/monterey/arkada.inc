@@ -74,7 +74,7 @@ InitArkada()
 static ArkStvori(m)
 {
     new tekst[64];
-    format(tekst, sizeof tekst, "{F39C12}%s\n{FFFFFF}[ALT] $%d", gArkIme[gArk[m][amIgra]], ARK_CIJENA);
+    format(tekst, sizeof tekst, "{F39C12}%s\n{FFFFFF}$%d", gArkIme[gArk[m][amIgra]], ARK_CIJENA);
     gArk[m][amIma] = true;
     gArk[m][amIgrac] = INVALID_PLAYER_ID;
     gArk[m][amObj] = CreateDynamicObject(gArkModel[gArk[m][amIgra]], gArk[m][amX], gArk[m][amY], gArk[m][amZ], 0.0, 0.0, gArk[m][amA], gArk[m][amSvijet], gArk[m][amInt]);

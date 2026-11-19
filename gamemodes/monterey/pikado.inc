@@ -210,7 +210,7 @@ PikadoConnect(playerid)
 static PikadoOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Pikado\n{FFFFFF}[ALT] $%d", PIKADO_CIJENA);
+    format(tekst, sizeof tekst, "Pikado\n{FFFFFF}$%d", PIKADO_CIJENA);
     return tekst;
 }
 

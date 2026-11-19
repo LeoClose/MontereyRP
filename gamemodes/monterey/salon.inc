@@ -83,7 +83,7 @@ static SalonStvori(s)
     gSalon[s][slIma] = true;
     gSalon[s][slAktor] = CreateActor(SALON_SKIN, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ], gSalon[s][slA]);
     SetActorInvulnerable(gSalon[s][slAktor], true);
-    gSalon[s][slTekst] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    gSalon[s][slTekst] = CreateDynamic3DTextLabel("Salon automobila", COLOR_ORG, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     InterakcijaOznaka(gSalon[s][slTekst], 3.0);
     SalonPonuda(s);
 }

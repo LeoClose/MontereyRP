@@ -1716,6 +1716,20 @@ PcDisconnect(playerid)
     gPcBroj[playerid] = 0;
 }
 
+RacunaloKey(playerid)
+{
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || gPcOtvoren[playerid]) return 0;
+    if (!PcBlizu(playerid))
+    {
+        if (!KaficRacunalo(playerid, false)) return 0;
+        ObavijestGreska(playerid, T(playerid, "Platite vrijeme na blagajni internet kafica."));
+        return 1;
+    }
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali racunalo.", GetRPIme(playerid), "", 1);
+    PcOtvori(playerid);
+    return 1;
+}
+
 CMD:computer(playerid, params[])
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;

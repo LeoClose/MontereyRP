@@ -29,7 +29,7 @@ InitKamp()
 static KampStvori(s)
 {
     gKamp[s][kpIma] = true;
-    gKamp[s][kpTekst] = CreateDynamic3DTextLabel("Kamp prikolice\n[ALT]", COLOR_ORG, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ] + 0.8, 15.0);
+    gKamp[s][kpTekst] = CreateDynamic3DTextLabel("Kamp prikolice", COLOR_ORG, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ] + 0.8, 15.0);
     InterakcijaOznaka(gKamp[s][kpTekst]);
     gKamp[s][kpIkona] = MapaIkona(gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ], 51);
 }

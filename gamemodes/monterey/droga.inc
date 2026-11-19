@@ -251,7 +251,7 @@ static DobStvori(p)
     gDob[p][dbAktor] = CreateActor(DOB_SKIN, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ], gDob[p][dbA]);
     SetActorVirtualWorld(gDob[p][dbAktor], gDob[p][dbSvijet]);
     SetActorInvulnerable(gDob[p][dbAktor], true);
-    gDob[p][dbTekst] = CreateDynamic3DTextLabel("[ALT]", 0xAAAAAAFF, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ] + 1.2, 4.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gDob[p][dbSvijet], gDob[p][dbInt]);
+    gDob[p][dbTekst] = CreateDynamic3DTextLabel(" ", 0xAAAAAAFF, gDob[p][dbX], gDob[p][dbY], gDob[p][dbZ] + 1.2, 4.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gDob[p][dbSvijet], gDob[p][dbInt]);
     InterakcijaOznaka(gDob[p][dbTekst]);
 }
 

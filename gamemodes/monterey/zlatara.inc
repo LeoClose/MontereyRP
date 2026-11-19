@@ -118,7 +118,7 @@ static ZlataraAktor(s)
     gZl[s][zlAktor] = CreateActor(ZLATARA_SKIN, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz], gZl[s][zlAa]);
     SetActorVirtualWorld(gZl[s][zlAktor], svijet);
     SetActorInvulnerable(gZl[s][zlAktor], true);
-    gZl[s][zlTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
+    gZl[s][zlTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, ZLATARA_INT);
     InterakcijaOznaka(gZl[s][zlTekstA]);
 }
 

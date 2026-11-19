@@ -106,7 +106,7 @@ static BankaAktor(s)
     gBanka[s][bkAktor] = CreateActor(BANKA_SKIN, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz], gBanka[s][bkAa]);
     SetActorVirtualWorld(gBanka[s][bkAktor], svijet);
     SetActorInvulnerable(gBanka[s][bkAktor], true);
-    gBanka[s][bkTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
+    gBanka[s][bkTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
     InterakcijaOznaka(gBanka[s][bkTekstA]);
 }
 

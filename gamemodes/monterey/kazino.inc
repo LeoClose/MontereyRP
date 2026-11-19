@@ -202,7 +202,7 @@ static KazinoStvori(k)
         SetActorVirtualWorld(gKaz[k][kzAktor], gKaz[k][kzSvijet]);
         SetActorInvulnerable(gKaz[k][kzAktor], true);
     }
-    format(tekst, sizeof tekst, "%s\n[ALT]", gKzIme[gKaz[k][kzTip]]);
+    format(tekst, sizeof tekst, "%s", gKzIme[gKaz[k][kzTip]]);
     gKaz[k][kzTekst] = CreateDynamic3DTextLabel(tekst, COLOR_ORG, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ] + (KazinoMasina(gKaz[k][kzTip]) ? 0.5 : 1.2), 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gKaz[k][kzSvijet], gKaz[k][kzInt]);
     InterakcijaOznaka(gKaz[k][kzTekst]);
     if (gKaz[k][kzTip] == KZ_HOLDEM) PokerStvori(k, gKaz[k][kzX], gKaz[k][kzY], gKaz[k][kzZ], gKaz[k][kzA], gKaz[k][kzInt], gKaz[k][kzSvijet], gKaz[k][kzAktor]);

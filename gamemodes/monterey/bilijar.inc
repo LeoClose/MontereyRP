@@ -78,7 +78,7 @@ InitBilijar()
 static BilijarOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Bilijar\n{FFFFFF}[ALT] $%d", BILIJAR_CIJENA);
+    format(tekst, sizeof tekst, "Bilijar\n{FFFFFF}$%d", BILIJAR_CIJENA);
     return tekst;
 }
 

@@ -179,7 +179,7 @@ static KuglanjeKuglaNazad(s)
 static KuglanjeOznaka()
 {
     new tekst[48];
-    format(tekst, sizeof tekst, "Kuglanje\n{FFFFFF}[ALT] $%d", KUGLANJE_CIJENA);
+    format(tekst, sizeof tekst, "Kuglanje\n{FFFFFF}$%d", KUGLANJE_CIJENA);
     return tekst;
 }
 

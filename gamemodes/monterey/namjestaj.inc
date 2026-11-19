@@ -175,7 +175,7 @@ static NamjestajAktor(s)
     gNam[s][nmImaAktor] = true;
     gNam[s][nmAktor] = CreateActor(NAMJESTAJ_SKIN, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz], gNam[s][nmAa]);
     SetActorVirtualWorld(gNam[s][nmAktor], svijet);
-    gNam[s][nmTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[gNam[s][nmInt]][niInt]);
+    gNam[s][nmTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gNam[s][nmAx], gNam[s][nmAy], gNam[s][nmAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gNamjestajInt[gNam[s][nmInt]][niInt]);
     InterakcijaOznaka(gNam[s][nmTekstA]);
 }
 

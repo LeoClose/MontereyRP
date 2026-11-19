@@ -26,7 +26,7 @@ enum E_OPINT { oiIme[32], oiInt, Float:oiX, Float:oiY, Float:oiZ, Float:oiA }
 static const gOpstinaInt[][E_OPINT] = {
     { "City Planning", 3, 384.808, 173.804, 1008.382, 90.0 }
 };
-static const gSalterNatpis[SALTER_BROJ][] = { "Opstina\nKazne i promjena imena\n[ALT]", "Opstina\nProdaja vozila\n[ALT]" };
+static const gSalterNatpis[SALTER_BROJ][] = { "Opstina\nKazne i promjena imena", "Opstina\nProdaja vozila" };
 
 static bool:ImeIspravno(const ime[])
 {

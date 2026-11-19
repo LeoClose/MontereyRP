@@ -283,10 +283,11 @@ SnagaBarStvori(playerid, &PlayerText:pozadina, &PlayerText:traka)
     PlayerTextDrawShow(playerid, pozadina);
 }
 
-SnagaBarPostavi(playerid, PlayerText:traka, Float:snaga)
+SnagaBarPostavi(playerid, PlayerText:traka, Float:snaga, Float:zelenoOd = 101.0, Float:zelenoDo = -1.0)
 {
     if (snaga <= 0.0) return PlayerTextDrawHide(playerid, traka);
     PlayerTextDrawTextSize(playerid, traka, snaga / 100.0 * SNAGA_BAR_W, 8.0);
+    PlayerTextDrawColour(playerid, traka, snaga >= zelenoOd && snaga <= zelenoDo ? 0x2ECC71FF : SNAGA_ZUTA);
     return PlayerTextDrawShow(playerid, traka);
 }
 

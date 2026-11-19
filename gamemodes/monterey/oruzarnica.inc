@@ -108,7 +108,7 @@ static OruzarnicaAktor(s)
     gOruz[s][orImaAktor] = true;
     gOruz[s][orAktor] = CreateActor(ORUZARNICA_SKIN, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz], gOruz[s][orAa]);
     SetActorVirtualWorld(gOruz[s][orAktor], svijet);
-    gOruz[s][orTekstA] = CreateDynamic3DTextLabel("[ALT]", COLOR_ORG, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[gOruz[s][orInt]][oiInt]);
+    gOruz[s][orTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gOruz[s][orAx], gOruz[s][orAy], gOruz[s][orAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOruzarnicaInt[gOruz[s][orInt]][oiInt]);
     InterakcijaOznaka(gOruz[s][orTekstA]);
 }
 
