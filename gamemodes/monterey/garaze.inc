@@ -145,16 +145,22 @@ DLG:garaza_vozilo(playerid, response, listitem)
         if (GetPlayerVehicleID(playerid) == v) RemovePlayerFromVehicle(playerid);
         return 1;
     }
-    new bool:unutra = GetPlayerVehicleID(playerid) == v;
-    GarazaIzvezi(v, g);
-    if (!unutra)
-    {
-        SetPlayerInterior(playerid, 0);
-        SetPlayerVirtualWorld(playerid, 0);
-        PutPlayerInVehicle(playerid, v, 0);
-        SetTimerEx("GarazaSjedni", GARAZA_SJEDNI_MS, false, "iiii", playerid, v, 0, 0);
-    }
+    GarazaIzveziIgraca(playerid, v, g);
     return 1;
+}
+
+static GarazaIzveziIgraca(playerid, v, g)
+{
+    new bool:unutra = GetPlayerVehicleID(playerid) == v, Float:x, Float:y, Float:z;
+    GarazaIzvezi(v, g);
+    if (unutra) return;
+    GetVehiclePos(v, x, y, z);
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    Streamer_UpdateEx(playerid, x, y, z, 0, 0);
+    SetPlayerPos(playerid, x, y, z + 1.0);
+    PutPlayerInVehicle(playerid, v, 0);
+    SetTimerEx("GarazaSjedni", GARAZA_SJEDNI_MS, false, "iiii", playerid, v, 0, 0);
 }
 
 static GarazaIzvezi(v, g)
@@ -394,7 +400,21 @@ DLG:garaza_meni(playerid, response, listitem)
     new g = gGarazaPonuda[playerid] - 1;
     if (!response || g < 0 || !gGaraza[g][gaIma] || gGaraza[g][gaVlasnik] != gAccountId[playerid]) return 1;
     if (GarazaIgraca(playerid) != g || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET * 2.0, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 1;
-    if (listitem == 0) GarazaVani(playerid, g);
+    if (listitem == 0)
+    {
+        new v = gGarazaVozilo[playerid], Float:x, Float:y, Float:z;
+        if (GetPlayerVehicleID(playerid)) v = GetPlayerVehicleID(playerid);
+        if (v && GetVehicleModel(v) && GetVehicleVirtualWorld(v) == GetPlayerVirtualWorld(playerid))
+        {
+            GetVehiclePos(v, x, y, z);
+            if (IsPlayerInRangeOfPoint(playerid, 6.0, x, y, z))
+            {
+                GarazaIzveziIgraca(playerid, v, g);
+                return 1;
+            }
+        }
+        GarazaVani(playerid, g);
+    }
     else if (listitem == 1) GarazaPrebaciBravu(playerid, g);
     else if (listitem == 2)
     {
