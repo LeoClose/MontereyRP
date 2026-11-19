@@ -75,13 +75,20 @@ InitBilijar()
     DB_FreeResultSet(res);
 }
 
+static BilijarOznaka()
+{
+    new tekst[48];
+    format(tekst, sizeof tekst, "Bilijar\n{FFFFFF}[Y] $%d", BILIJAR_CIJENA);
+    return tekst;
+}
+
 static BilijarStvori(s)
 {
     gBilijar[s][bsIma] = true;
     gBilijar[s][bsIgrac][0] = gBilijar[s][bsIgrac][1] = INVALID_PLAYER_ID;
     gBilijar[s][bsNisani] = INVALID_PLAYER_ID;
     gBilijar[s][bsStol] = CreateDynamicObject(BILIJAR_STOL, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ], 0.0, 0.0, gBilijar[s][bsA], gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
-    gBilijar[s][bsTekst] = CreateDynamic3DTextLabel("Bilijar\n[Y]", COLOR_ORG, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ] + 1.3, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
+    gBilijar[s][bsTekst] = CreateDynamic3DTextLabel(BilijarOznaka(), 0xF39C12FF, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ] + 1.3, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gBilijar[s][bsSvijet], gBilijar[s][bsInt]);
     BilijarSlozi(s);
 }
 
@@ -286,6 +293,7 @@ BilijarKey(playerid)
         return IgraObavijest(playerid, T(playerid, "Bilijar"), OBAVIJEST_GRESKA, poruka), 1;
     }
     if (!OkladaUdi(playerid, OK_BILIJAR, s)) return DajNovac(playerid, BILIJAR_CIJENA), 1;
+    BlagajnaDodaj(BILIJAR_CIJENA);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), BILIJAR_CIJENA);
     gBilijar[s][bsIgrac][i] = playerid;
     gBilijarIgrac[playerid] = s;

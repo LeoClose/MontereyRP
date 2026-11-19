@@ -22,7 +22,9 @@
 #define PIKADO_SNOP_MODEL   18656
 #define PIKADO_SNOP_ZOOM    2.1
 #define PIKADO_SNOP_DUZ     0.956
-#define PIKADO_SNOP_POLA    6.5
+#define PIKADO_SNOP_POLA    7.0
+#define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
+#define PIKADO_PRSTEN_ZELENA 0x22E05AFF
 #define PIKADO_TD           13
 #define PIKADO_KREM         0xF2EBD9FF
 #define PIKADO_CRNA         0x1C1C1CFF
@@ -94,17 +96,17 @@ static PikadoSnop(Float:rmm, Float:kut, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoSloj(Float:rmm, parna, neparna)
+static PikadoSloj(Float:rmm, parna, neparna, bool:prsten)
 {
-    PikadoKrugPloce(rmm, parna);
+    PikadoKrugPloce(rmm, prsten ? PIKADO_CRNA : parna);
     for (new i = 0; i < 20; i++)
     {
-        if (!(i % 2)) continue;
-        new Float:s = float(i) * 18.0 - 9.0;
-        for (new d = 2; d > 0; d--)
+        if (!prsten && !(i % 2)) continue;
+        new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
+        for (new d = prsten ? 1 : 2; d > 0; d--)
         {
-            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, neparna);
-            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, neparna);
+            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja);
+            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja);
         }
     }
 }
@@ -118,10 +120,10 @@ static PikadoPlocaStvori()
     TextDrawTextSize(td, 640.0, 0.0);
     gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(200.0, 0x111111FF);
-    PikadoSloj(170.0, PIKADO_CRVENA, PIKADO_ZELENA);
-    PikadoSloj(162.0, PIKADO_CRNA, PIKADO_KREM);
-    PikadoSloj(107.0, PIKADO_CRVENA, PIKADO_ZELENA);
-    PikadoSloj(99.0, PIKADO_CRNA, PIKADO_KREM);
+    PikadoSloj(170.0, PIKADO_PRSTEN_CRVENA, PIKADO_PRSTEN_ZELENA, true);
+    PikadoSloj(162.0, PIKADO_CRNA, PIKADO_KREM, false);
+    PikadoSloj(107.0, PIKADO_PRSTEN_CRVENA, PIKADO_PRSTEN_ZELENA, true);
+    PikadoSloj(99.0, PIKADO_CRNA, PIKADO_KREM, false);
     PikadoKrugPloce(15.9, PIKADO_ZELENA);
     PikadoKrugPloce(6.35, PIKADO_CRVENA);
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
@@ -198,13 +200,20 @@ PikadoConnect(playerid)
     gPkTdIma[playerid] = false;
 }
 
+static PikadoOznaka()
+{
+    new tekst[48];
+    format(tekst, sizeof tekst, "Pikado\n{FFFFFF}[Y] $%d", PIKADO_CIJENA);
+    return tekst;
+}
+
 static PikadoStvori(s)
 {
     gPikado[s][pkIma] = true;
     gPikado[s][pkIgrac][0] = gPikado[s][pkIgrac][1] = INVALID_PLAYER_ID;
     gPikado[s][pkNisani] = INVALID_PLAYER_ID;
     gPikado[s][pkFaza] = PF_CEKA;
-    gPikado[s][pkTekst] = CreateDynamic3DTextLabel("Pikado\n[Y]", COLOR_ORG, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gPikado[s][pkSvijet], gPikado[s][pkInt]);
+    gPikado[s][pkTekst] = CreateDynamic3DTextLabel(PikadoOznaka(), 0xF39C12FF, gPikado[s][pkX], gPikado[s][pkY], gPikado[s][pkZ] + 1.2, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, gPikado[s][pkSvijet], gPikado[s][pkInt]);
 }
 
 static PikadoPoruka(s, const tekst[], igrac = INVALID_PLAYER_ID, a = 0, b = 0)
@@ -432,6 +441,7 @@ PikadoKey(playerid)
         return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, poruka), 1;
     }
     if (!OkladaUdi(playerid, OK_PIKADO, s)) return DajNovac(playerid, PIKADO_CIJENA), 1;
+    BlagajnaDodaj(PIKADO_CIJENA);
     SendClientMessage(playerid, COLOR_INFO, T(playerid, "Platili ste $%d."), PIKADO_CIJENA);
     gPikado[s][pkIgrac][i] = playerid;
     gPikadoIgrac[playerid] = s;
