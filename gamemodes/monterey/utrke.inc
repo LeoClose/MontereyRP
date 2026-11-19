@@ -16,7 +16,7 @@
 
 enum { UV_NE, UV_NA_START, UV_GRID, UV_VOZI, UV_CILJ }
 enum { UK_NEMA, UK_LOBBY, UK_ODBROJ, UK_VOZI }
-enum E_UTRKA { ukStanje, ukDomacin, ukStvoreno, ukPot, ukIme[UTRKA_IME], ukBroj, ukOdbroj, ukRok, ukPrvi, ukPlasman, ukGrid, ukObjava }
+enum E_UTRKA { ukStanje, ukDomacin, ukStvoreno, ukPot, ukVozaca, ukStart, ukIme[UTRKA_IME], ukBroj, ukOdbroj, ukRok, ukPrvi, ukPlasman, ukGrid, ukObjava }
 
 static gUk[UTRKA_AKTIVNIH][E_UTRKA], Float:gUkTocke[UTRKA_AKTIVNIH][UTRKA_TOCAKA][3];
 static gUv[MAX_PLAYERS], gUvStanje[MAX_PLAYERS], gUvCp[MAX_PLAYERS], gUvUlog[MAX_PLAYERS], gUvMjesto[MAX_PLAYERS], STREAMER_TAG_MAP_ICON:gUvIkona[MAX_PLAYERS];
@@ -223,7 +223,7 @@ static UtrkaIzbaci(playerid)
     UtrkaIkonaMakni(playerid);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUv[i] == u + 1 && i != playerid && gUvIkona[i]) Streamer_RemoveArrayData(STREAMER_TYPE_MAP_ICON, gUvIkona[i], E_STREAMER_PLAYER_ID, playerid);
-    if (gUk[u][ukStanje] >= UK_ODBROJ) IgraObavijestUkloni(playerid);
+    IgraObavijestUkloni(playerid);
     gUv[playerid] = 0;
     gUvStanje[playerid] = UV_NE;
 }
@@ -258,7 +258,7 @@ static UtrkaKraj(u)
         if (vozilo)
         {
             new zarada = (i == dobitnik ? pot : 0) - (dobitnik == INVALID_PLAYER_ID ? 0 : gUvUlog[i]);
-            UtrkaStats(i, gUvMjesto[i] == 1, zarada);
+            if (gUk[u][ukVozaca] >= 2) UtrkaStats(i, gUvMjesto[i] == 1, zarada);
             if (gUvMjesto[i]) SendClientMessage(i, COLOR_INFO, T(i, "Utrka %s je zavrsena. Vase mjesto: %d."), gUk[u][ukIme], gUvMjesto[i]);
             else SendClientMessage(i, COLOR_INFO, T(i, "Utrka %s je zavrsena. Niste stigli do cilja."), gUk[u][ukIme]);
             if (i == dobitnik && pot) SendClientMessage(i, COLOR_INFO, T(i, "Osvojili ste $%d iz uloga."), pot);
@@ -338,7 +338,7 @@ UtrkaUlog(playerid, u, racun, ulog)
     gUvMjesto[playerid] = 0;
     gUvCp[playerid] = 0;
     UtrkaPostaviCp(playerid, u);
-    ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Dovezite se do starta oznacenog na karti."));
+    UtrkaLobbyPanel(u);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUv[i] == u + 1 && i != playerid) SendClientMessage(i, COLOR_INFO, T(i, "%s se prijavio na utrku (ulog $%d)."), GetRPIme(playerid), ulog);
     if (playerid == gUk[u][ukDomacin]) MobitelUtrkaPoziv(playerid);
@@ -369,13 +369,56 @@ static UtrkaNaGrid(playerid, u)
     gUvStanje[playerid] = UV_GRID;
     new naStartu, ukupno = UtrkaVozaci(u, naStartu);
     if (ukupno >= 2 && naStartu == ukupno) UtrkaOdbroj(u);
-    else ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Cekamo ostale vozace na startu."));
+    else UtrkaLobbyPanel(u);
+}
+
+static UtrkaLobbyPanel(u)
+{
+    new popis[400], naslov[48];
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gUv[i] != u + 1) continue;
+        new linija[48];
+        format(linija, sizeof linija, "~n~%s%s", gUvStanje[i] == UV_GRID ? ("~g~") : ("~w~"), GetRPIme(i));
+        strcat(popis, linija);
+    }
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gUv[i] != u + 1) continue;
+        new tekst[512];
+        if (gUvStanje[i] != UV_GRID) strcat(tekst, T(i, "Dovezite se do starta oznacenog na karti."));
+        else if (i == gUk[u][ukDomacin]) strcat(tekst, T(i, "~y~Y~w~ - pokreni utrku"));
+        else strcat(tekst, T(i, "Cekamo ostale vozace na startu."));
+        strcat(tekst, popis);
+        format(naslov, sizeof naslov, T(i, "Utrka: %s"), gUk[u][ukIme]);
+        IgraObavijestPanel(i, naslov, UTRKA_BOJA, tekst);
+    }
+}
+
+static UtrkaDomacinKreni(playerid)
+{
+    new u = gUv[playerid] - 1;
+    if (u < 0 || gUk[u][ukDomacin] != playerid || gUk[u][ukStanje] != UK_LOBBY) return 0;
+    if (gUvStanje[playerid] != UV_GRID)
+    {
+        ObavijestGreska(playerid, T(playerid, "Prvo se dovezite na start."));
+        return 1;
+    }
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gUv[i] != u + 1 || gUvStanje[i] == UV_GRID) continue;
+        SendClientMessage(i, COLOR_INFO, T(i, "Utrka je krenula bez vas, ulog je vracen."));
+        UtrkaNapusti(i);
+    }
+    UtrkaOdbroj(u);
+    return 1;
 }
 
 static UtrkaOdbroj(u)
 {
     gUk[u][ukStanje] = UK_ODBROJ;
     gUk[u][ukOdbroj] = UTRKA_ODBROJ;
+    gUk[u][ukVozaca] = UtrkaVozaci(u);
     gUk[u][ukRok] = gettime() + UTRKA_TRAJE_S;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
@@ -409,11 +452,13 @@ public OnPlayerEnterRaceCheckpoint(playerid)
     gUvMjesto[playerid] = ++gUk[u][ukPlasman];
     if (gUvMjesto[playerid] == 1) gUk[u][ukPrvi] = gettime();
     gUk[u][ukObjava] = GetTickCount() + UTRKA_OBJAVA_MS;
+    new ms = GetTickCount() - gUk[u][ukStart], vrijeme[16];
+    format(vrijeme, sizeof vrijeme, "%d:%02d.%d", ms / 60000, (ms / 1000) % 60, (ms / 100) % 10);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (gUv[i] != u + 1) continue;
-        new tekst[96];
-        format(tekst, sizeof tekst, T(i, "%s je zavrsio utrku kao %d."), GetRPIme(playerid), gUvMjesto[playerid]);
+        new tekst[128];
+        format(tekst, sizeof tekst, T(i, "%s je zavrsio utrku kao %d. (%s)"), GetRPIme(playerid), gUvMjesto[playerid], vrijeme);
         IgraObavijest(i, T(i, "Utrka"), UTRKA_BOJA, tekst, UTRKA_OBJAVA_MS);
     }
     return 1;
@@ -467,6 +512,7 @@ UtrkaTick()
         if (gUk[u][ukStanje] == UK_LOBBY)
         {
             if (ukupno >= 2 && naStartu == ukupno) UtrkaOdbroj(u);
+            else UtrkaLobbyPanel(u);
             continue;
         }
         if (gUk[u][ukStanje] == UK_ODBROJ)
@@ -490,7 +536,11 @@ UtrkaTick()
                 gUvCp[i] = 1;
                 UtrkaPostaviCp(i, u);
             }
-            if (o <= 0) gUk[u][ukStanje] = UK_VOZI;
+            if (o <= 0)
+            {
+                gUk[u][ukStanje] = UK_VOZI;
+                gUk[u][ukStart] = GetTickCount();
+            }
             continue;
         }
         for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
@@ -508,7 +558,7 @@ UtrkaTick()
 
 UtrkaKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
-    if (!gUrIma[playerid]) return 0;
+    if (!gUrIma[playerid]) return (newkeys & KEY_YES) && !(oldkeys & KEY_YES) ? UtrkaDomacinKreni(playerid) : 0;
     new PLAYER_STATE:st = GetPlayerState(playerid);
     new bool:alt = st == PLAYER_STATE_ONFOOT ? ((newkeys & KEY_WALK) && !(oldkeys & KEY_WALK)) : ((newkeys & KEY_ACTION) && !(oldkeys & KEY_ACTION));
     if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO))
@@ -546,7 +596,7 @@ UtrkaNapusti(playerid)
         return;
     }
     if (gUk[u][ukStanje] == UK_LOBBY && gUvUlog[playerid]) DajNovac(playerid, gUvUlog[playerid]);
-    else if (gUk[u][ukStanje] >= UK_ODBROJ) UtrkaStats(playerid, false, -gUvUlog[playerid]);
+    else if (gUk[u][ukStanje] >= UK_ODBROJ && gUk[u][ukVozaca] >= 2) UtrkaStats(playerid, false, -gUvUlog[playerid]);
     if (gUk[u][ukStanje] >= UK_ODBROJ) gUk[u][ukPot] += gUvUlog[playerid], gUvUlog[playerid] = 0;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUv[i] == u + 1 && i != playerid) SendClientMessage(i, COLOR_INFO, T(i, "%s je napustio utrku."), GetRPIme(playerid));

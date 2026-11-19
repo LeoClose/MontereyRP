@@ -2167,7 +2167,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Taksimetar", "Taximeter", "Таксометр", "Taximetro", "Taksimetre" },
     { "Trenutno: $%d~n~Do cilja: $%d", "Current: $%d~n~To destination: $%d", "Сейчас: $%d~n~До места: $%d", "Actual: $%d~n~Hasta el destino: $%d", "Su an: $%d~n~Varisa kadar: $%d" },
     { "Dispecer (telefon): Mehanicarski servis, izvolite. Koje vozilo trebate odslepati?", "Dispatcher (phone): Mechanic service, how can I help? Which vehicle needs towing?", "Диспетчер (телефон): Служба механиков, слушаю. Какую машину нужно эвакуировать?", "Operador (telefono): Servicio de mecanicos, digame. Que vehiculo necesita remolcar?", "Operator (telefon): Tamirci servisi, buyurun. Hangi aracin cekilmesi gerekiyor?" },
-    { "%s je zavrsio utrku kao %d.", "%s finished the race in place %d.", "%s финишировал на %d месте.", "%s termino la carrera en el puesto %d.", "%s yarisi %d. sirada bitirdi." },
     { "%s se prijavio na utrku (ulog $%d).", "%s joined the race (bet $%d).", "%s присоединился к гонке (ставка $%d).", "%s se unio a la carrera (apuesta $%d).", "%s yarisa katildi (bahis $%d)." },
     { "%s vas poziva na utrku %s.", "%s invites you to the race %s.", "%s приглашает вас на гонку %s.", "%s te invita a la carrera %s.", "%s sizi %s yarisina davet ediyor." },
     { "Cekamo ostale vozace na startu.", "Waiting for the other drivers at the start.", "Ждём остальных водителей на старте.", "Esperando a los demas pilotos en la salida.", "Diger suruculer baslangicta bekleniyor." },
@@ -2212,7 +2211,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pomoc: Upisite ID igraca u chat (T), pa pritisnite desnu strelicu (Odaberi). Vozaci se skupljaju na startu.", "Help: Type the player ID in the chat (T), then press the right arrow (Select). Drivers gather at the start.", "Помощь: Введите ID игрока в чат (T), затем нажмите стрелку вправо (Выбрать). Водители собираются на старте.", "Ayuda: Escribe el ID del jugador en el chat (T) y pulsa la flecha derecha (Elegir). Los pilotos se reunen en la salida.", "Yardim: Oyuncu ID'sini sohbete (T) yazin, sonra sag oka basin (Sec). Suruculer baslangicta toplanir." },
     { "Napusti utrku", "Leave race", "Покинуть гонку", "Abandonar carrera", "Yaristan ayril" },
     { "Napustili ste utrku.", "You left the race.", "Вы покинули гонку.", "Abandonaste la carrera.", "Yaristan ayrildiniz." },
-    { "%s je napustio utrku.", "%s left the race.", "%s покинул гонку.", "%s abandono la carrera.", "%s yaristan ayrildi." }
+    { "%s je napustio utrku.", "%s left the race.", "%s покинул гонку.", "%s abandono la carrera.", "%s yaristan ayrildi." },
+    { "%s je zavrsio utrku kao %d. (%s)", "%s finished the race in place %d. (%s)", "%s финишировал на %d месте. (%s)", "%s termino la carrera en el puesto %d. (%s)", "%s yarisi %d. sirada bitirdi. (%s)" },
+    { "~y~Y~w~ - pokreni utrku", "~y~Y~w~ - start the race", "~y~Y~w~ - начать гонку", "~y~Y~w~ - iniciar la carrera", "~y~Y~w~ - yarisi baslat" },
+    { "Prvo se dovezite na start.", "Drive to the start first.", "Сначала подъезжайте к старту.", "Primero conduce hasta la salida.", "Once baslangica gidin." },
+    { "Utrka je krenula bez vas, ulog je vracen.", "The race started without you, your bet was returned.", "Гонка началась без вас, ставка возвращена.", "La carrera empezo sin ti, se devolvio la apuesta.", "Yaris sizsiz basladi, bahsiniz iade edildi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
