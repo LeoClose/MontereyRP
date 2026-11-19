@@ -2304,7 +2304,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Udaljenost mora biti od %d do %d m.", "The distance must be from %d to %d m.", "Расстояние должно быть от %d до %d м.", "La distancia debe ser de %d a %d m.", "Mesafe %d ile %d m arasinda olmali." },
     { "Unesite: /kazni [id/ime] [1 = plivanje, 2 = metenje] [metara / markera] [razlog]", "Usage: /kazni [id/name] [1 = swimming, 2 = sweeping] [meters / markers] [reason]", "Введите: /kazni [id/имя] [1 = плавание, 2 = подметание] [метров / маркеров] [причина]", "Uso: /kazni [id/nombre] [1 = nadar, 2 = barrer] [metros / marcadores] [motivo]", "Kullanim: /kazni [id/isim] [1 = yuzme, 2 = supurme] [metre / isaret] [sebep]" },
     { "Vraceni ste na mjesto gdje ste izasli iz igre.", "You were returned to where you left the game.", "Вы возвращены туда, где вышли из игры.", "Volviste al lugar donde saliste del juego.", "Oyundan ciktiginiz yere geri dondurduldunuz." },
-    { "Vrsta kazne mora biti 1 (plivanje) ili 2 (metenje).", "The punishment type must be 1 (swimming) or 2 (sweeping).", "Тип наказания должен быть 1 (плавание) или 2 (подметание).", "El tipo de castigo debe ser 1 (nadar) o 2 (barrer).", "Ceza turu 1 (yuzme) veya 2 (supurme) olmali." }
+    { "Vrsta kazne mora biti 1 (plivanje) ili 2 (metenje).", "The punishment type must be 1 (swimming) or 2 (sweeping).", "Тип наказания должен быть 1 (плавание) или 2 (подметание).", "El tipo de castigo debe ser 1 (nadar) o 2 (barrer).", "Ceza turu 1 (yuzme) veya 2 (supurme) olmali." },
+    { "Dok ste kaznjeni ne mozete uci u vozilo.", "You cannot enter a vehicle while punished.", "Во время наказания нельзя садиться в транспорт.", "No puedes subir a un vehiculo mientras estas castigado.", "Cezaliyken araca binemezsiniz." },
+    { "Dok ste kaznjeni ne mozete koristiti komande ni chat.", "You cannot use commands or chat while punished.", "Во время наказания нельзя использовать команды и чат.", "No puedes usar comandos ni el chat mientras estas castigado.", "Cezaliyken komut ve sohbet kullanamazsiniz." },
+    { "Razlog:", "Reason:", "Prichina:", "Motivo:", "Sebep:" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

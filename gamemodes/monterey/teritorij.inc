@@ -356,15 +356,6 @@ bool:IsShootingBlocked(playerid)
         Obavijesti(playerid, "Poginuli ste u napadu: ne mozete pucati blizu teritorija dok napad traje.");
         return true;
     }
-    if (!IsBanda(playerid)) return false;
-    new ids[MAX_PLAYERS];
-    for (new t = 0; t < MAX_TER; t++)
-    {
-        if (!gTer[t][terDb] || !gTer[t][terOrg] || gTer[t][terOrg] == gOrg[playerid] || !IsUZoni(playerid, t)) continue;
-        if (ClanoviUZoni(t, gOrg[playerid], ids, playerid)) return false;
-        Obavijesti(playerid, "Na neprijateljskom teritoriju ne mozete pucati bez barem jos jednog clana.");
-        return true;
-    }
     return false;
 }
 

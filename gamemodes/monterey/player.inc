@@ -176,6 +176,7 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
 
 public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 {
+    KaznaStanje(playerid, newstate);
     TaksiStateChange(playerid, newstate, oldstate);
     PolicijaStateChange(playerid, newstate);
     MdtStateChange(playerid, oldstate);
@@ -191,6 +192,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
 
 public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
 {
+    if (KaznaKey(playerid, newkeys, oldkeys)) return 1;
     if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
@@ -283,6 +285,7 @@ public OnPlayerUpdate(playerid)
 public OnPlayerCommandText(playerid, cmdtext[])
 {
     AfkAktivan(playerid);
+    if (KaznaBlokira(playerid)) return 1;
     new cmd[32] = "cmd_", pos = 1, len = 4;
     while (cmdtext[pos] && cmdtext[pos] != ' ')
     {

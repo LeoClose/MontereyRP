@@ -18,12 +18,41 @@
 #define POVRATAK_S          600
 #define POVRATAK_PRIVREMENI 9000
 
-static gKazna[MAX_PLAYERS], gKaznaOstalo[MAX_PLAYERS], bool:gKaznaMete[MAX_PLAYERS], Float:gKaznaCp[MAX_PLAYERS][3], bool:gPovratakProvjeren[MAX_PLAYERS];
+static gKazna[MAX_PLAYERS], gKaznaOstalo[MAX_PLAYERS], bool:gKaznaMete[MAX_PLAYERS], Float:gKaznaCp[MAX_PLAYERS][3], bool:gPovratakProvjeren[MAX_PLAYERS], gKaznaRazlog[MAX_PLAYERS][96];
 
 InitKazne()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS admin_punish (account INTEGER PRIMARY KEY, type INTEGER NOT NULL, amount INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '')"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_lastpos (account INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL, time INTEGER NOT NULL)"));
+}
+
+KaznaKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (!gKazna[playerid]) return 0;
+    if (gKazna[playerid] == KAZNA_METENJE && !gKaznaMete[playerid] && (newkeys & KEY_JUMP) && !(oldkeys & KEY_JUMP) && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ClearAnimations(playerid, SYNC_ALL);
+    return 1;
+}
+
+KaznaVozilo(playerid)
+{
+    if (!gKazna[playerid]) return 0;
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    SetPlayerPos(playerid, x, y, z);
+    ObavijestGreska(playerid, T(playerid, "Dok ste kaznjeni ne mozete uci u vozilo."));
+    return 1;
+}
+
+KaznaStanje(playerid, PLAYER_STATE:newstate)
+{
+    if (gKazna[playerid] && (newstate == PLAYER_STATE_DRIVER || newstate == PLAYER_STATE_PASSENGER)) RemovePlayerFromVehicle(playerid);
+}
+
+KaznaBlokira(playerid)
+{
+    if (!gKazna[playerid]) return 0;
+    SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dok ste kaznjeni ne mozete koristiti komande ni chat."));
+    return 1;
 }
 
 static KaznaSpremi(playerid)
@@ -32,16 +61,36 @@ static KaznaSpremi(playerid)
     else DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM admin_punish WHERE account = %d", gAccountId[playerid]));
 }
 
+static KaznaObavijest(playerid, tekst[], size = sizeof tekst)
+{
+    if (gKaznaRazlog[playerid][0])
+    {
+        strcat(tekst, "~n~", size);
+        strcat(tekst, T(playerid, "Razlog:"), size);
+        strcat(tekst, " ", size);
+        strcat(tekst, gKaznaRazlog[playerid], size);
+    }
+    IgraObavijestPanel(playerid, T(playerid, "Kazna"), 0xC0392BE6, tekst);
+}
+
+static KaznaRazlogPostavi(playerid, const razlog[])
+{
+    gKaznaRazlog[playerid][0] = EOS;
+    strcat(gKaznaRazlog[playerid], razlog, sizeof gKaznaRazlog[]);
+    for (new i = 0; gKaznaRazlog[playerid][i]; i++) if (gKaznaRazlog[playerid][i] == '~') gKaznaRazlog[playerid][i] = '-';
+}
+
 static KaznaSljedeci(playerid)
 {
     new Float:a = float(random(360)), Float:r = 5.0 + float(random(floatround(KAZNA_TRG_R) - 5));
     gKaznaCp[playerid][0] = KAZNA_TRG_X + r * floatcos(a, degrees);
     gKaznaCp[playerid][1] = KAZNA_TRG_Y + r * floatsin(a, degrees);
-    gKaznaCp[playerid][2] = HodTlo(gKaznaCp[playerid][0], gKaznaCp[playerid][1], KAZNA_TRG_Z + 5.0) - 1.0;
+    new Float:hx, Float:hy, Float:hz;
+    gKaznaCp[playerid][2] = Kolizija_Zraka(gKaznaCp[playerid][0], gKaznaCp[playerid][1], KAZNA_TRG_Z + 20.0, gKaznaCp[playerid][0], gKaznaCp[playerid][1], KAZNA_TRG_Z - 20.0, hx, hy, hz) ? hz : KAZNA_TRG_Z;
     SetPlayerCheckpoint(playerid, gKaznaCp[playerid][0], gKaznaCp[playerid][1], gKaznaCp[playerid][2], 1.5);
-    new tekst[96];
+    new tekst[200];
     format(tekst, sizeof tekst, T(playerid, "Pometite mjesto oznaceno markerom. Preostalo: %d"), gKaznaOstalo[playerid]);
-    IgraObavijestPanel(playerid, T(playerid, "Kazna"), 0xC0392BE6, tekst);
+    KaznaObavijest(playerid, tekst);
 }
 
 static KaznaPocni(playerid)
@@ -52,9 +101,9 @@ static KaznaPocni(playerid)
     {
         new Float:x = KAZNA_PLAZA_X + float(random(201) - 100);
         PrebaciIgraca(playerid, 0, KAZNA_SVIJET + playerid, x, KAZNA_PLAZA_Y - float(gKaznaOstalo[playerid]), 1.0, 0.0);
-        new tekst[96];
+        new tekst[200];
         format(tekst, sizeof tekst, T(playerid, "Doplivajte do obale (%d m sjeverno)."), gKaznaOstalo[playerid]);
-        IgraObavijestPanel(playerid, T(playerid, "Kazna"), 0xC0392BE6, tekst);
+        KaznaObavijest(playerid, tekst);
         return;
     }
     PrebaciIgraca(playerid, 0, KAZNA_SVIJET, KAZNA_TRG_X, KAZNA_TRG_Y, KAZNA_TRG_Z, 0.0);
@@ -91,7 +140,9 @@ static KaznaKraj(playerid)
 KaznaCheckpoint(playerid)
 {
     if (gKazna[playerid] != KAZNA_METENJE || gKaznaMete[playerid]) return 0;
-    if (!IsPlayerInRangeOfPoint(playerid, 2.5, gKaznaCp[playerid][0], gKaznaCp[playerid][1], gKaznaCp[playerid][2])) return 1;
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    if (VectorSize(x - gKaznaCp[playerid][0], y - gKaznaCp[playerid][1], 0.0) > 3.0) return 1;
     DisablePlayerCheckpoint(playerid);
     gKaznaMete[playerid] = true;
     TogglePlayerControllable(playerid, false);
@@ -131,11 +182,14 @@ KaznaSpawn(playerid)
 {
     if (!gKazna[playerid])
     {
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT type, amount FROM admin_punish WHERE account = %d", gAccountId[playerid]);
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT type, amount, reason FROM admin_punish WHERE account = %d", gAccountId[playerid]);
         if (DB_GetRowCount(res))
         {
             gKazna[playerid] = DB_GetFieldInt(res, 0);
             gKaznaOstalo[playerid] = DB_GetFieldInt(res, 1);
+            new razlog[96];
+            DB_GetFieldString(res, 2, razlog, sizeof razlog);
+            KaznaRazlogPostavi(playerid, razlog);
         }
         DB_FreeResultSet(res);
     }
@@ -206,6 +260,7 @@ CMD:kazni(playerid, params[])
     if (IsPlayerInAnyVehicle(target)) RemovePlayerFromVehicle(target);
     gKazna[target] = tip;
     gKaznaOstalo[target] = kolicina;
+    KaznaRazlogPostavi(target, razlog);
     gKaznaMete[target] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO admin_punish (account, type, amount, reason) VALUES (%d, %d, %d, '%q')", gAccountId[target], tip, kolicina, razlog));
     KaznaPocni(target);

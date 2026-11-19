@@ -809,6 +809,7 @@ public OnNPCFinishMove(npcid)
 
 public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
+    if (KaznaVozilo(playerid)) return 1;
     MobitelEnterVehicle(playerid);
     if (VlakEnter(playerid, vehicleid) || AvionEnter(playerid, vehicleid)) return 1;
     if (ImaLisice(playerid) && !Pritvoren(playerid))
