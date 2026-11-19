@@ -440,7 +440,7 @@ CMD:hood(playerid, params[])
 #define PRIKOLICA_OBJ_Z_VELIKA -1.55
 
 static STREAMER_TAG_OBJECT:gPrikolicaObj[MAX_VEHICLES];
-
+static STREAMER_TAG_AREA:gPrikolicaZona[MAX_VEHICLES];
 static gMaricaU[MAX_PLAYERS], Float:gMaricaIzlaz[MAX_PLAYERS][3];
 
 InitMarica()
@@ -591,6 +591,21 @@ PrikolicaDodaj(v)
     if (!JePrikolica(GetVehicleModel(v))) return;
     gPrikolicaObj[v] = CreateDynamicObject(GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJEKT_VELIKA : PRIKOLICA_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     AttachDynamicObjectToVehicle(gPrikolicaObj[v], v, 0.0, GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Y_VELIKA : PRIKOLICA_OBJ_Y, GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Z_VELIKA : PRIKOLICA_OBJ_Z, 0.0, 0.0, 0.0);
+    new Float:oy = GetVehicleModel(v) == PRIKOLICA_VELIKA ? PRIKOLICA_OBJ_Y_VELIKA : PRIKOLICA_OBJ_Y;
+
+    gPrikolicaZona[v] = InterakcijaZona(
+        0.0, 0.0, 0.0,
+        PRIKOLICA_DOMET,
+        0, 0, SAVJET_ULAZ
+    );
+
+    AttachDynamicAreaToVehicle(
+        gPrikolicaZona[v],
+        v,
+        PRIKOLICA_STRANA * PRIKOLICA_VRATA,
+        oy,
+        0.0
+    );
 }
 
 PrikolicaOtkaci(c)
@@ -605,6 +620,8 @@ PrikolicaMakni(v)
     if (!JePrikolica(GetVehicleModel(v))) return;
     DestroyDynamicObject(gPrikolicaObj[v]);
     if (VlasnikDb(v)) NamjestajKucaIsprazni(-VlasnikDb(v));
+    if (IsValidDynamicArea(gPrikolicaZona[v])) DestroyDynamicArea(gPrikolicaZona[v]);
+    gPrikolicaZona[v] = STREAMER_TAG_AREA:0;
 }
 
 PrikolicaUlaz(playerid)

@@ -20,6 +20,11 @@
 
 static gKazna[MAX_PLAYERS], gKaznaOstalo[MAX_PLAYERS], bool:gKaznaMete[MAX_PLAYERS], Float:gKaznaCp[MAX_PLAYERS][3], bool:gPovratakProvjeren[MAX_PLAYERS], gKaznaRazlog[MAX_PLAYERS][96];
 
+bool:KaznaAktivna(playerid)
+{
+    return gKazna[playerid] != 0;
+}
+
 InitKazne()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS admin_punish (account INTEGER PRIMARY KEY, type INTEGER NOT NULL, amount INTEGER NOT NULL, reason TEXT NOT NULL DEFAULT '')"));

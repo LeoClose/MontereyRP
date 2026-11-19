@@ -214,7 +214,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     return 1;
 }
 
-// Interakcija je na Y
+// Interakcija je na ALT
 static InterakcijaF(playerid)
 {
     if (!gUlogiran[playerid] || PrikolicaUnutra(playerid)) return;
