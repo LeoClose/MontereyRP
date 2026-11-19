@@ -13,7 +13,7 @@
 #define PIKADO_RASIPANJE    5
 #define PIKADO_POMAK        5.0
 #define PIKADO_IDEAL        75.0
-#define PIKADO_TOCNO        4.0
+#define PIKADO_TOCNO        5.5
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
@@ -44,7 +44,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.06;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.035;
 
 PikadoBodovi(Float:x, Float:y)
 {
