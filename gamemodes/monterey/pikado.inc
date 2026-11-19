@@ -16,10 +16,11 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        700
+#define PIKADO_PLOCA        48
 #define PIKADO_LOPTA        1.032
-#define PIKADO_ZICA_DEB     1.2
-#define PIKADO_ZICA_MAX     6.0
+#define PIKADO_ZICA_MODEL   19087
+#define PIKADO_ZICA_ZOOM    1.0
+#define PIKADO_ZICA_RUB     1.6
 #define PIKADO_TD           13
 #define PIKADO_CRNA         0x1C1C1CFF
 #define PIKADO_SREBRNA      0xC8C8C8FF
@@ -77,19 +78,24 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoZica(Float:mx, Float:my, Float:w, Float:h)
+static PikadoZica(Float:kut)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:px, Float:py, Float:lx = w * PIKADO_AX / 7.5, Float:ly = h / 1.98;
-    PikadoNaEkran(mx, my, px, py);
-    new Text:td = TextDrawCreate(px + lx, py - 6.8 * ly, ".");
-    TextDrawFont(td, TEXT_DRAW_FONT_1);
-    TextDrawLetterSize(td, lx, ly);
-    TextDrawAlignment(td, TEXT_DRAW_ALIGN_CENTER);
+    new Float:h = 2.0 * PIKADO_R * PIKADO_LOPTA, Float:w = h * PIKADO_AX;
+    new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0, PIKADO_CY - h / 2.0, "_");
+    TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
+    TextDrawTextSize(td, w, h);
+    TextDrawBackgroundColour(td, 0x00000000);
     TextDrawColour(td, PIKADO_SREBRNA);
-    TextDrawSetOutline(td, 0);
-    TextDrawSetShadow(td, 0);
+    TextDrawSetPreviewModel(td, PIKADO_ZICA_MODEL);
+    TextDrawSetPreviewRot(td, 0.0, kut, 0.0, PIKADO_ZICA_ZOOM);
     gPikadoPloca[gPikadoPlocaN++] = td;
+}
+
+static PikadoPrsten(Float:rmm, boja)
+{
+    PikadoKrugPloce(rmm + PIKADO_ZICA_RUB, PIKADO_SREBRNA);
+    PikadoKrugPloce(rmm, boja);
 }
 
 static PikadoPlocaStvori()
@@ -101,21 +107,13 @@ static PikadoPlocaStvori()
     TextDrawTextSize(td, 640.0, 0.0);
     gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(226.0, 0x111111FF);
-    PikadoKrugPloce(170.0, PIKADO_CRVENA);
-    PikadoKrugPloce(162.0, PIKADO_CRNA);
-    PikadoKrugPloce(107.0, PIKADO_ZELENA);
-    PikadoKrugPloce(99.0, PIKADO_CRNA);
-    PikadoKrugPloce(15.9, PIKADO_ZELENA);
-    PikadoKrugPloce(6.35, PIKADO_CRVENA);
-    for (new i = 0; i < 20; i++)
-    {
-        new Float:a = float(i) * 18.0 + 9.0, Float:sn = floatsin(a, degrees), Float:c = floatcos(a, degrees);
-        new Float:korak = 1.5 * PIKADO_ZICA_DEB / (floatabs(sn) < floatabs(c) ? floatabs(sn) : floatabs(c));
-        if (korak > PIKADO_ZICA_MAX) korak = PIKADO_ZICA_MAX;
-        new Float:w = korak * floatabs(sn) + PIKADO_ZICA_DEB, Float:h = korak * floatabs(c) + PIKADO_ZICA_DEB;
-        korak /= PIKADO_R / 170.0;
-        for (new Float:r = 18.0; r <= 170.0; r += korak) PikadoZica(r * sn, r * c, w, h);
-    }
+    PikadoPrsten(170.0, PIKADO_CRVENA);
+    PikadoPrsten(162.0, PIKADO_CRNA);
+    PikadoPrsten(107.0, PIKADO_ZELENA);
+    PikadoPrsten(99.0, PIKADO_CRNA);
+    for (new i = 0; i < 10; i++) PikadoZica(float(i) * 18.0 + 9.0);
+    PikadoPrsten(15.9, PIKADO_ZELENA);
+    PikadoPrsten(6.35, PIKADO_CRVENA);
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
     {
         new Float:px, Float:py;
