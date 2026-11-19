@@ -2165,7 +2165,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Napuni gorivo", "Refuel", "Zapravit", "Repostar", "Yakit doldur" },
     { "Slepaj vozilo u radionicu", "Tow the vehicle to the workshop", "Otbuksirovat v masterskuyu", "Remolcar al taller", "Araci atolyeye cek" },
     { "Taksimetar", "Taximeter", "Таксометр", "Taximetro", "Taksimetre" },
-    { "Trenutno: $%d~n~Do cilja: $%d", "Current: $%d~n~To destination: $%d", "Сейчас: $%d~n~До места: $%d", "Actual: $%d~n~Hasta el destino: $%d", "Su an: $%d~n~Varisa kadar: $%d" }
+    { "Trenutno: $%d~n~Do cilja: $%d", "Current: $%d~n~To destination: $%d", "Сейчас: $%d~n~До места: $%d", "Actual: $%d~n~Hasta el destino: $%d", "Su an: $%d~n~Varisa kadar: $%d" },
+    { "Dispecer (telefon): Mehanicarski servis, izvolite. Koje vozilo trebate odslepati?", "Dispatcher (phone): Mechanic service, how can I help? Which vehicle needs towing?", "Диспетчер (телефон): Служба механиков, слушаю. Какую машину нужно эвакуировать?", "Operador (telefono): Servicio de mecanicos, digame. Que vehiculo necesita remolcar?", "Operator (telefon): Tamirci servisi, buyurun. Hangi aracin cekilmesi gerekiyor?" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

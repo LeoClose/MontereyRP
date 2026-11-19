@@ -918,6 +918,7 @@ static MehanicarOdvozPoziv(playerid)
 {
     gOdvozBroj[playerid] = VlasnistvaIgraca(playerid, gOdvozVozila[playerid]);
     if (!gOdvozBroj[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate vlastitih vozila."));
+    SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Dispecer (telefon): Mehanicarski servis, izvolite. Koje vozilo trebate odslepati?"));
     MobitelOdvoz(playerid);
     return 1;
 }
@@ -935,12 +936,9 @@ MehanicarOdvozBroj(playerid)
 
 MehanicarOdvozRed(playerid, i, red[], len)
 {
-    new v = gOdvozVozila[playerid][i], Float:x, Float:y, Float:z;
     red[0] = EOS;
-    if (i < 0 || i >= gOdvozBroj[playerid] || !GetVehicleModel(v)) return;
-    GetVehiclePos(v, x, y, z);
-    if (GetVehicleVirtualWorld(v)) GarazaIzvana(VlasnikGarazaDb(v), x, y);
-    format(red, len, "%s - %s", gImenaVozila[GetVehicleModel(v) - 400], CestaZona(x, y));
+    if (i < 0 || i >= gOdvozBroj[playerid] || !GetVehicleModel(gOdvozVozila[playerid][i])) return;
+    strcat(red, gImenaVozila[GetVehicleModel(gOdvozVozila[playerid][i]) - 400], len);
 }
 
 MehanicarOdvozOdaberi(playerid, listitem)

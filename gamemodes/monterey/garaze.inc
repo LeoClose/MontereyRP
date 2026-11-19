@@ -129,7 +129,7 @@ static GarazaNajbliza(playerid)
     return najbliza;
 }
 
-static gGarazaCeka[MAX_PLAYERS][3], gGarazaCekaDo[MAX_PLAYERS];
+static gGarazaCeka[MAX_PLAYERS][3], gGarazaCekaDo[MAX_PLAYERS], bool:gGarazaTama[MAX_PLAYERS];
 
 static GarazaCekaj(playerid, v, g, ulaz)
 {
@@ -137,6 +137,32 @@ static GarazaCekaj(playerid, v, g, ulaz)
     gGarazaCeka[playerid][1] = g;
     gGarazaCeka[playerid][2] = ulaz;
     gGarazaCekaDo[playerid] = GetTickCount() + GARAZA_VOZAC_MS;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (i != playerid && !IsPlayerInVehicle(i, v)) continue;
+        gGarazaTama[i] = true;
+        Fade(i, 0);
+        SetTimerEx("GarazaSvjetlo", GARAZA_VOZAC_MS + GARAZA_IZLAZ_MS, false, "ii", i, gAccountId[i]);
+    }
+}
+
+static GarazaPosvijetliSve(playerid, v)
+{
+    GarazaPosvijetli(playerid);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) GarazaPosvijetli(i);
+}
+
+static GarazaPosvijetli(playerid)
+{
+    if (!gGarazaTama[playerid]) return;
+    gGarazaTama[playerid] = false;
+    Fade(playerid, FADE_SLOJEVA + 1);
+}
+
+forward GarazaSvjetlo(playerid, racun);
+public GarazaSvjetlo(playerid, racun)
+{
+    if (IsPlayerConnected(playerid) && gAccountId[playerid] == racun) GarazaPosvijetli(playerid);
 }
 
 GarazaStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
@@ -144,8 +170,14 @@ GarazaStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
     new v = gGarazaCeka[playerid][0];
     if (!v || oldstate != PLAYER_STATE_DRIVER) return;
     gGarazaCeka[playerid][0] = 0;
-    if (newstate != PLAYER_STATE_ONFOOT || GetTickCount() > gGarazaCekaDo[playerid]) return;
+    if (newstate != PLAYER_STATE_ONFOOT || GetTickCount() > gGarazaCekaDo[playerid])
+    {
+        GarazaPosvijetliSve(playerid, v);
+        return;
+    }
+    new svijet = GetVehicleVirtualWorld(v);
     GarazaVozac(playerid, v, gGarazaCeka[playerid][1], gGarazaCeka[playerid][2]);
+    if (!GetVehicleModel(v) || GetVehicleVirtualWorld(v) == svijet) GarazaPosvijetliSve(playerid, v);
 }
 
 static GarazaVozac(playerid, v, g, ulaz)
@@ -217,7 +249,9 @@ public GarazaVoziloPostavi(v, Float:x, Float:y, Float:z, Float:a)
 forward GarazaOdmrzni(playerid, racun);
 public GarazaOdmrzni(playerid, racun)
 {
-    if (IsPlayerConnected(playerid) && gAccountId[playerid] == racun) TogglePlayerControllable(playerid, true);
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    TogglePlayerControllable(playerid, true);
+    GarazaPosvijetli(playerid);
 }
 
 forward GarazaSjedni(playerid, v, sjedalo, svijet);
