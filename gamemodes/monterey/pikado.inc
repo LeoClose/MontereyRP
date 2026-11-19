@@ -13,19 +13,21 @@
 #define PIKADO_RASIPANJE    5
 #define PIKADO_POMAK        5.0
 #define PIKADO_IDEAL        75.0
+#define PIKADO_IDEAL_OD     55.0
+#define PIKADO_IDEAL_DO     90.0
 #define PIKADO_TOCNO        5.5
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        192
+#define PIKADO_PLOCA        212
 #define PIKADO_LOPTA        1.032
 #define PIKADO_SNOP_MODEL   18656
 #define PIKADO_SNOP_ZOOM    2.1
 #define PIKADO_SNOP_DUZ     0.956
-#define PIKADO_SNOP_POLA    7.0
+#define PIKADO_SNOP_POLA    5.0
 #define PIKADO_SNOP_AX      0.9375
 #define PIKADO_SNOP_NAGIB   0.022
-#define PIKADO_KREM_DUZ     0.98
+#define PIKADO_KREM_DUZ     1.0
 #define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
 #define PIKADO_PRSTEN_ZELENA 0x22E05AFF
 #define PIKADO_TD           13
@@ -38,7 +40,7 @@ enum { PF_CEKA, PF_IGRA, PF_PAUZA }
 enum { PTD_NISAN, PTD_STRELICA = PTD_NISAN + 3, PTD_INFO = PTD_STRELICA + PIKADO_STRELICA, PTD_BAR, PTD_SNAGA, PTD_ZONA, PTD_POLJE, PTD_BROJ }
 enum E_PIKADO { bool:pkIma, pkDb, Float:pkX, Float:pkY, Float:pkZ, Float:pkA, pkInt, pkSvijet, STREAMER_TAG_3D_TEXT_LABEL:pkTekst,
     pkFaza, pkIgrac[2], pkBodovi[2], pkNaPotezu, pkBacio, pkPrije, pkNisani, Float:pkAx, Float:pkAy, Float:pkHx[PIKADO_STRELICA], Float:pkHy[PIKADO_STRELICA], pkToken, bool:pkSam, pkUkupno,
-    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkNisanOd, pkPolje }
+    Float:pkSx, Float:pkSy, Float:pkSnaga, bool:pkGore, bool:pkDrzi, pkNisanOd, pkPolje, Float:pkIdeal }
 
 static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5 };
 
@@ -109,11 +111,7 @@ static PikadoSloj(Float:rmm, parna, neparna, bool:prsten)
     {
         if (!prsten && !(i % 2)) continue;
         new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
-        for (new d = prsten ? 1 : 2; d > 0; d--)
-        {
-            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja, prsten ? 90.0 : gPikadoRz);
-            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja, prsten ? 90.0 : gPikadoRz);
-        }
+        for (new k = 0; k < 3; k++) PikadoSnop(rmm, s + PIKADO_SNOP_POLA + (18.0 - 2.0 * PIKADO_SNOP_POLA) * float(k) / 2.0, boja, prsten ? 90.0 : gPikadoRz);
     }
 }
 
@@ -309,7 +307,7 @@ static PikadoTraka(playerid, i, Float:udio, Float:h)
         return;
     }
     PlayerTextDrawTextSize(playerid, gPkTd[playerid][i], udio * PIKADO_BAR_W, h);
-    if (i == PTD_SNAGA) PlayerTextDrawColour(playerid, gPkTd[playerid][i], floatabs(udio * 100.0 - PIKADO_IDEAL) <= PIKADO_TOCNO ? 0x2ECC71FF : 0xF1C40FFF);
+    if (i == PTD_SNAGA && gPikadoIgrac[playerid] != -1) PlayerTextDrawColour(playerid, gPkTd[playerid][i], floatabs(udio * 100.0 - gPikado[gPikadoIgrac[playerid]][pkIdeal]) <= PIKADO_TOCNO ? 0x2ECC71FF : 0xF1C40FFF);
     PlayerTextDrawShow(playerid, gPkTd[playerid][i]);
 }
 
@@ -549,7 +547,7 @@ static PikadoNisani(playerid, s)
 
 static PikadoBaci(playerid, s)
 {
-    new n = gPikado[s][pkNaPotezu], d = gPikado[s][pkBacio], Float:greska = gPikado[s][pkSnaga] - PIKADO_IDEAL;
+    new n = gPikado[s][pkNaPotezu], d = gPikado[s][pkBacio], Float:greska = gPikado[s][pkSnaga] - gPikado[s][pkIdeal];
     new Float:x = gPikado[s][pkAx] + gPikado[s][pkSx] + float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
     new Float:y = gPikado[s][pkAy] + gPikado[s][pkSy] + float(random(PIKADO_RASIPANJE * 2 + 1) - PIKADO_RASIPANJE);
     if (floatabs(greska) > PIKADO_TOCNO) y += greska * 1.5;
@@ -622,6 +620,7 @@ PikadoTipke(playerid, KEY:newkeys, KEY:oldkeys)
         gPikado[s][pkDrzi] = true;
         gPikado[s][pkGore] = true;
         gPikado[s][pkSnaga] = 0.0;
+        gPikado[s][pkIdeal] = PIKADO_IDEAL_OD + float(random(floatround(PIKADO_IDEAL_DO - PIKADO_IDEAL_OD) + 1));
         return 1;
     }
     if (!(newkeys & KEY_FIRE) && (oldkeys & KEY_FIRE) && gPikado[s][pkDrzi])

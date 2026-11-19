@@ -489,12 +489,12 @@ static MobitelOtvori(playerid)
     MobitelKutija(playerid, 9.0, 17.0, 102.0, 106.0, 0x000000FF);
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 100.0, 0xDCE4ECFF);
     MobitelKutija(playerid, 12.0, 20.0, 96.0, 11.0, 0x2E4A68FF);
-    gMobitelSatTd[playerid] = MobitelTekst(playerid, 105.0, 21.0, vrijeme, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_ALIGN_RIGHT);
-    MobitelTekst(playerid, 15.0, 21.0, "LS", 0xFFFFFFFF, 0.18, 0.85);
-    for (new i = 0; i < 3; i++) MobitelKutija(playerid, 25.0 + 2.5 * float(i), 26.5 - 1.5 * float(i), 1.5, 1.5 + 1.5 * float(i), 0xFFFFFFFF);
-    MobitelTekst(playerid, 34.0, 21.5, "4G", 0xFFFFFFFF, 0.13, 0.7);
-    MobitelKutija(playerid, 78.0, 23.5, 7.0, 3.5, 0xFFFFFFFF);
-    MobitelKutija(playerid, 85.0, 24.5, 1.0, 1.5, 0xFFFFFFFF);
+    MobitelTekst(playerid, 14.0, 21.5, "LS", 0xFFFFFFFF, 0.15, 0.75);
+    for (new i = 0; i < 3; i++) MobitelKutija(playerid, 27.0 + 2.5 * float(i), 27.0 - 1.5 * float(i), 1.5, 1.5 + 1.5 * float(i), 0xFFFFFFFF);
+    MobitelTekst(playerid, 37.0, 22.0, "4G", 0xFFFFFFFF, 0.12, 0.65);
+    gMobitelSatTd[playerid] = MobitelTekst(playerid, 93.0, 21.5, vrijeme, 0xFFFFFFFF, 0.15, 0.75, TEXT_DRAW_ALIGN_RIGHT);
+    MobitelKutija(playerid, 97.0, 23.5, 7.0, 3.5, 0xFFFFFFFF);
+    MobitelKutija(playerid, 104.0, 24.5, 1.0, 1.5, 0xFFFFFFFF);
     gMobitelNaslov[playerid] = MobitelTekst(playerid, 60.0, 34.0, "_", 0x2E4A68FF, 0.24, 1.1, TEXT_DRAW_ALIGN_CENTER);
     gMobitelOznaka[playerid] = MobitelKutija(playerid, 15.0, MOBITEL_STAVKA_Y, 90.0, MOBITEL_STAVKA_H, 0x5B8DBFFF);
     for (new i = 0; i < MOBITEL_REDOVA; i++)
