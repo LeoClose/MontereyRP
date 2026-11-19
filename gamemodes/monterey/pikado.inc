@@ -18,10 +18,12 @@
 #define PIKADO_BAR_W        160.0
 #define PIKADO_PLOCA        200
 #define PIKADO_LOPTA        1.032
-#define PIKADO_KLIN_MODEL   1559
-#define PIKADO_KLIN_ZOOM    1.724
-#define PIKADO_KLIN_SLOJEVA 2
+#define PIKADO_SNOP_MODEL   18656
+#define PIKADO_SNOP_ZOOM    2.1
+#define PIKADO_SNOP_DUZ     0.956
+#define PIKADO_SNOP_POLA    6.5
 #define PIKADO_TD           13
+#define PIKADO_KREM         0xF2EBD9FF
 #define PIKADO_CRNA         0x1C1C1CFF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
@@ -36,89 +38,6 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static const gPikadoKlinBoja[] = { 0x1C1C1CFF, 0xF2EBD9FF, 0xC0392BFF, 0x1E8449FF };
-static const Float:gPikadoKlin[][6] = {
-    { 246.715, 26.344, 207.300, 259.125, 333.710, 3.0 },
-    { 264.708, 42.263, 207.300, 259.125, 315.710, 2.0 },
-    { 277.885, 64.353, 207.300, 259.125, 297.709, 3.0 },
-    { 284.710, 93.112, 207.601, 249.731, 280.609, 2.0 },
-    { 285.229, 118.005, 207.300, 259.125, 261.709, 3.0 },
-    { 278.677, 144.314, 207.300, 259.125, 243.709, 2.0 },
-    { 265.942, 166.805, 207.300, 259.125, 225.709, 3.0 },
-    { 248.270, 183.276, 207.300, 259.125, 207.709, 2.0 },
-    { 231.798, 191.860, 199.785, 259.501, 190.609, 3.0 },
-    { 205.349, 192.456, 207.300, 259.125, 171.709, 2.0 },
-    { 184.301, 184.267, 207.300, 259.125, 153.709, 3.0 },
-    { 166.308, 168.348, 207.300, 259.125, 135.709, 2.0 },
-    { 153.132, 146.258, 207.300, 259.125, 117.710, 3.0 },
-    { 146.003, 124.365, 207.601, 249.731, 100.609, 2.0 },
-    { 145.788, 92.606, 207.300, 259.125, 81.710, 3.0 },
-    { 152.339, 66.297, 207.300, 259.125, 63.710, 2.0 },
-    { 165.075, 43.805, 207.300, 259.125, 45.710, 3.0 },
-    { 182.747, 27.334, 207.300, 259.125, 27.710, 2.0 },
-    { 206.795, 18.476, 199.785, 259.501, 10.609, 3.0 },
-    { 264.462, 12.652, 110.669, 265.625, 359.625, 2.0 },
-    { 250.158, 34.502, 197.562, 246.952, 333.710, 1.0 },
-    { 267.306, 49.673, 197.562, 246.952, 315.710, 0.0 },
-    { 279.864, 70.725, 197.562, 246.952, 297.709, 1.0 },
-    { 286.368, 98.133, 197.849, 238.000, 280.609, 0.0 },
-    { 286.863, 121.856, 197.562, 246.952, 261.709, 1.0 },
-    { 280.619, 146.930, 197.562, 246.952, 243.709, 0.0 },
-    { 268.482, 168.365, 197.562, 246.952, 225.709, 1.0 },
-    { 251.640, 184.062, 197.562, 246.952, 207.709, 0.0 },
-    { 235.941, 192.242, 190.400, 247.311, 190.609, 1.0 },
-    { 210.735, 192.811, 197.562, 246.952, 171.709, 0.0 },
-    { 190.676, 185.006, 197.562, 246.952, 153.709, 1.0 },
-    { 173.528, 169.835, 197.562, 246.952, 135.709, 0.0 },
-    { 160.970, 148.782, 197.562, 246.952, 117.710, 1.0 },
-    { 154.177, 127.918, 197.849, 238.000, 100.609, 0.0 },
-    { 153.971, 97.651, 197.562, 246.952, 81.710, 1.0 },
-    { 160.215, 72.577, 197.562, 246.952, 63.710, 0.0 },
-    { 172.352, 51.143, 197.562, 246.952, 45.710, 1.0 },
-    { 189.194, 35.446, 197.562, 246.952, 27.710, 0.0 },
-    { 212.113, 27.003, 190.400, 247.311, 10.609, 1.0 },
-    { 267.071, 21.452, 105.470, 253.147, 359.625, 0.0 },
-    { 273.826, 90.586, 130.612, 163.265, 333.710, 3.0 },
-    { 285.163, 100.616, 130.612, 163.265, 315.710, 2.0 },
-    { 293.465, 114.534, 130.612, 163.265, 297.709, 3.0 },
-    { 297.765, 132.653, 130.802, 157.347, 280.609, 2.0 },
-    { 298.092, 148.338, 130.612, 163.265, 261.709, 3.0 },
-    { 293.964, 164.914, 130.612, 163.265, 243.709, 2.0 },
-    { 285.940, 179.085, 130.612, 163.265, 225.709, 3.0 },
-    { 274.806, 189.463, 130.612, 163.265, 207.709, 2.0 },
-    { 264.427, 194.871, 125.877, 163.503, 190.609, 3.0 },
-    { 247.763, 195.247, 130.612, 163.265, 171.709, 2.0 },
-    { 234.501, 190.087, 130.612, 163.265, 153.709, 3.0 },
-    { 223.164, 180.057, 130.612, 163.265, 135.709, 2.0 },
-    { 214.862, 166.139, 130.612, 163.265, 117.710, 3.0 },
-    { 210.371, 152.345, 130.802, 157.347, 100.609, 2.0 },
-    { 210.235, 132.335, 130.612, 163.265, 81.710, 3.0 },
-    { 214.363, 115.758, 130.612, 163.265, 63.710, 2.0 },
-    { 222.387, 101.587, 130.612, 163.265, 45.710, 3.0 },
-    { 233.522, 91.210, 130.612, 163.265, 27.710, 2.0 },
-    { 248.674, 85.628, 125.877, 163.503, 10.609, 3.0 },
-    { 285.008, 81.958, 69.728, 167.361, 359.625, 2.0 },
-    { 277.269, 98.743, 120.874, 151.093, 333.710, 1.0 },
-    { 287.760, 108.025, 120.874, 151.093, 315.710, 0.0 },
-    { 295.443, 120.906, 120.874, 151.093, 297.709, 1.0 },
-    { 299.423, 137.675, 121.050, 145.615, 280.609, 0.0 },
-    { 299.726, 152.189, 120.874, 151.093, 261.709, 1.0 },
-    { 295.905, 167.530, 120.874, 151.093, 243.709, 0.0 },
-    { 288.480, 180.645, 120.874, 151.093, 225.709, 1.0 },
-    { 278.175, 190.249, 120.874, 151.093, 207.709, 0.0 },
-    { 268.570, 195.253, 116.492, 151.312, 190.609, 1.0 },
-    { 253.148, 195.601, 120.874, 151.093, 171.709, 0.0 },
-    { 240.876, 190.826, 120.874, 151.093, 153.709, 1.0 },
-    { 230.384, 181.544, 120.874, 151.093, 135.709, 0.0 },
-    { 222.701, 168.663, 120.874, 151.093, 117.710, 1.0 },
-    { 218.545, 155.898, 121.050, 145.615, 100.609, 0.0 },
-    { 218.419, 137.380, 120.874, 151.093, 81.710, 1.0 },
-    { 222.239, 122.039, 120.874, 151.093, 63.710, 0.0 },
-    { 229.665, 108.925, 120.874, 151.093, 45.710, 1.0 },
-    { 239.969, 99.321, 120.874, 151.093, 27.710, 0.0 },
-    { 253.992, 94.156, 116.492, 151.312, 10.609, 1.0 },
-    { 287.617, 90.759, 64.530, 154.883, 359.625, 0.0 }
-};
 static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN;
 
 PikadoBodovi(Float:x, Float:y)
@@ -160,17 +79,28 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoKlin(k)
+static PikadoSnop(Float:rmm, Float:kut, boja)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Text:td = TextDrawCreate(gPikadoKlin[k][0], gPikadoKlin[k][1], "_");
+    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ, Float:w = h * PIKADO_AX;
+    new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0, PIKADO_CY - h / 2.0, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-    TextDrawTextSize(td, gPikadoKlin[k][2], gPikadoKlin[k][3]);
+    TextDrawTextSize(td, w, h);
     TextDrawBackgroundColour(td, 0x00000000);
-    TextDrawColour(td, gPikadoKlinBoja[floatround(gPikadoKlin[k][5])]);
-    TextDrawSetPreviewModel(td, PIKADO_KLIN_MODEL);
-    TextDrawSetPreviewRot(td, 0.0, gPikadoKlin[k][4], 0.0, PIKADO_KLIN_ZOOM);
+    TextDrawColour(td, boja);
+    TextDrawSetPreviewModel(td, PIKADO_SNOP_MODEL);
+    TextDrawSetPreviewRot(td, 0.0, 90.0 - kut, 90.0, PIKADO_SNOP_ZOOM);
     gPikadoPloca[gPikadoPlocaN++] = td;
+}
+
+static PikadoSloj(Float:rmm, parna, neparna)
+{
+    for (new i = 0; i < 20; i++)
+    {
+        new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
+        PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja);
+        PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja);
+    }
 }
 
 static PikadoPlocaStvori()
@@ -182,7 +112,10 @@ static PikadoPlocaStvori()
     TextDrawTextSize(td, 640.0, 0.0);
     gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(226.0, 0x111111FF);
-    for (new k = 0; k < sizeof gPikadoKlin; k++) for (new d = 0; d < PIKADO_KLIN_SLOJEVA; d++) PikadoKlin(k);
+    PikadoSloj(170.0, PIKADO_CRVENA, PIKADO_ZELENA);
+    PikadoSloj(162.0, PIKADO_CRNA, PIKADO_KREM);
+    PikadoSloj(107.0, PIKADO_CRVENA, PIKADO_ZELENA);
+    PikadoSloj(99.0, PIKADO_CRNA, PIKADO_KREM);
     PikadoKrugPloce(15.9, PIKADO_ZELENA);
     PikadoKrugPloce(6.35, PIKADO_CRVENA);
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
@@ -199,41 +132,6 @@ static PikadoPlocaStvori()
         TextDrawSetShadow(td, 0);
         gPikadoPloca[gPikadoPlocaN++] = td;
     }
-}
-
-static Text:gPikadoTest[6], bool:gPikadoTestIma;
-
-CMD:pikadotest(playerid, params[])
-{
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    if (gPikadoTestIma)
-    {
-        for (new i = 0; i < sizeof gPikadoTest; i++) TextDrawDestroy(gPikadoTest[i]);
-        gPikadoTestIma = false;
-        return 1;
-    }
-    new const Float:t[][] = {
-        { 40.0, 60.0, 100.0, 100.0, 0.0, 30.0, 90.0 },
-        { 160.0, 60.0, 100.0, 100.0, 0.0, 60.0, 90.0 },
-        { 280.0, 60.0, 100.0, 100.0, 30.0, 0.0, 90.0 },
-        { 400.0, 60.0, 100.0, 100.0, 90.0, 0.0, 0.0 },
-        { 40.0, 280.0, 100.0, 100.0, 90.0, 30.0, 0.0 },
-        { 160.0, 280.0, 100.0, 100.0, 90.0, 0.0, 30.0 }
-    };
-    for (new i = 0; i < sizeof gPikadoTest; i++)
-    {
-        new Text:td = TextDrawCreate(t[i][0], t[i][1], "_");
-        TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-        TextDrawTextSize(td, t[i][2], t[i][3]);
-        TextDrawBackgroundColour(td, 0x3050A0FF);
-        TextDrawColour(td, 0xFFFFFFFF);
-        TextDrawSetPreviewModel(td, 18656);
-        TextDrawSetPreviewRot(td, t[i][4], t[i][5], t[i][6], 1.0);
-        TextDrawShowForPlayer(playerid, td);
-        gPikadoTest[i] = td;
-    }
-    gPikadoTestIma = true;
-    return 1;
 }
 
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)
