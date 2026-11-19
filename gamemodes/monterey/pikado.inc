@@ -147,6 +147,41 @@ CMD:pikadozice(playerid, params[])
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Zice pikada: x %.1f, y %.1f, zoom %.2f"), gPikadoZicaDx, gPikadoZicaDy, gPikadoZicaZoom);
 }
 
+static Text:gPikadoTest[6], bool:gPikadoTestIma;
+
+CMD:pikadotest(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    if (gPikadoTestIma)
+    {
+        for (new i = 0; i < sizeof gPikadoTest; i++) TextDrawDestroy(gPikadoTest[i]);
+        gPikadoTestIma = false;
+        return 1;
+    }
+    new const Float:t[][] = {
+        { 40.0, 60.0, 100.0, 100.0, 45.0, 0.0 },
+        { 160.0, 60.0, 200.0, 100.0, 45.0, 0.0 },
+        { 380.0, 60.0, 100.0, 200.0, 45.0, 0.0 },
+        { 500.0, 60.0, 100.0, 100.0, 45.0, 30.0 },
+        { 40.0, 280.0, 100.0, 100.0, 0.0, 0.0 },
+        { 160.0, 280.0, 100.0, 100.0, 45.0, 90.0 }
+    };
+    for (new i = 0; i < sizeof gPikadoTest; i++)
+    {
+        new Text:td = TextDrawCreate(t[i][0], t[i][1], "_");
+        TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
+        TextDrawTextSize(td, t[i][2], t[i][3]);
+        TextDrawBackgroundColour(td, 0x3050A0FF);
+        TextDrawColour(td, i == 5 ? PIKADO_CRNA : PIKADO_BIJELA);
+        TextDrawSetPreviewModel(td, 1559);
+        TextDrawSetPreviewRot(td, 0.0, t[i][5], t[i][4], 1.0);
+        TextDrawShowForPlayer(playerid, td);
+        gPikadoTest[i] = td;
+    }
+    gPikadoTestIma = true;
+    return 1;
+}
+
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)
 {
     new Float:r = VectorSize(x, y, 0.0);
