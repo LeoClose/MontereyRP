@@ -64,8 +64,8 @@ static PikadoNaEkran(Float:mx, Float:my, &Float:px, &Float:py)
 static PikadoBrojPoz(i, &Float:px, &Float:py)
 {
     new Float:k = PIKADO_R / 170.0, Float:a = float(i) * 18.0;
-    px = PIKADO_CX + 197.0 * k * PIKADO_AX * floatsin(a, degrees);
-    py = PIKADO_CY - 197.0 * k * floatcos(a, degrees) - 6.0;
+    px = PIKADO_CX + 186.0 * k * PIKADO_AX * floatsin(a, degrees);
+    py = PIKADO_CY - 186.0 * k * floatcos(a, degrees) - 6.0;
 }
 
 static PikadoKrugPloce(Float:rmm, boja)
@@ -111,10 +111,10 @@ static PikadoPlocaStvori()
     TextDrawBoxColour(td, 0x000000A0);
     TextDrawTextSize(td, 640.0, 0.0);
     gPikadoPloca[gPikadoPlocaN++] = td;
-    PikadoKrugPloce(226.0, 0x111111FF);
-    PikadoSloj(170.0, PIKADO_CRVENA, PIKADO_ZELENA);
+    PikadoKrugPloce(200.0, 0x111111FF);
+    PikadoSloj(170.0, PIKADO_CRNA, PIKADO_ZELENA);
     PikadoSloj(162.0, PIKADO_CRNA, PIKADO_KREM);
-    PikadoSloj(107.0, PIKADO_CRVENA, PIKADO_ZELENA);
+    PikadoSloj(107.0, PIKADO_CRNA, PIKADO_ZELENA);
     PikadoSloj(99.0, PIKADO_CRNA, PIKADO_KREM);
     PikadoKrugPloce(15.9, PIKADO_ZELENA);
     PikadoKrugPloce(6.35, PIKADO_CRVENA);
