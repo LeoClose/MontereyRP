@@ -59,19 +59,6 @@ InitOdjeca()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_style (account INTEGER PRIMARY KEY, skin INTEGER NOT NULL DEFAULT -1, \
         kapa INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, krx REAL NOT NULL DEFAULT 0, kry REAL NOT NULL DEFAULT 0, krz REAL NOT NULL DEFAULT 0, \
         frizura INTEGER NOT NULL DEFAULT 0, fx REAL NOT NULL DEFAULT 0, fy REAL NOT NULL DEFAULT 0, fz REAL NOT NULL DEFAULT 0, frx REAL NOT NULL DEFAULT 0, fry REAL NOT NULL DEFAULT 0, frz REAL NOT NULL DEFAULT 0)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS server_flags (name TEXT PRIMARY KEY)"));
-    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'odjeca_kape'");
-    new bool:kape = DB_GetRowCount(zastava) > 0;
-    DB_FreeResultSet(zastava);
-    if (!kape)
-    {
-        for (new i = 0; i < sizeof gOdjecaZadano; i++)
-        {
-            if (gOdjecaZadano[i][0] != ODJ_KAPA) continue;
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO store_items (store_type, store, kind, model, price) SELECT %d, s.id, %d, %d, %d FROM clothing_shops s WHERE s.type = %d AND NOT EXISTS (SELECT 1 FROM store_items i WHERE i.store_type = %d AND i.store = s.id AND i.model = %d)", ODJECA_KATALOG, ODJ_KAPA, gOdjecaZadano[i][1], gOdjecaZadano[i][2], ODJ_PRODAVAONICA, ODJECA_KATALOG, gOdjecaZadano[i][1]));
-        }
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('odjeca_kape')"));
-    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, type, x, y, z, a, Aktor, ax, ay, az, aa, Kabina, kx, ky, kz, ka FROM clothing_shops ORDER BY id LIMIT %d", ODJECA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
     {
