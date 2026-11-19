@@ -47,7 +47,9 @@ forward bool:GarazaIzvana(db, &Float:x, &Float:y);
 #define RANJEN_TRAJANJE_S   300
 #define RANJEN_CEKANJE_MS   10000
 #define RANJEN_POGODAKA     5
-#define RANJEN_CIJENA       250
+#define RANJEN_OSNOVA       100
+#define RANJEN_PO_KM        60
+#define RANJEN_PO_STETI     1.5
 #define RANJEN_DOMET_NPC    0.8
 #define RANJEN_PRAG         20.0
 #define RANJEN_IZLAZ_MS     1500
@@ -703,6 +705,7 @@ static SlucajKraj(s, bool:ok, ko = INVALID_PLAYER_ID)
         if (p != INVALID_PLAYER_ID)
         {
             if (gMehanicar[p] == s + 1) gMehanicar[p] = 0;
+            TuningMehanicarZatvori(p);
             if (!ok) SendClientMessage(p, COLOR_ERROR, T(p, "Mehanicar je otisao."));
         }
         SlucajZatvori(s);
@@ -886,6 +889,7 @@ SlucajStateChange(playerid, PLAYER_STATE:newstate)
 
 SlucajDisconnect(playerid)
 {
+    RanjenOcistiRane(playerid);
     gSlucajPoziv[playerid] = 0;
     gMehanicar[playerid] = 0;
     gRanjen[playerid] = RN_NE;
@@ -912,51 +916,36 @@ static gOdvozVozila[MAX_PLAYERS][MEHANICAR_ODVOZ_VOZILA], gOdvozBroj[MAX_PLAYERS
 
 static MehanicarOdvozPoziv(playerid)
 {
-    new vozila[MEHANICAR_ODVOZ_VOZILA];
-    if (!VlasnistvaIgraca(playerid, vozila)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate vlastitih vozila."));
-    MobitelPoziv(playerid, T(playerid, "Mehanicar"));
-    SetTimerEx("MehanicarOdvozPitaj", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
+    gOdvozBroj[playerid] = VlasnistvaIgraca(playerid, gOdvozVozila[playerid]);
+    if (!gOdvozBroj[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate vlastitih vozila."));
+    MobitelOdvoz(playerid);
     return 1;
 }
 
 static MehanicarOdvozGreska(playerid, const tekst[])
 {
     SendClientMessage(playerid, COLOR_ERROR, T(playerid, tekst));
-    TaksiSpustiMobitel(playerid);
     return 1;
 }
 
-forward MehanicarOdvozPitaj(playerid);
-public MehanicarOdvozPitaj(playerid)
+MehanicarOdvozBroj(playerid)
 {
-    if (!IsPlayerConnected(playerid) || !gUlogiran[playerid]) return;
-    SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Dispecer (telefon): Mehanicarski servis, izvolite. Koje vozilo trebate odslepati i odakle?"));
-    MehanicarOdvozIzbor(playerid);
+    return gOdvozBroj[playerid];
 }
 
-static MehanicarOdvozIzbor(playerid)
+MehanicarOdvozRed(playerid, i, red[], len)
 {
-    gOdvozBroj[playerid] = VlasnistvaIgraca(playerid, gOdvozVozila[playerid]);
-    if (!gOdvozBroj[playerid]) return MehanicarOdvozGreska(playerid, "Nemate vlastitih vozila.");
-    new list[512], row[96], naslov[64], len = 0, Float:x, Float:y, Float:z;
-    for (new i = 0; i < gOdvozBroj[playerid]; i++)
-    {
-        new v = gOdvozVozila[playerid][i];
-        GetVehiclePos(v, x, y, z);
-        format(row, sizeof row, "%s - %s", gImenaVozila[GetVehicleModel(v) - 400], CestaZona(x, y));
-        DodajStupac(list, len, row);
-    }
-    format(naslov, sizeof naslov, T(playerid, "Odvoz vozila na parking ($%d)"), MEHANICAR_ODVOZ);
-    return PrikaziDialog(playerid, DLG_MEHANICAR_ODVOZ, DIALOG_STYLE_LIST, naslov, list, T(playerid, "Odaberi"), T(playerid, "Odustani"));
+    new v = gOdvozVozila[playerid][i], Float:x, Float:y, Float:z;
+    red[0] = EOS;
+    if (i < 0 || i >= gOdvozBroj[playerid] || !GetVehicleModel(v)) return;
+    GetVehiclePos(v, x, y, z);
+    if (GetVehicleVirtualWorld(v)) GarazaIzvana(VlasnikGarazaDb(v), x, y);
+    format(red, len, "%s - %s", gImenaVozila[GetVehicleModel(v) - 400], CestaZona(x, y));
 }
 
-DLG:mehanicar_odvoz(playerid, response, listitem)
+MehanicarOdvozOdaberi(playerid, listitem)
 {
-    if (!response || listitem < 0 || listitem >= gOdvozBroj[playerid])
-    {
-        TaksiSpustiMobitel(playerid);
-        return 1;
-    }
+    if (listitem < 0 || listitem >= gOdvozBroj[playerid]) return 1;
     new v = gOdvozVozila[playerid][listitem], bool:zauzeto = false;
     if (!GetVehicleModel(v) || VlasnikVozila(v) != gAccountId[playerid]) return MehanicarOdvozGreska(playerid, "Vozilo vise nije vase.");
     if (gOdvoz[v]) return MehanicarOdvozGreska(playerid, "To vozilo se vec odvozi.");
@@ -971,6 +960,7 @@ DLG:mehanicar_odvoz(playerid, response, listitem)
     odakle = CestaZona(x, y);
     if (GetVehicleVirtualWorld(v) && GarazaIzvana(VlasnikGarazaDb(v), x, y)) odakle = CestaZona(x, y);
     VlasnikParkingZona(v, dokle);
+    MobitelPoziv(playerid, T(playerid, "Mehanicar"));
     SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_CHAT, "%s kaze (telefon): Dobar dan, odslepajte mi %s iz %s do parkinga u %s.", GetRPIme(playerid), model, 1, odakle, dokle);
     SetTimerEx("MehanicarOdvozOdgovor", MEHANICAR_ODGOVOR_MS, false, "i", playerid);
@@ -1026,11 +1016,55 @@ public MehanicarOdgovor(playerid)
     if (IsPlayerConnected(playerid)) SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Dispecer (telefon): U redu, mehanicar je na putu."));
 }
 
+static const gMehanicarUsluga[][] = { "Napuni gorivo", "Popravi motor", "Slepaj vozilo u radionicu", "Zamijeni gume" };
+static const gMehanicarCijena[] = { MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE, MEHANICAR_GUME };
+
+static MehanicarSlucaj(playerid)
+{
+    new s = gMehanicar[playerid] - 1;
+    if (s >= 0 && gSlucaj[s][slStanje] == SL_PRISTANAK && gSlucaj[s][slPacijent] == playerid) return s;
+    gMehanicar[playerid] = 0;
+    return -1;
+}
+
+static MehanicarPosao(playerid, i)
+{
+    new s = gMehanicar[playerid] - 1;
+    return s >= 0 && gSlucaj[s][slIgrac] == INVALID_PLAYER_ID && i >= 2 ? i + 1 : i;
+}
+
+MehanicarBroj(playerid)
+{
+    new s = gMehanicar[playerid] - 1;
+    return s >= 0 && gSlucaj[s][slIgrac] != INVALID_PLAYER_ID ? 4 : 3;
+}
+
+MehanicarStavka(playerid, i, &cijena, ime[], size)
+{
+    new p = MehanicarPosao(playerid, i);
+    if (p < 0 || p >= sizeof gMehanicarCijena) p = 0;
+    cijena = gMehanicarCijena[p];
+    format(ime, size, T(playerid, gMehanicarUsluga[p]));
+}
+
+MehanicarOdustani(playerid)
+{
+    new s = MehanicarSlucaj(playerid);
+    if (s == -1) return;
+    gMehanicar[playerid] = 0;
+    SlucajKraj(s, true);
+}
+
 static MehanicarPonudi(playerid, s)
 {
     if (playerid == INVALID_PLAYER_ID || !IsPlayerConnected(playerid)) return;
     new body[256];
     gMehanicar[playerid] = s + 1;
+    if (GetPlayerState(playerid) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(playerid) == gMehanicarVozilo[playerid])
+    {
+        TuningMehanicar(playerid);
+        return;
+    }
     if (gSlucaj[s][slIgrac] != INVALID_PLAYER_ID) format(body, sizeof body, T(playerid, "Napuni gorivo ($%d)\nPopravi motor ($%d)\nSlepaj vozilo u radionicu ($%d)\nZamijeni gume ($%d)"), MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE, MEHANICAR_GUME);
     else format(body, sizeof body, T(playerid, "Napuni gorivo ($%d)\nPopravi motor ($%d)\nZamijeni gume ($%d)"), MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_GUME);
     PrikaziDialog(playerid, DLG_MEHANICAR, DIALOG_STYLE_LIST, T(playerid, "Mehanicar"), body, T(playerid, "Odaberi"), T(playerid, "Gotovo"));
@@ -1038,22 +1072,27 @@ static MehanicarPonudi(playerid, s)
 
 DLG:mehanicar(playerid, response, listitem)
 {
-    static const cijene[] = { MEHANICAR_GORIVO, MEHANICAR_POPRAVAK, MEHANICAR_SLEPANJE, MEHANICAR_GUME };
-    new s = gMehanicar[playerid] - 1, v = gMehanicarVozilo[playerid];
-    if (s < 0 || gSlucaj[s][slStanje] != SL_PRISTANAK || gSlucaj[s][slPacijent] != playerid)
+    if (!response)
     {
-        gMehanicar[playerid] = 0;
+        MehanicarOdustani(playerid);
         return 1;
     }
-    if (!response || !GetVehicleModel(v))
+    return MehanicarOdaberi(playerid, listitem);
+}
+
+MehanicarOdaberi(playerid, listitem)
+{
+    new s = MehanicarSlucaj(playerid), v = gMehanicarVozilo[playerid];
+    if (s == -1) return 1;
+    if (!GetVehicleModel(v))
     {
         gMehanicar[playerid] = 0;
         SlucajKraj(s, true);
         return 1;
     }
     new igrac = gSlucaj[s][slIgrac];
-    if (igrac == INVALID_PLAYER_ID && listitem >= 2) listitem++;
-    if (listitem < 0 || listitem >= sizeof cijene) return 1;
+    listitem = MehanicarPosao(playerid, listitem);
+    if (listitem < 0 || listitem >= sizeof gMehanicarCijena) return 1;
     if (listitem == 3)
     {
         new VEHICLE_PANEL_STATUS:panels, VEHICLE_DOOR_STATUS:doors, VEHICLE_LIGHT_STATUS:lights, VEHICLE_TIRE_STATUS:tires;
@@ -1065,7 +1104,7 @@ DLG:mehanicar(playerid, response, listitem)
             return 1;
         }
     }
-    if (igrac != INVALID_PLAYER_ID ? !TransferNovac(playerid, igrac, cijene[listitem]) : !DajNovac(playerid, -cijene[listitem]))
+    if (igrac != INVALID_PLAYER_ID ? !TransferNovac(playerid, igrac, gMehanicarCijena[listitem]) : !DajNovac(playerid, -gMehanicarCijena[listitem]))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
         MehanicarPonudi(playerid, s);
@@ -1330,20 +1369,48 @@ RanjenUpdate(playerid)
     ApplyAnimation(playerid, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
 }
 
+static Float:gRanjenRana[MAX_PLAYERS][7];
+static const Float:gRanjenTezina[7] = { 2.0, 1.5, 1.0, 1.0, 1.0, 1.0, 4.0 };
+
+RanjenRana(playerid, bodypart, Float:steta)
+{
+    if (playerid >= 0 && playerid < MAX_PLAYERS && bodypart >= 3 && bodypart <= 9 && steta > 0.0) gRanjenRana[playerid][bodypart - 3] += steta;
+}
+
+static RanjenOcistiRane(playerid)
+{
+    for (new i = 0; i < sizeof gRanjenRana[]; i++) gRanjenRana[playerid][i] = 0.0;
+}
+
 static RanjenCijena(playerid)
 {
-    return gNovac[playerid] < RANJEN_CIJENA ? gNovac[playerid] : RANJEN_CIJENA;
+    new Float:d = 1.0e9, Float:c = float(RANJEN_OSNOVA);
+    for (new k = 0; k < KAMION_MAX; k++)
+    {
+        if (!gKamion[k][kIma] || gKamion[k][kTip] != ORG_MEDICINSKA) continue;
+        new Float:u = VectorSize(gKamion[k][kX] - gRanjenPos[playerid][0], gKamion[k][kY] - gRanjenPos[playerid][1], 0.0);
+        if (u < d) d = u;
+    }
+    if (d == 1.0e9) for (new b = 0; b < sizeof gBolnice; b++)
+    {
+        new Float:u = VectorSize(gBolnice[b][0] - gRanjenPos[playerid][0], gBolnice[b][1] - gRanjenPos[playerid][1], 0.0);
+        if (u < d) d = u;
+    }
+    c += d / 1000.0 * float(RANJEN_PO_KM);
+    for (new i = 0; i < sizeof gRanjenRana[]; i++) c += gRanjenRana[playerid][i] * gRanjenTezina[i] * RANJEN_PO_STETI;
+    new n = floatround(c);
+    return gNovac[playerid] < n ? gNovac[playerid] : n;
 }
 
 RanjenPonudi(playerid, medic)
 {
-    new body[128];
+    new info[128];
     gRanjenPonuda[playerid] = medic == RANJEN_NPC ? RANJEN_NPC : medic + 1;
-    format(body, sizeof body, T(playerid, "Bolnicar vam zeli pomoci. Cijena: $%d. Prihvacate li?"), RanjenCijena(playerid));
-    PrikaziDialog(playerid, DLG_RANJEN, DIALOG_STYLE_MSGBOX, T(playerid, "Hitna pomoc"), body, T(playerid, "Prihvati"), T(playerid, "Odbij"));
+    format(info, sizeof info, T(playerid, "Bolnicar vam zeli pomoci. Cijena: $%d."), RanjenCijena(playerid));
+    UpitDaNe(playerid, UPIT_RANJEN, 0, 0, T(playerid, "Hitna pomoc"), info);
 }
 
-DLG:ranjen(playerid, response)
+RanjenUpit(playerid, bool:response)
 {
     new n = gRanjenPonuda[playerid], s = SlucajPacijenta(playerid);
     gRanjenPonuda[playerid] = 0;
@@ -1386,6 +1453,7 @@ RanjenAdmin(playerid)
 
 RanjenPrimijeni(playerid, bool:spasen)
 {
+    UpitMakni(playerid, UPIT_RANJEN);
     gRanjen[playerid] = RN_NE;
     gRanjenPonuda[playerid] = 0;
     SetPlayerHealth(playerid, 100.0);
@@ -1394,10 +1462,12 @@ RanjenPrimijeni(playerid, bool:spasen)
     if (spasen)
     {
         new cijena = RanjenCijena(playerid);
+        RanjenOcistiRane(playerid);
         if (cijena) DajNovac(playerid, -cijena);
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Spaseni ste. Placate $%d."), cijena);
         return;
     }
+    RanjenOcistiRane(playerid);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT oruzje_dozvola FROM accounts WHERE id = %d", gAccountId[playerid]), bool:dozvola = DB_GetRowCount(res) && DB_GetFieldInt(res, 0);
     DB_FreeResultSet(res);
     SpremiSvoOruzje(playerid);

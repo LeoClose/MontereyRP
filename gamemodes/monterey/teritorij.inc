@@ -544,6 +544,7 @@ DilerKey(playerid)
     new k = NpcBlizu(playerid);
     if (k == -1) return 0;
     new t = k / MAX_TER_NPC, item = DrogaTeritorija(t), info[96];
+    if (gTer[t][terZaliha] <= 0) return SendClientMessage(playerid, COLOR_CHAT, T(playerid, "Diler kaze: Trenutno nemam nista za prodaju.")), 1;
     format(info, sizeof info, T(playerid, "%s: $%d/%s, na zalihi %d."), T(playerid, gItems[item][ITEM_NAME]), gTer[t][terCijena], T(playerid, gItems[item][ITEM_UNIT]), gTer[t][terZaliha]);
     return UpitKolicina(playerid, UPIT_DILER, k, 0, T(playerid, "Diler"), info);
 }

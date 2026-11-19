@@ -253,6 +253,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bo
     gStetaZadnji[playerid][damagedid] = sad;
     new Float:dmg = gSteta[i][stDmg];
     if (gSteta[i][stKlijent] && amount < dmg) dmg = amount;
+    RanjenRana(damagedid, bodypart, dmg);
     StetaPrimijeni(damagedid, dmg, weaponid);
     return 1;
 }
@@ -268,6 +269,7 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, WEAPON:weaponid, bod
     }
     if (issuerid != INVALID_PLAYER_ID && i >= 0 && i < STETA_ORUZJA && gSteta[i][stDmg] > 0.0) return 1;
     if (weaponid == WEAPON_COLLISION && 1061 <= GetPlayerAnimationIndex(playerid) <= 1067) return 1;
+    RanjenRana(playerid, bodypart, amount);
     StetaPrimijeni(playerid, amount, weaponid);
     return 1;
 }

@@ -23,6 +23,7 @@ IgraObavijest(playerid, const naslov[], boja, const tekst[], ms = OBAVIJEST_MS)
     gObZadnji[playerid][0] = EOS;
     strcat(gObZadnji[playerid], tekst[i]);
     PlayerPlaySound(playerid, OBAVIJEST_ZVUK, 0.0, 0.0, 0.0);
+    SavjetMakni(playerid);
     if (gObOd[playerid] && GetTickCount() - gObOd[playerid] < OBAVIJEST_SPOJI_MS && strlen(gObTekst[playerid]) + strlen(tekst[i]) < sizeof gObTekst[] - 4) strcat(gObTekst[playerid], "~n~");
     else gObTekst[playerid][0] = EOS;
     strcat(gObTekst[playerid], tekst[i]);

@@ -79,6 +79,7 @@ stock ZamrzniIgraca(playerid, bool:moze)
 stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
 {
     gPrenosCekaj[playerid] = interijer != GetPlayerInterior(playerid) || svijet != GetPlayerVirtualWorld(playerid);
+    if (gPrenosCekaj[playerid]) SavjetPromjena(playerid);
     SetPlayerInterior(playerid, interijer);
     SetPlayerVirtualWorld(playerid, svijet);
     SetPlayerPos(playerid, x, y, z);
@@ -386,6 +387,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #define AP_ORG_LIST_FIXED   2
 
 #include "monterey/dialog.inc"
+#include "monterey/upit.inc"
 #include "monterey/chat.inc"
 #include "monterey/tekst.inc"
 #include "monterey/oznake.inc"
@@ -412,7 +414,6 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/kafic.inc"
 #include "monterey/oklada.inc"
 #include "monterey/obavijest.inc"
-#include "monterey/upit.inc"
 #include "monterey/bilijar.inc"
 #include "monterey/kosarka.inc"
 #include "monterey/arkada.inc"

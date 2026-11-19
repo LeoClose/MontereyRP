@@ -11,13 +11,14 @@
 #define TAKSI_RUB_Z         0.15
 #define TAKSI_RUB           2.1
 #define TAKSI_BLIZU         50.0
-#define TAKSI_ESC_MS        800
 #define TAKSI_POLICIJA_MS   20000
 #define TAKSI_RUB_PRVI      9.0
 #define TAKSI_RUB_DRUGI     6.0
 #define TAKSI_RUB_SPORO     3.0
 #define TAKSI_NAPOJNICA_POSTO 80
-#define TAKSI_SAVJET_MS     8000
+#define TAKSI_STANI_MS      5000
+#define TAKSI_METAR_BOJA    0xF1C40FE6
+#define TAKSI_KONTROLE_MS   6000
 #define TAKSI_NAPOJNICA_BRZE 1.3
 #define TAKSI_CEKA_MS       8000
 #define TAKSI_PROGURAJ_MS   8000
@@ -51,7 +52,7 @@
 
 enum { TX_SLOBODAN, TX_DOLAZI, TX_CEKA, TX_KARTA, TX_POTVRDA, TX_VOZI, TX_TELEPORT, TX_IZLAZ, TX_ODLAZI, TX_KUCI, TX_KRAJ, TX_NESTAO, TX_NEMA }
 static Float:gTaksiPoziv[MAX_PLAYERS][2];
-enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, tRok, tKlik, tKuca, tSkok, tCeka, tProguraj, tSporo, tDb, tStaje, tRub, tPrikaz, bool:tBrzo, bool:tObilazi, Float:tCiljX, Float:tCiljY }
+enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, tRok, tKlik, tKuca, tSkok, tCeka, tProguraj, tSporo, tDb, tStaje, tRub, tMetar, bool:tZavrsi, bool:tBrzo, bool:tObilazi, Float:tCiljX, Float:tCiljY }
 static gTaksi[TAKSI_SLOTOVA][E_TAKSI];
 static Float:gTaksiTocke[TAKSI_SLOTOVA][CESTA_MAX_TOCAKA][4];
 static gTaksiOd[MAX_PLAYERS], gTaksiCeka[MAX_PLAYERS], gTaksiPonuda[MAX_PLAYERS], bool:gTaksiVozac[MAX_PLAYERS];
@@ -378,9 +379,9 @@ static TaksiIsprazni(s)
 TaksiPrekini(s)
 {
     new p = gTaksi[s][tMusterija];
+    TaksiMetarMakni(s);
     if (p != INVALID_PLAYER_ID)
     {
-        if (gTaksi[s][tStanje] == TX_VOZI || gTaksi[s][tStanje] == TX_TELEPORT) DajNovac(p, gTaksi[s][tCijena]);
         SendClientMessage(p, COLOR_POMOC, T(p, "Pomoc: Taksi je unisten, voznja je otkazana."));
         gTaksiOd[p] = 0;
         gTaksi[s][tMusterija] = INVALID_PLAYER_ID;
@@ -420,6 +421,8 @@ static TaksiOtidi(s)
 
 static TaksiOstavi(s)
 {
+    TaksiMetarMakni(s);
+    if (gTaksi[s][tMusterija] != INVALID_PLAYER_ID) UpitMakni(gTaksi[s][tMusterija], UPIT_TAKSI);
     gTaksi[s][tStanje] = TX_IZLAZ;
     gTaksi[s][tRok] = GetTickCount() + TAKSI_IZLAZAK_MS;
     TaksiIsprazni(s);
@@ -690,6 +693,11 @@ public TaksiPrepreke()
             {
                 gTaksi[s][tStaje] = 0;
                 gTaksi[s][tRub] = 0;
+                if (gTaksi[s][tZavrsi] && st == TX_VOZI)
+                {
+                    TaksiZavrsiRano(s);
+                    continue;
+                }
                 CestaNastavi(gTaksi[s][tVozilo], gTaksiTocke[s], gTaksi[s][tBroj], gTaksi[s][tIdx]);
                 TaksiKorak(s);
             }
@@ -788,6 +796,7 @@ public OnNPCFinishMove(npcid)
         case TX_DOLAZI: TaksiStigao(s);
         case TX_VOZI:
         {
+            TaksiNaplati(p, gTaksi[s][tCijena]);
             TaksiVozac(s, p, "Vozac kaze: Stigli smo. Hvala na voznji i ugodan dan!");
             Govor(p, "%s kaze: Hvala, dovidenja.", GetRPIme(p));
             TaksiOstavi(s);
@@ -916,48 +925,92 @@ TaksiPovratak(playerid)
 
 static TaksiPotvrda(s, playerid)
 {
-    new body[128];
-    gTaksi[s][tPrikaz] = GetTickCount();
-    format(body, sizeof body, T(playerid, "Odrediste: %s\nCijena: $%d\n\nKrecemo?"), CestaZona(gTaksi[s][tCiljX], gTaksi[s][tCiljY]), gTaksi[s][tCijena]);
-    PrikaziDialog(playerid, DLG_TAKSI, DIALOG_STYLE_MSGBOX, T(playerid, "Taksi"), body, T(playerid, "Vozi"), T(playerid, "Odustani"));
+    new info[128];
+    format(info, sizeof info, T(playerid, "Odrediste: %s~n~Cijena: $%d"), CestaZona(gTaksi[s][tCiljX], gTaksi[s][tCiljY]), gTaksi[s][tCijena]);
+    UpitDaNe(playerid, UPIT_TAKSI, s, 0, T(playerid, "Taksi"), info);
 }
 
-forward TaksiPonovi(s, playerid);
-public TaksiPonovi(s, playerid)
+TaksiUpit(playerid, s, bool:da)
 {
-    if (gTaksiOd[playerid] == s + 1 && gTaksi[s][tStanje] == TX_POTVRDA) TaksiPotvrda(s, playerid);
-}
-
-DLG:taksi(playerid, response)
-{
-    new s = gTaksiOd[playerid] - 1;
-    if (s < 0 || gTaksi[s][tStanje] != TX_POTVRDA) return 1;
-    if (!response && GetTickCount() - gTaksi[s][tPrikaz] < TAKSI_ESC_MS)
-    {
-        SetTimerEx("TaksiPonovi", 700, false, "ii", s, playerid);
-        return 1;
-    }
-    if (!response)
+    if (s < 0 || s >= TAKSI_SLOTOVA || gTaksiOd[playerid] != s + 1 || gTaksi[s][tStanje] != TX_POTVRDA) return;
+    if (!da)
     {
         Govor(playerid, "%s kaze: Ipak necu, hvala.", GetRPIme(playerid));
         TaksiVozac(s, playerid, "Vozac kaze: U redu, ugodan dan.");
         TaksiOstavi(s);
-        return 1;
+        return;
     }
-    if (!DajNovac(playerid, -gTaksi[s][tCijena]))
+    if (gNovac[playerid] < gTaksi[s][tCijena])
     {
         TaksiVozac(s, playerid, "Vozac kaze: Zao mi je, nemate dovoljno novca za ovu voznju.");
         TaksiOstavi(s);
-        return 1;
+        return;
     }
     Govor(playerid, "%s kaze: U redu, krenimo.", GetRPIme(playerid));
     TaksiVozac(s, playerid, "Vozac kaze: Krecemo, vezite se.");
     gTaksi[s][tStanje] = TX_VOZI;
     gTaksi[s][tSkok] = 0;
+    gTaksi[s][tZavrsi] = false;
     gTaksi[s][tRok] = GetTickCount();
     TaksiVozi(s);
-    if (s < TAKSI_FLOTA) SetTimerEx("TaksiSavjet", TAKSI_SAVJET_MS, false, "ii", s, playerid);
-    return 1;
+    TaksiMetar(s, true);
+    TaksiKontrole(s, playerid);
+}
+
+static TaksiKontrole(s, playerid)
+{
+    new tekst[96];
+    if (s < TAKSI_FLOTA) format(tekst, sizeof tekst, T(playerid, "~y~Y~w~ - brze ($%d)~n~~y~N~w~ - stani"), TaksiNapojnica(s));
+    else strcat(tekst, T(playerid, "~y~N~w~ - stani"));
+    Savjet(playerid, tekst, TAKSI_KONTROLE_MS);
+}
+
+static TaksiNaplati(p, iznos)
+{
+    if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p)) return;
+    if (gNovac[p] < iznos) iznos = gNovac[p];
+    if (iznos > 0) DajNovac(p, -iznos);
+    SendClientMessage(p, COLOR_INFO, T(p, "Platili ste voznju taksijem: $%d."), iznos);
+}
+
+static TaksiPredeno(s)
+{
+    new Float:m = 0.0, kraj = gTaksi[s][tIdx] < gTaksi[s][tBroj] ? gTaksi[s][tIdx] : gTaksi[s][tBroj] - 1;
+    for (new i = 1; i <= kraj; i++) m += VectorSize(gTaksiTocke[s][i][0] - gTaksiTocke[s][i - 1][0], gTaksiTocke[s][i][1] - gTaksiTocke[s][i - 1][1], 0.0);
+    return floatround(m);
+}
+
+static TaksiIznos(s)
+{
+    new m = TaksiPredeno(s), iznos = s >= TAKSI_FLOTA ? PREMIUM_START + (m * PREMIUM_PO_KM + 500) / 1000 : TAKSI_START + (m * TAKSI_PO_KM + 500) / 1000;
+    return iznos > gTaksi[s][tCijena] ? gTaksi[s][tCijena] : iznos;
+}
+
+static TaksiMetar(s, bool:odmah = false)
+{
+    new p = gTaksi[s][tMusterija], iznos = TaksiIznos(s), info[96];
+    if (p == INVALID_PLAYER_ID || (!odmah && iznos == gTaksi[s][tMetar])) return;
+    gTaksi[s][tMetar] = iznos;
+    format(info, sizeof info, T(p, "Trenutno: $%d~n~Do cilja: $%d"), iznos, gTaksi[s][tCijena]);
+    IgraObavijestPanel(p, T(p, "Taksimetar"), TAKSI_METAR_BOJA, info);
+}
+
+static TaksiMetarMakni(s)
+{
+    new p = gTaksi[s][tMusterija];
+    if (p == INVALID_PLAYER_ID || (gTaksi[s][tStanje] != TX_VOZI && gTaksi[s][tStanje] != TX_TELEPORT)) return;
+    IgraObavijestUkloni(p);
+}
+
+static TaksiZavrsiRano(s)
+{
+    new p = gTaksi[s][tMusterija], iznos = TaksiIznos(s), cijena[12];
+    gTaksi[s][tZavrsi] = false;
+    NPC_StopMove(gTaksi[s][tNpc]);
+    valstr(cijena, iznos);
+    TaksiVozac(s, p, "Vozac kaze: Izvolite, to je $%s. Ugodan dan!", cijena);
+    TaksiNaplati(p, iznos);
+    TaksiOstavi(s);
 }
 
 static TaksiPocniSkok(s)
@@ -1068,17 +1121,20 @@ static TaksiNapojnica(s)
     return (gTaksi[s][tCijena] * TAKSI_NAPOJNICA_POSTO + 50) / 100;
 }
 
-forward TaksiSavjet(s, playerid);
-public TaksiSavjet(s, playerid)
-{
-    if (gTaksiOd[playerid] == s + 1 && gTaksi[s][tStanje] == TX_VOZI && !gTaksi[s][tBrzo])
-        SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pritisnite Y i dajte vozacu napojnicu od $%d pa ce voziti brze."), TaksiNapojnica(s));
-}
-
 TaksiKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     new s = gTaksiOd[playerid] - 1;
-    if (!(newkeys & KEY_YES) || (oldkeys & KEY_YES) || s < 0 || s >= TAKSI_FLOTA || gTaksi[s][tStanje] != TX_VOZI || gTaksi[s][tBrzo] || !IsPlayerInVehicle(playerid, gTaksi[s][tVozilo])) return;
+    if (s < 0 || gTaksi[s][tStanje] != TX_VOZI || !IsPlayerInVehicle(playerid, gTaksi[s][tVozilo])) return;
+    if ((newkeys & KEY_NO) && !(oldkeys & KEY_NO))
+    {
+        if (gTaksi[s][tZavrsi]) return;
+        gTaksi[s][tZavrsi] = true;
+        Govor(playerid, "%s kaze: Stanite ovdje, molim vas.", GetRPIme(playerid));
+        TaksiVozac(s, playerid, "Vozac kaze: U redu, stajem uz rub.");
+        TaksiNaRub(s, TAKSI_STANI_MS);
+        return;
+    }
+    if (!(newkeys & KEY_YES) || (oldkeys & KEY_YES) || s >= TAKSI_FLOTA || gTaksi[s][tBrzo] || gTaksi[s][tZavrsi]) return;
     if (!DajNovac(playerid, -TaksiNapojnica(s)))
     {
         TaksiVozac(s, playerid, "Vozac kaze: Zao mi je, nemate dovoljno novca za ovu voznju.");
@@ -1091,6 +1147,7 @@ TaksiKey(playerid, KEY:newkeys, KEY:oldkeys)
 
 TaksiPlayerLeft(playerid)
 {
+    if (gTaksiOd[playerid]) TaksiMetarMakni(gTaksiOd[playerid] - 1);
     if (gTaksiOd[playerid]) TaksiOtidi(gTaksiOd[playerid] - 1);
     if (gTaksiCeka[playerid]) TaksiOcistiPonude(playerid);
     gTaksiCeka[playerid] = 0;
@@ -1113,6 +1170,7 @@ TaksiTick()
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
     {
         new st = gTaksi[s][tStanje], Float:x, Float:y, Float:z;
+        if (st == TX_VOZI) TaksiMetar(s);
         if ((st == TX_DOLAZI || st == TX_CEKA) && gTaksi[s][tMusterija] != INVALID_PLAYER_ID)
         {
             new p = gTaksi[s][tMusterija];

@@ -57,6 +57,7 @@
 #define MOBITEL_GPS_DOMET   6.0
 #define MOBITEL_BANKA       30
 #define MOBITEL_HRANA       31
+#define MOBITEL_ODVOZ       32
 
 static const gMobitelIzbornik[MOBITEL_REDOVA][] = { "Nazovi", "Imenik", "Poruke", "Kamera", "Internet", "Postavke" };
 static const gMobitelTipke[][] = { "1", "2", "3", "4", "5", "6" };
@@ -328,6 +329,7 @@ static MobitelBrojStavki(playerid)
     if (gMobitelEkran[playerid] == MOBITEL_HRANA) return 1;
     if (gMobitelEkran[playerid] == MOBITEL_GRUPE) return sizeof gMobitelGrupe;
     if (gMobitelEkran[playerid] == MOBITEL_LOKACIJE) return gMobitelLokBroj[playerid];
+    if (gMobitelEkran[playerid] == MOBITEL_ODVOZ) return MehanicarOdvozBroj(playerid);
     return 0;
 }
 
@@ -416,6 +418,12 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Lokacije"));
     else if (ekran == MOBITEL_HRANA) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Dostava hrane"));
     else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelGrupe[gMobitelGrupa[playerid]]));
+    else if (ekran == MOBITEL_ODVOZ)
+    {
+        new naslov[48];
+        format(naslov, sizeof naslov, T(playerid, "Odvoz ($%d)"), MEHANICAR_ODVOZ);
+        PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], naslov);
+    }
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
     if (broj) PlayerTextDrawShow(playerid, gMobitelOznaka[playerid]);
@@ -445,6 +453,12 @@ static MobitelPrikazi(playerid)
         else if (ekran == MOBITEL_INTERNET) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelInternet[s]));
         else if (ekran == MOBITEL_GRUPE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelGrupe[s]));
         else if (ekran == MOBITEL_LOKACIJE) PlayerTextDrawSetString(playerid, td, T(playerid, gMobitelLokIme[playerid][s]));
+        else if (ekran == MOBITEL_ODVOZ)
+        {
+            new red[64];
+            MehanicarOdvozRed(playerid, s, red, sizeof red);
+            PlayerTextDrawSetString(playerid, td, red[0] ? red : ("-"));
+        }
         else if (ekran == MOBITEL_PORUKE && s == 0) PlayerTextDrawSetString(playerid, td, T(playerid, "Nova poruka"));
         else if (ekran == MOBITEL_PORUKE)
         {
@@ -931,6 +945,7 @@ static MobitelOdaberi(playerid)
         gMobitelOdabir[playerid] = 0;
     }
     else if (ekran == MOBITEL_KAMERA) MobitelKamera(playerid, odabir ? MOBITEL_SELFIE : MOBITEL_FOTO);
+    else if (ekran == MOBITEL_ODVOZ) MehanicarOdvozOdaberi(playerid, odabir);
     else if (ekran == MOBITEL_HRANA) HranaNarudzba(playerid);
     else if (ekran == MOBITEL_INTERNET)
     {
@@ -1175,6 +1190,14 @@ MobitelUpdate(playerid)
         RemovePlayerAttachedObject(playerid, MOBITEL_SLOT);
         if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ClearAnimations(playerid);
     }
+}
+
+MobitelOdvoz(playerid)
+{
+    if (!gMobitelOtvoren[playerid]) return;
+    gMobitelEkran[playerid] = MOBITEL_ODVOZ;
+    gMobitelOdabir[playerid] = 0;
+    MobitelPrikazi(playerid);
 }
 
 MobitelPoziv(playerid, const ime[], drugi = INVALID_PLAYER_ID)

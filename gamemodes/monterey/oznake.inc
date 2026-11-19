@@ -5,20 +5,43 @@ static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MA
 
 #define INTERAKCIJA_ZONA    0x494E54
 enum { SAVJET_ALT, SAVJET_KUCA, SAVJET_GARAZA, SAVJET_IZLAZ, SAVJET_ULAZ }
-#define SAVJET_X            87.0
-#define SAVJET_DNO          319.0
-#define SAVJET_SIRINA       80.0
+#define SAVJET_X            71.0
+#define SAVJET_DNO          324.0
+#define SAVJET_SIRINA       70.0
+#define SAVJET_BLOK_MS      2000
 
-static PlayerText:gSavjetTd[MAX_PLAYERS], bool:gSavjetIma[MAX_PLAYERS], gSavjetToken[MAX_PLAYERS];
+static PlayerText:gSavjetTd[MAX_PLAYERS], bool:gSavjetIma[MAX_PLAYERS], gSavjetToken[MAX_PLAYERS], gSavjetBlok[MAX_PLAYERS];
 
 SavjetConnect(playerid)
 {
     gSavjetIma[playerid] = false;
     gSavjetToken[playerid]++;
+    gSavjetBlok[playerid] = 0;
+}
+
+SavjetMakni(playerid)
+{
+    gSavjetToken[playerid]++;
+    if (!gSavjetIma[playerid]) return;
+    PlayerTextDrawDestroy(playerid, gSavjetTd[playerid]);
+    gSavjetIma[playerid] = false;
+}
+
+SavjetPromjena(playerid)
+{
+    SavjetMakni(playerid);
+    gSavjetBlok[playerid] = GetTickCount() + SAVJET_BLOK_MS;
+}
+
+public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
+{
+    SavjetPromjena(playerid);
+    return 1;
 }
 
 Savjet(playerid, const tekst[], ms = 3000)
 {
+    if (GetTickCount() - gSavjetBlok[playerid] < 0) return;
     new redova = 1;
     for (new p = strfind(tekst, "~n~"); p != -1; p = strfind(tekst, "~n~", false, p + 3)) redova++;
     if (gSavjetIma[playerid]) PlayerTextDrawDestroy(playerid, gSavjetTd[playerid]);
@@ -148,6 +171,7 @@ InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
     if (tip < SAVJET_ALT || tip > SAVJET_ULAZ) return 0;
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
     new sad = GetTickCount();
+    if (sad - gSavjetBlok[playerid] < 0) return 1;
     if (areaid == gInterakcijaZadnja[playerid] && sad - gInterakcijaVrijeme[playerid] < 30000) return 1;
     gInterakcijaZadnja[playerid] = areaid;
     gInterakcijaVrijeme[playerid] = sad;
