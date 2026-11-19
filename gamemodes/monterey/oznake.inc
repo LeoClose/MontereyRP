@@ -5,7 +5,7 @@ static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MA
 
 #define INTERAKCIJA_ZONA    0x494E54
 enum { SAVJET_ALT, SAVJET_KUCA, SAVJET_GARAZA, SAVJET_IZLAZ, SAVJET_ULAZ }
-#define SAVJET_X            82.0
+#define SAVJET_X            87.0
 #define SAVJET_DNO          319.0
 #define SAVJET_SIRINA       80.0
 

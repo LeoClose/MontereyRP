@@ -177,6 +177,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     SlucajStateChange(playerid, newstate);
     VoziloStateChange(playerid, newstate);
     VlakStateChange(playerid, newstate);
+    GarazaStateChange(playerid, newstate, oldstate);
     if (newstate == PLAYER_STATE_DRIVER) VoziloVozac(playerid);
     return 1;
 }

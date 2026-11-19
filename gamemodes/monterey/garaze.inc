@@ -1,6 +1,6 @@
 #define GARAZA_MAX          200
 #define GARAZA_DOMET        7.0
-#define GARAZA_VOZAC_MS     700
+#define GARAZA_VOZAC_MS     3000
 #define GARAZA_PJESKE_DOMET 2.0
 #define GARAZA_ULAZ_DOMET   2.0
 #define GARAZA_SJEDNI_MS    400
@@ -129,10 +129,28 @@ static GarazaNajbliza(playerid)
     return najbliza;
 }
 
-forward GarazaVozac(playerid, v, racun, g, ulaz);
-public GarazaVozac(playerid, v, racun, g, ulaz)
+static gGarazaCeka[MAX_PLAYERS][3], gGarazaCekaDo[MAX_PLAYERS];
+
+static GarazaCekaj(playerid, v, g, ulaz)
 {
-    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || !GetVehicleModel(v) || !gGaraza[g][gaIma]) return;
+    gGarazaCeka[playerid][0] = v;
+    gGarazaCeka[playerid][1] = g;
+    gGarazaCeka[playerid][2] = ulaz;
+    gGarazaCekaDo[playerid] = GetTickCount() + GARAZA_VOZAC_MS;
+}
+
+GarazaStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
+{
+    new v = gGarazaCeka[playerid][0];
+    if (!v || oldstate != PLAYER_STATE_DRIVER) return;
+    gGarazaCeka[playerid][0] = 0;
+    if (newstate != PLAYER_STATE_ONFOOT || GetTickCount() > gGarazaCekaDo[playerid]) return;
+    GarazaVozac(playerid, v, gGarazaCeka[playerid][1], gGarazaCeka[playerid][2]);
+}
+
+static GarazaVozac(playerid, v, g, ulaz)
+{
+    if (!GetVehicleModel(v) || !gGaraza[g][gaIma]) return;
     new Float:x, Float:y, Float:z;
     GetVehiclePos(v, x, y, z);
     if (GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, 6.0, x, y, z)) return;
@@ -328,7 +346,7 @@ GarazaKey(playerid)
     {
         if (st == PLAYER_STATE_DRIVER)
         {
-            SetTimerEx("GarazaVozac", GARAZA_VOZAC_MS, false, "iiiii", playerid, GetPlayerVehicleID(playerid), gAccountId[playerid], g, 0);
+            GarazaCekaj(playerid, GetPlayerVehicleID(playerid), g, 0);
             return 1;
         }
         if (st != PLAYER_STATE_ONFOOT || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 0;
@@ -346,7 +364,7 @@ GarazaKey(playerid)
         if (!gGaraza[g][gaVlasnik]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Garaza je na prodaju. Izadite iz vozila da je kupite.")), 1;
         if (gGaraza[g][gaZakljucano] && !vlasnik) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Garaza je zakljucana.")), 1;
         if (!VlasnikDb(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U garazu se mogu parkirati samo vlastita vozila.")), 1;
-        SetTimerEx("GarazaVozac", GARAZA_VOZAC_MS, false, "iiiii", playerid, v, gAccountId[playerid], g, 1);
+        GarazaCekaj(playerid, v, g, 1);
         return 1;
     }
     if (!gGaraza[g][gaVlasnik])
