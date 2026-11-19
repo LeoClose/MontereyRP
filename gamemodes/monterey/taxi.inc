@@ -526,6 +526,7 @@ DLG:taksi_poziv(playerid, response)
 
 public OnPlayerEnterCheckpoint(playerid)
 {
+    if (KaznaCheckpoint(playerid)) return 1;
     if (DrogaCheckpoint(playerid) || DostavaCheckpoint(playerid)) return 1;
     if (!gTaksiVozac[playerid]) return MobitelGpsStigao(playerid);
     gTaksiVozac[playerid] = false;

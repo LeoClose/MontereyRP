@@ -837,6 +837,10 @@ static KupacRanjen(k)
     NPC_StopMeleeAttack(npc);
     NPC_SetHealth(npc, KUPAC_RANJEN_HP);
     NPC_SetInvulnerable(npc, true);
+    NPC_StopMove(npc);
+    NPC_GetPos(npc, x, y, z);
+    new Float:hx, Float:hy, Float:hz;
+    if (Kolizija_Zraka(x, y, z + 1.0, x, y, z - 50.0, hx, hy, hz)) NPC_SetPos(npc, x, y, hz + 1.0);
     NPC_ApplyAnimation(npc, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
     gKupac[k][kuStanje] = KU_RANJEN;
     gKupac[k][kuStanjeOd] = gettime();

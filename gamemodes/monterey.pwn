@@ -263,6 +263,7 @@ public OnGameModeInit()
     InitPikado();
     InitKuglanje();
     InitKamp();
+    InitKazne();
     InitStandovi();
     InitAntiCheat();
     InitSync();
@@ -355,6 +356,7 @@ public Sekunda()
     DrogaTick();
     UtrkaTick();
     StandTick();
+    KaznaTick();
     SpecTick();
     UpitTick();
 }
@@ -470,6 +472,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/staze.inc"
 #include "monterey/staza.inc"
 #include "monterey/standovi.inc"
+#include "monterey/kazne.inc"
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"

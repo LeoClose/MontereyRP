@@ -70,6 +70,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
+    PovratakSpremi(playerid);
     if (playerid == gIgracZadnji) do gIgracZadnji--; while (gIgracZadnji >= 0 && !IsPlayerConnected(gIgracZadnji));
     SpecDisconnect(playerid);
     SlucajDisconnect(playerid);
@@ -93,6 +94,7 @@ public OnPlayerDisconnect(playerid, reason)
     UpitDisconnect(playerid);
     UtrkaDisconnect(playerid);
     StandDisconnect(playerid);
+    KaznaDisconnect(playerid);
     DostavaDisconnect(playerid);
     KaficDisconnect(playerid);
     BilijarIgracOdlazi(playerid);
@@ -148,6 +150,8 @@ public OnPlayerSpawn(playerid)
     PolicijaSpawn(playerid);
     GepekSpawn(playerid);
     KucaSpawn(playerid);
+    PovratakSpawn(playerid);
+    KaznaSpawn(playerid);
     RanjenSpawn(playerid);
     OdjecaSpawn(playerid);
     ZlataraSpawn(playerid);

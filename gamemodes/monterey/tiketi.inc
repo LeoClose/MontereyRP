@@ -3,10 +3,21 @@
 #define TIKET_LEN           128
 
 enum { TIKET_PITANJE, TIKET_PRIJAVA }
-enum { TP_ADMINU = 1, TP_IGRACU }
+enum { TP_ADMINU = 1, TP_IGRACU, TP_OBAVIJEST }
 enum E_TIKET { bool:tkIma, tkTip, tkIgrac, tkRacun, tkCilj, tkTekst[TIKET_LEN], tkVrijeme, tkBroj }
 static gTiket[TIKET_MAX][E_TIKET], gTiketBroj, gTiketZadnji[MAX_PLAYERS], gTiketOdabran[MAX_PLAYERS] = { -1, ... }, gTiketPopis[MAX_PLAYERS][TIKET_MAX];
-static gTiketOdgovor[MAX_PLAYERS][TIKET_LEN], gTiketPrima[MAX_PLAYERS], gTiketPrimaRacun[MAX_PLAYERS];
+static gTiketOdgovor[MAX_PLAYERS][TIKET_LEN], gTiketPrima[MAX_PLAYERS], gTiketPrimaRacun[MAX_PLAYERS], gTiketObavijest[MAX_PLAYERS] = { -1, ... };
+
+forward bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[]);
+
+static TiketObavijestPosalji(i, t, const tekst[])
+{
+    new poruka[220], p = gTiket[t][tkIgrac], cilj = gTiket[t][tkCilj];
+    if (gTiket[t][tkTip] == TIKET_PRIJAVA) format(poruka, sizeof poruka, T(i, "[Prijava #%d] %s (%d) prijavljuje %s (%d): %s"), gTiket[t][tkBroj], GetRPIme(p), p, GetRPIme(cilj), cilj, tekst);
+    else format(poruka, sizeof poruka, T(i, "[Pitanje #%d] %s (%d): %s"), gTiket[t][tkBroj], GetRPIme(p), p, tekst);
+    SendLong(i, COLOR_ADMIN, poruka);
+    SendClientMessage(i, COLOR_ADMIN, T(i, "Odgovorite s /tiketi."));
+}
 
 static TiketNovi(playerid, tip, cilj, const tekst[])
 {
@@ -26,14 +37,11 @@ static TiketNovi(playerid, tip, cilj, const tekst[])
     gTiket[t][tkTekst][0] = EOS;
     strcat(gTiket[t][tkTekst], tekst, TIKET_LEN);
     RemoveBoje(gTiket[t][tkTekst]);
-    new poruka[200];
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || !gAdmin[i]) continue;
-        if (tip == TIKET_PRIJAVA) format(poruka, sizeof poruka, T(i, "[Prijava #%d] %s (%d) prijavljuje %s (%d): %s"), gTiket[t][tkBroj], GetRPIme(playerid), playerid, GetRPIme(cilj), cilj, gTiket[t][tkTekst]);
-        else format(poruka, sizeof poruka, T(i, "[Pitanje #%d] %s (%d): %s"), gTiket[t][tkBroj], GetRPIme(playerid), playerid, gTiket[t][tkTekst]);
-        SendLong(i, COLOR_ADMIN, poruka);
-        SendClientMessage(i, COLOR_ADMIN, T(i, "Odgovorite s /tiketi."));
+        gTiketObavijest[i] = t;
+        if (!TiketPrevedi(i, TP_OBAVIJEST, gJezik[playerid], gJezik[i], gTiket[t][tkTekst])) TiketObavijestPosalji(i, t, gTiket[t][tkTekst]);
     }
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vas upit je poslan adminima (#%d)."), gTiket[t][tkBroj]);
 }
@@ -109,7 +117,7 @@ static TiketPrikazi(playerid, const prijevod[])
     return PrikaziDialog(playerid, DLG_TIKET, DIALOG_STYLE_INPUT, naslov, body, T(playerid, "Odgovori"), T(playerid, "Natrag"));
 }
 
-static bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[])
+bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[])
 {
     if (od == za) return false;
     new url[64];
@@ -169,6 +177,14 @@ public TiketPrijevod(index, response_code, const data[])
     if (response_code == 200 && data[0]) strcat(tekst, data);
     RemoveBoje(tekst);
     if (((index >>> 10) & 3) == TP_ADMINU) return TiketPrikazi(playerid, tekst);
+    if (((index >>> 10) & 3) == TP_OBAVIJEST)
+    {
+        new t = gTiketObavijest[playerid];
+        if (!TiketValjan(t)) return 1;
+        if (tekst[0]) TiketObavijestPosalji(playerid, t, tekst);
+        else TiketObavijestPosalji(playerid, t, gTiket[t][tkTekst]);
+        return 1;
+    }
     TiketPosalji(playerid, tekst[0] ? tekst : gTiketOdgovor[playerid]);
     return 1;
 }

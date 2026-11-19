@@ -908,6 +908,55 @@ static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VE
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
 
+CMD:kick(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminKick(playerid, params);
+    return 1;
+}
+
+CMD:ban(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminBan(playerid, params);
+    return 1;
+}
+
+CMD:unban(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminOdban(playerid, params);
+    return 1;
+}
+
+CMD:dajnovac(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminDajNovac(playerid, params);
+    return 1;
+}
+
+CMD:dajpredmet(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminGiveItem(playerid, params);
+    return 1;
+}
+
+CMD:premium(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    AdminPremium(playerid, params);
+    return 1;
+}
+
+CMD:postavibroj(playerid, params[])
+{
+    if (!gAdmin[playerid]) return 0;
+    MobitelPostaviBroj(playerid, params);
+    return 1;
+}
+
 CMD:apanel(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, 1)) return 1;

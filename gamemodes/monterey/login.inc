@@ -9,9 +9,15 @@
 
 enum { LTD_NASLOV, LTD_PODNASLOV, LTD_STATISTIKA }
 
+#define LOGIN_ORBITA_KORAKA 12
+#define LOGIN_ORBITA_MS     (LOGIN_KADAR_MS / LOGIN_ORBITA_KORAKA)
+static const Float:gLoginOrbita[][6] = {
+    { 484.0, -1499.5, 22.0, 45.0, 45.0, 0.0 },
+    { 1193.4, -2054.9, 110.0, 260.0, 170.0, 0.0 }
+};
 static const Float:gLoginKadar[LOGIN_KADROVA][9] = {
-    { 1340.0, -960.0, 115.0, 1490.0, -960.0, 115.0, 1415.0, -805.0, 90.0 },
-    { 1250.0, -1150.0, 190.0, 1650.0, -1100.0, 190.0, 1530.0, -1350.0, 90.0 },
+    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
+    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 },
     { 2440.0, -1610.0, 40.0, 2540.0, -1610.0, 40.0, 2495.0, -1680.0, 15.0 },
     { 280.0, -1880.0, 45.0, 440.0, -1930.0, 45.0, 370.0, -2050.0, 10.0 }
 };
@@ -88,10 +94,32 @@ public LoginKamera(playerid, token)
     if (!IsPlayerConnected(playerid) || !gLoginIma[playerid] || gLoginToken[playerid] != token) return;
     new k = gLoginKadarBr[playerid];
     gLoginKadarBr[playerid] = (k + 1) % LOGIN_KADROVA;
+    if (k < sizeof gLoginOrbita)
+    {
+        Streamer_UpdateEx(playerid, gLoginOrbita[k][0], gLoginOrbita[k][1], gLoginOrbita[k][2], 0, 0, STREAMER_TYPE_OBJECT, 1000);
+        LoginOrbita(playerid, token, k, 0);
+        return;
+    }
     Streamer_UpdateEx(playerid, gLoginKadar[k][6], gLoginKadar[k][7], gLoginKadar[k][8], 0, 0, STREAMER_TYPE_OBJECT, 1000);
     InterpolateCameraPos(playerid, gLoginKadar[k][0], gLoginKadar[k][1], gLoginKadar[k][2], gLoginKadar[k][3], gLoginKadar[k][4], gLoginKadar[k][5], LOGIN_KADAR_MS, CAMERA_CUT);
     InterpolateCameraLookAt(playerid, gLoginKadar[k][6], gLoginKadar[k][7], gLoginKadar[k][8], gLoginKadar[k][6], gLoginKadar[k][7], gLoginKadar[k][8], LOGIN_KADAR_MS, CAMERA_CUT);
     SetTimerEx("LoginKamera", LOGIN_KADAR_MS, false, "ii", playerid, token);
+}
+
+forward LoginOrbita(playerid, token, o, korak);
+public LoginOrbita(playerid, token, o, korak)
+{
+    if (!IsPlayerConnected(playerid) || !gLoginIma[playerid] || gLoginToken[playerid] != token) return;
+    if (korak >= LOGIN_ORBITA_KORAKA)
+    {
+        LoginKamera(playerid, token);
+        return;
+    }
+    new Float:a0 = float(korak) * 360.0 / float(LOGIN_ORBITA_KORAKA), Float:a1 = a0 + 360.0 / float(LOGIN_ORBITA_KORAKA), Float:r = gLoginOrbita[o][3];
+    new Float:cx = gLoginOrbita[o][0], Float:cy = gLoginOrbita[o][1], Float:cz = gLoginOrbita[o][2], Float:z = gLoginOrbita[o][4];
+    InterpolateCameraPos(playerid, cx + r * floatcos(a0, degrees), cy + r * floatsin(a0, degrees), z, cx + r * floatcos(a1, degrees), cy + r * floatsin(a1, degrees), z, LOGIN_ORBITA_MS, korak ? CAMERA_MOVE : CAMERA_CUT);
+    InterpolateCameraLookAt(playerid, cx, cy, cz, cx, cy, cz, LOGIN_ORBITA_MS, korak ? CAMERA_MOVE : CAMERA_CUT);
+    SetTimerEx("LoginOrbita", LOGIN_ORBITA_MS, false, "iiii", playerid, token, o, korak + 1);
 }
 
 LoginUlaz(playerid)

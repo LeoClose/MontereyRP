@@ -19,16 +19,8 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        212
+#define PIKADO_PLOCA        40
 #define PIKADO_LOPTA        1.032
-#define PIKADO_SNOP_MODEL   18656
-#define PIKADO_SNOP_ZOOM    2.1
-#define PIKADO_SNOP_DUZ     0.956
-#define PIKADO_SNOP_POLA    5.0
-#define PIKADO_SNOP_AX      0.9375
-#define PIKADO_SNOP_NAGIB   0.022
-#define PIKADO_PRSTEN_GORE  0.04
-#define PIKADO_KREM_DUZ     1.0
 #define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
 #define PIKADO_PRSTEN_ZELENA 0x22E05AFF
 #define PIKADO_TD           13
@@ -47,7 +39,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.035;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -88,35 +80,6 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
-{
-    if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:fi = atan2(floatsin(kut, degrees) / PIKADO_SNOP_AX, floatcos(kut, degrees));
-    new Float:e = floatsqroot(floatpower(PIKADO_SNOP_AX * floatsin(fi, degrees), 2.0) + floatpower(floatcos(fi, degrees), 2.0));
-    new Float:gore = (1.0 + floatcos(kut, degrees)) / 2.0;
-    new Float:t = 1.0 - PIKADO_SNOP_NAGIB * gore - (rz == 90.0 ? PIKADO_PRSTEN_GORE * gore * gore : 0.0);
-    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : PIKADO_KREM_DUZ) / (e * t), Float:w = h * PIKADO_AX;
-    new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
-    TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-    TextDrawTextSize(td, w, h);
-    TextDrawBackgroundColour(td, 0x00000000);
-    TextDrawColour(td, boja);
-    TextDrawSetPreviewModel(td, PIKADO_SNOP_MODEL);
-    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - fi, rz, PIKADO_SNOP_ZOOM);
-    gPikadoPloca[gPikadoPlocaN++] = td;
-}
-
-static PikadoSloj(Float:rmm, parna, neparna, bool:prsten)
-{
-    PikadoKrugPloce(rmm, prsten ? PIKADO_CRNA : parna);
-    for (new i = 0; i < 20; i++)
-    {
-        if (!prsten && !(i % 2)) continue;
-        new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
-        for (new k = 0; k < 3; k++) PikadoSnop(rmm, s + PIKADO_SNOP_POLA + (18.0 - 2.0 * PIKADO_SNOP_POLA) * float(k) / 2.0, boja, prsten ? 90.0 : gPikadoRz);
-    }
-}
-
 static PikadoPlocaStvori()
 {
     new broj[4], Text:td = TextDrawCreate(0.0, 0.0, "_");
@@ -126,10 +89,10 @@ static PikadoPlocaStvori()
     TextDrawTextSize(td, 640.0, 0.0);
     gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(200.0, 0x111111FF);
-    PikadoSloj(170.0, PIKADO_PRSTEN_CRVENA, PIKADO_PRSTEN_ZELENA, true);
-    PikadoSloj(162.0, PIKADO_CRNA, PIKADO_KREM, false);
-    PikadoSloj(107.0, PIKADO_PRSTEN_CRVENA, PIKADO_PRSTEN_ZELENA, true);
-    PikadoSloj(99.0, PIKADO_CRNA, PIKADO_KREM, false);
+    PikadoKrugPloce(170.0, PIKADO_PRSTEN_CRVENA);
+    PikadoKrugPloce(162.0, PIKADO_KREM);
+    PikadoKrugPloce(107.0, PIKADO_PRSTEN_ZELENA);
+    PikadoKrugPloce(99.0, PIKADO_CRNA);
     PikadoKrugPloce(15.9, PIKADO_ZELENA);
     PikadoKrugPloce(6.35, PIKADO_CRVENA);
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
@@ -146,23 +109,6 @@ static PikadoPlocaStvori()
         TextDrawSetShadow(td, 0);
         gPikadoPloca[gPikadoPlocaN++] = td;
     }
-}
-
-CMD:pikadorot(playerid, params[])
-{
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    new idx = 0, p1[16], p2[16], p3[16], p4[16], p5[16];
-    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pikadorot [rx] [rz] [x] [y] [prsten]"));
-    gPikadoRx = floatstr(p1);
-    if (SljedeciParam(params, idx, p2)) gPikadoRz = floatstr(p2);
-    if (SljedeciParam(params, idx, p3)) gPikadoDx = floatstr(p3);
-    if (SljedeciParam(params, idx, p4)) gPikadoDy = floatstr(p4);
-    if (SljedeciParam(params, idx, p5) && floatstr(p5) > 0.3) gPikadoPrsten = floatstr(p5);
-    for (new i = 0; i < gPikadoPlocaN; i++) TextDrawDestroy(gPikadoPloca[i]);
-    gPikadoPlocaN = 0;
-    PikadoPlocaStvori();
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
-    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f"), gPikadoRx, gPikadoRz, gPikadoDx, gPikadoDy, gPikadoPrsten);
 }
 
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)
