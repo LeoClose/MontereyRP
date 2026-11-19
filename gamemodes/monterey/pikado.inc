@@ -38,7 +38,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 90.0;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -89,7 +89,7 @@ static PikadoSnop(Float:rmm, Float:kut, boja)
     TextDrawBackgroundColour(td, 0x00000000);
     TextDrawColour(td, boja);
     TextDrawSetPreviewModel(td, PIKADO_SNOP_MODEL);
-    TextDrawSetPreviewRot(td, 0.0, 90.0 - kut, 90.0, PIKADO_SNOP_ZOOM);
+    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - kut, gPikadoRz, PIKADO_SNOP_ZOOM);
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
@@ -134,6 +134,20 @@ static PikadoPlocaStvori()
         TextDrawSetShadow(td, 0);
         gPikadoPloca[gPikadoPlocaN++] = td;
     }
+}
+
+CMD:pikadorot(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    new idx = 0, p1[16], p2[16];
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pikadorot [rx] [rz]"));
+    gPikadoRx = floatstr(p1);
+    if (SljedeciParam(params, idx, p2)) gPikadoRz = floatstr(p2);
+    for (new i = 0; i < gPikadoPlocaN; i++) TextDrawDestroy(gPikadoPloca[i]);
+    gPikadoPlocaN = 0;
+    PikadoPlocaStvori();
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Rotacija pikada: rx %.1f, rz %.1f"), gPikadoRx, gPikadoRz);
 }
 
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)

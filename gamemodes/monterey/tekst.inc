@@ -2129,7 +2129,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Admin vas je izlijecio.", "An admin healed you.", "Администратор вас вылечил.", "Un admin te curo.", "Bir admin sizi iyilestirdi." },
     { "Izlijecili ste igraca %s.", "You healed %s.", "Вы вылечили игрока %s.", "Curaste a %s.", "%s oyuncusunu iyilestirdiniz." },
     { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
-    { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." }
+    { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." },
+    { "Koristenje: /pikadorot [rx] [rz]", "Usage: /pikadorot [rx] [rz]", "Использование: /pikadorot [rx] [rz]", "Uso: /pikadorot [rx] [rz]", "Kullanim: /pikadorot [rx] [rz]" },
+    { "Rotacija pikada: rx %.1f, rz %.1f", "Dartboard rotation: rx %.1f, rz %.1f", "Вращение мишени: rx %.1f, rz %.1f", "Rotacion de la diana: rx %.1f, rz %.1f", "Dart tahtasi donusu: rx %.1f, rz %.1f" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
