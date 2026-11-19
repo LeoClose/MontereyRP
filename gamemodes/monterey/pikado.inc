@@ -18,15 +18,10 @@
 #define PIKADO_BAR_W        160.0
 #define PIKADO_PLOCA        200
 #define PIKADO_LOPTA        1.032
-#define PIKADO_ZICA_MODEL   19087
-#define PIKADO_BIJELA       0xFFFFFFFF
 #define PIKADO_KLIN_MODEL   1559
-#define PIKADO_KLIN_ZOOM    0.58
-#define PIKADO_ZICA_DUZINA  0.905
-#define PIKADO_ZICA_VRH     0.395
+#define PIKADO_KLIN_ZOOM    1.724
 #define PIKADO_TD           13
 #define PIKADO_CRNA         0x1C1C1CFF
-#define PIKADO_SREBRNA      0xC8C8C8FF
 #define PIKADO_CRVENA       0xC0392BFF
 #define PIKADO_ZELENA       0x1E8449FF
 
@@ -163,7 +158,7 @@ static const Float:gPikadoKlin[][6] = {
     { 254.560, 46.206, 65.720, 82.150, 198.000, 4.0 },
     { 270.448, 41.412, 65.720, 82.150, 189.000, 4.0 }
 };
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoZicaDx, Float:gPikadoZicaDy, Float:gPikadoZicaZoom = 0.38;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -204,20 +199,6 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoZica(Float:kut)
-{
-    if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:h = PIKADO_R * PIKADO_LOPTA / (PIKADO_ZICA_DUZINA * gPikadoZicaZoom), Float:w = h * PIKADO_AX;
-    new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoZicaDx, PIKADO_CY + PIKADO_ZICA_VRH * gPikadoZicaZoom * h - h / 2.0 + gPikadoZicaDy, "_");
-    TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
-    TextDrawTextSize(td, w, h);
-    TextDrawBackgroundColour(td, 0x00000000);
-    TextDrawColour(td, PIKADO_BIJELA);
-    TextDrawSetPreviewModel(td, PIKADO_ZICA_MODEL);
-    TextDrawSetPreviewRot(td, 0.0, 180.0 - kut, 0.0, gPikadoZicaZoom);
-    gPikadoPloca[gPikadoPlocaN++] = td;
-}
-
 static PikadoKlin(k)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
@@ -241,7 +222,6 @@ static PikadoPlocaStvori()
     gPikadoPloca[gPikadoPlocaN++] = td;
     PikadoKrugPloce(226.0, 0x111111FF);
     for (new k = 0; k < sizeof gPikadoKlin; k++) PikadoKlin(k);
-    for (new i = 0; i < 20; i++) PikadoZica(float(i) * 18.0 + 9.0);
     PikadoKrugPloce(15.9, PIKADO_ZELENA);
     PikadoKrugPloce(6.35, PIKADO_CRVENA);
     for (new i = 0; i < 20 && gPikadoPlocaN < PIKADO_PLOCA; i++)
@@ -258,21 +238,6 @@ static PikadoPlocaStvori()
         TextDrawSetShadow(td, 0);
         gPikadoPloca[gPikadoPlocaN++] = td;
     }
-}
-
-CMD:pikadozice(playerid, params[])
-{
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    new idx = 0, p1[16], p2[16], p3[16];
-    if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pikadozice [pomak x] [pomak y] [zoom]"));
-    gPikadoZicaDx = floatstr(p1);
-    gPikadoZicaDy = floatstr(p2);
-    if (SljedeciParam(params, idx, p3) && floatstr(p3) > 0.05) gPikadoZicaZoom = floatstr(p3);
-    for (new i = 0; i < gPikadoPlocaN; i++) TextDrawDestroy(gPikadoPloca[i]);
-    gPikadoPlocaN = 0;
-    PikadoPlocaStvori();
-    for (new i = 0; i < MAX_PLAYERS; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
-    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Zice pikada: x %.1f, y %.1f, zoom %.2f"), gPikadoZicaDx, gPikadoZicaDy, gPikadoZicaZoom);
 }
 
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)

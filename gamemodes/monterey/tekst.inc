@@ -2129,9 +2129,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Admin vas je izlijecio.", "An admin healed you.", "Администратор вас вылечил.", "Un admin te curo.", "Bir admin sizi iyilestirdi." },
     { "Izlijecili ste igraca %s.", "You healed %s.", "Вы вылечили игрока %s.", "Curaste a %s.", "%s oyuncusunu iyilestirdiniz." },
     { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
-    { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." },
-    { "Koristenje: /pikadozice [pomak x] [pomak y] [zoom]", "Usage: /pikadozice [offset x] [offset y] [zoom]", "Использование: /pikadozice [смещение x] [смещение y] [зум]", "Uso: /pikadozice [desplazamiento x] [desplazamiento y] [zoom]", "Kullanim: /pikadozice [kaydirma x] [kaydirma y] [zoom]" },
-    { "Zice pikada: x %.1f, y %.1f, zoom %.2f", "Dart wires: x %.1f, y %.1f, zoom %.2f", "Провода дартса: x %.1f, y %.1f, зум %.2f", "Alambres de dardos: x %.1f, y %.1f, zoom %.2f", "Dart telleri: x %.1f, y %.1f, zoom %.2f" }
+    { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
