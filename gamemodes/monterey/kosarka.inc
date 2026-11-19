@@ -748,7 +748,7 @@ KosTick()
         {
             if (!gKos[k][koIma] || gKos[k][koFaza] != KF_SLOBODNA || gKos[k][koSvijet] != GetPlayerVirtualWorld(p) || !IsPlayerInRangeOfPoint(p, KOS_UZMI * 2.0, gKos[k][koLx], gKos[k][koLy], gKos[k][koLz] + 0.8)) continue;
             gKosHint[p] = sad;
-            IgraObavijest(p, T(p, "Kosarka"), KOS_BOJA, T(p, "Pritisnite ALT za interakciju."), 1500);
+            Savjet(p, T(p, "~y~ALT~w~ - interakcija"), 2000);
             break;
         }
     }

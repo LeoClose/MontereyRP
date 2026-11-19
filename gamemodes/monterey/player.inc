@@ -48,6 +48,7 @@ public OnPlayerConnect(playerid)
     DrogaConnect(playerid);
     KuglanjeConnect(playerid);
     IgraObavijestConnect(playerid);
+    SavjetConnect(playerid);
     PokerConnect(playerid);
     InventarConnect(playerid);
     OruzjeConnect(playerid);

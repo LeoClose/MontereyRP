@@ -1,6 +1,6 @@
 #define KUCA_MAX            1000
 #define KUCA_DB_MAPA        8192
-#define KUCA_DOMET          2.0
+#define KUCA_DOMET          1.5
 #define KUCA_ADMIN_DOMET    15.0
 #define KUCA_PRODAJA        1273
 #define KUCA_PRODANA        1272

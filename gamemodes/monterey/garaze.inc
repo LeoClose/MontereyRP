@@ -1,6 +1,7 @@
 #define GARAZA_MAX          200
-#define GARAZA_DOMET        7.0
-#define GARAZA_ULAZ_DOMET   3.5
+#define GARAZA_DOMET        5.0
+#define GARAZA_PJESKE_DOMET 2.0
+#define GARAZA_ULAZ_DOMET   2.0
 #define GARAZA_SJEDNI_MS    400
 #define GARAZA_IZLAZ_ODMAK  5.0
 #define GARAZA_IZLAZ_MS     1000
@@ -113,7 +114,7 @@ static GarazaIgraca(playerid)
 
 static GarazaNajbliza(playerid)
 {
-    new najbliza = -1, Float:naj = GARAZA_DOMET;
+    new najbliza = -1, Float:naj = IsPlayerInAnyVehicle(playerid) ? GARAZA_DOMET : GARAZA_PJESKE_DOMET;
     for (new g = 0; g < GARAZA_MAX; g++)
     {
         if (!gGaraza[g][gaIma]) continue;

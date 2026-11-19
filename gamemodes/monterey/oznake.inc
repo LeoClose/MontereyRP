@@ -4,6 +4,40 @@ static STREAMER_TAG_3D_TEXT_LABEL:gOznakaKopija[OZNAKA_MAX][BROJ_JEZIKA], bool:g
 static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MAX_PLAYERS];
 
 #define INTERAKCIJA_ZONA    0x494E54
+#define SAVJET_X            82.0
+#define SAVJET_DNO          312.0
+#define SAVJET_SIRINA       110.0
+
+static PlayerText:gSavjetTd[MAX_PLAYERS], bool:gSavjetIma[MAX_PLAYERS], gSavjetToken[MAX_PLAYERS];
+
+SavjetConnect(playerid)
+{
+    gSavjetIma[playerid] = false;
+    gSavjetToken[playerid]++;
+}
+
+Savjet(playerid, const tekst[], ms = 3000)
+{
+    new redova = 1;
+    for (new p = strfind(tekst, "~n~"); p != -1; p = strfind(tekst, "~n~", false, p + 3)) redova++;
+    if (gSavjetIma[playerid]) PlayerTextDrawDestroy(playerid, gSavjetTd[playerid]);
+    new PlayerText:td = TdTekst(playerid, SAVJET_X, SAVJET_DNO - float(redova) * 10.0, tekst, 0xFFFFFFFF, 0.22, 1.0, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_CENTER);
+    PlayerTextDrawUseBox(playerid, td, true);
+    PlayerTextDrawBoxColour(playerid, td, 0x000000AA);
+    PlayerTextDrawTextSize(playerid, td, 0.0, SAVJET_SIRINA);
+    PlayerTextDrawShow(playerid, td);
+    gSavjetTd[playerid] = td;
+    gSavjetIma[playerid] = true;
+    SetTimerEx("SavjetSkrij", ms, false, "ii", playerid, ++gSavjetToken[playerid]);
+}
+
+forward SavjetSkrij(playerid, token);
+public SavjetSkrij(playerid, token)
+{
+    if (token != gSavjetToken[playerid] || !gSavjetIma[playerid]) return;
+    PlayerTextDrawDestroy(playerid, gSavjetTd[playerid]);
+    gSavjetIma[playerid] = false;
+}
 
 static OznakaPrevedi(l, const hr[], out[], len)
 {
@@ -114,7 +148,7 @@ InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
     if (areaid == gInterakcijaZadnja[playerid] && sad - gInterakcijaVrijeme[playerid] < 30000) return 1;
     gInterakcijaZadnja[playerid] = areaid;
     gInterakcijaVrijeme[playerid] = sad;
-    IgraObavijest(playerid, T(playerid, "Interakcija"), 0xF39C12FF, T(playerid, "Pritisnite ALT za interakciju."), 1500);
+    Savjet(playerid, T(playerid, "~y~ALT~w~ - interakcija"), 2000);
     return 1;
 }
 

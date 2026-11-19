@@ -581,7 +581,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "* %s stavlja %s u prtljaznik.", "* %s puts %s in the trunk.", "* %s кладет %s в багажник.", "* %s mete a %s en el maletero.", "* %s, %s oyuncusunu bagaja koyar." },
     { "* %s vadi %s iz prtljaznika.", "* %s pulls %s out of the trunk.", "* %s вытаскивает %s из багажника.", "* %s saca a %s del maletero.", "* %s, %s oyuncusunu bagajdan cikarir." },
     { "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout", "  Trunk: /frisktrunk, /trunkput (LSPD), /trunkout", "  Багажник: /frisktrunk, /trunkput (LSPD), /trunkout", "  Maletero: /frisktrunk, /trunkput (LSPD), /trunkout", "  Bagaj: /frisktrunk, /trunkput (LSPD), /trunkout" },
-    { "Pomoc: Upalite motor tipkom 2 ili naredbom /motor.", "Help: Start the engine with key 2 or /engine.", "Подсказка: заведите двигатель клавишей 2 или командой /engine.", "Ayuda: Arranca el motor con la tecla 2 o /engine.", "Yardim: Motoru 2 tusu veya /engine ile calistirin." },
     { "Nemate kljuceve. Spojite zice naredbom /ukradi.", "You don't have the keys. Hotwire it with /steal.", "У вас нет ключей. Соедините провода командой /steal.", "No tienes las llaves. Haz un puente con /steal.", "Anahtariniz yok. /steal ile kablolari baglayin." },
     { "* %s spaja zice ispod volana.", "* %s hotwires the vehicle under the steering wheel.", "* %s соединяет провода под рулём.", "* %s hace un puente bajo el volante.", "* %s direksiyonun altindaki kablolari birlestiriyor." },
     { "Niste kod pumpe.", "You are not at a fuel pump.", "Вы не у колонки.", "No estas junto a un surtidor.", "Yakit pompasinin yaninda degilsiniz." },
@@ -2132,8 +2131,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koristenje: /pikadorot [rx] [rz] [x] [y] [prsten]", "Usage: /pikadorot [rx] [rz] [x] [y] [ring]", "Использование: /pikadorot [rx] [rz] [x] [y] [кольцо]", "Uso: /pikadorot [rx] [rz] [x] [y] [anillo]", "Kullanim: /pikadorot [rx] [rz] [x] [y] [halka]" },
     { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f, ring %.2f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f, кольцо %.2f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f, anillo %.2f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f, halka %.2f" },
     { "Igra kosta $%d.", "The game costs $%d.", "Игра стоит $%d.", "El juego cuesta $%d.", "Oyun $%d tutar." },
-    { "Interakcija", "Interaction", "Взаимодействие", "Interaccion", "Etkilesim" },
-    { "Pritisnite ALT za interakciju.", "Press ALT to interact.", "Нажмите ALT для взаимодействия.", "Pulsa ALT para interactuar.", "Etkilesim icin ALT tusuna basin." },
     { "%s: $%d/%s, na zalihi %d.", "%s: $%d/%s, %d in stock.", "%s: $%d/%s, в наличии %d.", "%s: $%d/%s, %d en stock.", "%s: $%d/%s, stokta %d." },
     { "Upisite kolicinu u chat ili N za odbijanje.", "Type the amount in chat or press N to decline.", "Напишите количество в чат или нажмите N, чтобы отказаться.", "Escribe la cantidad en el chat o pulsa N para rechazar.", "Miktari sohbete yazin veya reddetmek icin N basin." },
     { "Cijena: $%d~n~Y - prihvati, N - odbij", "Price: $%d~n~Y - accept, N - decline", "Цена: $%d~n~Y - принять, N - отказаться", "Precio: $%d~n~Y - aceptar, N - rechazar", "Fiyat: $%d~n~Y - kabul, N - reddet" },
@@ -2153,7 +2150,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koristenje: /spawn [id/ime]", "Usage: /spawn [id/name]", "Использование: /spawn [id/имя]", "Uso: /spawn [id/nombre]", "Kullanim: /spawn [id/isim]" },
     { "Teleportirali ste igraca %s do sebe.", "You teleported %s to you.", "Вы телепортировали игрока %s к себе.", "Teletransportaste a %s hacia ti.", "%s oyuncusunu yaniniza isinladiniz." },
     { "Admin vas je teleportirao do sebe.", "An admin teleported you to them.", "Администратор телепортировал вас к себе.", "Un admin te teletransporto hacia el.", "Bir admin sizi yanina isinladi." },
-    { "Admin vas je vratio na spawn.", "An admin sent you back to spawn.", "Администратор вернул вас на спавн.", "Un admin te devolvio al spawn.", "Bir admin sizi spawna geri gonderdi." }
+    { "Admin vas je vratio na spawn.", "An admin sent you back to spawn.", "Администратор вернул вас на спавн.", "Un admin te devolvio al spawn.", "Bir admin sizi spawna geri gonderdi." },
+    { "~y~ALT~w~ - interakcija", "~y~ALT~w~ - interact", "~y~ALT~w~ - vzaimodejstvie", "~y~ALT~w~ - interactuar", "~y~ALT~w~ - etkilesim" },
+    { "~y~2~w~ - upali motor~n~~y~Y~w~ - opcije", "~y~2~w~ - engine on~n~~y~Y~w~ - options", "~y~2~w~ - zapustit dvigatel~n~~y~Y~w~ - opcii", "~y~2~w~ - encender motor~n~~y~Y~w~ - opciones", "~y~2~w~ - motoru calistir~n~~y~Y~w~ - secenekler" },
+    { "~y~Y~w~ - opcije", "~y~Y~w~ - options", "~y~Y~w~ - opcii", "~y~Y~w~ - opciones", "~y~Y~w~ - secenekler" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

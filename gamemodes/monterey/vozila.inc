@@ -1579,7 +1579,8 @@ VoziloVozac(playerid)
     if (!gUlogiran[playerid]) return;
     if (ImaKljuc(playerid, v))
     {
-        if (!BezMotora(GetVehicleModel(v)) && VoziloGet(v, VP_MOTOR) != 1) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Upalite motor tipkom 2 ili naredbom /motor."));
+        if (!BezMotora(GetVehicleModel(v)) && VoziloGet(v, VP_MOTOR) != 1) Savjet(playerid, T(playerid, "~y~2~w~ - upali motor~n~~y~Y~w~ - opcije"), 4000);
+        else Savjet(playerid, T(playerid, "~y~Y~w~ - opcije"), 4000);
         return;
     }
     if (MozeKljuc(v) && VoziloGet(v, VP_MOTOR) == 1) return;
