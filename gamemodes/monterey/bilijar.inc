@@ -42,7 +42,7 @@ static const gBilijarUdarac[][] = { "POOL_Short_Shot", "POOL_Med_Shot", "POOL_Lo
 static const Float:gBilijarRupe[][2] = { { 0.955, 0.51 }, { 0.955, -0.49 }, { 0.005, 0.55 }, { 0.007, -0.535 }, { -0.945, 0.513 }, { -0.945, -0.49 } };
 
 static gBilijar[BILIJAR_MAX][E_BILIJAR], Float:gBilijarPut[BILIJAR_MAX][BILIJAR_OKVIRA][BILIJAR_KUGLI][2], gBilijarIgrac[MAX_PLAYERS] = { -1, ... }, gApBilijar[MAX_PLAYERS][BILIJAR_MAX];
-static PlayerText:gBilijarTd[MAX_PLAYERS];
+static PlayerText:gBilijarTd[MAX_PLAYERS][2];
 
 static BilijarSvijet(s, Float:lx, Float:ly, &Float:wx, &Float:wy)
 {
@@ -190,7 +190,8 @@ static BilijarNisanKraj(s)
     if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p)) return -1;
     SetPlayerPos(p, gBilijar[s][bsSx], gBilijar[s][bsSy], gBilijar[s][bsZ] + 1.0);
     SetPlayerFacingAngle(p, gBilijar[s][bsKut]);
-    PlayerTextDrawDestroy(p, gBilijarTd[p]);
+    PlayerTextDrawDestroy(p, gBilijarTd[p][0]);
+    PlayerTextDrawDestroy(p, gBilijarTd[p][1]);
     TogglePlayerControllable(p, true);
     SetCameraBehindPlayer(p);
     return poza < 0 ? 2 : poza;
@@ -316,11 +317,7 @@ static BilijarNisanPostavi(s)
     BilijarKlon(s);
     SetPlayerCameraPos(p, bx - dx * 0.55, by - dy * 0.55, z + 0.22);
     SetPlayerCameraLookAt(p, bx + dx * 2.0, by + dy * 2.0, z - 0.05);
-    new tekst[64], crte = floatround(gBilijar[s][bsSnaga] / 5.0);
-    for (new i = 0; i < 20; i++) tekst[i] = i < crte ? 'I' : '.';
-    tekst[20] = EOS;
-    format(tekst, sizeof tekst, "~w~%s ~r~%s", T(p, "SNAGA"), tekst);
-    PlayerTextDrawSetString(p, gBilijarTd[p], tekst);
+    SnagaBarPostavi(p, gBilijarTd[p][1], gBilijar[s][bsSnaga]);
 }
 
 forward BilijarNisanTick(s, token);
@@ -368,12 +365,7 @@ BilijarTipke(playerid, KEY:newkeys, KEY:oldkeys)
         gBilijar[s][bsSnagaGore] = true;
         TogglePlayerControllable(playerid, false);
         SetPlayerPos(playerid, gBilijar[s][bsX], gBilijar[s][bsY], gBilijar[s][bsZ] - BILIJAR_SKRIJ_Z);
-        gBilijarTd[playerid] = CreatePlayerTextDraw(playerid, 320.0, 380.0, "_");
-        PlayerTextDrawAlignment(playerid, gBilijarTd[playerid], TEXT_DRAW_ALIGN_CENTER);
-        PlayerTextDrawLetterSize(playerid, gBilijarTd[playerid], 0.3, 1.3);
-        PlayerTextDrawFont(playerid, gBilijarTd[playerid], TEXT_DRAW_FONT_2);
-        PlayerTextDrawSetOutline(playerid, gBilijarTd[playerid], 1);
-        PlayerTextDrawShow(playerid, gBilijarTd[playerid]);
+        SnagaBarStvori(playerid, gBilijarTd[playerid][0], gBilijarTd[playerid][1]);
         BilijarNisanPostavi(s);
         IgraObavijest(playerid, T(playerid, "Bilijar"), BILIJAR_BOJA, T(playerid, "A/D - nisan (ALT precizno), drzi LMB - snaga, pusti LMB - udarac, RMB - odustani."), 0);
         SetTimerEx("BilijarNisanTick", BILIJAR_NISAN_MS, false, "ii", s, gBilijar[s][bsToken]);

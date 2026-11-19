@@ -31,7 +31,7 @@ static const Float:gKgCunj[10][2] = {
 };
 
 static gKg[KUGLANJE_MAX][E_KUGLANA], gKgRoll[KUGLANJE_MAX][2][KUGLANJE_BACANJA], gKgN[KUGLANJE_MAX][2], gKuglanjeIgrac[MAX_PLAYERS] = { -1, ... }, gApKuglanje[MAX_PLAYERS][KUGLANJE_MAX];
-static PlayerText:gKgTd[MAX_PLAYERS], bool:gKgTdIma[MAX_PLAYERS];
+static PlayerText:gKgTd[MAX_PLAYERS], PlayerText:gKgBar[MAX_PLAYERS][2], bool:gKgTdIma[MAX_PLAYERS];
 
 KuglanjeRezultat(const b[], n)
 {
@@ -211,6 +211,8 @@ static KuglanjeTdUnisti(playerid)
     if (!gKgTdIma[playerid]) return;
     gKgTdIma[playerid] = false;
     PlayerTextDrawDestroy(playerid, gKgTd[playerid]);
+    PlayerTextDrawDestroy(playerid, gKgBar[playerid][0]);
+    PlayerTextDrawDestroy(playerid, gKgBar[playerid][1]);
 }
 
 static KuglanjeNisanKraj(s)
@@ -380,11 +382,10 @@ static KuglanjeNisanPostavi(s)
     SetDynamicObjectPos(gKg[s][kgKugla], wx, wy, z + KUGLANJE_KUGLA_Z);
     SetPlayerCameraPos(p, cx, cy, z + 2.3);
     SetPlayerCameraLookAt(p, tx, ty, z + 0.2);
-    new tekst[96], crte = floatround(gKg[s][kgSnaga] / 5.0);
-    for (new i = 0; i < 20; i++) tekst[i] = i < crte ? 'I' : '.';
-    tekst[20] = EOS;
-    format(tekst, sizeof tekst, "~w~%s ~r~%s~n~~w~%s %.1f", T(p, "SNAGA"), tekst, T(p, "KUT"), gKg[s][kgKut]);
+    new tekst[48];
+    format(tekst, sizeof tekst, "~w~%s %.1f", T(p, "KUT"), gKg[s][kgKut]);
     PlayerTextDrawSetString(p, gKgTd[p], tekst);
+    SnagaBarPostavi(p, gKgBar[p][1], gKg[s][kgSnaga]);
 }
 
 forward KuglanjeNisanTick(s, token);
@@ -433,6 +434,7 @@ static KuglanjeNisani(playerid, s)
     PlayerTextDrawFont(playerid, gKgTd[playerid], TEXT_DRAW_FONT_2);
     PlayerTextDrawSetOutline(playerid, gKgTd[playerid], 1);
     PlayerTextDrawShow(playerid, gKgTd[playerid]);
+    SnagaBarStvori(playerid, gKgBar[playerid][0], gKgBar[playerid][1]);
     gKgTdIma[playerid] = true;
     KuglanjeNisanPostavi(s);
     IgraObavijest(playerid, T(playerid, "Kuglanje"), KUGLANJE_BOJA, T(playerid, "A/D - smjer (ALT precizno), drzi LMB - snaga, pusti LMB - bacanje, RMB - odustani."), 0);

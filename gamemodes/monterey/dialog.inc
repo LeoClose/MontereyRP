@@ -276,6 +276,25 @@ PlayerText:TdTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina
     return td;
 }
 
+#define SNAGA_BAR_X         240.0
+#define SNAGA_BAR_Y         408.0
+#define SNAGA_BAR_W         160.0
+#define SNAGA_ZUTA          0xF1C40FFF
+
+SnagaBarStvori(playerid, &PlayerText:pozadina, &PlayerText:traka)
+{
+    pozadina = TdSlika(playerid, SNAGA_BAR_X - 2.0, SNAGA_BAR_Y - 2.0, SNAGA_BAR_W + 4.0, 12.0, 0x000000AA);
+    traka = TdSlika(playerid, SNAGA_BAR_X, SNAGA_BAR_Y, 1.0, 8.0, SNAGA_ZUTA);
+    PlayerTextDrawShow(playerid, pozadina);
+}
+
+SnagaBarPostavi(playerid, PlayerText:traka, Float:snaga)
+{
+    if (snaga <= 0.0) return PlayerTextDrawHide(playerid, traka);
+    PlayerTextDrawTextSize(playerid, traka, snaga / 100.0 * SNAGA_BAR_W, 8.0);
+    return PlayerTextDrawShow(playerid, traka);
+}
+
 ZadnjiId()
 {
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
