@@ -2,7 +2,7 @@
 #define ODJECA_SVIJET           4000
 #define ODJECA_DOMET            2.0
 #define ODJECA_KASA_DOMET       2.5
-#define ODJECA_ARTIKALA         48
+#define ODJECA_ARTIKALA         128
 #define ODJECA_KATALOG          1
 #define ODJECA_TD               16
 #define ODJECA_SLOT_KAPA        8
@@ -29,6 +29,16 @@ static const gOdjecaZadano[][3] = {
     { ODJ_SKIN, 12, 300 }, { ODJ_SKIN, 13, 250 }, { ODJ_SKIN, 40, 400 }, { ODJ_SKIN, 41, 300 }, { ODJ_SKIN, 56, 250 }, { ODJ_SKIN, 69, 350 },
     { ODJ_KAPA, 19006, 80 }, { ODJ_KAPA, 19007, 80 }, { ODJ_KAPA, 19022, 120 }, { ODJ_KAPA, 18891, 50 }, { ODJ_KAPA, 18892, 50 }, { ODJ_KAPA, 18893, 50 },
     { ODJ_KAPA, 18926, 100 }, { ODJ_KAPA, 18927, 100 }, { ODJ_KAPA, 18939, 100 },
+    { ODJ_KAPA, 19352, 500 }, { ODJ_KAPA, 19487, 500 }, { ODJ_KAPA, 18947, 300 }, { ODJ_KAPA, 18948, 300 }, { ODJ_KAPA, 18949, 300 }, { ODJ_KAPA, 18950, 300 },
+    { ODJ_KAPA, 18951, 300 }, { ODJ_KAPA, 19488, 300 }, { ODJ_KAPA, 18944, 250 }, { ODJ_KAPA, 18945, 250 }, { ODJ_KAPA, 18946, 250 }, { ODJ_KAPA, 18968, 300 },
+    { ODJ_KAPA, 18969, 300 }, { ODJ_KAPA, 18962, 350 }, { ODJ_KAPA, 19095, 350 }, { ODJ_KAPA, 19096, 350 }, { ODJ_KAPA, 19097, 350 }, { ODJ_KAPA, 19098, 350 },
+    { ODJ_KAPA, 18921, 200 }, { ODJ_KAPA, 18922, 200 }, { ODJ_KAPA, 18923, 200 }, { ODJ_KAPA, 18924, 200 }, { ODJ_KAPA, 18925, 200 }, { ODJ_KAPA, 18928, 100 },
+    { ODJ_KAPA, 18929, 100 }, { ODJ_KAPA, 18930, 100 }, { ODJ_KAPA, 18931, 100 }, { ODJ_KAPA, 18932, 100 }, { ODJ_KAPA, 18933, 100 }, { ODJ_KAPA, 18934, 100 },
+    { ODJ_KAPA, 18935, 100 }, { ODJ_KAPA, 18940, 100 }, { ODJ_KAPA, 18941, 100 }, { ODJ_KAPA, 18942, 100 }, { ODJ_KAPA, 18943, 100 }, { ODJ_KAPA, 18953, 120 },
+    { ODJ_KAPA, 18954, 120 }, { ODJ_KAPA, 18955, 100 }, { ODJ_KAPA, 18956, 100 }, { ODJ_KAPA, 18957, 100 }, { ODJ_KAPA, 18958, 100 }, { ODJ_KAPA, 18959, 100 },
+    { ODJ_KAPA, 18960, 100 }, { ODJ_KAPA, 18961, 100 }, { ODJ_KAPA, 19067, 120 }, { ODJ_KAPA, 19068, 120 }, { ODJ_KAPA, 19069, 120 }, { ODJ_KAPA, 19553, 150 },
+    { ODJ_KAPA, 18970, 150 }, { ODJ_KAPA, 18971, 150 }, { ODJ_KAPA, 18972, 150 }, { ODJ_KAPA, 18973, 150 }, { ODJ_KAPA, 19064, 100 }, { ODJ_KAPA, 19065, 100 },
+    { ODJ_KAPA, 19066, 100 }, { ODJ_KAPA, 19528, 200 },
     { ODJ_FRIZURA, 18640, 150 }, { ODJ_FRIZURA, 18975, 150 }, { ODJ_FRIZURA, 19077, 200 }, { ODJ_FRIZURA, 19136, 250 }, { ODJ_FRIZURA, 19274, 200 }
 };
 
@@ -49,6 +59,19 @@ InitOdjeca()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_style (account INTEGER PRIMARY KEY, skin INTEGER NOT NULL DEFAULT -1, \
         kapa INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, krx REAL NOT NULL DEFAULT 0, kry REAL NOT NULL DEFAULT 0, krz REAL NOT NULL DEFAULT 0, \
         frizura INTEGER NOT NULL DEFAULT 0, fx REAL NOT NULL DEFAULT 0, fy REAL NOT NULL DEFAULT 0, fz REAL NOT NULL DEFAULT 0, frx REAL NOT NULL DEFAULT 0, fry REAL NOT NULL DEFAULT 0, frz REAL NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS server_flags (name TEXT PRIMARY KEY)"));
+    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'odjeca_kape'");
+    new bool:kape = DB_GetRowCount(zastava) > 0;
+    DB_FreeResultSet(zastava);
+    if (!kape)
+    {
+        for (new i = 0; i < sizeof gOdjecaZadano; i++)
+        {
+            if (gOdjecaZadano[i][0] != ODJ_KAPA) continue;
+            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO store_items (store_type, store, kind, model, price) SELECT %d, s.id, %d, %d, %d FROM clothing_shops s WHERE s.type = %d AND NOT EXISTS (SELECT 1 FROM store_items i WHERE i.store_type = %d AND i.store = s.id AND i.model = %d)", ODJECA_KATALOG, ODJ_KAPA, gOdjecaZadano[i][1], gOdjecaZadano[i][2], ODJ_PRODAVAONICA, ODJECA_KATALOG, gOdjecaZadano[i][1]));
+        }
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('odjeca_kape')"));
+    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, type, x, y, z, a, Aktor, ax, ay, az, aa, Kabina, kx, ky, kz, ka FROM clothing_shops ORDER BY id LIMIT %d", ODJECA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
     {

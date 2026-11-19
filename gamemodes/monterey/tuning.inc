@@ -502,10 +502,10 @@ static const Float:gPs[][8] = {
 };
 static STREAMER_TAG_AREA:gPsZona[sizeof gPs], gPsU[MAX_PLAYERS], Float:gPsUlaz[MAX_PLAYERS][4], Float:gPsZdravlje[MAX_PLAYERS], gPsStete[MAX_PLAYERS][4], gPsBoja[MAX_PLAYERS][2], Float:gTunPovratak[MAX_PLAYERS][4];
 static const Float:gTunUnutra[4] = { 617.536, -1.99, 1000.6, 90.0 };
-static gTunNitro[MAX_VEHICLES], gTunNitroDo[MAX_VEHICLES], bool:gTunSamo[MAX_PLAYERS], gPsPauza[MAX_PLAYERS], gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], gTunNeonObj[MAX_VEHICLES][2];
+static gTunNitro[MAX_VEHICLES], gTunNitroDo[MAX_VEHICLES], bool:gTunSamo[MAX_PLAYERS], gPsPauza[MAX_PLAYERS], gTunMod[MAX_VEHICLES][14], gTunPaint[MAX_VEHICLES], gTunNeon[MAX_VEHICLES], gTunMotor[MAX_VEHICLES], gTunBoja[MAX_VEHICLES][2], STREAMER_TAG_OBJECT:gTunNeonObj[MAX_VEHICLES][2];
 static gTunOklop[MAX_VEHICLES], gTunRezervoar[MAX_VEHICLES], gTunTruba[MAX_VEHICLES], gTunIskre[MAX_VEHICLES], Float:gTunZdravlje[MAX_VEHICLES], gTunIskreMs[MAX_VEHICLES], gTunTrubaMs[MAX_VEHICLES], gTunZatamnjeno[MAX_VEHICLES];
 static bool:gTunSkriven[MAX_PLAYERS], gTunTrubaStaro[MAX_PLAYERS], gTunTrubaSlusa[MAX_PLAYERS], bool:gTunTrubaTipka[MAX_PLAYERS];
-static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], gTunNatpisObj[MAX_VEHICLES];
+static gTunNatpis[MAX_VEHICLES][TUNING_NATPIS_DUZ + 1], gTunNatpisFont[MAX_VEHICLES], gTunNatpisBoja[MAX_VEHICLES], STREAMER_TAG_OBJECT:gTunNatpisObj[MAX_VEHICLES];
 static gTunNTekst[MAX_PLAYERS][TUNING_NATPIS_DUZ + 1], gTunNFont[MAX_PLAYERS], gTunNBoja[MAX_PLAYERS], bool:gTunUnos[MAX_PLAYERS];
 static gTunU[MAX_PLAYERS], gTunV[MAX_PLAYERS], gTunKat[MAX_PLAYERS], gTunIdx[MAX_PLAYERS], gTunPoc[MAX_PLAYERS], gTunBroj[MAX_PLAYERS];
 static gTunDijelovi[MAX_PLAYERS][TUNING_DIJELOVA], gTunKategorije[MAX_PLAYERS][TK_DIO + 14], gTunKatBroj[MAX_PLAYERS];
@@ -682,7 +682,7 @@ TuningRezervoar(v)
 forward TuningIskreKraj(objekt);
 public TuningIskreKraj(objekt)
 {
-    DestroyObject(objekt);
+    DestroyDynamicObject(STREAMER_TAG_OBJECT:objekt);
 }
 
 static TuningIskre(v)
@@ -692,9 +692,9 @@ static TuningIskre(v)
     new broj = floatround(gTuningAuspuh[m][3]);
     for (new i = 0; i < broj; i++)
     {
-        new objekt = CreateObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2] - TUNING_ISKRE_FX_Z, 0.0, 0.0, 0.0);
-        SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", objekt);
+        new STREAMER_TAG_OBJECT:objekt = CreateDynamicObject(TUNING_ISKRE_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        AttachDynamicObjectToVehicle(objekt, v, i ? -gTuningAuspuh[m][0] : gTuningAuspuh[m][0], gTuningAuspuh[m][1], gTuningAuspuh[m][2] - TUNING_ISKRE_FX_Z, 0.0, 0.0, 0.0);
+        SetTimerEx("TuningIskreKraj", TUNING_ISKRE_TRAJE, false, "i", _:objekt);
     }
 }
 
@@ -777,11 +777,11 @@ static TuningNeon(v, boja)
 {
     for (new i = 0; i < 2; i++)
     {
-        if (gTunNeonObj[v][i]) DestroyObject(gTunNeonObj[v][i]);
-        gTunNeonObj[v][i] = 0;
+        if (gTunNeonObj[v][i]) DestroyDynamicObject(gTunNeonObj[v][i]);
+        gTunNeonObj[v][i] = STREAMER_TAG_OBJECT:0;
         if (!boja) continue;
-        gTunNeonObj[v][i] = CreateObject(18646 + boja, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(gTunNeonObj[v][i], v, i ? 0.9 : -0.9, 0.0, -0.55, 0.0, 0.0, 0.0);
+        gTunNeonObj[v][i] = CreateDynamicObject(18646 + boja, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+        AttachDynamicObjectToVehicle(gTunNeonObj[v][i], v, i ? 0.9 : -0.9, 0.0, -0.55, 0.0, 0.0, 0.0);
     }
 }
 
@@ -792,13 +792,13 @@ static bool:TuningNatpisMoze(model)
 
 static TuningNatpis(v, const tekst[], font, boja)
 {
-    if (gTunNatpisObj[v]) DestroyObject(gTunNatpisObj[v]);
-    gTunNatpisObj[v] = 0;
+    if (gTunNatpisObj[v]) DestroyDynamicObject(gTunNatpisObj[v]);
+    gTunNatpisObj[v] = STREAMER_TAG_OBJECT:0;
     new model = GetVehicleModel(v), duz = strlen(tekst);
     if (!duz || !TuningNatpisMoze(model)) return;
-    gTunNatpisObj[v] = CreateObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    SetObjectMaterialText(gTunNatpisObj[v], tekst, 0, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), true, gTuningNatpisArgb[boja], 0, OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
-    AttachObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1], 0.0, -90.0, 0.0);
+    gTunNatpisObj[v] = CreateDynamicObject(TUNING_NATPIS_OBJEKT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    SetDynamicObjectMaterialText(gTunNatpisObj[v], 0, tekst, OBJECT_MATERIAL_SIZE_512x256, gTuningFont[font], min(TUNING_NATPIS_MAX, TUNING_NATPIS_FONT / duz), 1, gTuningNatpisArgb[boja], 0, _:OBJECT_MATERIAL_TEXT_ALIGN_CENTRE);
+    AttachDynamicObjectToVehicle(gTunNatpisObj[v], v, 0.0, gTuningKrov[model - 400][0], gTuningKrov[model - 400][1], 0.0, -90.0, 0.0);
 }
 
 static TuningVrati(v)

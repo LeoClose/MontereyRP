@@ -104,8 +104,8 @@ static TaksiVozilo(s, Float:x, Float:y, Float:z, Float:a)
     SetVehicleParamsEx(v, 0, 0, 0, 0, 0, 0, 0);
     if (premium)
     {
-        gTaksi[s][tZnak] = CreateObject(PREMIUM_ZNAK, x, y, z, 0.0, 0.0, 0.0);
-        AttachObjectToVehicle(gTaksi[s][tZnak], v, 0.0, -0.2, PREMIUM_ZNAK_Z, 0.0, 0.0, 0.0);
+        gTaksi[s][tZnak] = _:CreateDynamicObject(PREMIUM_ZNAK, x, y, z, 0.0, 0.0, 0.0);
+        AttachDynamicObjectToVehicle(STREAMER_TAG_OBJECT:gTaksi[s][tZnak], v, 0.0, -0.2, PREMIUM_ZNAK_Z, 0.0, 0.0, 0.0);
     }
 }
 
@@ -1001,7 +1001,7 @@ static TaksiPreskoci(s, playerid)
         SetTimerEx("TaksiPutnikSjedi", 600, false, "iiii", s, i, GetPlayerVehicleSeat(i), 0);
         SetPlayerPos(i, gTaksiTocke[s][j][0], gTaksiTocke[s][j][1], gTaksiTocke[s][j][2] + 2.0);
     }
-    DestroyObject(stariZnak);
+    if (stariZnak) DestroyDynamicObject(STREAMER_TAG_OBJECT:stariZnak);
     DestroyVehicle(stari);
     gTaksi[s][tIdx] = j;
     SetPlayerPos(playerid, gTaksiTocke[s][j][0], gTaksiTocke[s][j][1], gTaksiTocke[s][j][2] + 2.0);
@@ -1151,7 +1151,7 @@ TaksiTick()
             TaksiBezVozaca(s);
             DestroyVehicle(gTaksi[s][tVozilo]);
             gTaksi[s][tVozilo] = INVALID_VEHICLE_ID;
-            if (s >= TAKSI_FLOTA) DestroyObject(gTaksi[s][tZnak]);
+            if (s >= TAKSI_FLOTA) DestroyDynamicObject(STREAMER_TAG_OBJECT:gTaksi[s][tZnak]);
             gTaksi[s][tStanje] = s < TAKSI_FLOTA ? TX_NESTAO : TX_SLOBODAN;
         }
         else if (st == TX_NESTAO)
