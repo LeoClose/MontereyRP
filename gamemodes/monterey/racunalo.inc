@@ -1,8 +1,8 @@
 #define KLAD_CUVAJ_DANA     30
 #define RACUNALO_MODEL      2190
-#define RACUNALO_CIJENA     2500
+#define RACUNALO_CIJENA     1200
 #define RACUNALO_DOMET      2.0
-#define OGLAS_CIJENA        500
+#define OGLAS_CIJENA        50
 #define OGLAS_LEN           100
 #define OGLAS_PAUZA         60
 #define OGLAS_TRAJE         86400

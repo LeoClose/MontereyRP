@@ -12,7 +12,7 @@
 enum E_KAFIC { bool:kfIma, kfDb, Float:kfX, Float:kfY, Float:kfZ, Float:kfA, kfInt, kfSvijet, kfAktor, STREAMER_TAG_3D_TEXT_LABEL:kfTekst }
 enum E_KAFIC_PC { bool:kpIma, kpDb, kpKafic, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, kpInt, kpSvijet, STREAMER_TAG_OBJECT:kpObjekt }
 static const gKaficMinuta[] = { 10, 20, 30, 60 };
-static const gKaficCijena[] = { 20, 35, 50, 90 };
+static const gKaficCijena[] = { 3, 5, 8, 15 };
 static gKaficUredi[MAX_PLAYERS] = { -1, ... }, gKafic[KAFIC_MAX][E_KAFIC], gKaficPc[KAFIC_PC_MAX][E_KAFIC_PC], gKaficIgrac[MAX_PLAYERS], gKaficDo[MAX_PLAYERS], gApKafic[MAX_PLAYERS][KAFIC_MAX + KAFIC_PC_MAX];
 
 InitKafic()

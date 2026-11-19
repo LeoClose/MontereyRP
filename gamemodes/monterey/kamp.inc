@@ -5,7 +5,7 @@
 
 static const gKampModel[] = { PRIKOLICA_VELIKA };
 static const gKampIme[][] = { "Kamp prikolica" };
-static const gKampCijena[] = { 45000 };
+static const gKampCijena[] = { 35000 };
 
 enum E_KAMP { bool:kpIma, kpDb, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, STREAMER_TAG_3D_TEXT_LABEL:kpTekst, kpIkona }
 static gKamp[KAMP_MAX][E_KAMP], gKampU[MAX_PLAYERS] = { -1, ... }, gKampV[MAX_PLAYERS], gApKamp[MAX_PLAYERS][KAMP_MAX];

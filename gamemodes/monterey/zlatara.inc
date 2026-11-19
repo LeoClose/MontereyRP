@@ -28,7 +28,7 @@ enum E_ZLATARA { bool:zlIma, zlDb, Float:zlX, Float:zlY, Float:zlZ, Float:zlA, b
 enum E_PREPRODAVAC { bool:ppIma, ppDb, Float:ppX, Float:ppY, Float:ppZ, Float:ppA, ppInt, ppSvijet, ppAktor, STREAMER_TAG_3D_TEXT_LABEL:ppTekst }
 
 static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
-static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 2500 }, { ITEM_ZLATNE_NAOCALE, 6000 } };
+static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 400 }, { ITEM_ZLATNE_NAOCALE, 1200 } };
 
 static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC];
 static gZlato, gZlatoSat, gApZlatara[MAX_PLAYERS], gZlataraOdabir[MAX_PLAYERS][sizeof gZlataraRoba], gSatNosi[MAX_PLAYERS], gOgrNosi[MAX_PLAYERS], gZlataraPoruka[MAX_PLAYERS];

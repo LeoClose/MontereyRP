@@ -1,6 +1,6 @@
 #define OPSTINA_DOMET       2.5
 #define OPSTINA_SKIN        141
-#define IME_CIJENA          5000
+#define IME_CIJENA          450
 #define IME_MIN             5
 #define BLAGAJNA_POCETNA    1000000
 #define IME_MAX             20

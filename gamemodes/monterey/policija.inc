@@ -1,4 +1,4 @@
-#define KAZNA_MAX           2000
+#define KAZNA_MAX           1000
 #define PD_BLIZU            4.0
 #define PD_STOP_DOMET       30.0
 #define PD_STOP_SIRINA      6.0

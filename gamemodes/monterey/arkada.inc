@@ -1,5 +1,5 @@
 #define ARK_MAX             24
-#define ARK_CIJENA          5
+#define ARK_CIJENA          1
 #define ARK_SW              14
 #define ARK_SH              10
 #define ARK_CELIJA          (ARK_SW * ARK_SH)

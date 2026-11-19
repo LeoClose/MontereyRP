@@ -27,12 +27,12 @@ static const gNamjestajInt[][E_NAM_INT] = {
 
 enum E_NAM_ZADANO { nzModel, nzCijena, nzIme[24] }
 static const gNamjestajZadano[][E_NAM_ZADANO] = {
-    { 1700, 1500, "Bracni krevet" }, { 1701, 1500, "Bracni krevet 2" }, { 1745, 1200, "Krevet" }, { 1771, 900, "Krevet na kat" },
-    { 1702, 1200, "Kauc" }, { 1703, 1200, "Kauc 2" }, { 1753, 2000, "Kozni kauc" }, { 1761, 1800, "Kauc 3" },
-    { 1704, 600, "Fotelja" }, { 1708, 600, "Fotelja 2" }, { 1754, 800, "Kozna fotelja" }, { 1714, 400, "Uredska stolica" },
-    { 1720, 200, "Stolica" }, { 2115, 700, "Kuhinjski stol" }, { 1433, 300, "Stolic" }, { 1742, 900, "Polica za knjige" },
-    { 1741, 500, "Ormaric" }, { 1748, 800, "Televizor" }, { 1752, 1500, "Veliki televizor" }, { 2131, 1000, "Hladnjak" },
-    { 948, 150, "Biljka" }, { 2069, 250, "Lampa" }, { 2190, 2500, "Racunalo" }
+    { 1700, 900, "Bracni krevet" }, { 1701, 900, "Bracni krevet 2" }, { 1745, 700, "Krevet" }, { 1771, 450, "Krevet na kat" },
+    { 1702, 800, "Kauc" }, { 1703, 800, "Kauc 2" }, { 1753, 1500, "Kozni kauc" }, { 1761, 1100, "Kauc 3" },
+    { 1704, 300, "Fotelja" }, { 1708, 300, "Fotelja 2" }, { 1754, 600, "Kozna fotelja" }, { 1714, 150, "Uredska stolica" },
+    { 1720, 60, "Stolica" }, { 2115, 300, "Kuhinjski stol" }, { 1433, 100, "Stolic" }, { 1742, 200, "Polica za knjige" },
+    { 1741, 150, "Ormaric" }, { 1748, 400, "Televizor" }, { 1752, 900, "Veliki televizor" }, { 2131, 1100, "Hladnjak" },
+    { 948, 40, "Biljka" }, { 2069, 60, "Lampa" }, { 2190, 1200, "Racunalo" }
 };
 
 #assert sizeof gNamjestajZadano <= NAMJESTAJ_ROBA

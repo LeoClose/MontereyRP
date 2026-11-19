@@ -1,5 +1,5 @@
 #define MAX_KURVI           16
-#define KURVA_CIJENA        30
+#define KURVA_CIJENA        100
 #define KURVA_TRUBA         8.0
 #define KURVA_BJEG          25.0
 #define KURVA_TRAJANJE_MS   12000

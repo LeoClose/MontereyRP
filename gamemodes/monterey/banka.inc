@@ -16,8 +16,8 @@
 #define BANKA_PLJACKASA     4
 #define BANKA_PLJACKA_S     20
 #define BANKA_PLJACKA_PAUZA 3600
-#define BANKA_PLIJEN_MIN    20000
-#define BANKA_PLIJEN_RASPON 20000
+#define BANKA_PLIJEN_MIN    10000
+#define BANKA_PLIJEN_RASPON 10000
 #define BANKA_WANTED        3
 
 enum E_BANKA { bool:bkIma, bkDb, bkInt, Float:bkX, Float:bkY, Float:bkZ, Float:bkA, Float:bkIx, Float:bkIy, Float:bkIz, bkPljacka, bkPljackaKraj, bkPljackano, bool:bkImaAktor, Float:bkAx, Float:bkAy, Float:bkAz, Float:bkAa, bkAktor,

@@ -27,10 +27,10 @@
 #define TAKSI_SKRIVENO      250.0
 #define TAKSI_MAX_OD_CESTE  150.0
 #define TAKSI_MIN_VOZNJA    50
-#define TAKSI_START         10
-#define TAKSI_PO_KM         5
-#define PREMIUM_START       3
-#define PREMIUM_PO_KM       2
+#define TAKSI_START         4
+#define TAKSI_PO_KM         2
+#define PREMIUM_START       6
+#define PREMIUM_PO_KM       3
 #define PREMIUM_MODEL       579
 #define PREMIUM_ZNAK        19308
 #define PREMIUM_ZNAK_Z      1.32

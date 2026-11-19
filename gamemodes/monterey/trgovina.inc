@@ -7,8 +7,8 @@
 #define TRGOVINA_PLJACKA_S      3600
 #define TRGOVINA_PREDAJA_MS     30000
 #define TRGOVINA_RUKE_MS        60000
-#define TRGOVINA_PLIJEN_MIN     1500
-#define TRGOVINA_PLIJEN_RASPON  2000
+#define TRGOVINA_PLIJEN_MIN     300
+#define TRGOVINA_PLIJEN_RASPON  700
 #define TRGOVINA_BANDA          0
 
 enum E_TRGOVINA { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, bool:tgImaAktor, Float:tgAx, Float:tgAy, Float:tgAz, Float:tgAa, tgAktor, tgPljackano,
@@ -17,7 +17,7 @@ enum E_TRGOVINA { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, 
 static gTrg[TRGOVINA_MAX][E_TRGOVINA];
 static gApTrgovina[MAX_PLAYERS], gTrgPoruka[MAX_PLAYERS];
 static const Float:gTrgovinaUlaz[3] = { -25.884, -185.869, 1003.547 };
-static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 150 }, { ITEM_KANISTER, 50 }, { ITEM_MOBITEL, 200 } };
+static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 25 }, { ITEM_KANISTER, 25 }, { ITEM_MOBITEL, 300 } };
 
 InitTrgovina()
 {

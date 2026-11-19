@@ -858,8 +858,8 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_MOTOR_MS         200
 #define VOZILO_MOTOR_OD         0.85
 #define VOZILO_DOMET            4.0
-#define BENZIN_CIJENA           3
-#define DIZEL_CIJENA            2
+#define BENZIN_CIJENA           1
+#define DIZEL_CIJENA            1
 #define PUMPA_MAX               48
 #define PUMPA_DOMET             2.0
 #define VOZILO_KRIVO_LITARA     5.0

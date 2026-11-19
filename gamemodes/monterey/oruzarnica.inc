@@ -30,9 +30,9 @@ CMD:oruzarnicaint(playerid, params[])
 }
 
 static const gOruzarnicaZadano[][3] = {
-    { ITEM_COLT, 1, 800 }, { ITEM_DEAGLE, 1, 1500 }, { ITEM_SACMARICA, 1, 2000 }, { ITEM_UZI, 1, 2500 },
-    { ITEM_MP5, 1, 3000 }, { ITEM_AK47, 1, 4500 }, { ITEM_M4, 1, 5000 }, { ITEM_NOZ, 1, 150 },
-    { ITEM_MUN_PISTOLJ, 50, 100 }, { ITEM_MUN_SACMARICA, 20, 120 }, { ITEM_MUN_SMG, 50, 150 }, { ITEM_MUN_PUSKA, 50, 200 }
+    { ITEM_COLT, 1, 500 }, { ITEM_DEAGLE, 1, 1800 }, { ITEM_SACMARICA, 1, 600 }, { ITEM_UZI, 1, 1200 },
+    { ITEM_MP5, 1, 2500 }, { ITEM_AK47, 1, 2000 }, { ITEM_M4, 1, 1500 }, { ITEM_NOZ, 1, 60 },
+    { ITEM_MUN_PISTOLJ, 50, 30 }, { ITEM_MUN_SACMARICA, 20, 25 }, { ITEM_MUN_SMG, 50, 35 }, { ITEM_MUN_PUSKA, 50, 50 }
 };
 
 #assert sizeof gOruzarnicaZadano <= ORUZARNICA_ROBA

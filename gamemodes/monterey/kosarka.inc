@@ -664,7 +664,9 @@ public KosHod()
         if (gKosNabija[p] || sad - gKosAnimDo[p] < 0 || GetPlayerState(p) != PLAYER_STATE_ONFOOT) continue;
         new KEY:tipke, gore, strana;
         GetPlayerKeys(p, tipke, gore, strana);
-        new hod = !gore && !strana ? KH_STOJI : (tipke & KEY_SPRINT) ? KH_TRCI : KH_HODA;
+        new hod = !gore && !strana ? KH_STOJI : (tipke & KEY_SPRINT) ? KH_TRCI : KH_HODA, lib[16], ime[32];
+        GetAnimationName(GetPlayerAnimationIndex(p), lib, sizeof lib, ime, sizeof ime);
+        if (strcmp(lib, "BSKTBALL", true)) gKosHod[p] = -1;
         if (hod == gKosHod[p]) continue;
         gKosHod[p] = hod;
         if (hod == KH_STOJI) ApplyAnimation(p, "BSKTBALL", "BBALL_idleloop", 4.1, true, false, false, false, 0);

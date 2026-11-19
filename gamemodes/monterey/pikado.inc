@@ -16,12 +16,13 @@
 #define PIKADO_BAR_X        240.0
 #define PIKADO_BAR_Y        408.0
 #define PIKADO_BAR_W        160.0
-#define PIKADO_PLOCA        200
+#define PIKADO_PLOCA        240
 #define PIKADO_LOPTA        1.032
 #define PIKADO_SNOP_MODEL   18656
 #define PIKADO_SNOP_ZOOM    2.1
 #define PIKADO_SNOP_DUZ     0.956
 #define PIKADO_SNOP_POLA    6.5
+#define PIKADO_CRNA_SLOJEVA 2
 #define PIKADO_TD           13
 #define PIKADO_KREM         0xF2EBD9FF
 #define PIKADO_CRNA         0x1C1C1CFF
@@ -98,8 +99,11 @@ static PikadoSloj(Float:rmm, parna, neparna)
     for (new i = 0; i < 20; i++)
     {
         new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
-        PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja);
-        PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja);
+        for (new d = boja == PIKADO_CRNA ? PIKADO_CRNA_SLOJEVA : 1; d > 0; d--)
+        {
+            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja);
+            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja);
+        }
     }
 }
 

@@ -22,10 +22,10 @@
 #define MEHANICAR_DOMET     3.5
 #define MEHANICAR_STETA     900.0
 #define MEHANICAR_CEKA_S    60
-#define MEHANICAR_GORIVO    50
-#define MEHANICAR_POPRAVAK  150
-#define MEHANICAR_GUME      100
-#define BOLNICA_SPAWN_CIJENA 500
+#define MEHANICAR_GORIVO    60
+#define MEHANICAR_POPRAVAK  300
+#define MEHANICAR_GUME      200
+#define BOLNICA_SPAWN_CIJENA 1500
 #define BOLNICA_CRNO_MS     1000
 #define MEHANICAR_ODVOZ     2500
 #define MEHANICAR_ODVOZ_MS  20000
@@ -34,7 +34,7 @@
 
 forward bool:VlasnikNaParkingu(v);
 forward bool:GarazaIzvana(db, &Float:x, &Float:y);
-#define MEHANICAR_SLEPANJE  250
+#define MEHANICAR_SLEPANJE  150
 #define RADIONICA_X         1207.18
 #define RADIONICA_Y         -981.57
 #define RADIONICA_Z         43.0
@@ -47,7 +47,7 @@ forward bool:GarazaIzvana(db, &Float:x, &Float:y);
 #define RANJEN_TRAJANJE_S   300
 #define RANJEN_CEKANJE_MS   10000
 #define RANJEN_POGODAKA     5
-#define RANJEN_CIJENA       100
+#define RANJEN_CIJENA       250
 #define RANJEN_DOMET_NPC    0.8
 #define RANJEN_PRAG         20.0
 #define RANJEN_IZLAZ_MS     1500

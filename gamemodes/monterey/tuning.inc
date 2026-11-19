@@ -8,8 +8,8 @@
 #define TUNING_Y            110.0
 #define TUNING_SIRINA       200.0
 #define TUNING_RED_H        14.0
-#define TUNING_POPRAVAK     400
-#define TUNING_POPRAVAK_MOTOR 600
+#define TUNING_POPRAVAK     500
+#define TUNING_POPRAVAK_MOTOR 1200
 #define TUNING_GUME         200
 #define TUNING_BOJA         300
 #define TUNING_PAINTJOB     2500

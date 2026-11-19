@@ -1,24 +1,24 @@
-#define PLACA_DRZAVNA       1200
-#define PLACA_PRIVATNA      400
-#define PLACA_POMOC         150
+#define PLACA_DRZAVNA       280
+#define PLACA_PRIVATNA      160
+#define PLACA_POMOC         100
 #define PLACA_POMOC_LEVEL   5
-#define PLACA_POREZ         10
-#define PLACA_IMOVINA       2000
+#define PLACA_POREZ         15
+#define PLACA_IMOVINA       40000
 #define POSAO_NEMA          0
 #define POSAO_DOSTAVLJAC    1
 #define POSAO_KONTROLOR     2
 #define ATC_ODOBRENJE       40
 #define ATC_DOMET           80.0
 #define DOSTAVA_VOZILO      499
-#define DOSTAVA_BAZA        60
-#define DOSTAVA_PO_KM       400
+#define DOSTAVA_BAZA        30
+#define DOSTAVA_PO_KM       25
 #define DOSTAVA_DEPO_DOMET  20.0
 #define DOSTAVA_MIN_M       150.0
-#define HRANA_BAZA          40
-#define HRANA_PO_KM         300
+#define HRANA_BAZA          20
+#define HRANA_PO_KM         20
 #define HRANA_MIN_M         200.0
 #define HRANA_DOMET         4.0
-#define HRANA_CIJENA        50
+#define HRANA_CIJENA        15
 
 static const Float:gToranj[3] = { 1610.0, -2285.0, 13.5 };
 static gPosao[MAX_PLAYERS], gPlacaDuty[MAX_PLAYERS], gDostavaVozilo[MAX_PLAYERS], bool:gDostavaCilj[MAX_PLAYERS], Float:gDostavaOd[MAX_PLAYERS][2];
