@@ -750,6 +750,7 @@ bool:HqUlazIzlaz(playerid)
         return true;
     }
     if (TrgovinaUlaz(playerid)) return true;
+    if (KaficUlaz(playerid)) return true;
     if (OruzarnicaUlaz(playerid)) return true;
     if (BankaUlaz(playerid)) return true;
     if (ZlataraUlaz(playerid)) return true;

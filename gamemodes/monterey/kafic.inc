@@ -8,16 +8,33 @@
 #define KAFIC_MAPA_X        1403.5
 #define KAFIC_MAPA_Y        -14.6
 #define KAFIC_MAPA_Z        1001.0
+#define KAFIC_ULAZA         16
+#define KAFIC_ULAZ_DOMET    2.0
 
 enum E_KAFIC { bool:kfIma, kfDb, Float:kfX, Float:kfY, Float:kfZ, Float:kfA, kfInt, kfSvijet, kfAktor, STREAMER_TAG_3D_TEXT_LABEL:kfTekst }
 enum E_KAFIC_PC { bool:kpIma, kpDb, kpKafic, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, kpInt, kpSvijet, STREAMER_TAG_OBJECT:kpObjekt }
 static const gKaficMinuta[] = { 10, 20, 30, 60 };
 static const gKaficCijena[] = { 3, 5, 8, 15 };
-static gKaficUredi[MAX_PLAYERS] = { -1, ... }, gKafic[KAFIC_MAX][E_KAFIC], gKaficPc[KAFIC_PC_MAX][E_KAFIC_PC], gKaficIgrac[MAX_PLAYERS], gKaficDo[MAX_PLAYERS], gApKafic[MAX_PLAYERS][KAFIC_MAX + KAFIC_PC_MAX];
+static gKaficUredi[MAX_PLAYERS] = { -1, ... }, gKafic[KAFIC_MAX][E_KAFIC], gKaficPc[KAFIC_PC_MAX][E_KAFIC_PC], gKaficIgrac[MAX_PLAYERS], gKaficDo[MAX_PLAYERS], gApKafic[MAX_PLAYERS][KAFIC_MAX + KAFIC_PC_MAX + KAFIC_ULAZA];
+enum E_KAFIC_ULAZ { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, Float:kuA, STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst }
+static gKaficUlaz[KAFIC_ULAZA][E_KAFIC_ULAZ], gKaficUsao[MAX_PLAYERS];
 
 InitKafic()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS cafe_cashiers (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS cafe_entrances (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
+    new DBResult:ru = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM cafe_entrances LIMIT %d", KAFIC_ULAZA);
+    for (new e = 0, n = DB_GetRowCount(ru); e < n; e++, DB_SelectNextRow(ru))
+    {
+        gKaficUlaz[e][kuDb] = DB_GetFieldInt(ru, 0);
+        gKaficUlaz[e][kuX] = DB_GetFieldFloat(ru, 1);
+        gKaficUlaz[e][kuY] = DB_GetFieldFloat(ru, 2);
+        gKaficUlaz[e][kuZ] = DB_GetFieldFloat(ru, 3);
+        gKaficUlaz[e][kuA] = DB_GetFieldFloat(ru, 4);
+        KaficUlazStvori(e);
+    }
+    DB_FreeResultSet(ru);
+    InterakcijaOznaka(CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, KAFIC_MAPA_X, KAFIC_MAPA_Y - 1.0, KAFIC_MAPA_Z + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, KAFIC_MAPA_INT), KAFIC_ULAZ_DOMET, SAVJET_IZLAZ);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS cafe_pcs (id INTEGER PRIMARY KEY AUTOINCREMENT, cashier INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world FROM cafe_cashiers LIMIT %d", KAFIC_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++, DB_SelectNextRow(res))
@@ -46,6 +63,37 @@ InitKafic()
         KaficPcStvori(p);
     }
     DB_FreeResultSet(res);
+}
+
+static KaficUlazStvori(e)
+{
+    gKaficUlaz[e][kuIma] = true;
+    gKaficUlaz[e][kuPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gKaficUlaz[e][kuX], gKaficUlaz[e][kuY], gKaficUlaz[e][kuZ], 0, 0);
+    gKaficUlaz[e][kuTekst] = CreateDynamic3DTextLabel("Internet kafic", COLOR_ORG, gKaficUlaz[e][kuX], gKaficUlaz[e][kuY], gKaficUlaz[e][kuZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gKaficUlaz[e][kuTekst], KAFIC_ULAZ_DOMET, SAVJET_ULAZ);
+}
+
+KaficUlaz(playerid)
+{
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
+    if (GetPlayerInterior(playerid) == KAFIC_MAPA_INT && !GetPlayerVirtualWorld(playerid))
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, KAFIC_ULAZ_DOMET, KAFIC_MAPA_X, KAFIC_MAPA_Y - 1.0, KAFIC_MAPA_Z)) return 0;
+        new e = gKaficUsao[playerid] - 1;
+        if (e < 0 || !gKaficUlaz[e][kuIma]) for (e = 0; e < KAFIC_ULAZA && !gKaficUlaz[e][kuIma]; e++) {}
+        if (e >= KAFIC_ULAZA) return 0;
+        PrebaciIgraca(playerid, 0, 0, gKaficUlaz[e][kuX], gKaficUlaz[e][kuY], gKaficUlaz[e][kuZ], gKaficUlaz[e][kuA] + 180.0);
+        return 1;
+    }
+    if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return 0;
+    for (new e = 0; e < KAFIC_ULAZA; e++)
+    {
+        if (!gKaficUlaz[e][kuIma] || !IsPlayerInRangeOfPoint(playerid, KAFIC_ULAZ_DOMET, gKaficUlaz[e][kuX], gKaficUlaz[e][kuY], gKaficUlaz[e][kuZ])) continue;
+        gKaficUsao[playerid] = e + 1;
+        PrebaciIgraca(playerid, KAFIC_MAPA_INT, 0, KAFIC_MAPA_X, KAFIC_MAPA_Y, KAFIC_MAPA_Z, 0.0);
+        return 1;
+    }
+    return 0;
 }
 
 static KaficStvori(k)
@@ -164,6 +212,7 @@ ShowKafici(playerid)
     new list[2048], red[96], len = 0, n = 0;
     DodajStupac(list, len, T(playerid, "+ Novi blagajnik na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "+ Novo racunalo ispred mene"));
+    DodajStupac(list, len, T(playerid, "+ Novi ulaz u internet kafic na mojoj poziciji"));
     for (new k = 0; k < KAFIC_MAX; k++)
     {
         if (!gKafic[k][kfIma]) continue;
@@ -177,6 +226,13 @@ ShowKafici(playerid)
         format(red, sizeof red, T(playerid, "[%d] Racunalo, blagajnik %d - obrisi"), gKaficPc[p][kpDb], gKaficPc[p][kpKafic]);
         DodajStupac(list, len, red);
         gApKafic[playerid][n++] = KAFIC_MAX + p;
+    }
+    for (new e = 0; e < KAFIC_ULAZA; e++)
+    {
+        if (!gKaficUlaz[e][kuIma]) continue;
+        format(red, sizeof red, T(playerid, "[%d] Ulaz (%s) - obrisi"), gKaficUlaz[e][kuDb], CestaZona(gKaficUlaz[e][kuX], gKaficUlaz[e][kuY]));
+        DodajStupac(list, len, red);
+        gApKafic[playerid][n++] = KAFIC_MAX + KAFIC_PC_MAX + e;
     }
     return PrikaziDialog(playerid, DLG_APANEL_KAFIC, DIALOG_STYLE_LIST, T(playerid, "Internet kafici"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
@@ -236,9 +292,35 @@ DLG:apanel_kafic(playerid, response, listitem)
         EditDynamicObject(playerid, gKaficPc[p][kpObjekt]);
         return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje."));
     }
-    new i = listitem - 2;
-    if (i < 0 || i >= KAFIC_MAX + KAFIC_PC_MAX) return 1;
+    if (listitem == 2)
+    {
+        new e = 0;
+        while (e < KAFIC_ULAZA && gKaficUlaz[e][kuIma]) e++;
+        if (e == KAFIC_ULAZA || unutra || svijet) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ulaz se postavlja samo izvana.")), ShowKafici(playerid);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO cafe_entrances (x, y, z, a) VALUES (%f, %f, %f, %f)", x, y, z, a));
+        gKaficUlaz[e][kuDb] = ZadnjiId();
+        gKaficUlaz[e][kuX] = x;
+        gKaficUlaz[e][kuY] = y;
+        gKaficUlaz[e][kuZ] = z;
+        gKaficUlaz[e][kuA] = a;
+        KaficUlazStvori(e);
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ulaz u internet kafic je postavljen."));
+        return ShowKafici(playerid);
+    }
+    new i = listitem - 3;
+    if (i < 0 || i >= KAFIC_MAX + KAFIC_PC_MAX + KAFIC_ULAZA) return 1;
     new s = gApKafic[playerid][i];
+    if (s >= KAFIC_MAX + KAFIC_PC_MAX)
+    {
+        s -= KAFIC_MAX + KAFIC_PC_MAX;
+        if (!gKaficUlaz[s][kuIma]) return ShowKafici(playerid);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM cafe_entrances WHERE id = %d", gKaficUlaz[s][kuDb]));
+        DestroyDynamicPickup(gKaficUlaz[s][kuPickup]);
+        DestroyDynamic3DTextLabel(gKaficUlaz[s][kuTekst]);
+        gKaficUlaz[s][kuIma] = false;
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ulaz u internet kafic je obrisan."));
+        return ShowKafici(playerid);
+    }
     if (s < KAFIC_MAX)
     {
         if (!gKafic[s][kfIma]) return ShowKafici(playerid);

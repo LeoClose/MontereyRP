@@ -1,5 +1,4 @@
 #define STAND_MAX            32
-#define STAND_ZNAKOVA        64
 #define STAND_CIJENA         30000
 #define STAND_PROIZVOD       12
 #define STAND_ZALIHA_CIJENA  5
@@ -9,9 +8,12 @@
 #define STAND_DOSTAVA        15
 #define STAND_DOMET          3.0
 #define STAND_RADI_DOMET     4.0
+#define STAND_RADNIK_RAZMAK  1.7
+#define KUPAC_BLIZU_MIN      15.0
+#define KUPAC_BLIZU_MAX      45.0
+#define KUPAC_NA_OTVARANJE   2
 #define STAND_NARUDZBA_MS    12000
 #define STAND_RADNIK_MS      3000
-#define STAND_ZNAK_MODEL     19482
 #define STAND_BOJA           0xE67E22FF
 #define STAND_SMS_BROJ       "558"
 #define KUPAC_MAX            12
@@ -35,9 +37,7 @@ static const gKupacSkinovi[] = { 7, 14, 15, 20, 22, 23, 24, 26, 29, 35, 37, 44, 
 enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float:snRz, Float:snKx, Float:snKy, Float:snKz, snVlasnik, snVlasnikIme[MAX_PLAYER_NAME + 1], snIme[25],
     snZaliha, snKasa, bool:snRadnik, snRadnikDo, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd }
 static gStand[STAND_MAX][E_STAND];
-enum E_ZNAK { bool:znIma, znDb, znStand, STREAMER_TAG_OBJECT:znObjekt }
-static gZnak[STAND_ZNAKOVA][E_ZNAK];
-static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], gStandNarudzba[MAX_PLAYERS][3], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
+static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gStandNarudzba[MAX_PLAYERS][3], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
 enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI }
 enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ }
@@ -48,7 +48,6 @@ enum { SO_IME, SO_KASA, SO_ROBA, SO_RADNIK, SO_RADI }
 InitStandovi()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS food_stands (id INTEGER PRIMARY KEY AUTOINCREMENT, kind INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, rz REAL NOT NULL, kx REAL NOT NULL, ky REAL NOT NULL, kz REAL NOT NULL, owner INTEGER NOT NULL DEFAULT 0, owner_name TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', stock INTEGER NOT NULL DEFAULT 0, till INTEGER NOT NULL DEFAULT 0, worker INTEGER NOT NULL DEFAULT 0, worker_until INTEGER NOT NULL DEFAULT 0)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS food_stand_signs (id INTEGER PRIMARY KEY AUTOINCREMENT, stand INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, rx REAL NOT NULL, ry REAL NOT NULL, rz REAL NOT NULL)"));
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         gKupac[k][kuNpc] = INVALID_PLAYER_ID;
@@ -76,24 +75,6 @@ InitStandovi()
         StandStvori(s);
     }
     DB_FreeResultSet(res);
-    res = DB_ExecuteQuery(gDB, "SELECT id, stand, x, y, z, rx, ry, rz FROM food_stand_signs LIMIT %d", STAND_ZNAKOVA);
-    for (new z = 0, n = DB_GetRowCount(res); z < n; z++, DB_SelectNextRow(res))
-    {
-        new s = StandPoDb(DB_GetFieldInt(res, 1));
-        if (s == -1) continue;
-        gZnak[z][znIma] = true;
-        gZnak[z][znDb] = DB_GetFieldInt(res, 0);
-        gZnak[z][znStand] = s;
-        gZnak[z][znObjekt] = CreateDynamicObject(STAND_ZNAK_MODEL, DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), DB_GetFieldFloat(res, 5), DB_GetFieldFloat(res, 6), DB_GetFieldFloat(res, 7));
-        StandZnakTekst(z);
-    }
-    DB_FreeResultSet(res);
-}
-
-static StandPoDb(db)
-{
-    for (new s = 0; s < STAND_MAX; s++) if (gStand[s][snIma] && gStand[s][snDb] == db) return s;
-    return -1;
 }
 
 static StandSpremi(s)
@@ -109,13 +90,6 @@ static StandImeIli(s, ime[], len)
     else strcat(ime, gStandVrsta[gStand[s][snVrsta]], len);
 }
 
-static StandZnakTekst(z)
-{
-    new ime[25];
-    StandImeIli(gZnak[z][znStand], ime, sizeof ime);
-    SetDynamicObjectMaterialText(gZnak[z][znObjekt], 0, ime, 130, "Arial", 40, 1, 0xFFFFFFFF, 0xFF8B1A1A, 1);
-}
-
 static StandOsvjeziTekst(s)
 {
     new tekst[160], ime[25], vlasnik[MAX_PLAYER_NAME + 1];
@@ -128,15 +102,14 @@ static StandOsvjeziTekst(s)
     }
     else format(tekst, sizeof tekst, "%s\n{FFFFFF}$%d", ime, STAND_CIJENA);
     UpdateDynamic3DTextLabelText(gStand[s][snTekst], STAND_BOJA, tekst);
-    for (new z = 0; z < STAND_ZNAKOVA; z++) if (gZnak[z][znIma] && gZnak[z][znStand] == s) StandZnakTekst(z);
 }
 
 static StandRadnikMjesto(s, &Float:x, &Float:y, &Float:a)
 {
     new Float:dx = gStand[s][snX] - gStand[s][snKx], Float:dy = gStand[s][snY] - gStand[s][snKy], Float:d = VectorSize(dx, dy, 0.0);
     if (d < 0.1) d = 1.0;
-    x = gStand[s][snX] + dx / d * 1.1;
-    y = gStand[s][snY] + dy / d * 1.1;
+    x = gStand[s][snX] + dx / d * STAND_RADNIK_RAZMAK;
+    y = gStand[s][snY] + dy / d * STAND_RADNIK_RAZMAK;
     a = atan2(-dy, -dx) - 90.0;
 }
 
@@ -160,8 +133,8 @@ static StandStvori(s)
     gStand[s][snAktor] = INVALID_ACTOR_ID;
     gStand[s][snKupac] = -1;
     gStand[s][snObjekt] = CreateDynamicObject(gStandModeli[gStand[s][snVrsta]], gStand[s][snX], gStand[s][snY], gStand[s][snZ], 0.0, 0.0, gStand[s][snRz]);
-    gStand[s][snTekst] = CreateDynamic3DTextLabel(" ", STAND_BOJA, gStand[s][snKx], gStand[s][snKy], gStand[s][snKz] + 0.7, 12.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
-    InterakcijaOznaka(gStand[s][snTekst]);
+    gStand[s][snTekst] = CreateDynamic3DTextLabel(" ", STAND_BOJA, gStand[s][snX], gStand[s][snY], gStand[s][snZ] + 1.6, 12.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
+    InterakcijaOznaka(gStand[s][snTekst], 3.0);
     StandOsvjeziTekst(s);
     StandAktor(s);
 }
@@ -169,12 +142,6 @@ static StandStvori(s)
 static StandMakni(s)
 {
     for (new k = 0; k < KUPAC_MAX; k++) if (gKupac[k][kuStanje] != KU_NEMA && gKupac[k][kuCilj] == s) KupacMakni(k);
-    for (new z = 0; z < STAND_ZNAKOVA; z++)
-    {
-        if (!gZnak[z][znIma] || gZnak[z][znStand] != s) continue;
-        DestroyDynamicObject(gZnak[z][znObjekt]);
-        gZnak[z][znIma] = false;
-    }
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gStandRadi[i] == s + 1) gStandRadi[i] = 0;
     DestroyDynamicObject(gStand[s][snObjekt]);
     DestroyDynamic3DTextLabel(gStand[s][snTekst]);
@@ -349,7 +316,7 @@ DLG:stand(playerid, response, listitem)
             if (StandIgracRadi(s) != INVALID_PLAYER_ID) return ObavijestGreska(playerid, T(playerid, "Netko vec radi na ovom standu."));
             new Float:x, Float:y, Float:a;
             StandRadnikMjesto(s, x, y, a);
-            SetPlayerPos(playerid, x, y, gStand[s][snKz]);
+            SetPlayerPos(playerid, x, y, gStand[s][snKz] + 0.1);
             SetPlayerFacingAngle(playerid, a);
             gStandRadi[playerid] = s + 1;
             return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Radite na standu. Kupci ce dolaziti, posluzite ih pravom narudzbom."));
@@ -366,7 +333,7 @@ DLG:stand_ime(playerid, response, const inputtext[])
     strcopy(gStand[s][snIme], inputtext, 25);
     StandSpremi(s);
     StandOsvjeziTekst(s);
-    return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Ime standa i natpis su promijenjeni."));
+    return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Ime standa je promijenjeno."));
 }
 
 DLG:stand_roba(playerid, response, const inputtext[])
@@ -550,20 +517,20 @@ static bool:KupacSkriven(Float:x, Float:y, Float:z)
     return true;
 }
 
-static KupacNovi()
+static KupacNovi(cilj = -1)
 {
     new k = -1;
     for (new i = 0; i < KUPAC_MAX && k == -1; i++) if (gKupac[i][kuStanje] == KU_NEMA) k = i;
     if (k == -1) return;
-    new s = KupacOtvoreniStand(-1);
+    new s = cilj == -1 ? KupacOtvoreniStand(-1) : cilj;
     if (s == -1) return;
     new cvor = -1, Float:x, Float:y, Float:z;
-    for (new pokusaj = 0; pokusaj < 40 && cvor == -1; pokusaj++)
+    for (new pokusaj = 0; pokusaj < (cilj != -1 ? 400 : 40) && cvor == -1; pokusaj++)
     {
         new c = random(StazaBrojTocaka());
         StazaTocka(c, x, y, z);
         new Float:d = VectorSize(x - gStand[s][snKx], y - gStand[s][snKy], 0.0);
-        if (d >= KUPAC_SPAWN_MIN && d <= KUPAC_SPAWN_MAX && KupacSkriven(x, y, z)) cvor = c;
+        if (cilj != -1 ? (d >= KUPAC_BLIZU_MIN && d <= KUPAC_BLIZU_MAX) : (d >= KUPAC_SPAWN_MIN && d <= KUPAC_SPAWN_MAX && KupacSkriven(x, y, z))) cvor = c;
     }
     if (cvor == -1) return;
     new ime[MAX_PLAYER_NAME + 1];
@@ -663,7 +630,13 @@ StandTick()
         }
     }
     new otvoreno = 0, aktivni = 0;
-    for (new s = 0; s < STAND_MAX; s++) if (StandOtvoren(s)) otvoreno++;
+    for (new s = 0; s < STAND_MAX; s++)
+    {
+        new bool:otvoren = StandOtvoren(s);
+        if (otvoren) otvoreno++;
+        if (otvoren && !gStandBio[s]) for (new k = 0; k < KUPAC_NA_OTVARANJE; k++) KupacNovi(s);
+        gStandBio[s] = otvoren;
+    }
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         if (gKupac[k][kuStanje] == KU_NEMA) continue;
@@ -720,7 +693,7 @@ DLG:apanel_stand(playerid, response, listitem)
     for (new s = 0; s < STAND_MAX; s++) if (gStand[s][snIma]) n++;
     if (listitem - 1 >= n) return ShowStandoveAdmin(playerid);
     gApStand[playerid] = gApStandLista[playerid][listitem - 1];
-    return PrikaziDialog(playerid, DLG_APANEL_STAND_MENI, DIALOG_STYLE_LIST, T(playerid, "Standovi s hranom"), T(playerid, "Dodaj natpis ovdje\nPomakni stand\nObrisi natpise\nObrisi stand"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
+    return PrikaziDialog(playerid, DLG_APANEL_STAND_MENI, DIALOG_STYLE_LIST, T(playerid, "Standovi s hranom"), T(playerid, "Pomakni stand\nObrisi stand"), T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 DLG:apanel_stand_model(playerid, response, listitem)
@@ -764,47 +737,13 @@ DLG:apanel_stand_meni(playerid, response, listitem)
     {
         case 0:
         {
-            new z = 0;
-            while (z < STAND_ZNAKOVA && gZnak[z][znIma]) z++;
-            if (z == STAND_ZNAKOVA) return ObavijestGreska(playerid, T(playerid, "Dostignut je najveci broj natpisa."));
-            new Float:x, Float:y, Float:pz, Float:a;
-            GetPlayerPos(playerid, x, y, pz);
-            GetPlayerFacingAngle(playerid, a);
-            x -= 1.5 * floatsin(a, degrees);
-            y += 1.5 * floatcos(a, degrees);
-            pz += 1.0;
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO food_stand_signs (stand, x, y, z, rx, ry, rz) VALUES (%d, %f, %f, %f, 0.0, 0.0, %f)", gStand[s][snDb], x, y, pz, a));
-            gZnak[z][znIma] = true;
-            gZnak[z][znDb] = ZadnjiId();
-            gZnak[z][znStand] = s;
-            gZnak[z][znObjekt] = CreateDynamicObject(STAND_ZNAK_MODEL, x, y, pz, 0.0, 0.0, a);
-            StandZnakTekst(z);
-            gStandUredi[playerid][0] = 2;
-            gStandUredi[playerid][1] = z;
-            EditDynamicObject(playerid, gZnak[z][znObjekt]);
-            return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Natpis je postavljen. Namjestite ga i spremite (disketa)."));
-        }
-        case 1:
-        {
             gStandUredi[playerid][0] = 1;
             gStandUredi[playerid][1] = s;
             EditDynamicObject(playerid, gStand[s][snObjekt]);
             return 1;
         }
-        case 2:
+        case 1:
         {
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM food_stand_signs WHERE stand = %d", gStand[s][snDb]));
-            for (new z = 0; z < STAND_ZNAKOVA; z++)
-            {
-                if (!gZnak[z][znIma] || gZnak[z][znStand] != s) continue;
-                DestroyDynamicObject(gZnak[z][znObjekt]);
-                gZnak[z][znIma] = false;
-            }
-            SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Natpisi standa su obrisani."));
-        }
-        case 3:
-        {
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM food_stand_signs WHERE stand = %d", gStand[s][snDb]));
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM food_stands WHERE id = %d", gStand[s][snDb]));
             StandMakni(s);
             SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Stand je obrisan."));
@@ -813,12 +752,11 @@ DLG:apanel_stand_meni(playerid, response, listitem)
     return ShowStandoveAdmin(playerid);
 }
 
-StandUredi(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, Float:z, Float:rx, Float:ry, Float:rz)
+StandUredi(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, Float:z, Float:rz)
 {
     new tip = gStandUredi[playerid][0], i = gStandUredi[playerid][1];
     if (!tip) return 0;
     if (tip == 1 && (i < 0 || i >= STAND_MAX || !gStand[i][snIma] || gStand[i][snObjekt] != objectid)) return 0;
-    if (tip == 2 && (i < 0 || i >= STAND_ZNAKOVA || !gZnak[i][znIma] || gZnak[i][znObjekt] != objectid)) return 0;
     if (response == _:EDIT_RESPONSE_UPDATE) return 1;
     gStandUredi[playerid][0] = 0;
     if (tip == 1)
@@ -833,20 +771,11 @@ StandUredi(playerid, STREAMER_TAG_OBJECT:objectid, response, Float:x, Float:y, F
         }
         SetDynamicObjectPos(objectid, gStand[i][snX], gStand[i][snY], gStand[i][snZ]);
         SetDynamicObjectRot(objectid, 0.0, 0.0, gStand[i][snRz]);
+        Streamer_SetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, gStand[i][snTekst], E_STREAMER_X, gStand[i][snX]);
+        Streamer_SetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, gStand[i][snTekst], E_STREAMER_Y, gStand[i][snY]);
+        Streamer_SetFloatData(STREAMER_TYPE_3D_TEXT_LABEL, gStand[i][snTekst], E_STREAMER_Z, gStand[i][snZ] + 1.6);
         StandAktor(i);
         return 1;
-    }
-    if (response == _:EDIT_RESPONSE_FINAL)
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE food_stand_signs SET x = %f, y = %f, z = %f, rx = %f, ry = %f, rz = %f WHERE id = %d", x, y, z, rx, ry, rz, gZnak[i][znDb]));
-        SetDynamicObjectPos(objectid, x, y, z);
-        SetDynamicObjectRot(objectid, rx, ry, rz);
-    }
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM food_stand_signs WHERE id = %d", gZnak[i][znDb]));
-        DestroyDynamicObject(gZnak[i][znObjekt]);
-        gZnak[i][znIma] = false;
     }
     return 1;
 }

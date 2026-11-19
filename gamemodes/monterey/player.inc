@@ -14,6 +14,7 @@ public OnPlayerConnect(playerid)
     WilshirePdUkloni(playerid);
     MapaBusTaxiUkloni(playerid);
     MapaCartierExtUkloni(playerid);
+    MapaInternetKaficExtUkloni(playerid);
     MapaCentralBankUkloni(playerid);
     MapaCasinoExtUkloni(playerid);
     MapaMainStreetUkloni(playerid);

@@ -2221,10 +2221,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Izadji", "Exit", "Выйти", "Salir", "Cik" },
     { "+ Novi stand (stand se pojavljuje ispred vas, kupci stoje gdje vi stojite)", "+ New stand (it appears in front of you, customers stand where you stand)", "+ Новый стенд (появится перед вами, покупатели стоят на вашем месте)", "+ Nuevo puesto (aparece delante de ti, los clientes se ponen donde estas)", "+ Yeni stant (onunuzde belirir, musteriler durdugunuz yerde durur)" },
     { "Dobar dan! Izvolite, sve je svjeze.", "Good day! Go ahead, everything is fresh.", "Добрый день! Пожалуйста, всё свежее.", "Buenos dias! Adelante, todo esta fresco.", "Iyi gunler! Buyurun, her sey taze." },
-    { "Dodaj natpis ovdje\nPomakni stand\nObrisi natpise\nObrisi stand", "Add a sign here\nMove the stand\nDelete signs\nDelete the stand", "Добавить вывеску здесь\nПереместить стенд\nУдалить вывески\nУдалить стенд", "Anadir letrero aqui\nMover el puesto\nBorrar letreros\nBorrar el puesto", "Buraya tabela ekle\nStanti tasi\nTabelalari sil\nStanti sil" },
-    { "Dostignut je najveci broj natpisa.", "The maximum number of signs has been reached.", "Достигнуто максимальное число вывесок.", "Se alcanzo el maximo de letreros.", "En fazla tabela sayisina ulasildi." },
     { "Ime mora imati 1-24 znaka, bez znakova ~ i {.", "The name must have 1-24 characters, without ~ and {.", "Название: 1-24 символа, без ~ и {.", "El nombre debe tener 1-24 caracteres, sin ~ ni {.", "Ad 1-24 karakter olmali, ~ ve { olmadan." },
-    { "Ime standa i natpis su promijenjeni.", "The stand name and sign were changed.", "Название стенда и вывеска изменены.", "Se cambiaron el nombre y el letrero.", "Stant adi ve tabela degistirildi." },
     { "Koliko komada narucujete? ($%d po komadu, najvise jos %d)", "How many pieces do you order? ($%d each, at most %d more)", "Сколько штук заказываете? ($%d за штуку, не более %d)", "Cuantas piezas pide? ($%d cada una, como maximo %d mas)", "Kac adet siparis ediyorsunuz? (adet $%d, en fazla %d daha)" },
     { "Kupac je platio $%d.", "The customer paid $%d.", "Покупатель заплатил $%d.", "El cliente pago $%d.", "Musteri $%d odedi." },
     { "Kupac kaze: %s", "Customer says: %s", "Покупатель говорит: %s", "El cliente dice: %s", "Musteri diyor ki: %s" },
@@ -2236,8 +2233,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Naruci robu (zaliha %d/%d, $%d po komadu)", "Order stock (stock %d/%d, $%d each)", "Заказать товар (запас %d/%d, $%d за штуку)", "Pedir mercancia (stock %d/%d, $%d cada una)", "Mal siparis et (stok %d/%d, adet $%d)" },
     { "Narucili ste %d komada za $%d.", "You ordered %d pieces for $%d.", "Вы заказали %d штук за $%d.", "Pediste %d piezas por $%d.", "%d adet $%d karsiliginda siparis ettiniz." },
     { "Narudzba - sto je kupac trazio?", "Order - what did the customer ask for?", "Заказ - что просил покупатель?", "Pedido - que pidio el cliente?", "Siparis - musteri ne istedi?" },
-    { "Natpis je postavljen. Namjestite ga i spremite (disketa).", "The sign is placed. Adjust it and save (floppy icon).", "Вывеска установлена. Настройте и сохраните (дискета).", "Letrero colocado. Ajustalo y guarda (disquete).", "Tabela yerlestirildi. Ayarlayin ve kaydedin (disket)." },
-    { "Natpisi standa su obrisani.", "The stand signs were deleted.", "Вывески стенда удалены.", "Se borraron los letreros del puesto.", "Stant tabelalari silindi." },
     { "Netko vec radi na ovom standu.", "Someone is already working at this stand.", "На этом стенде уже кто-то работает.", "Alguien ya trabaja en este puesto.", "Bu stantta zaten biri calisiyor." },
     { "Otpusti radnika", "Fire the worker", "Уволить работника", "Despedir al empleado", "Calisani kov" },
     { "Otpusti radnika (ceka placu)", "Fire the worker (waiting for pay)", "Уволить работника (ждёт зарплату)", "Despedir al empleado (espera su paga)", "Calisani kov (maas bekliyor)" },
@@ -2278,7 +2273,13 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Sladoled od jagode", "Strawberry ice cream", "Клубничное мороженое", "Helado de fresa", "Cilekli dondurma" },
     { "Rezanci s piletinom", "Chicken noodles", "Лапша с курицей", "Fideos con pollo", "Tavuklu eriste" },
     { "Rezanci s govedinom", "Beef noodles", "Лапша с говядиной", "Fideos con ternera", "Dana etli eriste" },
-    { "Proljetna rolica", "Spring roll", "Спринг-ролл", "Rollito de primavera", "Bahar rulosu" }
+    { "Proljetna rolica", "Spring roll", "Спринг-ролл", "Rollito de primavera", "Bahar rulosu" },
+    { "Pomakni stand\nObrisi stand", "Move the stand\nDelete the stand", "Переместить стенд\nУдалить стенд", "Mover el puesto\nBorrar el puesto", "Stanti tasi\nStanti sil" },
+    { "Ime standa je promijenjeno.", "The stand name was changed.", "Название стенда изменено.", "Se cambio el nombre del puesto.", "Stant adi degistirildi." },
+    { "+ Novi ulaz u internet kafic na mojoj poziciji", "+ New internet cafe entrance at my position", "+ Новый вход в интернет-кафе на моей позиции", "+ Nueva entrada al cibercafe en mi posicion", "+ Konumumda yeni internet kafe girisi" },
+    { "[%d] Ulaz (%s) - obrisi", "[%d] Entrance (%s) - delete", "[%d] Вход (%s) - удалить", "[%d] Entrada (%s) - borrar", "[%d] Giris (%s) - sil" },
+    { "Ulaz u internet kafic je postavljen.", "The internet cafe entrance was placed.", "Вход в интернет-кафе установлен.", "Se coloco la entrada al cibercafe.", "Internet kafe girisi yerlestirildi." },
+    { "Ulaz u internet kafic je obrisan.", "The internet cafe entrance was deleted.", "Вход в интернет-кафе удалён.", "Se borro la entrada al cibercafe.", "Internet kafe girisi silindi." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
