@@ -137,6 +137,11 @@ static GarazaCekaj(playerid, v, g, ulaz)
     gGarazaCeka[playerid][1] = g;
     gGarazaCeka[playerid][2] = ulaz;
     gGarazaCekaDo[playerid] = GetTickCount() + GARAZA_VOZAC_MS;
+    GarazaZatamni(playerid, v);
+}
+
+static GarazaZatamni(playerid, v)
+{
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (i != playerid && !IsPlayerInVehicle(i, v)) continue;
@@ -144,6 +149,29 @@ static GarazaCekaj(playerid, v, g, ulaz)
         Fade(i, 0);
         SetTimerEx("GarazaSvjetlo", GARAZA_VOZAC_MS + GARAZA_IZLAZ_MS, false, "ii", i, gAccountId[i]);
     }
+}
+
+GarazaMotor(playerid, v)
+{
+    new g = GarazaIgraca(playerid);
+    if (g == -1 || GetVehicleVirtualWorld(v) != GetPlayerVirtualWorld(playerid)) return 0;
+    GarazaZatamni(playerid, v);
+    SetTimerEx("GarazaMotorIzlaz", FADE_SLOJEVA * FADE_KORAK_MS + 50, false, "iiii", playerid, v, g, gAccountId[playerid]);
+    return 1;
+}
+
+forward GarazaMotorIzlaz(playerid, v, g, racun);
+public GarazaMotorIzlaz(playerid, v, g, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    if (!GetVehicleModel(v) || !gGaraza[g][gaIma] || GetPlayerVehicleID(playerid) != v)
+    {
+        GarazaPosvijetliSve(playerid, v);
+        return;
+    }
+    new svijet = GetVehicleVirtualWorld(v);
+    GarazaIzvezi(v, g);
+    if (GetVehicleVirtualWorld(v) == svijet) GarazaPosvijetliSve(playerid, v);
 }
 
 static GarazaPosvijetliSve(playerid, v)
@@ -299,7 +327,8 @@ static GarazaUvezi(playerid, g, v)
         VlasnikGaraza(v, db, x, y, z, a);
     }
     GarazaPrebaci(v, x, y, z, a, db, playerid);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo je parkirano u garazi. F za izlazak."));
+    VoziloSet(v, VP_MOTOR, 0);
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo je parkirano u garazi. Upalite motor za izlazak."));
 }
 
 GarazaParkiraj(playerid, v)
@@ -378,11 +407,6 @@ GarazaKey(playerid)
     new PLAYER_STATE:st = GetPlayerState(playerid), g = GarazaIgraca(playerid);
     if (g != -1)
     {
-        if (st == PLAYER_STATE_DRIVER)
-        {
-            GarazaCekaj(playerid, GetPlayerVehicleID(playerid), g, 0);
-            return 1;
-        }
         if (st != PLAYER_STATE_ONFOOT || !IsPlayerInRangeOfPoint(playerid, GARAZA_ULAZ_DOMET, gGarazaUlaz[0], gGarazaUlaz[1], gGarazaUlaz[2])) return 0;
         if (gGaraza[g][gaVlasnik] == gAccountId[playerid]) return GarazaMeni(playerid, g), 1;
         GarazaVani(playerid, g);

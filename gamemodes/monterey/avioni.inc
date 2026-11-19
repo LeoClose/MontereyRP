@@ -357,6 +357,7 @@ static AvionPauza(i)
 
 InitAvioni()
 {
+    for (new i = 0; i < AVION_SLOTOVA; i++) gAvionNpc[i] = INVALID_PLAYER_ID;
     for (new i = 0; i < AVION_JAVNI; i++)
     {
         gAvionToken[i]++;
@@ -365,26 +366,57 @@ InitAvioni()
     }
 }
 
-static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a)
+static bool:AvionPilot(i)
 {
     new name[MAX_PLAYER_NAME + 1];
     format(name, sizeof name, "Kapetan_%d", i);
     new npc = NPC_Create(name);
     if (npc == INVALID_PLAYER_ID) return false;
-    new v = CreateVehicle(model, x, y, z, a, -1, -1, -1);
-    if (v == INVALID_VEHICLE_ID)
-    {
-        NPC_Destroy(npc);
-        return false;
-    }
-    new k = AvionInst(i);
-    SetVehicleVirtualWorld(v, k ? AVION_ATC_SVIJET + k : 0);
     gAvionNpc[i] = npc;
-    gAvionVozilo[i] = v;
-    gAvionModel[i] = model;
     gNpcAvion[npc] = i + 1;
     NPC_Spawn(npc);
     return true;
+}
+
+static AvionBezPilota(i)
+{
+    new npc = gAvionNpc[i];
+    if (npc == INVALID_PLAYER_ID) return;
+    gAvionNpc[i] = INVALID_PLAYER_ID;
+    if (gNpcAvion[npc] != i + 1) return;
+    gNpcAvion[npc] = 0;
+    NPC_Destroy(npc);
+}
+
+static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a, bool:pilot = true)
+{
+    new v = CreateVehicle(model, x, y, z, a, -1, -1, -1);
+    if (v == INVALID_VEHICLE_ID) return false;
+    new k = AvionInst(i);
+    SetVehicleVirtualWorld(v, k ? AVION_ATC_SVIJET + k : 0);
+    gAvionVozilo[i] = v;
+    gAvionModel[i] = model;
+    gAvionNpc[i] = INVALID_PLAYER_ID;
+    if (pilot && !AvionPilot(i))
+    {
+        DestroyVehicle(v);
+        gAvionVozilo[i] = 0;
+        return false;
+    }
+    return true;
+}
+
+static AvionPoleti(i, seg)
+{
+    gAvionRuta[i] = seg;
+    if (gAvionNpc[i] != INVALID_PLAYER_ID) AvionSnimka(i, seg);
+    else if (!AvionPilot(i)) AvionKraj(i);
+}
+
+forward AvionSidi(i, token);
+public AvionSidi(i, token)
+{
+    if (token == gAvionToken[i] && gAvionFaza[i] == AF_PARKIRAN) AvionBezPilota(i);
 }
 
 forward AvionParkirani(i, token);
@@ -393,7 +425,7 @@ public AvionParkirani(i, token)
     new k = AvionInst(i);
     if (token != gAvionToken[i] || !AvionInstAktivna(k)) return;
     new model = gAvionModeli[random(sizeof gAvionModeli)], s = AvionSlobodnoStajaliste(k, model), j = s < 0 ? -1 : AvionStajIndeks(model, s);
-    if (j < 0 || !AvionStvori(i, model, gAvionStaj[j][asjX], gAvionStaj[j][asjY], gAvionStaj[j][asjZ], gAvionStaj[j][asjA]))
+    if (j < 0 || !AvionStvori(i, model, gAvionStaj[j][asjX], gAvionStaj[j][asjY], gAvionStaj[j][asjZ], gAvionStaj[j][asjA], false))
     {
         AvionCekaj(i, AvionPauza(i));
         return;
@@ -401,6 +433,7 @@ public AvionParkirani(i, token)
     gInstZauzeto[k][s] = i + 1;
     gAvionStajaliste[i] = s;
     gAvionFaza[i] = AF_PARKIRAN;
+    AvionCekaj(i, AvionParkVrijeme(i));
 }
 
 static AvionNovi(i)
@@ -444,8 +477,7 @@ static AvionUgasi(i)
     gAvionToken[i]++;
     gAvionFaza[i] = AF_NISTA;
     if (!gAvionVozilo[i]) return;
-    gNpcAvion[gAvionNpc[i]] = 0;
-    NPC_Destroy(gAvionNpc[i]);
+    AvionBezPilota(i);
     DestroyVehicle(gAvionVozilo[i]);
     gAvionVozilo[i] = 0;
 }
@@ -659,13 +691,13 @@ public AvionKorak(i, token)
             {
                 gInstZauzeto[k][gAvionStajaliste[i]] = 0;
                 gAvionFaza[i] = AF_ODLAZAK;
-                AvionSnimka(i, SEG_ODLAZAK_HANGAR + (gAvionStajaliste[i] - 6) * 3 + random(3));
+                AvionPoleti(i, SEG_ODLAZAK_HANGAR + (gAvionStajaliste[i] - 6) * 3 + random(3));
                 SetTimerEx("AvionPistaSlobodna", AVION_PISTA_MS, false, "ii", i, gAvionToken[i]);
                 return;
             }
             gInstSjeverna[k] = id;
             gAvionFaza[i] = AF_IZLAZ;
-            AvionSnimka(i, SEG_IZLAZ + gAvionStajaliste[i]);
+            AvionPoleti(i, SEG_IZLAZ + gAvionStajaliste[i]);
         }
         case AF_CEKA_POLIJETANJE:
         {
@@ -705,8 +737,7 @@ forward AvionKreni(i, token);
 public AvionKreni(i, token)
 {
     if (token != gAvionToken[i] || !gAvionVozilo[i]) return;
-    if (gAvionFaza[i] == AF_PARKIRAN) AvionCekaj(i, AvionParkVrijeme(i));
-    else AvionSnimka(i, gAvionRuta[i]);
+    AvionSnimka(i, gAvionRuta[i]);
 }
 
 AvionPlaybackEnd(npcid)
@@ -727,6 +758,7 @@ AvionPlaybackEnd(npcid)
             if (gInstJuzna[k] == i + 1) gInstJuzna[k] = 0;
             gAvionFaza[i] = AF_PARKIRAN;
             AvionCekaj(i, AvionParkVrijeme(i));
+            SetTimerEx("AvionSidi", 500, false, "ii", i, gAvionToken[i]);
         }
         case AF_IZLAZ:
         {

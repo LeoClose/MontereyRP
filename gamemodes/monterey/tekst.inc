@@ -1217,7 +1217,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vase vozilo %s je popravljeno i dostavljeno na parking.", "Your %s has been repaired and delivered to your parking spot.", "Ваш %s отремонтирован и доставлен на парковку.", "Tu %s ha sido reparado y entregado en tu aparcamiento.", "%s aracin tamir edildi ve parkina teslim edildi." },
     { "Netko je u vozilu, ne mozemo ga odslepati.", "Someone is in the vehicle, we can't tow it.", "В машине кто-то есть, мы не можем её отбуксировать.", "Hay alguien en el vehiculo, no podemos remolcarlo.", "Aracta biri var, cekemeyiz." },
     { "Garaza je puna (najvise %d vozila).", "The garage is full (max %d vehicles).", "Гараж полон (максимум %d машины).", "El garaje esta lleno (max. %d vehiculos).", "Garaj dolu (en fazla %d arac)." },
-    { "Vozilo je parkirano u garazi. F za izlazak.", "The vehicle is parked in the garage. F to leave.", "Машина припаркована в гараже. F - выехать.", "El vehiculo esta aparcado en el garaje. F para salir.", "Arac garaja park edildi. Cikmak icin F." },
+    { "Vozilo je parkirano u garazi. Upalite motor za izlazak.", "The vehicle is parked in the garage. Start the engine to drive out.", "Машина припаркована в гараже. Заведите двигатель, чтобы выехать.", "El vehiculo esta aparcado en el garaje. Enciende el motor para salir.", "Arac garaja park edildi. Cikmak icin motoru calistirin." },
     { "Izadi iz garaze\n%s\nProdaj gradu ($%d)", "Leave the garage\n%s\nSell to the city ($%d)", "Выйти из гаража\n%s\nПродать городу ($%d)", "Salir del garaje\n%s\nVender a la ciudad ($%d)", "Garajdan cik\n%s\nSehre sat ($%d)" },
     { "Otkljucaj", "Unlock", "Открыть", "Desbloquear", "Kilidi ac" },
     { "Zakljucaj", "Lock", "Закрыть", "Bloquear", "Kilitle" },

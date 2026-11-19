@@ -1030,7 +1030,7 @@ static VoziloGet(v, param)
     return p[param];
 }
 
-static VoziloSet(v, param, stanje)
+VoziloSet(v, param, stanje)
 {
     new p[7];
     GetVehicleParamsEx(v, p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
@@ -1613,6 +1613,7 @@ static VoziloMotor(playerid)
     if (zdravlje < VOZILO_KVAR_ZDRAVLJE && random(100) < VOZILO_KVAR_PALJENJE) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Motor se ne pali."));
     VoziloSet(v, VP_MOTOR, 1);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali motor.", GetRPIme(playerid), "", 1);
+    GarazaMotor(playerid, v);
     return 1;
 }
 
