@@ -76,6 +76,11 @@ DLG:kamp_kupi(playerid, response, listitem)
         return PrikaziDialog(playerid, DLG_KAMP_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Kamp prikolica"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
     }
     new model = gKampModel[listitem], cijena = gKampCijena[listitem], c = random(128);
+    if (KampImaPrikolicu(playerid))
+    {
+        AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", "Vec imate kamp prikolicu, jedna je dovoljna.");
+        return 1;
+    }
     if (BrojVlasnistava(gAccountId[playerid]) >= VLASNISTVO_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d vozila."), VLASNISTVO_MAX);
     if (gNovac[playerid] < cijena)
     {
@@ -95,6 +100,13 @@ DLG:kamp_kupi(playerid, response, listitem)
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste kamp prikolicu za $%d. Zakacite je vozilom (/zakaci), a /kamp otvara izbornik."), cijena);
 }
 
+static KampImaPrikolicu(playerid)
+{
+    new vozila[VLASNISTVO_MAX];
+    for (new i = 0, n = VlasnistvaIgraca(playerid, vozila); i < n; i++) if (JePrikolica(GetVehicleModel(vozila[i]))) return 1;
+    return 0;
+}
+
 static KampZaProdaju(playerid, s)
 {
     new vozila[VLASNISTVO_MAX], Float:x, Float:y, Float:z;
@@ -108,47 +120,70 @@ static KampZaProdaju(playerid, s)
     return 0;
 }
 
-static KampMoja(playerid, &bool:unutra)
+static gKampOpcija[MAX_PLAYERS][4], gKampOpcija_n[MAX_PLAYERS];
+enum { KO_UDJI, KO_IZADJI, KO_BRAVA, KO_NAMJESTAJ, KO_PRODAJ }
+
+static KampProdavac(playerid, v)
 {
-    new v = PrikolicaUnutra(playerid);
-    unutra = v != 0;
-    if (!v) v = PrikolicaKodVrata(playerid);
-    return v && VlasnikVozila(v) == gAccountId[playerid] ? v : 0;
+    for (new s = 0; s < KAMP_MAX; s++) if (gKamp[s][kpIma] && KampZaProdaju(playerid, s) == v) return s;
+    return -1;
 }
 
-CMD:kamp(playerid, params[])
+KampVrata(playerid, v, bool:unutra)
 {
-    if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;
-    new bool:unutra, v = KampMoja(playerid, unutra), list[256], len = 0;
-    if (!v)
-    {
-        new vozila[VLASNISTVO_MAX];
-        for (new i = 0, n = VlasnistvaIgraca(playerid, vozila); i < n && !v; i++) if (JePrikolica(GetVehicleModel(vozila[i]))) v = vozila[i];
-    }
-    if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate kamp prikolicu."));
+    new list[256], red[96], len = 0, n = 0, bool:vlasnik = VlasnikVozila(v) == gAccountId[playerid];
     gKampV[playerid] = v;
-    DodajStupac(list, len, PrikolicaZakljucana(v) ? T(playerid, "Otkljucaj") : T(playerid, "Zakljucaj"));
-    DodajStupac(list, len, T(playerid, "Namjestaj"));
+    gKampU[playerid] = vlasnik && !unutra ? KampProdavac(playerid, v) : -1;
+    gKampOpcija[playerid][n++] = unutra ? KO_IZADJI : KO_UDJI;
+    DodajStupac(list, len, unutra ? T(playerid, "Izadji") : T(playerid, "Udji"));
+    if (ImaKljuc(playerid, v))
+    {
+        gKampOpcija[playerid][n++] = KO_BRAVA;
+        DodajStupac(list, len, PrikolicaZakljucana(v) ? T(playerid, "Otkljucaj") : T(playerid, "Zakljucaj"));
+    }
+    if (vlasnik && unutra)
+    {
+        gKampOpcija[playerid][n++] = KO_NAMJESTAJ;
+        DodajStupac(list, len, T(playerid, "Namjestaj"));
+    }
+    if (gKampU[playerid] != -1)
+    {
+        gKampOpcija[playerid][n++] = KO_PRODAJ;
+        format(red, sizeof red, T(playerid, "Prodaj ($%d)"), VlasnikCijena(v) / KAMP_OTKUP_DIO);
+        DodajStupac(list, len, red);
+    }
+    gKampOpcija_n[playerid] = n;
     return PrikaziDialog(playerid, DLG_KAMP, DIALOG_STYLE_LIST, T(playerid, "Kamp prikolica"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
 DLG:kamp(playerid, response, listitem)
 {
-    new bool:unutra, v = gKampV[playerid], bool:blizu = KampMoja(playerid, unutra) == v;
-    if (!response || !v || VlasnikVozila(v) != gAccountId[playerid] || !JePrikolica(GetVehicleModel(v))) return 1;
-    if (listitem < 2 && !blizu) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod svoje kamp prikolice."));
-    switch (listitem)
+    new v = gKampV[playerid];
+    if (!response || !v || listitem < 0 || listitem >= gKampOpcija_n[playerid] || !JePrikolica(GetVehicleModel(v))) return 1;
+    new bool:unutra = PrikolicaUnutra(playerid) == v;
+    if (!unutra && PrikolicaKodVrata(playerid) != v) return 1;
+    switch (gKampOpcija[playerid][listitem])
     {
-        case 0:
+        case KO_UDJI:
         {
+            if (PrikolicaZakljucana(v) && !ImaKljuc(playerid, v)) return ObavijestGreska(playerid, T(playerid, "Prikolica je zakljucana."));
+            PrikolicaUdji(playerid, v);
+        }
+        case KO_IZADJI: if (unutra) PrikolicaIzadji(playerid);
+        case KO_BRAVA:
+        {
+            if (!ImaKljuc(playerid, v)) return 1;
             new bool:novo = !PrikolicaZakljucana(v);
             PrikolicaZakljucaj(v, novo);
             PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, novo ? ("* %s zakljucava kamp prikolicu.") : ("* %s otkljucava kamp prikolicu."), GetRPIme(playerid), "", 1);
         }
-        case 1:
+        case KO_NAMJESTAJ: if (unutra && VlasnikVozila(v) == gAccountId[playerid]) return NamjestajMeni(playerid, -VlasnikDb(v));
+        case KO_PRODAJ:
         {
-            if (!unutra) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Namjestaj se postavlja unutar prikolice."));
-            return NamjestajMeni(playerid, -VlasnikDb(v));
+            new s = gKampU[playerid], body[160];
+            if (s == -1 || KampZaProdaju(playerid, s) != v) return 1;
+            format(body, sizeof body, T(playerid, "Prodati kamp prikolicu za $%d? Namjestaj se vraca u skladiste."), VlasnikCijena(v) / KAMP_OTKUP_DIO);
+            return PrikaziDialog(playerid, DLG_KAMP_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Kamp prikolica"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
         }
     }
     return 1;
@@ -158,7 +193,6 @@ DLG:kamp_prodaj(playerid, response)
 {
     new v = gKampV[playerid], s = gKampU[playerid];
     if (!response || !v || s == -1 || !gKamp[s][kpIma] || VlasnikVozila(v) != gAccountId[playerid] || !JePrikolica(GetVehicleModel(v)) || KampZaProdaju(playerid, s) != v) return 1;
-    if (!IsPlayerInRangeOfPoint(playerid, KAMP_DOMET * 2.0, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ])) return 1;
     if (!PrikolicaPrazna(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U prikolici je netko."));
     new otkup = VlasnikCijena(v) / KAMP_OTKUP_DIO, db = VlasnikDb(v);
     AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", "Dogovoreno, evo vasih novaca. Bilo je zadovoljstvo.");

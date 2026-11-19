@@ -261,6 +261,7 @@ public OnGameModeInit()
     InitPikado();
     InitKuglanje();
     InitKamp();
+    InitStandovi();
     InitAntiCheat();
     InitSync();
     InitPoker();
@@ -351,6 +352,7 @@ public Sekunda()
     AvionAtcTick();
     DrogaTick();
     UtrkaTick();
+    StandTick();
     SpecTick();
     UpitTick();
 }
@@ -462,6 +464,9 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/utrke.inc"
+#include "monterey/staze.inc"
+#include "monterey/staza.inc"
+#include "monterey/standovi.inc"
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"

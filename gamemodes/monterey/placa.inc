@@ -30,7 +30,21 @@ static const Float:gRestoran[][3] = {
     { 2397.83, -1898.65, 13.71 },
     { 2419.95, -1509.8, 24.16 }
 };
-static gHrana[MAX_PLAYERS], Float:gHranaCilj[MAX_PLAYERS][3], Float:gHranaOd[MAX_PLAYERS][2];
+static gHrana[MAX_PLAYERS], Float:gHranaCilj[MAX_PLAYERS][3], Float:gHranaOd[MAX_PLAYERS][2], gHranaStand[MAX_PLAYERS];
+
+RestoranBroj()
+{
+    return sizeof gRestoran;
+}
+
+RestoranPozicija(i, &Float:x, &Float:y, &Float:z)
+{
+    if (i < 0 || i >= sizeof gRestoran) return 0;
+    x = gRestoran[i][0];
+    y = gRestoran[i][1];
+    z = gRestoran[i][2];
+    return 1;
+}
 static Float:gDepo[4], bool:gImaDepo, gDepoIkona, STREAMER_TAG_3D_TEXT_LABEL:gDepoTekst;
 
 InitPlaca()
@@ -186,8 +200,22 @@ HranaNarudzba(playerid)
         if (d < najblize) najblize = d, r = k;
     }
     gHrana[playerid] = 1;
+    gHranaStand[playerid] = 0;
     for (new k = 0; k < 3; k++) gHranaCilj[playerid][k] = gRestoran[r][k];
-    SetPlayerCheckpoint(playerid, gRestoran[r][0], gRestoran[r][1], gRestoran[r][2], HRANA_DOMET);
+    for (new s = 0, sMax = DostavaStandBroj(); s < sMax; s++)
+    {
+        new Float:sx, Float:sy, Float:sz;
+        if (!DostavaStand(s, sx, sy, sz)) continue;
+        new Float:d = VectorSize(sx - x, sy - y, 0.0);
+        if (d >= najblize) continue;
+        najblize = d;
+        gHranaStand[playerid] = s + 1;
+        gHranaCilj[playerid][0] = sx;
+        gHranaCilj[playerid][1] = sy;
+        gHranaCilj[playerid][2] = sz;
+    }
+    SetPlayerCheckpoint(playerid, gHranaCilj[playerid][0], gHranaCilj[playerid][1], gHranaCilj[playerid][2], HRANA_DOMET);
+    if (gHranaStand[playerid]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prihvatili ste narudzbu. Preuzmite hranu na standu (%s)."), CestaZona(gHranaCilj[playerid][0], gHranaCilj[playerid][1]));
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prihvatili ste narudzbu. Preuzmite hranu u restoranu (%s)."), CestaZona(gRestoran[r][0], gRestoran[r][1]));
 }
 
@@ -215,7 +243,16 @@ static HranaCheckpoint(playerid)
 {
     if (!gHrana[playerid] || !IsPlayerInRangeOfPoint(playerid, HRANA_DOMET + 2.0, gHranaCilj[playerid][0], gHranaCilj[playerid][1], gHranaCilj[playerid][2])) return 0;
     DisablePlayerCheckpoint(playerid);
-    if (gHrana[playerid] == 1) return HranaKuca(playerid), 1;
+    if (gHrana[playerid] == 1)
+    {
+        if (gHranaStand[playerid] && !DostavaStandPreuzmi(gHranaStand[playerid] - 1))
+        {
+            HranaOtkazi(playerid);
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Stand je ostao bez robe, narudzba je otkazana."));
+            return 1;
+        }
+        return HranaKuca(playerid), 1;
+    }
     gHrana[playerid] = 0;
     new iznos = HRANA_BAZA + floatround(VectorSize(gHranaCilj[playerid][0] - gHranaOd[playerid][0], gHranaCilj[playerid][1] - gHranaOd[playerid][1], 0.0) * HRANA_PO_KM / 1000.0);
     new poruka[144];

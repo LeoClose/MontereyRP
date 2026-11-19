@@ -528,7 +528,18 @@ static UdjiUMaricu(playerid, v)
     SetPlayerTime(playerid, 0, 0);
     SetCameraBehindPlayer(playerid);
     Streamer_UpdateEx(playerid, x, y, z, svijet, unutra, STREAMER_TYPE_OBJECT, 1000);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stisni Enter da izadjes iz vozila."));
+    if (unutra == PRIKOLICA_INT) Savjet(playerid, T(playerid, "~y~F~w~ - vrata"), 4000);
+    else SendClientMessage(playerid, COLOR_INFO, T(playerid, "Stisni Enter da izadjes iz vozila."));
+}
+
+PrikolicaUdji(playerid, v)
+{
+    UdjiUMaricu(playerid, v);
+}
+
+PrikolicaIzadji(playerid)
+{
+    MaricaExit(playerid);
 }
 
 MaricaEnter(playerid, PLAYER_STATE:newstate)
@@ -601,8 +612,7 @@ PrikolicaUlaz(playerid)
     if (ImaLisice(playerid)) return 0;
     new v = PrikolicaKodVrata(playerid);
     if (!v) return 0;
-    if (PrikolicaZakljucana(v) && !ImaKljuc(playerid, v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prikolica je zakljucana.")), 1;
-    UdjiUMaricu(playerid, v);
+    KampVrata(playerid, v, false);
     return 1;
 }
 
@@ -668,6 +678,11 @@ MaricaKey(playerid, KEY:newkeys, KEY:oldkeys)
     else if ((newkeys & KEY_SECONDARY_ATTACK) && !(oldkeys & KEY_SECONDARY_ATTACK))
     {
         new Float:vx, Float:vy, Float:vz;
+        if (JePrikolica(GetVehicleModel(gMaricaU[playerid])))
+        {
+            if (IsPlayerInRangeOfPoint(playerid, PRIKOLICA_DOMET, 0.3440, -0.5140, 1000.5490)) KampVrata(playerid, gMaricaU[playerid], true);
+            return;
+        }
         GetVehicleVelocity(gMaricaU[playerid], vx, vy, vz);
         if (ImaLisice(playerid) && VectorSize(vx, vy, vz) > 0.02) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo se krece."));
         else MaricaExit(playerid);

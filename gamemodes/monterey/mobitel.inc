@@ -267,6 +267,7 @@ static MobitelImeIzImenika(playerid, const broj[], ime[], velicina)
     if (!strcmp(broj, MOBITEL_TAKSI_BROJ)) strcopy(ime, T(playerid, "Taksi sluzba"), velicina);
     else if (!strcmp(broj, MOBITEL_MEHANICAR_BROJ)) strcopy(ime, T(playerid, "Mehanicar"), velicina);
     else if (!strcmp(broj, MOBITEL_BANKA_BROJ)) strcopy(ime, T(playerid, "Banka"), velicina);
+    else if (!strcmp(broj, "558")) strcopy(ime, T(playerid, "Radnik na standu"), velicina);
     else strcopy(ime, broj, velicina);
 }
 

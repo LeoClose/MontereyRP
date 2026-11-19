@@ -195,7 +195,9 @@ UtrkaChat(playerid, const text[])
     for (new i = 0; i < gUrBroj[playerid]; i++)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO race_points (race, idx, x, y, z) VALUES (%d, %d, %f, %f, %f)", id, i, gUrTocke[playerid][i][0], gUrTocke[playerid][i][1], gUrTocke[playerid][i][2]));
     UtrkaUrediKraj(playerid);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Utrka %s je spremljena."), text);
+    new tekst[96];
+    format(tekst, sizeof tekst, T(playerid, "Utrka %s je spremljena."), text);
+    ObavijestInfo(playerid, T(playerid, "Utrka"), tekst);
     return 1;
 }
 
@@ -334,7 +336,7 @@ UtrkaPokreni(playerid, i)
     gUk[u][ukPot] = 0;
     strcopy(gUk[u][ukIme], gUlIme[playerid][i], UTRKA_IME);
     gUk[u][ukCp] = CreateDynamicRaceCP(_:CP_TYPE_GROUND_NORMAL, gUkTocke[u][0][0], gUkTocke[u][0][1], gUkTocke[u][0][2], gUkTocke[u][1][0], gUkTocke[u][1][1], gUkTocke[u][1][2], UTRKA_CP, 0, 0, -1, UTRKA_START_SD);
-    ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Start je postavljen. Tko ude u start vozilom, ulazi u utrku. Kad ste na startu, Y pokrece utrku."));
+    ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Start je postavljen. Tko ude u start vozilom, ulazi u utrku. Na startu Y pokrece utrku, N je otkazuje."));
     return 1;
 }
 
@@ -381,8 +383,8 @@ static UtrkaNaGrid(playerid, u)
     if (Kolizija_Zraka(x, y, z + 6.0, x, y, z - 20.0, hx, hy, hz)) z = hz + 1.0;
     new Float:a = atan2(dy, dx) - 90.0;
     TogglePlayerControllable(playerid, false);
-    UtrkaPoravnaj(playerid, v, x, y, z, a, 0);
     gUvStanje[playerid] = UV_GRID;
+    UtrkaPoravnaj(playerid, v, x, y, z, a, 0);
     UtrkaLobbyPanel(u);
 }
 
@@ -579,7 +581,7 @@ UtrkaTick()
 UtrkaKey(playerid, KEY:newkeys, KEY:oldkeys)
 {
     new u = gUv[playerid] - 1;
-    if (u >= 0 && gUk[u][ukStanje] == UK_LOBBY && (newkeys & KEY_NO) && !(oldkeys & KEY_NO))
+    if ((u >= 0 ? gUk[u][ukStanje] == UK_LOBBY : UtrkaDomacina(playerid) != -1) && !gUrIma[playerid] && (newkeys & KEY_NO) && !(oldkeys & KEY_NO))
     {
         UtrkaNapusti(playerid);
         ObavijestInfo(playerid, T(playerid, "Utrka"), T(playerid, "Napustili ste utrku."));
