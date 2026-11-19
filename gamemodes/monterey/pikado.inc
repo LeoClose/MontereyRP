@@ -25,6 +25,7 @@
 #define PIKADO_SNOP_POLA    7.0
 #define PIKADO_SNOP_AX      0.9375
 #define PIKADO_SNOP_NAGIB   0.022
+#define PIKADO_KREM_DUZ     0.98
 #define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
 #define PIKADO_PRSTEN_ZELENA 0x22E05AFF
 #define PIKADO_TD           13
@@ -43,7 +44,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.03;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.06;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -90,7 +91,7 @@ static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
     new Float:fi = atan2(floatsin(kut, degrees) / PIKADO_SNOP_AX, floatcos(kut, degrees));
     new Float:e = floatsqroot(floatpower(PIKADO_SNOP_AX * floatsin(fi, degrees), 2.0) + floatpower(floatcos(fi, degrees), 2.0));
     new Float:t = 1.0 - PIKADO_SNOP_NAGIB * (1.0 + floatcos(kut, degrees)) / 2.0;
-    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : 1.0) / (e * t), Float:w = h * PIKADO_AX;
+    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : PIKADO_KREM_DUZ) / (e * t), Float:w = h * PIKADO_AX;
     new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
     TextDrawTextSize(td, w, h);
@@ -271,7 +272,6 @@ static PikadoTdStvori(playerid)
     PlayerTextDrawTextSize(playerid, gPkTd[playerid][PTD_ZONA], PIKADO_TOCNO * 2.0 / 100.0 * PIKADO_BAR_W, 8.0);
     PlayerTextDrawColour(playerid, gPkTd[playerid][PTD_ZONA], 0x2ECC7199);
     PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_BAR]);
-    PlayerTextDrawShow(playerid, gPkTd[playerid][PTD_ZONA]);
     gPkTd[playerid][PTD_POLJE] = CreatePlayerTextDraw(playerid, PIKADO_CX, PIKADO_CY - 190.0, "_");
     PlayerTextDrawFont(playerid, gPkTd[playerid][PTD_POLJE], TEXT_DRAW_FONT_2);
     PlayerTextDrawLetterSize(playerid, gPkTd[playerid][PTD_POLJE], 0.45, 1.8);
@@ -309,6 +309,7 @@ static PikadoTraka(playerid, i, Float:udio, Float:h)
         return;
     }
     PlayerTextDrawTextSize(playerid, gPkTd[playerid][i], udio * PIKADO_BAR_W, h);
+    if (i == PTD_SNAGA) PlayerTextDrawColour(playerid, gPkTd[playerid][i], floatabs(udio * 100.0 - PIKADO_IDEAL) <= PIKADO_TOCNO ? 0x2ECC71FF : 0xF1C40FFF);
     PlayerTextDrawShow(playerid, gPkTd[playerid][i]);
 }
 
