@@ -2289,7 +2289,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Kupac je platio $%d i ostavio napojnicu od $%d.", "The customer paid $%d and left a $%d tip.", "Покупатель заплатил $%d и оставил $%d чаевых.", "El cliente pago $%d y dejo $%d de propina.", "Musteri $%d odedi ve $%d bahsis birakti." },
     { "U blizini nema nikoga kome treba pomoc.", "There is nobody nearby who needs help.", "Рядом нет никого, кому нужна помощь.", "No hay nadie cerca que necesite ayuda.", "Yakinda yardima ihtiyaci olan kimse yok." },
     { "* %s pruza prvu pomoc ranjenom prolazniku.", "* %s gives first aid to an injured passerby.", "* %s оказывает первую помощь раненому прохожему.", "* %s da primeros auxilios a un transeunte herido.", "* %s yarali bir yoldasa ilk yardim yapiyor." },
-    { "~y~ALT~w~ - podigni", "~y~ALT~w~ - pick up", "~y~ALT~w~ - podnyat", "~y~ALT~w~ - recoger", "~y~ALT~w~ - al" }
+    { "~y~ALT~w~ - podigni", "~y~ALT~w~ - pick up", "~y~ALT~w~ - podnyat", "~y~ALT~w~ - recoger", "~y~ALT~w~ - al" },
+    { "Radnik (%s): Nestalo nam je robe. Narucite novu da mogu nastaviti raditi.", "Worker (%s): We ran out of stock. Order more so I can keep working.", "Работник (%s): У нас закончился товар. Закажите новый, чтобы я мог работать дальше.", "Empleado (%s): Se nos acabo la mercancia. Pida mas para que pueda seguir trabajando.", "Calisan (%s): Malimiz bitti. Calismaya devam edebilmem icin yeni mal siparis edin." },
+    { "Nestalo je robe. Narucite novu kako bi stand ponovno radio.", "Out of stock. Order more so the stand can work again.", "Товар закончился. Закажите новый, чтобы стенд снова работал.", "Se acabo la mercancia. Pida mas para que el puesto vuelva a funcionar.", "Mal bitti. Stantin tekrar calismasi icin yeni mal siparis edin." },
+    { "Zatvoreno - nema robe", "Closed - out of stock", "Закрыто - нет товара", "Cerrado - sin mercancia", "Kapali - mal yok" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

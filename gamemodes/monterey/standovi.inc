@@ -128,6 +128,7 @@ static StandOsvjeziTekst(s)
         strcopy(vlasnik, gStand[s][snVlasnikIme]);
         for (new i = 0; vlasnik[i]; i++) if (vlasnik[i] == '_') vlasnik[i] = ' ';
         format(tekst, sizeof tekst, "%s\n{FFFFFF}%s", ime, vlasnik);
+        if (gStand[s][snZaliha] <= 0) strcat(tekst, "\n{E74C3C}Zatvoreno - nema robe");
     }
     else format(tekst, sizeof tekst, "%s\n{FFFFFF}$%d", ime, STAND_CIJENA);
     UpdateDynamic3DTextLabelText(gStand[s][snTekst], STAND_BOJA, tekst);
@@ -388,6 +389,7 @@ DLG:stand_roba(playerid, response, const inputtext[])
     if (!DajNovac(playerid, -n * STAND_ZALIHA_CIJENA)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
     gStand[s][snZaliha] += n;
     StandSpremi(s);
+    StandOsvjeziTekst(s);
     new tekst[96];
     format(tekst, sizeof tekst, T(playerid, "Narucili ste %d komada za $%d."), n, n * STAND_ZALIHA_CIJENA);
     return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), tekst);
@@ -428,6 +430,13 @@ static StandProdaja(s)
 {
     if (gStand[s][snZaliha] > 0) gStand[s][snZaliha]--;
     StandSpremi(s);
+    if (gStand[s][snZaliha] > 0) return;
+    StandOsvjeziTekst(s);
+    new ime[25];
+    StandImeIli(s, ime, sizeof ime);
+    if (StandRadnikRadi(s)) StandSms(gStand[s][snVlasnik], "Radnik (%s): Nestalo nam je robe. Narucite novu da mogu nastaviti raditi.", ime);
+    new p = StandIgracRadi(s);
+    if (p != INVALID_PLAYER_ID) ObavijestGreska(p, T(p, "Nestalo je robe. Narucite novu kako bi stand ponovno radio."));
 }
 
 static StandIgraPanel(playerid)
@@ -596,7 +605,7 @@ DostavaStandBroj()
 
 DostavaStand(s, &Float:x, &Float:y, &Float:z)
 {
-    if (s < 0 || s >= STAND_MAX || !gStand[s][snIma] || !gStand[s][snVlasnik] || gStand[s][snZaliha] <= 0) return 0;
+    if (s < 0 || s >= STAND_MAX || !StandOtvoren(s)) return 0;
     x = gStand[s][snKx];
     y = gStand[s][snKy];
     z = gStand[s][snKz];
