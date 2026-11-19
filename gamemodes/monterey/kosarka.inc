@@ -77,8 +77,6 @@ InitKosarka()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bb_hoops (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
     if (novo) for (new i = 0; i < sizeof gKosSa; i++)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bb_hoops (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, 0, 0)", gKosSa[i][0], gKosSa[i][1], gKosSa[i][2] - KOS_STUP_Z, -gKosSa[i][3]));
-    for (new i = 0; i < sizeof gKosSa; i++)
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bb_hoops SET a = %f, z = %f WHERE abs(x - %f) < 0.1 AND abs(y - %f) < 0.1", -gKosSa[i][3], gKosSa[i][2] - KOS_STUP_Z, gKosSa[i][0], gKosSa[i][1]));
     res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world FROM bb_hoops LIMIT %d", KOS_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++, DB_SelectNextRow(res))
     {

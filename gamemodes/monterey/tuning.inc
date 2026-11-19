@@ -1,6 +1,6 @@
 #define TUNING_MAX          8
 #define TUNING_DOMET        5.0
-#define TUNING_SVIJET       9000
+#define TUNING_SVIJET       10000
 #define TUNING_REDOVA       8
 #define TUNING_TD           40
 #define TUNING_DIJELOVA     32

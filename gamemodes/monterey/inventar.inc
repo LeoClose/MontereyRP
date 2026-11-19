@@ -45,6 +45,7 @@ static NovacPromjena(playerid, amount)
     format(tekst, sizeof tekst, gNovacPromjena[playerid] < 0 ? ("-$%d") : ("+$%d"), gNovacPromjena[playerid] < 0 ? -gNovacPromjena[playerid] : gNovacPromjena[playerid]);
     PlayerTextDrawSetString(playerid, gNovacTd[playerid], tekst);
     PlayerTextDrawColour(playerid, gNovacTd[playerid], gNovacPromjena[playerid] < 0 ? 0xB4191DFF : 0x36682CFF);
+    PlayerTextDrawSetPos(playerid, gNovacTd[playerid], 608.0, GetPlayerWantedLevel(playerid) ? 125.0 : 101.0);
     PlayerTextDrawShow(playerid, gNovacTd[playerid]);
     SetTimerEx("NovacSakrij", 3000, false, "ii", playerid, ++gNovacToken[playerid]);
 }

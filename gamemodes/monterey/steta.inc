@@ -239,6 +239,10 @@ static bool:NapadValidanProvjera(playerid, damagedid, WEAPON:weaponid)
     return IsPlayerInRangeOfPoint(playerid, gSteta[i][stDomet] + (gSteta[i][stDomet] <= 3.0 ? 2.0 : 10.0), x, y, z);
 }
 
+#define STETA_NPC_UDARAC    12.0
+#define STETA_NPC_RAZMAK    500
+static gStetaNpc[MAX_PLAYERS];
+
 public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bodypart)
 {
     new i = _:weaponid, sad = GetTickCount();
@@ -262,6 +266,15 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, WEAPON:weaponid, bod
 {
     MobitelZatvori(playerid);
     new i = _:weaponid;
+    if (issuerid != INVALID_PLAYER_ID && IsPlayerNPC(issuerid) && i >= 0 && i < STETA_ORUZJA && gSteta[i][stDmg] > 0.0 && gSteta[i][stDomet] <= 3.0)
+    {
+        new sad = GetTickCount();
+        if (sad - gStetaNpc[issuerid] < STETA_NPC_RAZMAK) return 1;
+        gStetaNpc[issuerid] = sad;
+        RanjenRana(playerid, bodypart, STETA_NPC_UDARAC);
+        StetaPrimijeni(playerid, STETA_NPC_UDARAC, weaponid);
+        return 1;
+    }
     if (weaponid == WEAPON_KNIFE && amount == 0.0 && issuerid != INVALID_PLAYER_ID)
     {
         if (NapadValidanProvjera(issuerid, playerid, weaponid) && StetaIza(issuerid, playerid)) StetaNoz(playerid, issuerid);

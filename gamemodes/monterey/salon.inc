@@ -407,7 +407,7 @@ static SalonZatvori(playerid, bool:vani = true)
     for (new i = 0; i < SALON_TD; i++) PlayerTextDrawDestroy(playerid, gSalonTd[playerid][i]);
     CancelSelectTextDraw(playerid);
     if (!vani) return;
-    PrebaciIgraca(playerid, 0, 0, gSalon[s][slX], gSalon[s][slY], gSalon[s][slZ], gSalon[s][slA] + 180.0);
+    PrebaciIgraca(playerid, 0, 0, gSalon[s][slX] - 1.5 * floatsin(gSalon[s][slA], degrees), gSalon[s][slY] + 1.5 * floatcos(gSalon[s][slA], degrees), gSalon[s][slZ], gSalon[s][slA] + 180.0);
     TogglePlayerControllable(playerid, true);
     SetCameraBehindPlayer(playerid);
 }

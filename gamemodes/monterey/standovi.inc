@@ -63,7 +63,7 @@ static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:g
 static const gKupacSkinovi[] = { 7, 14, 15, 20, 22, 23, 24, 26, 29, 35, 37, 44, 46, 47, 48, 56, 59, 60, 72, 73, 93, 98, 101, 141, 150, 151, 170, 184, 185, 188, 190, 192, 193, 211, 214, 216, 217, 223, 225, 226, 227, 233, 240, 250, 261, 289, 290, 291 };
 
 enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float:snRz, Float:snKx, Float:snKy, Float:snKz, snVlasnik, snVlasnikIme[MAX_PLAYER_NAME + 1], snIme[25],
-    snZaliha, snKasa, bool:snRadnik, snRadnikDo, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd }
+    snZaliha, snKasa, bool:snRadnik, snRadnikDo, snRadnikPauzaOd, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd }
 static gStand[STAND_MAX][E_STAND];
 static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
@@ -150,7 +150,7 @@ static StandAktor(s)
         DestroyActor(gStand[s][snAktor]);
         gStand[s][snAktor] = INVALID_ACTOR_ID;
     }
-    if (!gStand[s][snRadnik] || gStand[s][snRadnikCeka]) return;
+    if (!gStand[s][snRadnik] || gStand[s][snRadnikCeka] || gStand[s][snRadnikPauzaOd]) return;
     new Float:x, Float:y, Float:a;
     StandRadnikMjesto(s, x, y, a);
     gStand[s][snAktor] = CreateActor(STAND_RADNIK_SKIN, x, y, gStand[s][snKz], a);
@@ -181,7 +181,7 @@ static StandMakni(s)
 
 static bool:StandRadnikRadi(s)
 {
-    return gStand[s][snRadnik] && !gStand[s][snRadnikCeka];
+    return gStand[s][snRadnik] && !gStand[s][snRadnikCeka] && !gStand[s][snRadnikPauzaOd];
 }
 
 static StandIgracRadi(s)
@@ -212,7 +212,7 @@ static StandSms(racun, const tekst[], const ime[], iznos = 0)
 
 static StandPlaca(s)
 {
-    if (!gStand[s][snRadnik] || !gStand[s][snVlasnik] || gettime() < gStand[s][snRadnikDo]) return;
+    if (!gStand[s][snRadnik] || !gStand[s][snVlasnik] || gStand[s][snRadnikPauzaOd] || gettime() < gStand[s][snRadnikDo]) return;
     new ime[25];
     StandImeIli(s, ime, sizeof ime);
     if (BankaUplati(gStand[s][snVlasnik], -STAND_RADNIK_SAT, "Placa radnika"))
@@ -232,6 +232,34 @@ static StandPlaca(s)
         StandSms(gStand[s][snVlasnik], "Radnik (%s): Ne radim dok mi ne platite. Na vasem racunu nema $%d za placu.", ime, STAND_RADNIK_SAT);
     }
     StandSpremi(s);
+}
+
+static bool:StandRadnikPauza(s, bool:stanka)
+{
+    if (!gStand[s][snRadnik] || gStand[s][snRadnikCeka])
+        return false;
+
+    if (stanka)
+    {
+        if (gStand[s][snRadnikPauzaOd])
+            return false;
+
+        gStand[s][snRadnikPauzaOd] = gettime();
+    }
+    else
+    {
+        if (!gStand[s][snRadnikPauzaOd])
+            return false;
+
+        gStand[s][snRadnikDo] +=
+            gettime() - gStand[s][snRadnikPauzaOd];
+
+        gStand[s][snRadnikPauzaOd] = 0;
+    }
+
+    StandAktor(s);
+    StandSpremi(s);
+    return true;
 }
 
 StandMeni(playerid)
@@ -337,6 +365,7 @@ DLG:stand(playerid, response, listitem)
             {
                 gStand[s][snRadnik] = false;
                 gStand[s][snRadnikCeka] = false;
+                gStand[s][snRadnikPauzaOd] = 0;
                 StandAktor(s);
                 StandSpremi(s);
                 return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Otpustili ste radnika."));
@@ -344,6 +373,7 @@ DLG:stand(playerid, response, listitem)
             gStand[s][snRadnik] = true;
             gStand[s][snRadnikCeka] = false;
             gStand[s][snRadnikDo] = 0;
+            gStand[s][snRadnikPauzaOd] = 0;
             StandPlaca(s);
             if (gStand[s][snRadnikCeka]) return 1;
             StandAktor(s);
@@ -353,20 +383,57 @@ DLG:stand(playerid, response, listitem)
         {
             if (gStandRadi[playerid] == s + 1)
             {
-                if (gStIgra[playerid]) StandIgraKraj(playerid, false);
+                if (gStIgra[playerid])
+                    StandIgraKraj(playerid, false);
+
                 gStandRadi[playerid] = 0;
-                return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Prestali ste raditi."));
+
+                StandRadnikPauza(s, false);
+                StandIgracOdmakni(playerid, s);
+
+                return ObavijestInfo(playerid,
+                    T(playerid, "Stand s hranom"),
+                    T(playerid, "Prestali ste raditi."));
             }
-            if (StandIgracRadi(s) != INVALID_PLAYER_ID) return ObavijestGreska(playerid, T(playerid, "Netko vec radi na ovom standu."));
+
+            if (StandIgracRadi(s) != INVALID_PLAYER_ID)
+                return ObavijestGreska(playerid,
+                    T(playerid, "Netko vec radi na ovom standu."));
+
             new Float:x, Float:y, Float:a;
             StandRadnikMjesto(s, x, y, a);
+
             SetPlayerPos(playerid, x, y, gStand[s][snKz] + 0.1);
             SetPlayerFacingAngle(playerid, a);
+
             gStandRadi[playerid] = s + 1;
-            return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Radite na standu. Kupci ce dolaziti, posluzite ih pravom narudzbom."));
+
+            StandRadnikPauza(s, true);
+
+            return ObavijestInfo(playerid,
+                T(playerid, "Stand s hranom"),
+                T(playerid, "Radite na standu. Kupci ce dolaziti, posluzite ih pravom narudzbom."));
         }
     }
     return 1;
+}
+
+static StandIgracOdmakni(playerid, s)
+{
+    new Float:x, Float:y, Float:a;
+    StandRadnikMjesto(s, x, y, a);
+
+    new Float:dx = x - gStand[s][snX];
+    new Float:dy = y - gStand[s][snY];
+    new Float:d = VectorSize(dx, dy, 0.0);
+
+    if (d < 0.1) return;
+
+    x += dx / d * 1.5;
+    y += dy / d * 1.5;
+
+    SetPlayerPos(playerid, x, y, gStand[s][snKz] + 0.1);
+    SetPlayerFacingAngle(playerid, a);
 }
 
 DLG:stand_ime(playerid, response, const inputtext[])
@@ -787,6 +854,7 @@ static KupacNaCilju(k)
 
 public OnNPCFinishMovePath(npcid, pathid)
 {
+    if (PlaninaPutGotov(npcid, pathid)) return 1;
     new k = gNpcKupac[npcid] - 1;
     if (k < 0 || gKupac[k][kuPut] != pathid || gKupac[k][kuStanje] != KU_HODA) return 1;
     KupacNaCilju(k);
@@ -995,15 +1063,15 @@ static KupacBorbaTick(k, sad)
         NPC_Move(npc, x + (x - px) / d * 15.0, y + (y - py) / d * 15.0, z, NPC_MOVE_TYPE_SPRINT);
         return;
     }
-    if (d > 1.6 || IsPlayerInAnyVehicle(p))
+    if (d > 1.2 || IsPlayerInAnyVehicle(p))
     {
         NPC_StopMeleeAttack(npc);
-        NPC_Move(npc, px, py, pz, NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 1.0);
+        NPC_MoveToPlayer(npc, p, NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 0.8, 250, true);
         return;
     }
     NPC_StopMove(npc);
     NPC_SetFacingAngle(npc, atan2(py - y, px - x) - 90.0);
-    NPC_MeleeAttack(npc, 900);
+    NPC_MeleeAttack(npc, 1000);
 }
 
 StandTick()
@@ -1018,8 +1086,12 @@ StandTick()
         if (!gStand[s][snIma] || gStand[s][snVlasnik] != gAccountId[i] || !IsPlayerInRangeOfPoint(i, STAND_RADI_DOMET, x, y, gStand[s][snKz]))
         {
             if (gStIgra[i]) StandIgraKraj(i, false);
+
             gStandRadi[i] = 0;
-            ObavijestInfo(i, T(i, "Stand s hranom"), T(i, "Udaljili ste se od standa i prestali raditi."));
+            StandRadnikPauza(s, false);
+
+            ObavijestInfo(i, T(i, "Stand s hranom"),
+                T(i, "Udaljili ste se od standa i prestali raditi."));
         }
     }
     for (new s = 0; s < STAND_MAX; s++)
@@ -1117,11 +1189,19 @@ StandTick()
     }
 }
 
+StandUgasi()
+{
+    for (new s = 0; s < STAND_MAX; s++) if (gStand[s][snIma]) StandRadnikPauza(s, false);
+}
+
 StandDisconnect(playerid)
 {
     if (gStIgra[playerid] && gStIgraTimer[playerid]) KillTimer(gStIgraTimer[playerid]);
     gStIgra[playerid] = SI_NEMA;
     gStIgraTimer[playerid] = 0;
+    new s = gStandRadi[playerid] - 1;
+    if (s >= 0 && s < STAND_MAX && gStand[s][snIma])
+    StandRadnikPauza(s, false);
     gStandRadi[playerid] = 0;
     gStandJede[playerid] = 0;
     gStandUredi[playerid][0] = 0;

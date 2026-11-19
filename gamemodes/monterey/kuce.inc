@@ -1,4 +1,5 @@
 #define KUCA_MAX            1000
+#define KUCA_PO_IGRACU      2
 #define KUCA_DB_MAPA        8192
 #define KUCA_DOMET          1.5
 #define KUCA_ADMIN_DOMET    15.0
@@ -330,6 +331,9 @@ DLG:kuca(playerid, response)
     if (!response || k < 0 || !gKuca[k][kuIma]) return 1;
     if (gKuca[k][kuVlasnik]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kucu je netko vec kupio."));
     if (!IsPlayerInRangeOfPoint(playerid, KUCA_DOMET * 2.0, gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ])) return 1;
+    new imam = 0;
+    for (new i = 0; i < KUCA_MAX; i++) if (gKuca[i][kuIma] && gKuca[i][kuVlasnik] == gAccountId[playerid]) imam++;
+    if (imam >= KUCA_PO_IGRACU) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d kuce."), KUCA_PO_IGRACU);
     if (!DajNovac(playerid, -gKuca[k][kuCijena])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     new ime[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, ime, sizeof ime);

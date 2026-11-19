@@ -30,14 +30,6 @@ InitUtrke()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS races (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, name TEXT NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS race_points (race INTEGER NOT NULL, idx INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, PRIMARY KEY (race, idx))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS race_stats (account INTEGER PRIMARY KEY, won INTEGER NOT NULL DEFAULT 0, second INTEGER NOT NULL DEFAULT 0, third INTEGER NOT NULL DEFAULT 0, lost INTEGER NOT NULL DEFAULT 0, dnf INTEGER NOT NULL DEFAULT 0, earned INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM pragma_table_info('race_stats') WHERE name = 'dnf'"), bool:ima = DB_GetFieldInt(res, 0) > 0;
-    DB_FreeResultSet(res);
-    if (!ima)
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE race_stats ADD COLUMN second INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE race_stats ADD COLUMN third INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE race_stats ADD COLUMN dnf INTEGER NOT NULL DEFAULT 0"));
-    }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS races_owner ON races (owner)"));
 }
 

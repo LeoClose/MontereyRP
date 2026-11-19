@@ -432,7 +432,7 @@ CMD:hood(playerid, params[])
 #define PRIKOLICA_OBJEKT    3174
 #define PRIKOLICA_OBJEKT_VELIKA 3175
 #define PRIKOLICA_OBJ_Y     -1.0
-#define PRIKOLICA_OBJ_Y_VELIKA -2.0
+#define PRIKOLICA_OBJ_Y_VELIKA -2.5
 #define PRIKOLICA_OBJ_Z     -0.8
 #define PRIKOLICA_DOMET     2.5
 #define PRIKOLICA_STRANA    -1.0

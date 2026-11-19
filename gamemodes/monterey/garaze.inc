@@ -1,4 +1,5 @@
 #define GARAZA_MAX          200
+#define GARAZA_PO_IGRACU    2
 #define GARAZA_DOMET        7.0
 #define GARAZA_VOZAC_MS     3000
 #define GARAZA_PJESKE_DOMET 2.0
@@ -445,6 +446,9 @@ DLG:garaza_kupi(playerid, response)
     if (!response || g < 0 || !gGaraza[g][gaIma]) return 1;
     if (gGaraza[g][gaVlasnik]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Garazu je netko vec kupio."));
     if (!IsPlayerInRangeOfPoint(playerid, GARAZA_DOMET * 2.0, gGaraza[g][gaX], gGaraza[g][gaY], gGaraza[g][gaZ])) return 1;
+    new imam = 0;
+    for (new i = 0; i < GARAZA_MAX; i++) if (gGaraza[i][gaIma] && gGaraza[i][gaVlasnik] == gAccountId[playerid]) imam++;
+    if (imam >= GARAZA_PO_IGRACU) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d garaze."), GARAZA_PO_IGRACU);
     if (!DajNovac(playerid, -gGaraza[g][gaCijena])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
     new ime[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, ime, sizeof ime);

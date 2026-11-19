@@ -1,4 +1,4 @@
-#define KAZNA_SVIJET        9800
+#define KAZNA_SVIJET        15000
 #define KAZNA_PLIVANJE      1
 #define KAZNA_METENJE       2
 #define KAZNA_MIN_METARA    50
@@ -15,12 +15,12 @@
 #define KAZNA_METENJE_MS    4000
 #define KAZNA_KISA          16
 #define KAZNA_TLO           0.4
+#define KAZNA_STEPENICA     0.35
 #define POVRATAK_S          600
-#define POVRATAK_PRIVREMENI 9000
 
 static gKazna[MAX_PLAYERS], gKaznaOstalo[MAX_PLAYERS], bool:gKaznaMete[MAX_PLAYERS], Float:gKaznaCp[MAX_PLAYERS][3], bool:gPovratakProvjeren[MAX_PLAYERS], gKaznaRazlog[MAX_PLAYERS][96];
 
-bool:KaznaAktivna(playerid)
+KaznaAktivna(playerid)
 {
     return gKazna[playerid] != 0;
 }
@@ -87,11 +87,21 @@ static KaznaRazlogPostavi(playerid, const razlog[])
 
 static KaznaSljedeci(playerid)
 {
-    new Float:a = float(random(360)), Float:r = 5.0 + float(random(floatround(KAZNA_TRG_R) - 5));
-    gKaznaCp[playerid][0] = KAZNA_TRG_X + r * floatcos(a, degrees);
-    gKaznaCp[playerid][1] = KAZNA_TRG_Y + r * floatsin(a, degrees);
-    new Float:hx, Float:hy, Float:hz;
-    gKaznaCp[playerid][2] = Kolizija_Zraka(gKaznaCp[playerid][0], gKaznaCp[playerid][1], KAZNA_TRG_Z + 20.0, gKaznaCp[playerid][0], gKaznaCp[playerid][1], KAZNA_TRG_Z - 20.0, hx, hy, hz) ? hz : KAZNA_TRG_Z;
+    new Float:hx, Float:hy, Float:hz, Float:px, Float:py, Float:pz;
+    GetPlayerPos(playerid, px, py, pz);
+    new Float:tlo = Kolizija_Zraka(px, py, pz, px, py, pz - 3.0, hx, hy, hz) ? hz : pz - 1.0;
+    for (new p = 0; p < 30; p++)
+    {
+        new Float:a = float(random(360)), Float:r = 5.0 + float(random(floatround(KAZNA_TRG_R) - 5));
+        gKaznaCp[playerid][0] = KAZNA_TRG_X + r * floatcos(a, degrees);
+        gKaznaCp[playerid][1] = KAZNA_TRG_Y + r * floatsin(a, degrees);
+        gKaznaCp[playerid][2] = tlo;
+        if (Kolizija_Zraka(gKaznaCp[playerid][0], gKaznaCp[playerid][1], tlo + 2.5, gKaznaCp[playerid][0], gKaznaCp[playerid][1], tlo - 1.0, hx, hy, hz) && floatabs(hz - tlo) <= KAZNA_STEPENICA && !Kolizija_Zraka(px, py, tlo + 0.6, gKaznaCp[playerid][0], gKaznaCp[playerid][1], hz + 0.6))
+        {
+            gKaznaCp[playerid][2] = hz;
+            break;
+        }
+    }
     SetPlayerCheckpoint(playerid, gKaznaCp[playerid][0], gKaznaCp[playerid][1], gKaznaCp[playerid][2], 1.5);
     new tekst[200];
     format(tekst, sizeof tekst, T(playerid, "Pometite mjesto oznaceno markerom. Preostalo: %d"), gKaznaOstalo[playerid]);
@@ -105,7 +115,7 @@ static KaznaPocni(playerid)
     if (gKazna[playerid] == KAZNA_PLIVANJE)
     {
         new Float:x = KAZNA_PLAZA_X + float(random(201) - 100);
-        PrebaciIgraca(playerid, 0, KAZNA_SVIJET + playerid, x, KAZNA_PLAZA_Y - float(gKaznaOstalo[playerid]), 1.0, 0.0);
+        PrebaciIgraca(playerid, 0, KAZNA_SVIJET + 1 + playerid, x, KAZNA_PLAZA_Y - float(gKaznaOstalo[playerid]), 1.0, 0.0);
         new tekst[200];
         format(tekst, sizeof tekst, T(playerid, "Doplivajte do obale (%d m sjeverno)."), gKaznaOstalo[playerid]);
         KaznaObavijest(playerid, tekst);
@@ -215,10 +225,16 @@ KaznaDisconnect(playerid)
 PovratakSpremi(playerid)
 {
     if (!gUlogiran[playerid] || gKazna[playerid] || GetPlayerState(playerid) == PLAYER_STATE_SPECTATING || GetPlayerState(playerid) == PLAYER_STATE_NONE) return;
-    new svijet = GetPlayerVirtualWorld(playerid);
-    if (svijet >= POVRATAK_PRIVREMENI) return;
+    new svijet = GetPlayerVirtualWorld(playerid), interijer = GetPlayerInterior(playerid);
     new Float:x, Float:y, Float:z, Float:a, v = GetPlayerVehicleID(playerid);
-    if (v)
+    if (svijet && svijet < KUCA_SVIJET)
+    {
+        if (!PolicijaZadnjeVani(playerid, x, y, z)) return;
+        svijet = 0;
+        interijer = 0;
+        a = 0.0;
+    }
+    else if (v)
     {
         GetVehiclePos(v, x, y, z);
         GetVehicleZAngle(v, a);
@@ -229,13 +245,18 @@ PovratakSpremi(playerid)
         GetPlayerPos(playerid, x, y, z);
         GetPlayerFacingAngle(playerid, a);
     }
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO player_lastpos (account, x, y, z, a, interior, world, time) VALUES (%d, %f, %f, %f, %f, %d, %d, %d)", gAccountId[playerid], x, y, z, a, GetPlayerInterior(playerid), svijet, gettime()));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO player_lastpos (account, x, y, z, a, interior, world, time) VALUES (%d, %f, %f, %f, %f, %d, %d, %d)", gAccountId[playerid], x, y, z, a, interijer, svijet, gettime()));
 }
 
 PovratakSpawn(playerid)
 {
     if (gPovratakProvjeren[playerid]) return;
     gPovratakProvjeren[playerid] = true;
+    if (ZatvorProvjera(playerid))
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_lastpos WHERE account = %d", gAccountId[playerid]));
+        return;
+    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, a, interior, world, time FROM player_lastpos WHERE account = %d", gAccountId[playerid]);
     if (DB_GetRowCount(res) && gettime() - DB_GetFieldInt(res, 6) <= POVRATAK_S)
     {
@@ -258,6 +279,7 @@ CMD:kazni(playerid, params[])
     if (!razlog[0]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite: /kazni [id/ime] [1 = plivanje, 2 = metenje] [metara / markera] [razlog]"));
     new target = FindPlayer(p1), tip = strval(p2), kolicina = strval(p3);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    if (!MozeKazniti(playerid, target)) return 1;
     if (tip != KAZNA_PLIVANJE && tip != KAZNA_METENJE) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vrsta kazne mora biti 1 (plivanje) ili 2 (metenje)."));
     if (tip == KAZNA_PLIVANJE && (kolicina < KAZNA_MIN_METARA || kolicina > KAZNA_MAX_METARA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Udaljenost mora biti od %d do %d m."), KAZNA_MIN_METARA, KAZNA_MAX_METARA);
     if (tip == KAZNA_METENJE && (kolicina < 1 || kolicina > KAZNA_MAX_MARKERA)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Broj markera mora biti od 1 do %d."), KAZNA_MAX_MARKERA);

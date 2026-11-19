@@ -224,6 +224,8 @@ public OnGameModeInit()
     MapaInternetKafic();
     MapaInternetKaficExtUkloni(INVALID_PLAYER_ID);
     MapaInternetKaficExt();
+    MapaFleecaBankaUkloni(INVALID_PLAYER_ID);
+    MapaFleecaBanka();
     MapaOruzarnicaInt();
     MapaCartierExtUkloni(INVALID_PLAYER_ID);
     MapaCartierExt();
@@ -243,7 +245,6 @@ public OnGameModeInit()
     MapaMontereyPeak();
     MapaGlenParkUkloni(INVALID_PLAYER_ID);
     MapaGlenPark();
-    MapaPD();
     InitMarica();
     InitPolicija();
     InitMdt();
@@ -264,6 +265,7 @@ public OnGameModeInit()
     InitKuglanje();
     InitKamp();
     InitKazne();
+    InitPlanina();
     InitStandovi();
     InitAntiCheat();
     InitSync();
@@ -363,6 +365,7 @@ public Sekunda()
 
 public OnGameModeExit()
 {
+    StandUgasi();
     OkladaVratiSve();
     PokerVratiSve();
     StatsSaveAll();
@@ -448,13 +451,13 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
-#include "monterey/mape/mapa_pd.inc"
 #include "monterey/mape/wilshire_pd.inc"
 #include "monterey/mape/mapa_bus_taxi.inc"
 #include "monterey/mape/mapa_diamond_casino.inc"
 #include "monterey/mape/mapa_cartier_zlatara.inc"
 #include "monterey/mape/mapa_internet_kafic.inc"
 #include "monterey/mape/mapa_internet_kafic_ext.inc"
+#include "monterey/mape/mapa_fleeca_banka.inc"
 #include "monterey/mape/mapa_oruzarnica_int.inc"
 #include "monterey/mape/mapa_cartier_ext.inc"
 #include "monterey/mape/mapa_central_bank.inc"
@@ -473,6 +476,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/staza.inc"
 #include "monterey/standovi.inc"
 #include "monterey/kazne.inc"
+#include "monterey/planina.inc"
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"

@@ -25,6 +25,7 @@
 #define ZATVOR_ULAZ_DOMET   5.0
 #define ZATVOR_MAX_MIN      60
 #define WANTED_PAD_S        900
+#define BIJEG_MIN_PO_ZVJEZDICI 5
 #define LOCATE_LS_MS        5000
 #define LOCATE_VAN_MS       10000
 #define LOCATE_IKONA        99
@@ -191,6 +192,15 @@ static TragPrati(i)
     gTragVrijeme[i] = gettime();
 }
 
+bool:PolicijaZadnjeVani(playerid, &Float:x, &Float:y, &Float:z)
+{
+    if (!gImaVani[playerid]) return false;
+    x = gVani[playerid][0];
+    y = gVani[playerid][1];
+    z = gVani[playerid][2];
+    return true;
+}
+
 PolicijaTick()
 {
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
@@ -286,8 +296,32 @@ static SkiniLisice(target)
     SetPlayerSpecialAction(target, SPECIAL_ACTION_NONE);
 }
 
+static LockerVrati(playerid)
+{
+    for (new i = 0; i < sizeof gLocker; i++)
+    {
+        if (!(gLockerUzeo[playerid] & (1 << i))) continue;
+        new item = gLocker[i][ORMAR_PREDMET], ammoItem = gItems[item][ITEM_AMMO];
+        if (gInv[playerid][item]) GiveItem(playerid, item, -1);
+        if (ammoItem != -1)
+        {
+            new n = min(gLocker[i][ORMAR_METCI], gInv[playerid][ammoItem]);
+            if (n) GiveItem(playerid, ammoItem, -n);
+        }
+        if (gLockerVani[i] > 0) gLockerVani[i]--;
+        LogLocker(playerid, item, 1, 0);
+    }
+    gLockerUzeo[playerid] = 0;
+}
+
 PolicijaDisconnect(playerid, bool:izlaz)
 {
+    if (izlaz && gCuffed[playerid] && gWanted[playerid] && !gJailTime[playerid])
+    {
+        gJailTime[playerid] = gWanted[playerid] * BIJEG_MIN_PO_ZVJEZDICI * 60;
+        SaveJail(playerid);
+        SetWanted(playerid, 0);
+    }
     if (gTased[playerid]) TogglePlayerControllable(playerid, true);
     gTased[playerid] = false;
     if (gDragging[playerid]) StopDrag(gDragging[playerid] - 1);
@@ -298,6 +332,7 @@ PolicijaDisconnect(playerid, bool:izlaz)
     VratiOpremu(playerid, false);
     if (!izlaz) return;
     LocateStop(playerid);
+    if (gOnDuty[playerid]) LockerVrati(playerid);
     gOnDuty[playerid] = false;
     gLockerUzeo[playerid] = 0;
     if (gJailTime[playerid]) SaveJail(playerid);
@@ -455,7 +490,11 @@ CMD:duty(playerid, params[])
     if (tip != ORG_TAKSI && tip != ORG_MEHANICAR && !HqProvjera(playerid)) return 1;
     if (tip == ORG_LSPD && !IsPlayerInRangeOfPoint(playerid, HQ_DOMET, DUTY_POS)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod mjesta za duznost."));
     gOnDuty[playerid] = !gOnDuty[playerid];
-    if (!gOnDuty[playerid]) VratiOpremu(playerid, true);
+    if (!gOnDuty[playerid])
+    {
+        VratiOpremu(playerid, true);
+        LockerVrati(playerid);
+    }
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, gOnDuty[playerid] ? ("* %s dolazi na duznost.") : ("* %s odlazi s duznosti."), GetRPIme(playerid), "", 1);
     return 1;
 }

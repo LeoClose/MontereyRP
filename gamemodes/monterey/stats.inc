@@ -68,6 +68,11 @@ StatsConnect(playerid)
     gStatsImaSljedecu[playerid] = false;
 }
 
+StatsPlaytime(playerid)
+{
+    return gStatsPlaytime[playerid];
+}
+
 StatsLoad(playerid)
 {
     new DBResult:res = DB_ExecuteQuery(gDB,

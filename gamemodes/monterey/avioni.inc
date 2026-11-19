@@ -3,7 +3,7 @@
 #define AVION_ATC_MAX       4
 #define AVION_SLOTOVA       (AVION_JAVNI + AVION_ATC_SLOTOVA * AVION_ATC_MAX)
 #define AVION_INSTANCI      (AVION_ATC_MAX + 1)
-#define AVION_ATC_SVIJET    9700
+#define AVION_ATC_SVIJET    9750
 #define AVION_PARKIRANO     4
 #define AVION_STAJALISTA    11
 #define AVION_SKIN          61

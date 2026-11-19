@@ -1245,7 +1245,7 @@ MobitelUpdate(playerid)
         return;
     }
     if (!gMobitelOtvoren[playerid]) return;
-    if (IsRanjen(playerid) || ImaLisice(playerid))
+    if (IsRanjen(playerid) || ImaLisice(playerid) || KaznaAktivna(playerid))
     {
         MobitelZatvori(playerid);
         return;

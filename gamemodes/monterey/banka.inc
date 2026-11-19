@@ -6,6 +6,7 @@
 #define BANKA_OTVARANJE     100
 #define BANKA_KARTICA       50
 #define BANKA_KREDIT_MAX    50000
+#define BANKA_KREDIT_SATI   10
 #define BANKA_KAMATA        10
 #define BANKA_RATA          10
 #define BANKA_KAZNA         5
@@ -27,7 +28,8 @@ enum E_BANKA_INT { biIme[24], biInt, Float:biX, Float:biY, Float:biZ }
 static const gBankaInt[][E_BANKA_INT] = {
     { "Palomino Creek banka", 0, 2306.380, -15.240, 26.750 },
     { "Gradski ured", 3, 384.808, 173.804, 1008.382 },
-    { "Atrium", 18, 1727.285, -1642.945, 20.225 }
+    { "Atrium", 18, 1727.285, -1642.945, 20.225 },
+    { "Fleeca banka", 0, 934.6, -1667.3, 14.1 }
 };
 
 enum { BA_OTVORI, BA_INFO, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, BA_POSALJI, BA_KREDIT, BA_OTPLATI, BA_KARTICA }
@@ -386,6 +388,11 @@ static bool:BankaPosalji(playerid, racun, iznos)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete to sami sebi."));
         return false;
     }
+    if (kredit)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete slati novac dok ne otplatite kredit."));
+        return false;
+    }
     if (!racun || !BankaUcitaj(racun, a, b, c, d, e))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Primatelj nema bankovni racun."));
@@ -419,10 +426,14 @@ BankaTick()
     new sad = gettime();
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
-        new stanje, stednja, kredit, rata, rok, poruka[144];
-        if (!gUlogiran[i] || !BankaUcitaj(gAccountId[i], stanje, stednja, kredit, rata, rok)) continue;
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT savings_tick FROM bank_accounts WHERE account = %d", gAccountId[i]);
-        new tick = DB_GetFieldInt(res, 0);
+        if (!gUlogiran[i]) continue;
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT balance, savings, loan, loan_rate, loan_due, savings_tick FROM bank_accounts WHERE account = %d", gAccountId[i]);
+        if (!DB_GetRowCount(res))
+        {
+            DB_FreeResultSet(res);
+            continue;
+        }
+        new stanje = DB_GetFieldInt(res, 0), stednja = DB_GetFieldInt(res, 1), kredit = DB_GetFieldInt(res, 2), rata = DB_GetFieldInt(res, 3), rok = DB_GetFieldInt(res, 4), tick = DB_GetFieldInt(res, 5), poruka[144];
         DB_FreeResultSet(res);
         if (stednja > 0 && sad - tick >= BANKA_DAN)
         {
@@ -622,6 +633,7 @@ DLG:banka_unos(playerid, response, const inputtext[])
         case BA_KREDIT:
         {
             if (kredit) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vec imate kredit."));
+            if (StatsPlaytime(playerid) < BANKA_KREDIT_SATI * 3600) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kredit mozete dobiti tek nakon %d sati igre."), BANKA_KREDIT_SATI);
             if (n > BANKA_KREDIT_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najveci kredit je $%d."), BANKA_KREDIT_MAX);
             new dug = BankaDug(n);
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_accounts SET balance = balance + %d, loan = %d, loan_rate = %d, loan_due = %d WHERE account = %d", n, dug, BankaRata(dug), gettime() + BANKA_DAN, racun));

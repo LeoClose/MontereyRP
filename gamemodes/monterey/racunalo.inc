@@ -142,12 +142,6 @@ InitRacunalo()
         gDionica[d] = gSvijecaBroj[d] ? gSvijeca[d][gSvijecaBroj[d] - 1][SV_C] : gDionicaPocetna[d];
         for (new k = 0; k < 4; k++) gTrenutna[d][k] = gDionica[d];
     }
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'pc_katalog'");
-    new bool:dodano = DB_GetRowCount(res) > 0;
-    DB_FreeResultSet(res);
-    if (dodano) return;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO furniture_catalog (shop, model, price, name) SELECT id, %d, %d, 'Racunalo' FROM furniture_shops WHERE id NOT IN (SELECT shop FROM furniture_catalog WHERE model = %d)", RACUNALO_MODEL, RACUNALO_CIJENA, RACUNALO_MODEL));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('pc_katalog')"));
 }
 
 static PcKomada(playerid, d)

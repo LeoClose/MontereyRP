@@ -220,6 +220,7 @@ public OnNPCSpawn(npcid)
         AvionSpawn(npcid);
         KupacSpawn(npcid);
         BankaSpawn(npcid);
+        PlaninaSpawn(npcid);
         return 1;
     }
     DilerPostavi(npcid, k / MAX_TER_NPC, k % MAX_TER_NPC);

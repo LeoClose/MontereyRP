@@ -304,15 +304,7 @@ CMD:goto(playerid, params[])
     return 1;
 }
 
-#define PD_MAPA_INT         10
 #define KAZINO_MAPA_INT     2
-
-CMD:pdint(playerid, params[])
-{
-    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
-    AdminPrebaci(playerid, PD_MAPA_INT, 0, 1292.0, -1190.0, -28.8);
-    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste u PD enterijer."));
-}
 
 static bool:AdminBrojParam(const params[], max, &vrijednost)
 {

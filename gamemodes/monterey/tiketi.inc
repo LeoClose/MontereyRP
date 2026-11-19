@@ -6,9 +6,9 @@ enum { TIKET_PITANJE, TIKET_PRIJAVA }
 enum { TP_ADMINU = 1, TP_IGRACU, TP_OBAVIJEST }
 enum E_TIKET { bool:tkIma, tkTip, tkIgrac, tkRacun, tkCilj, tkTekst[TIKET_LEN], tkVrijeme, tkBroj }
 static gTiket[TIKET_MAX][E_TIKET], gTiketBroj, gTiketZadnji[MAX_PLAYERS], gTiketOdabran[MAX_PLAYERS] = { -1, ... }, gTiketPopis[MAX_PLAYERS][TIKET_MAX];
-static gTiketOdgovor[MAX_PLAYERS][TIKET_LEN], gTiketPrima[MAX_PLAYERS], gTiketPrimaRacun[MAX_PLAYERS], gTiketObavijest[MAX_PLAYERS] = { -1, ... };
+static gTiketOdgovor[MAX_PLAYERS][TIKET_LEN], gTiketPrima[MAX_PLAYERS], gTiketPrimaRacun[MAX_PLAYERS];
 
-forward bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[]);
+forward bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[], t = 0);
 
 static TiketObavijestPosalji(i, t, const tekst[])
 {
@@ -40,8 +40,7 @@ static TiketNovi(playerid, tip, cilj, const tekst[])
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i] || !gAdmin[i]) continue;
-        gTiketObavijest[i] = t;
-        if (!TiketPrevedi(i, TP_OBAVIJEST, gJezik[playerid], gJezik[i], gTiket[t][tkTekst])) TiketObavijestPosalji(i, t, gTiket[t][tkTekst]);
+        if (!TiketPrevedi(i, TP_OBAVIJEST, gJezik[playerid], gJezik[i], gTiket[t][tkTekst], t)) TiketObavijestPosalji(i, t, gTiket[t][tkTekst]);
     }
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vas upit je poslan adminima (#%d)."), gTiket[t][tkBroj]);
 }
@@ -117,12 +116,12 @@ static TiketPrikazi(playerid, const prijevod[])
     return PrikaziDialog(playerid, DLG_TIKET, DIALOG_STYLE_INPUT, naslov, body, T(playerid, "Odgovori"), T(playerid, "Natrag"));
 }
 
-bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[])
+bool:TiketPrevedi(playerid, vrsta, od, za, const tekst[], t = 0)
 {
     if (od == za) return false;
     new url[64];
     format(url, sizeof url, JEZICI_SERVER, gJezikCode[od], gJezikCode[za]);
-    return HTTP((gConnSerial[playerid] << 12) | (vrsta << 10) | playerid, HTTP_POST, url, tekst, "TiketPrijevod") != 0;
+    return HTTP((gConnSerial[playerid] << 17) | (t << 12) | (vrsta << 10) | playerid, HTTP_POST, url, tekst, "TiketPrijevod") != 0;
 }
 
 DLG:tiketi(playerid, response, listitem)
@@ -172,14 +171,14 @@ forward TiketPrijevod(index, response_code, const data[]);
 public TiketPrijevod(index, response_code, const data[])
 {
     new playerid = index & 0x3FF;
-    if (playerid >= MAX_PLAYERS || !IsPlayerConnected(playerid) || (index >>> 12) != gConnSerial[playerid]) return 1;
+    if (playerid >= MAX_PLAYERS || !IsPlayerConnected(playerid) || (index >>> 17) != (gConnSerial[playerid] & 0x7FFF)) return 1;
     new tekst[TIKET_LEN + 16];
     if (response_code == 200 && data[0]) strcat(tekst, data);
     RemoveBoje(tekst);
     if (((index >>> 10) & 3) == TP_ADMINU) return TiketPrikazi(playerid, tekst);
     if (((index >>> 10) & 3) == TP_OBAVIJEST)
     {
-        new t = gTiketObavijest[playerid];
+        new t = (index >>> 12) & 0x1F;
         if (!TiketValjan(t)) return 1;
         if (tekst[0]) TiketObavijestPosalji(playerid, t, tekst);
         else TiketObavijestPosalji(playerid, t, gTiket[t][tkTekst]);

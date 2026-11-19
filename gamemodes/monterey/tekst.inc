@@ -373,8 +373,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koristenje: /goto [id/ime]", "Usage: /goto [id/name]", "Использование: /goto [id/имя]", "Uso: /goto [id/nombre]", "Kullanim: /goto [id/isim]" },
     { "Teleportirani ste do igraca %s.", "You teleported to %s.", "Вы телепортировались к %s.", "Te has teletransportado a %s.", "%s yanina isinlandiniz." },
     { "  /goto [id/ime] - teleport do igraca", "  /goto [id/name] - teleport to a player", "  /goto [id/имя] - телепорт к игроку", "  /goto [id/nombre] - teletransporte a un jugador", "  /goto [id/isim] - oyuncuya isinlan" },
-    { "  /pdint - teleport do PD enterijera", "  /pdint - teleport to the PD interior", "  /pdint - телепорт в интерьер полиции", "  /pdint - teletransporte al interior de la policia", "  /pdint - polis merkezi icine isinlan" },
-    { "Teleportirani ste u PD enterijer.", "You teleported to the PD interior.", "Вы телепортировались в интерьер полиции.", "Te has teletransportado al interior de la policia.", "Polis merkezinin icine isinlandiniz." },
     { "Taksi stanice", "Taxi stands", "Стоянки такси", "Paradas de taxi", "Taksi duraklari" },
     { "Taksi stanice (%d/%d)", "Taxi stands (%d/%d)", "Стоянки такси (%d/%d)", "Paradas de taxi (%d/%d)", "Taksi duraklari (%d/%d)" },
     { "{8AB4F8}+ Nova stanica na mojoj poziciji", "{8AB4F8}+ New stand at my position", "{8AB4F8}+ Новая стоянка на моей позиции", "{8AB4F8}+ Nueva parada en mi posicion", "{8AB4F8}+ Konumumda yeni durak" },
@@ -2307,7 +2305,14 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vrsta kazne mora biti 1 (plivanje) ili 2 (metenje).", "The punishment type must be 1 (swimming) or 2 (sweeping).", "Тип наказания должен быть 1 (плавание) или 2 (подметание).", "El tipo de castigo debe ser 1 (nadar) o 2 (barrer).", "Ceza turu 1 (yuzme) veya 2 (supurme) olmali." },
     { "Dok ste kaznjeni ne mozete uci u vozilo.", "You cannot enter a vehicle while punished.", "Во время наказания нельзя садиться в транспорт.", "No puedes subir a un vehiculo mientras estas castigado.", "Cezaliyken araca binemezsiniz." },
     { "Dok ste kaznjeni ne mozete koristiti komande ni chat.", "You cannot use commands or chat while punished.", "Во время наказания нельзя использовать команды и чат.", "No puedes usar comandos ni el chat mientras estas castigado.", "Cezaliyken komut ve sohbet kullanamazsiniz." },
-    { "Razlog:", "Reason:", "Prichina:", "Motivo:", "Sebep:" }
+    { "Razlog:", "Reason:", "Prichina:", "Motivo:", "Sebep:" },
+    { "  /kazni [id/ime] [1 plivanje / 2 metenje] [kolicina] [razlog], /oslobodi [id/ime]", "  /kazni [id/name] [1 swimming / 2 sweeping] [amount] [reason], /oslobodi [id/name]", "  /kazni [id/имя] [1 плавание / 2 подметание] [количество] [причина], /oslobodi [id/имя]", "  /kazni [id/nombre] [1 nadar / 2 barrer] [cantidad] [motivo], /oslobodi [id/nombre]", "  /kazni [id/isim] [1 yuzme / 2 supurme] [miktar] [sebep], /oslobodi [id/isim]" },
+    { "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj", "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj", "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj", "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj", "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj" },
+    { "Kredit mozete dobiti tek nakon %d sati igre.", "You can get a loan only after %d hours of play.", "Кредит можно получить только после %d часов игры.", "Solo puedes pedir un prestamo tras %d horas de juego.", "Kredi ancak %d saat oyundan sonra alinabilir." },
+    { "Ne mozete slati novac dok ne otplatite kredit.", "You cannot send money until you repay your loan.", "Нельзя переводить деньги, пока не погашен кредит.", "No puedes enviar dinero hasta pagar tu prestamo.", "Krediyi odeyene kadar para gonderemezsiniz." },
+    { "Mozete imati najvise %d kuce.", "You can own at most %d houses.", "Можно владеть не более чем %d домами.", "Puedes tener como maximo %d casas.", "En fazla %d eviniz olabilir." },
+    { "Mozete imati najvise %d garaze.", "You can own at most %d garages.", "Можно владеть не более чем %d гаражами.", "Puedes tener como maximo %d garajes.", "En fazla %d garajiniz olabilir." },
+    { "Fleeca banka", "Fleeca bank", "Банк Fleeca", "Banco Fleeca", "Fleeca bankasi" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

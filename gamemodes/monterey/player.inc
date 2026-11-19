@@ -15,6 +15,7 @@ public OnPlayerConnect(playerid)
     MapaBusTaxiUkloni(playerid);
     MapaCartierExtUkloni(playerid);
     MapaInternetKaficExtUkloni(playerid);
+    MapaFleecaBankaUkloni(playerid);
     MapaCentralBankUkloni(playerid);
     MapaCasinoExtUkloni(playerid);
     MapaMainStreetUkloni(playerid);
@@ -302,57 +303,59 @@ public OnPlayerCommandText(playerid, cmdtext[])
 
 CMD:help(playerid, params[])
 {
-    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Komande:"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Chat: /me [radnja], /do [opis], /setme [opis lika], /showme [id/ime]"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Govor: /w (sapat), /s ili /shout (vika), /ooc (izvan uloge)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Bez prijevoda: /t (govor), /wt (sapat), /st (vika)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Pretres: /frisk [id/ime]. HQ: F ili /ulaz"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Animacije: /anim (popis), /anim [broj], /anim 0 ili Space za prekid"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Kurva: ALT ili /kurva kod nje, truba iz vozila"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /motor (tipka 2), /svjetla, /prozor, /pojas, /zakljucaj, /prometna [id/ime]"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Vozilo: /tankaj (kod pumpe), /ukradi (bez kljuceva). LSPD: /provjeripojas [id/ime]"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Teritoriji: ALT ili /diler (kod dilera)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Trgovine: F za ulaz, ALT kod blagajne"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Salon automobila: ALT kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Opstina: ALT kod saltera (kazne, promjena imena, prodaja vozila)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Ostalo: /admini"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Statistika: /stats"));
-    if (gAdmin[playerid]) SendClientMessage(playerid, COLOR_INFO, T(playerid, "  Admin: /ahelp"));
-    return 1;
+    new list[4096], len = 0;
+    DodajStupac(list, len, T(playerid, "  Chat: /me [radnja], /do [opis], /setme [opis lika], /showme [id/ime]"));
+    DodajStupac(list, len, T(playerid, "  Govor: /w (sapat), /s ili /shout (vika), /ooc (izvan uloge)"));
+    DodajStupac(list, len, T(playerid, "  Bez prijevoda: /t (govor), /wt (sapat), /st (vika)"));
+    DodajStupac(list, len, T(playerid, "  Pretres: /frisk [id/ime]. HQ: F ili /ulaz"));
+    DodajStupac(list, len, T(playerid, "  Animacije: /anim (popis), /anim [broj], /anim 0 ili Space za prekid"));
+    DodajStupac(list, len, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
+    DodajStupac(list, len, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
+    DodajStupac(list, len, T(playerid, "  Kurva: ALT ili /kurva kod nje, truba iz vozila"));
+    DodajStupac(list, len, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
+    DodajStupac(list, len, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
+    DodajStupac(list, len, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
+    DodajStupac(list, len, T(playerid, "  Vozilo: /motor (tipka 2), /svjetla, /prozor, /pojas, /zakljucaj, /prometna [id/ime]"));
+    DodajStupac(list, len, T(playerid, "  Vozilo: /tankaj (kod pumpe), /ukradi (bez kljuceva). LSPD: /provjeripojas [id/ime]"));
+    DodajStupac(list, len, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
+    DodajStupac(list, len, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
+    DodajStupac(list, len, T(playerid, "  Teritoriji: ALT ili /diler (kod dilera)"));
+    DodajStupac(list, len, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
+    DodajStupac(list, len, T(playerid, "  Trgovine: F za ulaz, ALT kod blagajne"));
+    DodajStupac(list, len, T(playerid, "  Salon automobila: ALT kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
+    DodajStupac(list, len, T(playerid, "  Opstina: ALT kod saltera (kazne, promjena imena, prodaja vozila)"));
+    DodajStupac(list, len, T(playerid, "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)"));
+    DodajStupac(list, len, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
+    DodajStupac(list, len, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
+    DodajStupac(list, len, T(playerid, "  Ostalo: /admini"));
+    DodajStupac(list, len, T(playerid, "  Statistika: /stats"));
+    if (gAdmin[playerid]) DodajStupac(list, len, T(playerid, "  Admin: /ahelp"));
+    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, T(playerid, "Komande:"), list, T(playerid, "Zatvori"));
 }
 
 CMD:ahelp(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, 1)) return 1;
-    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Admin komande (razina %d - %s):"), gAdmin[playerid], gRankName[gAdmin[playerid]]);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /a [poruka] - admin chat"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /goto [id/ime] - teleport do igraca"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
+    new list[4096], len = 0, naslov[96];
+    format(naslov, sizeof naslov, T(playerid, "Admin komande (razina %d - %s):"), gAdmin[playerid], gRankName[gAdmin[playerid]]);
+    DodajStupac(list, len, T(playerid, "  /a [poruka] - admin chat"));
+    DodajStupac(list, len, T(playerid, "  /goto [id/ime] - teleport do igraca"));
+    DodajStupac(list, len, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
+    DodajStupac(list, len, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
+    DodajStupac(list, len, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
+    DodajStupac(list, len, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
+    DodajStupac(list, len, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));
+    DodajStupac(list, len, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
+    DodajStupac(list, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
+    DodajStupac(list, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
     {
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "  /pdint - teleport do PD enterijera"));
+        DodajStupac(list, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
     }
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
-    return 1;
+    DodajStupac(list, len, T(playerid, "  /kazni [id/ime] [1 plivanje / 2 metenje] [kolicina] [razlog], /oslobodi [id/ime]"));
+    DodajStupac(list, len, T(playerid, "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj"));
+    DodajStupac(list, len, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
+    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, naslov, list, T(playerid, "Zatvori"));
 }
 
 CMD:pay(playerid, params[]) return cmd_plati(playerid, params);
