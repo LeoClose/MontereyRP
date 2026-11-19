@@ -24,7 +24,6 @@
 #define KLAD_OK             "(CASE WHEN l.pick <= 3 THEN e.result = l.pick WHEN l.pick = 4 THEN (e.hscore + e.ascore) * 10 > l.line WHEN l.pick = 5 THEN (e.hscore + e.ascore) * 10 < l.line WHEN l.pick = 6 THEN e.hscore * 10 + l.line > e.ascore * 10 ELSE e.ascore * 10 + l.line > e.hscore * 10 END)"
 #define KLAD_PUSH           "(CASE WHEN l.pick IN (4, 5) THEN (e.hscore + e.ascore) * 10 = l.line WHEN l.pick = 6 THEN e.hscore * 10 + l.line = e.ascore * 10 WHEN l.pick = 7 THEN e.ascore * 10 + l.line = e.hscore * 10 ELSE 0 END)"
 #define KLAD_PAROVA         8
-#define KLAD_MIN_ULOG       10
 #define KLAD_MAX_ULOG       10000
 #define KLAD_MAX_KOEF       100000
 #define KLAD_MAX_DOBITAK    1000000
@@ -88,7 +87,6 @@ static const gKladTabovi[][] = { "Ponuda", "U igri", "Zavrseni" };
 static const gKladKategorije[][] = { "Sve", "Nogomet", "Kosarka", "Hokej", "Am. nogomet" };
 static const gKladKatSql[][] = { "1", "league IN ('EPL','LaLiga','SerieA','Bundes','Ligue1','UCL','UEL')", "league = 'NBA'", "league = 'NHL'", "league = 'NFL'" };
 static const gKladLige[][] = { "EPL", "LaLiga", "SerieA", "Bundes", "Ligue1", "UCL", "UEL" };
-static const gKladStupci[][] = { "hscore", "ascore", "tline", "odd_over", "odd_under", "sline", "odd_sph", "odd_spa" };
 static const gKladUlozi[] = { 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
 
 static DionicaNova(cijena, pocetna, pomak)
@@ -115,47 +113,25 @@ InitRacunalo()
     new koef = 100;
     for (new i = 0; i < KLAD_PAROVA; i++) koef = KladPomnozi(koef, 500);
     assert(koef == KLAD_MAX_KOEF && KladPomnozi(100, 250) == 250 && KladDobitak(KLAD_MAX_ULOG, KLAD_MAX_KOEF) == KLAD_MAX_DOBITAK);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_events (id TEXT PRIMARY KEY, league TEXT NOT NULL, home TEXT NOT NULL, away TEXT NOT NULL, start INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, result INTEGER NOT NULL DEFAULT 0, odd1 INTEGER NOT NULL DEFAULT 0, oddx INTEGER NOT NULL DEFAULT 0, odd2 INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_events (id TEXT PRIMARY KEY, league TEXT NOT NULL, home TEXT NOT NULL, away TEXT NOT NULL, start INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, result INTEGER NOT NULL DEFAULT 0, odd1 INTEGER NOT NULL DEFAULT 0, oddx INTEGER NOT NULL DEFAULT 0, odd2 INTEGER NOT NULL DEFAULT 0, updated INTEGER NOT NULL DEFAULT 0, hscore INTEGER NOT NULL DEFAULT 0, ascore INTEGER NOT NULL DEFAULT 0, tline INTEGER NOT NULL DEFAULT 0, odd_over INTEGER NOT NULL DEFAULT 0, odd_under INTEGER NOT NULL DEFAULT 0, sline INTEGER NOT NULL DEFAULT 0, odd_sph INTEGER NOT NULL DEFAULT 0, odd_spa INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_slips (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, stake INTEGER NOT NULL, odds INTEGER NOT NULL, payout INTEGER NOT NULL, status INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, settled INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bet_legs (slip INTEGER NOT NULL, event TEXT NOT NULL, pick INTEGER NOT NULL, odd INTEGER NOT NULL, line INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (slip, event, pick))"));
-    new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT line FROM bet_legs LIMIT 1");
-    if (stupac) DB_FreeResultSet(stupac);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE bet_legs ADD COLUMN line INTEGER NOT NULL DEFAULT 0"));
     new staro = gettime() - KLAD_CUVAJ_DANA * 86400;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_legs WHERE slip IN (SELECT id FROM bet_slips WHERE status != 0 AND settled > 0 AND settled < %d)", staro));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_slips WHERE status != 0 AND settled > 0 AND settled < %d", staro));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bet_events WHERE status >= 2 AND start < %d AND id NOT IN (SELECT event FROM bet_legs)", staro));
-    for (new c = 0; c < sizeof gKladStupci; c++)
-    {
-        stupac = DB_ExecuteQuery(gDB, "SELECT %s FROM bet_events LIMIT 1", gKladStupci[c]);
-        if (stupac) DB_FreeResultSet(stupac);
-        else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE bet_events ADD COLUMN %s INTEGER NOT NULL DEFAULT 0", gKladStupci[c]));
-    }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS ads (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_holdings (account INTEGER NOT NULL, stock INTEGER NOT NULL, shares INTEGER NOT NULL, PRIMARY KEY (account, stock))"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_holdings (account INTEGER NOT NULL, stock INTEGER NOT NULL, shares INTEGER NOT NULL, cost INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (account, stock))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS stock_candles (id INTEGER PRIMARY KEY AUTOINCREMENT, stock INTEGER NOT NULL, o INTEGER NOT NULL, h INTEGER NOT NULL, l INTEGER NOT NULL, c INTEGER NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_posts (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL, shared INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_likes (post INTEGER NOT NULL, account INTEGER NOT NULL, PRIMARY KEY (post, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_accounts (account INTEGER PRIMARY KEY, created INTEGER NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO social_accounts (account, created) SELECT DISTINCT owner, %d FROM furniture WHERE model = %d", gettime(), RACUNALO_MODEL));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_friends (a INTEGER NOT NULL, b INTEGER NOT NULL, accepted INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL, PRIMARY KEY (a, b))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_comments (id INTEGER PRIMARY KEY AUTOINCREMENT, post INTEGER NOT NULL, account INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_blocks (a INTEGER NOT NULL, b INTEGER NOT NULL, PRIMARY KEY (a, b))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, owner INTEGER NOT NULL, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_group_members (grp INTEGER NOT NULL, account INTEGER NOT NULL, PRIMARY KEY (grp, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_group_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, grp INTEGER NOT NULL, sender INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL)"));
-    stupac = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM pragma_table_info('social_posts') WHERE name = 'shared'");
-    if (!DB_GetFieldInt(stupac, 0)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE social_posts ADD COLUMN shared INTEGER NOT NULL DEFAULT 0"));
-    DB_FreeResultSet(stupac);
-    stupac = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM sqlite_master WHERE name = 'bet_legs' AND sql LIKE '%%PRIMARY KEY (slip, event)%%'");
-    if (DB_GetFieldInt(stupac, 0))
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE bet_legs RENAME TO bet_legs_staro"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE bet_legs (slip INTEGER NOT NULL, event TEXT NOT NULL, pick INTEGER NOT NULL, odd INTEGER NOT NULL, line INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (slip, event, pick))"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_legs SELECT slip, event, pick, odd, line FROM bet_legs_staro"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DROP TABLE bet_legs_staro"));
-    }
-    DB_FreeResultSet(stupac);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS social_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, sender INTEGER NOT NULL, receiver INTEGER NOT NULL, text TEXT NOT NULL, created INTEGER NOT NULL, seen INTEGER NOT NULL DEFAULT 0)"));
     for (new d = 0; d < sizeof gDionicaIme; d++)
     {
@@ -166,14 +142,7 @@ InitRacunalo()
         gDionica[d] = gSvijecaBroj[d] ? gSvijeca[d][gSvijecaBroj[d] - 1][SV_C] : gDionicaPocetna[d];
         for (new k = 0; k < 4; k++) gTrenutna[d][k] = gDionica[d];
     }
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT cost FROM stock_holdings LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE stock_holdings ADD COLUMN cost INTEGER NOT NULL DEFAULT 0"));
-        for (new d = 0; d < sizeof gDionicaIme; d++) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE stock_holdings SET cost = shares * %d / 100 WHERE stock = %d", gDionica[d], d));
-    }
-    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'pc_katalog'");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'pc_katalog'");
     new bool:dodano = DB_GetRowCount(res) > 0;
     DB_FreeResultSet(res);
     if (dodano) return;
@@ -214,36 +183,19 @@ static Float:PcH(Float:h) return gPcPuno ? h * PC_SY : h;
 
 static PlayerText:PcSlika(playerid, Float:x, Float:y, Float:w, Float:h, boja, const slika[] = "LD_SPAC:white")
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, PC_X + PcX(x), PC_Y + PcY(y), slika);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, PcW(w), PcH(h));
-    PlayerTextDrawColour(playerid, td, boja);
-    gPcTd[playerid][gPcBroj[playerid]++] = td;
-    return td;
+    return gPcTd[playerid][gPcBroj[playerid]++] = TdSlika(playerid, PC_X + PcX(x), PC_Y + PcY(y), PcW(w), PcH(h), boja, slika);
 }
 
 static PlayerText:PcKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, PC_X + PcX(x), PC_Y + PcY(y), "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, PcW(w), PcH(h));
-    PlayerTextDrawColour(playerid, td, boja);
-    gPcTd[playerid][gPcBroj[playerid]++] = td;
-    return td;
+    return PcSlika(playerid, x, y, w, h, boja);
 }
 
 static PlayerText:PcTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_FONT:font = TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, PC_X + PcX(x), PC_Y + PcY(y), tekst);
-    PlayerTextDrawFont(playerid, td, font);
-    PlayerTextDrawLetterSize(playerid, td, PcW(sirina), PcH(visina));
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawSetOutline(playerid, td, 0);
+    new PlayerText:td = TdTekst(playerid, PC_X + PcX(x), PC_Y + PcY(y), tekst, boja, PcW(sirina), PcH(visina), font, poravnanje);
     PlayerTextDrawSetProportional(playerid, td, true);
-    PlayerTextDrawAlignment(playerid, td, poravnanje);
-    gPcTd[playerid][gPcBroj[playerid]++] = td;
-    return td;
+    return gPcTd[playerid][gPcBroj[playerid]++] = td;
 }
 
 static PlayerText:PcGumb(playerid, Float:x, Float:y, Float:w, boja, const tekst[] = "_", tekstBoja = 0xFFFFFFFF)
@@ -582,7 +534,8 @@ static LsFeed(playerid)
     format(uvjet, sizeof uvjet, "WHERE p.account NOT IN (SELECT b FROM social_blocks WHERE a = %d UNION SELECT a FROM social_blocks WHERE b = %d)", me, me);
     if (gLsSamoPrijatelji[playerid]) format(uvjet, sizeof uvjet, "%s AND (p.account = %d OR p.account IN (SELECT CASE WHEN a = %d THEN b ELSE a END FROM social_friends WHERE (a = %d OR b = %d) AND accepted = 1))", uvjet, me, me, me, me);
     new n = LsObjave(playerid, uvjet, 0, 0);
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nema objava. Budite prvi!"));
+    if (n) PcPostavi(playerid, PTD_SADRZAJ, "_");
+    else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Jos nema objava. Budite prvi!"));
     LsAkcije(playerid, T(playerid, "Objavi"), gLsSamoPrijatelji[playerid] ? T(playerid, "Prikaz: prijatelji") : T(playerid, "Prikaz: svi"));
 }
 
@@ -668,7 +621,8 @@ static LsPrijatelji(playerid)
         DB_FreeResultSet(res);
         n += broj;
     }
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nemate prijatelja."));
+    if (n) PcPostavi(playerid, PTD_SADRZAJ, "_");
+    else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Jos nemate prijatelja."));
     if (gLsOdabran[playerid]) LsAkcije(playerid, T(playerid, "Prihvati"), T(playerid, "Odbij"));
     else LsAkcije(playerid, T(playerid, "Dodaj prijatelja"));
 }
@@ -692,7 +646,8 @@ static LsPoruke(playerid)
         LsRed(playerid, r, acc, acc, red);
     }
     DB_FreeResultSet(res);
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Jos nemate poruka."));
+    if (n) PcPostavi(playerid, PTD_SADRZAJ, "_");
+    else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Jos nemate poruka."));
     LsAkcije(playerid, T(playerid, "Nova poruka"));
 }
 
@@ -787,7 +742,8 @@ static LsDodaj(playerid)
         LsRed(playerid, r, acc, acc, red);
     }
     DB_FreeResultSet(res);
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Svi vasi prijatelji su vec u grupi."));
+    if (n) PcPostavi(playerid, PTD_SADRZAJ, "_");
+    else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Svi vasi prijatelji su vec u grupi."));
     LsAkcije(playerid, T(playerid, "Natrag"));
 }
 
@@ -856,7 +812,8 @@ static LsGrupe(playerid)
         LsRed(playerid, r, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 0), red);
     }
     DB_FreeResultSet(res);
-    PcPostavi(playerid, PTD_SADRZAJ, n ? ("_") : T(playerid, "Niste ni u jednoj grupi."));
+    if (n) PcPostavi(playerid, PTD_SADRZAJ, "_");
+    else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Niste ni u jednoj grupi."));
     LsAkcije(playerid, T(playerid, "Nova grupa"));
 }
 
@@ -1482,7 +1439,8 @@ static PcEkran(playerid, ekran)
                     PcPostavi(playerid, PTD_OBJAVA + r, red);
                 }
                 DB_FreeResultSet(moji);
-                strcat(tekst, n ? ("_") : T(playerid, "Nemate aktivnih oglasa."));
+                if (n) strcat(tekst, "_");
+                else strcat(tekst, T(playerid, "Nemate aktivnih oglasa."));
                 PcPostavi(playerid, PTD_AKCIJA, T(playerid, "Svi oglasi"));
                 if (gPcOglasOdabran[playerid]) PcPostavi(playerid, PTD_AKCIJA + 1, T(playerid, "Obrisi oglas"));
                 PcPostavi(playerid, PTD_SADRZAJ, tekst);
@@ -2352,9 +2310,7 @@ static KladUplati(playerid)
     if (!BankaPromijeni(playerid, -ulog, "Uplata oklade")) return 1;
     BlagajnaDodaj(ulog);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_slips (account, stake, odds, payout, status, created) VALUES (%d, %d, %d, %d, 0, %d)", gAccountId[playerid], ulog, koef, dobitak, gettime()));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-    new listic = DB_GetFieldInt(res, 0);
-    DB_FreeResultSet(res);
+    new listic = ZadnjiId();
     for (new i = 0; i < gKladN[playerid]; i++)
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bet_legs (slip, event, pick, odd, line) VALUES (%d, '%q', %d, %d, %d)", listic, gKladPar[playerid][i], gKladTip[playerid][i], gKladKoefPar[playerid][i], gKladLin[playerid][i]));
     gKladN[playerid] = 0;

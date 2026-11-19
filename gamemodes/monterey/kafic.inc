@@ -193,9 +193,7 @@ DLG:apanel_kafic(playerid, response, listitem)
         while (k < KAFIC_MAX && gKafic[k][kfIma]) k++;
         if (k == KAFIC_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je najveci broj blagajnika.")), ShowKafici(playerid);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO cafe_cashiers (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, unutra, svijet));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gKafic[k][kfDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gKafic[k][kfDb] = ZadnjiId();
         gKafic[k][kfX] = x;
         gKafic[k][kfY] = y;
         gKafic[k][kfZ] = z;
@@ -223,9 +221,7 @@ DLG:apanel_kafic(playerid, response, listitem)
         y += 0.7 * floatcos(-a, degrees);
         z -= 0.2;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO cafe_pcs (cashier, x, y, z, a, interior, world) VALUES (%d, %f, %f, %f, %f, %d, %d)", gKafic[k][kfDb], x, y, z, a + 180.0, unutra, svijet));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gKaficPc[p][kpDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gKaficPc[p][kpDb] = ZadnjiId();
         gKaficPc[p][kpKafic] = gKafic[k][kfDb];
         gKaficPc[p][kpX] = x;
         gKaficPc[p][kpY] = y;

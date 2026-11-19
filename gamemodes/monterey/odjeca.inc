@@ -390,11 +390,7 @@ static OdjecaOtvori(playerid, s)
     SetPlayerPos(playerid, gOdj[s][odKx], gOdj[s][odKy], gOdj[s][odKz]);
     SetPlayerFacingAngle(playerid, gOdj[s][odKa]);
     TogglePlayerControllable(playerid, false);
-    new PlayerText:td = CreatePlayerTextDraw(playerid, 465.0, 118.0, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, 170.0, 225.0);
-    PlayerTextDrawColour(playerid, td, 0x101418DD);
-    gOdjecaTd[playerid][gOdjecaBroj[playerid]++] = td;
+    gOdjecaTd[playerid][gOdjecaBroj[playerid]++] = TdSlika(playerid, 465.0, 118.0, 170.0, 225.0, 0x101418DD);
     OdjecaGumb(playerid, 550.0, 124.0, t == ODJ_FRIZER ? T(playerid, "FRIZER") : T(playerid, "ODJECA"), 0x00000000, 160.0, false);
     gOdjecaGumb[playerid][OTD_ODJECA] = PlayerText:INVALID_TEXT_DRAW;
     gOdjecaGumb[playerid][OTD_KAPE] = PlayerText:INVALID_TEXT_DRAW;

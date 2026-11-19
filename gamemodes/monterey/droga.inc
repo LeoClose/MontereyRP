@@ -518,10 +518,7 @@ DLG:lab_kol(playerid, response, const inputtext[])
 
 static PlayerText:MethKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
+    new PlayerText:td = TdSlika(playerid, x, y, w, h, boja);
     PlayerTextDrawShow(playerid, td);
     return td;
 }

@@ -61,22 +61,10 @@ InitZlatara()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS jewelry_shops (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS fences (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gold_price (id INTEGER PRIMARY KEY, price INTEGER NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS jewelry_watch (account INTEGER PRIMARY KEY, item INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0, fit INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT skin, sx, sy, sz FROM jewelry_watch LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN skin INTEGER NOT NULL DEFAULT -1"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sx REAL NOT NULL DEFAULT 1"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sy REAL NOT NULL DEFAULT 1"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN sz REAL NOT NULL DEFAULT 1"));
-    }
-    res = DB_ExecuteQuery(gDB, "SELECT neck FROM jewelry_watch LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE jewelry_watch ADD COLUMN neck INTEGER NOT NULL DEFAULT 0"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS jewelry_watch (account INTEGER PRIMARY KEY, item INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0, fit INTEGER NOT NULL DEFAULT 0, skin INTEGER NOT NULL DEFAULT -1, sx REAL NOT NULL DEFAULT 1, sy REAL NOT NULL DEFAULT 1, sz REAL NOT NULL DEFAULT 1, neck INTEGER NOT NULL DEFAULT 0)"));
     AddSimpleModel(-1, 19941, MODEL_LANAC, "nakit/zlatni_lanac.dff", "nakit/zlatni_lanac.txd");
     AddSimpleModel(-1, 19941, MODEL_OGRLICA, "nakit/ogrlica.dff", "nakit/ogrlica.txd");
-    res = DB_ExecuteQuery(gDB, "SELECT price FROM gold_price WHERE id = 1");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT price FROM gold_price WHERE id = 1");
     gZlato = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : ZLATO_POCETNA;
     DB_FreeResultSet(res);
     res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, Aktor, ax, ay, az, aa FROM jewelry_shops ORDER BY id LIMIT %d", ZLATARA_MAX);

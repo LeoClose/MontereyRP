@@ -205,20 +205,12 @@ static PikadoTdUnisti(playerid)
 
 static PlayerText:PikadoPravokutnik(playerid, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, -50.0, -50.0, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    return td;
+    return TdSlika(playerid, -50.0, -50.0, w, h, boja);
 }
 
 static PlayerText:PikadoTocka(playerid, Float:r, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, -50.0, -50.0, "LD_BEAT:chit");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, r * 2.0, r * 2.0);
-    PlayerTextDrawColour(playerid, td, boja);
-    return td;
+    return TdSlika(playerid, -50.0, -50.0, r * 2.0, r * 2.0, boja, "LD_BEAT:chit");
 }
 
 static PikadoTdStvori(playerid)
@@ -637,9 +629,7 @@ DLG:apanel_pikado(playerid, response, listitem)
         GetPlayerFacingAngle(playerid, a);
         z -= 1.0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO dart_boards (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid)));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gPikado[s][pkDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gPikado[s][pkDb] = ZadnjiId();
         gPikado[s][pkX] = x;
         gPikado[s][pkY] = y;
         gPikado[s][pkZ] = z;

@@ -22,26 +22,14 @@ static bool:gLoginFade[MAX_PLAYERS], PlayerText:gLoginTd[MAX_PLAYERS][LOGIN_TD],
 
 static PlayerText:LoginKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    gLoginTd[playerid][gLoginBroj[playerid]++] = td;
-    return td;
+    return gLoginTd[playerid][gLoginBroj[playerid]++] = TdSlika(playerid, x, y, w, h, boja);
 }
 
 static PlayerText:LoginTekst(playerid, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_FONT:font)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, LOGIN_SREDINA, y, tekst);
-    PlayerTextDrawFont(playerid, td, font);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawSetOutline(playerid, td, 0);
+    new PlayerText:td = TdTekst(playerid, LOGIN_SREDINA, y, tekst, boja, sirina, visina, font, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawSetProportional(playerid, td, true);
-    PlayerTextDrawAlignment(playerid, td, TEXT_DRAW_ALIGN_CENTER);
-    gLoginTd[playerid][gLoginBroj[playerid]++] = td;
-    return td;
+    return gLoginTd[playerid][gLoginBroj[playerid]++] = td;
 }
 
 LoginTd(playerid)

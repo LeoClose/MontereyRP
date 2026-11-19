@@ -30,7 +30,7 @@ InitSalon()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS dealerships (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, sx REAL NOT NULL, sy REAL NOT NULL, sz REAL NOT NULL, sa REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS dealership_cars (dealer INTEGER NOT NULL, model INTEGER NOT NULL, price INTEGER NOT NULL, PRIMARY KEY (dealer, model))"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, model INTEGER NOT NULL, c1 INTEGER NOT NULL, c2 INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, price INTEGER NOT NULL DEFAULT 0, spot INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_vehicles (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, model INTEGER NOT NULL, c1 INTEGER NOT NULL, c2 INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, price INTEGER NOT NULL DEFAULT 0, spot INTEGER NOT NULL DEFAULT 0, health REAL NOT NULL DEFAULT 1000, panels INTEGER NOT NULL DEFAULT 0, doors INTEGER NOT NULL DEFAULT 0, lights INTEGER NOT NULL DEFAULT 0, tires INTEGER NOT NULL DEFAULT 0, garage INTEGER NOT NULL DEFAULT 0)"));
 
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, sx, sy, sz, sa FROM dealerships ORDER BY id LIMIT %d", SALON_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
@@ -49,19 +49,6 @@ InitSalon()
     }
     DB_FreeResultSet(res);
 
-    res = DB_ExecuteQuery(gDB, "SELECT health FROM player_vehicles LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN health REAL NOT NULL DEFAULT 1000"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN panels INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN doors INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN lights INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN tires INTEGER NOT NULL DEFAULT 0"));
-    }
-    res = DB_ExecuteQuery(gDB, "SELECT garage FROM player_vehicles LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE player_vehicles ADD COLUMN garage INTEGER NOT NULL DEFAULT 0"));
     res = DB_ExecuteQuery(gDB, "SELECT id, owner, model, c1, c2, x, y, z, a, price, health, panels, doors, lights, tires, garage FROM player_vehicles");
     if (DB_GetRowCount(res)) do
     {

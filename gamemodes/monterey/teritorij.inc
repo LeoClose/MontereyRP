@@ -2,7 +2,6 @@
 #define MAX_TER_NPC         4
 #define TER_NPC_RANGE       3.0
 #define TER_OBRANA_RANGE    60.0
-#define TER_PRIBLIZI_SE     12.0
 #define TER_NAPAD_MS        60000
 #define TER_MIN_NAPADACA    3
 #define TER_ODABRANIH       2

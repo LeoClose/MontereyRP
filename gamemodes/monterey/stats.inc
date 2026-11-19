@@ -54,42 +54,6 @@ static AfkProvjeri(playerid)
     SetTimerEx("KickajIgraca", 500, false, "i", playerid);
 }
 
-InitStats()
-{
-    return StatsEnsureColumn("level", "INTEGER NOT NULL DEFAULT 1")
-        && StatsEnsureColumn("respekti", "INTEGER NOT NULL DEFAULT 0")
-        && StatsEnsureColumn("playtime", "INTEGER NOT NULL DEFAULT 0")
-        && StatsEnsureColumn("job", "INTEGER NOT NULL DEFAULT 0")
-        && StatsEnsureColumn("payday_earn", "INTEGER NOT NULL DEFAULT 0");
-}
-
-static StatsEnsureColumn(const name[], const definition[])
-{
-    new DBResult:res = DB_ExecuteQuery(gDB, "PRAGMA table_info(accounts)");
-    if (res == DBResult:0) return 0;
-    new field[32], bool:found;
-    if (DB_GetRowCount(res)) do
-    {
-        DB_GetFieldString(res, 1, field, sizeof field);
-        if (!strcmp(field, name))
-        {
-            found = true;
-            break;
-        }
-    } while (DB_SelectNextRow(res));
-    DB_FreeResultSet(res);
-
-    if (found) return 1;
-    res = DB_ExecuteQuery(gDB, "ALTER TABLE accounts ADD COLUMN %s %s", name, definition);
-    if (res == DBResult:0)
-    {
-        printf("[Stats] Dodavanje stupca %s nije uspjelo.", name);
-        return 0;
-    }
-    DB_FreeResultSet(res);
-    return 1;
-}
-
 StatsConnect(playerid)
 {
     gStatsLevel[playerid] = 1;
@@ -264,9 +228,10 @@ static StatsPrikazi(playerid, stranica)
         T(playerid, "Imovina"), T(playerid, "Vozila (ID)"), vozila, T(playerid, "Kuce (ID)"), kuce);
     gStatsStranica[playerid] = stranica;
     gStatsImaSljedecu[playerid] = brojKuca > STATS_KUCA_PO_STRANICI;
+    new zatvori[TEKST_LEN];
+    if (gStatsImaSljedecu[playerid]) strcat(zatvori, T(playerid, "Zatvori"));
     return PrikaziDialog(playerid, DLG_STATS, DIALOG_STYLE_MSGBOX, T(playerid, "Statistika"), body,
-        T(playerid, gStatsImaSljedecu[playerid] ? ("Sljedeca") : ("U redu")),
-        gStatsImaSljedecu[playerid] ? T(playerid, "Zatvori") : (""));
+        T(playerid, gStatsImaSljedecu[playerid] ? ("Sljedeca") : ("U redu")), zatvori);
 }
 
 CMD:stats(playerid, params[])

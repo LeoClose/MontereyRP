@@ -202,12 +202,7 @@ static MobitelUcitaj(playerid)
 
 static PlayerText:MobitelKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, MOBITEL_X + x, MOBITEL_Y + y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    gMobitelTd[playerid][gMobitelBroj[playerid]++] = td;
-    return td;
+    return gMobitelTd[playerid][gMobitelBroj[playerid]++] = TdSlika(playerid, MOBITEL_X + x, MOBITEL_Y + y, w, h, boja);
 }
 
 static PlayerText:MobitelTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT)

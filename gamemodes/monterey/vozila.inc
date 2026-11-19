@@ -1284,7 +1284,6 @@ static KradjaKorak(playerid)
 #define DASH_TD             (DT_LAMPICE + sizeof gDashDio)
 #define DASH_BOJA_SLABO     0x2A3644CC
 #define DASH_BOJA_LABEL     0x8AA0B6FF
-#define DASH_BOJA_AKCENT    0x5B8DBFFF
 #define DASH_BOJA_ZELENO    0x4CD964FF
 #define DASH_BOJA_ZUTO      0xF5A623FF
 #define DASH_BOJA_CRVENO    0xE5484DFF
@@ -1309,31 +1308,16 @@ static const gDashDio[][5] = {
 };
 static PlayerText:gDash[MAX_PLAYERS][DASH_TD], gDashV[MAX_PLAYERS], gDashStanje[MAX_PLAYERS][DS_BROJ];
 
-static PlayerText:DashSlika(playerid, Float:x, Float:y, Float:w, Float:h, boja, const slika[] = "LD_SPAC:white")
-{
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, slika);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    return td;
-}
-
 static PlayerText:DashTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_CENTER, TEXT_DRAW_FONT:font = TEXT_DRAW_FONT_2, obrub = 0)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
-    PlayerTextDrawFont(playerid, td, font);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawSetOutline(playerid, td, obrub);
+    new PlayerText:td = TdTekst(playerid, x, y, tekst, boja, sirina, visina, font, poravnanje, obrub);
     PlayerTextDrawBackgroundColour(playerid, td, 0x00000099);
-    PlayerTextDrawAlignment(playerid, td, poravnanje);
     return td;
 }
 
 static PlayerText:DashKrug(playerid, Float:cx, Float:cy, Float:r, boja)
 {
-    return DashSlika(playerid, cx - r * DASH_ASP, cy - r, 2.0 * r * DASH_ASP, 2.0 * r, boja, "LD_POOL:ball");
+    return TdSlika(playerid, cx - r * DASH_ASP, cy - r, 2.0 * r * DASH_ASP, 2.0 * r, boja, "LD_POOL:ball");
 }
 
 static DashTocka(Float:cx, Float:cy, Float:r, Float:kut, &Float:x, &Float:y)
@@ -1364,7 +1348,7 @@ static DashBrojcanik(playerid, Float:cx, prsten, lice, crtica, broj, korak, crve
     {
         new Float:kut = -120.0 + 30.0 * float(i);
         DashTocka(cx, DASH_GY, DASH_R - 4.0, kut, x, y);
-        gDash[playerid][crtica + i] = DashSlika(playerid, x - 0.9, y - 0.9, 1.8, 1.8, i >= crveno ? DASH_BOJA_CRVENO : DASH_BOJA_CRTICA);
+        gDash[playerid][crtica + i] = TdSlika(playerid, x - 0.9, y - 0.9, 1.8, 1.8, i >= crveno ? DASH_BOJA_CRVENO : DASH_BOJA_CRTICA);
         DashTocka(cx, DASH_GY, DASH_R - 10.5, kut, x, y);
         valstr(tekst, i * korak);
         gDash[playerid][broj + i] = DashTekst(playerid, x, y - 2.4, tekst, i >= crveno ? DASH_BOJA_CRVENO : DASH_BOJA_CRTICA, 0.11, 0.5);
@@ -1391,27 +1375,27 @@ static DashPokazi(playerid, v)
     for (new k = 0; k < DS_BROJ; k++) gDashStanje[playerid][k] = -1;
     new skala = DashSkala(v);
     gDashStanje[playerid][DS_SKALA] = skala;
-    gDash[playerid][DT_POZADINA] = DashSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 448.0 - DASH_GY + 20.0, DASH_BOJA_POZADINA);
-    gDash[playerid][DT_RUB] = DashSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 1.0, DASH_BOJA_PRSTEN);
+    gDash[playerid][DT_POZADINA] = TdSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 448.0 - DASH_GY + 20.0, DASH_BOJA_POZADINA);
+    gDash[playerid][DT_RUB] = TdSlika(playerid, DASH_TX, DASH_GY - 20.0, DASH_SX - DASH_TX, 1.0, DASH_BOJA_PRSTEN);
     DashBrojcanik(playerid, DASH_TX, DT_T_PRSTEN, DT_T_LICE, DT_T_CRTICA, DT_T_BROJ, 1, 7);
     DashBrojcanik(playerid, DASH_SX, DT_S_PRSTEN, DT_S_LICE, DT_S_CRTICA, DT_S_BROJ, skala / 8, DASH_CRTICA);
     for (new i = 0; i < DASH_KAZ; i++)
     {
-        gDash[playerid][DT_T_KAZ + i] = DashSlika(playerid, DASH_TX, DASH_GY, 2.0, 2.0, DASH_BOJA_KAZALJKA);
-        gDash[playerid][DT_S_KAZ + i] = DashSlika(playerid, DASH_SX, DASH_GY, 2.0, 2.0, DASH_BOJA_KAZALJKA);
+        gDash[playerid][DT_T_KAZ + i] = TdSlika(playerid, DASH_TX, DASH_GY, 2.0, 2.0, DASH_BOJA_KAZALJKA);
+        gDash[playerid][DT_S_KAZ + i] = TdSlika(playerid, DASH_SX, DASH_GY, 2.0, 2.0, DASH_BOJA_KAZALJKA);
     }
     gDash[playerid][DT_T_GLAVA] = DashKrug(playerid, DASH_TX, DASH_GY, 3.0, DASH_BOJA_PRSTEN);
     gDash[playerid][DT_S_GLAVA] = DashKrug(playerid, DASH_SX, DASH_GY, 3.0, DASH_BOJA_PRSTEN);
     gDash[playerid][DT_T_OZNAKA] = DashTekst(playerid, DASH_TX, DASH_GY - 12.0, "x1000 rpm", DASH_BOJA_LABEL, 0.1, 0.45);
     gDash[playerid][DT_S_OZNAKA] = DashTekst(playerid, DASH_SX, DASH_GY - 12.0, "km/h", DASH_BOJA_LABEL, 0.1, 0.45);
-    gDash[playerid][DT_SAT_POZ] = DashSlika(playerid, DASH_TX - 11.0, DASH_GY + 12.5, 22.0, 7.0, DASH_EKRAN);
+    gDash[playerid][DT_SAT_POZ] = TdSlika(playerid, DASH_TX - 11.0, DASH_GY + 12.5, 22.0, 7.0, DASH_EKRAN);
     gDash[playerid][DT_SAT] = DashTekst(playerid, DASH_TX, DASH_GY + 13.3, "_", 0xFFFFFFFF, 0.13, 0.6);
-    gDash[playerid][DT_KM_POZ] = DashSlika(playerid, DASH_SX - 15.0, DASH_GY + 12.5, 30.0, 7.0, DASH_EKRAN);
+    gDash[playerid][DT_KM_POZ] = TdSlika(playerid, DASH_SX - 15.0, DASH_GY + 12.5, 30.0, 7.0, DASH_EKRAN);
     gDash[playerid][DT_KM] = DashTekst(playerid, DASH_SX, DASH_GY + 13.3, "_", 0xFFFFFFFF, 0.12, 0.6);
     for (new d = 0; d < sizeof gDashDio; d++)
     {
         new l = gDashDio[d][0], Float:x = l == 4 ? 315.0 : 308.5 + 13.0 * float(l % 2), Float:y = DASH_GY - 12.0 + 12.0 * float(l / 2);
-        gDash[playerid][DT_LAMPICE + d] = DashSlika(playerid, x + float(gDashDio[d][1]), y + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
+        gDash[playerid][DT_LAMPICE + d] = TdSlika(playerid, x + float(gDashDio[d][1]), y + float(gDashDio[d][2]), float(gDashDio[d][3]), float(gDashDio[d][4]), DASH_BOJA_SLABO);
     }
     for (new t = 0; t < DASH_TD; t++)
     {

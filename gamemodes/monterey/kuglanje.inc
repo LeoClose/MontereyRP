@@ -643,9 +643,7 @@ DLG:apanel_kuglanje(playerid, response, listitem)
         GetPlayerFacingAngle(playerid, a);
         z -= 1.0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bowling_lanes (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid)));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gKg[s][kgDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gKg[s][kgDb] = ZadnjiId();
         gKg[s][kgX] = x;
         gKg[s][kgY] = y;
         gKg[s][kgZ] = z;

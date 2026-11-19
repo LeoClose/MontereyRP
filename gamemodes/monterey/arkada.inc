@@ -112,10 +112,7 @@ static PlayerText:ArkTekst(playerid, Float:x, Float:y, const tekst[], Float:vel,
 
 static PlayerText:ArkSprite(playerid, Float:x, Float:y, Float:w, Float:h, const tex[], boja, bool:prikazi = true)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tex);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
+    new PlayerText:td = TdSlika(playerid, x, y, w, h, boja, tex);
     if (prikazi) PlayerTextDrawShow(playerid, td);
     gArkTd[playerid][gArkBr[playerid]++] = td;
     return td;
@@ -698,9 +695,7 @@ DLG:apanel_arkada(playerid, response, listitem)
         y += floatcos(a, degrees) * 1.0;
         z -= 1.0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO arcade_machines (x, y, z, a, interior, world, game) VALUES (%f, %f, %f, %f, %d, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), listitem));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gArk[m][amDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gArk[m][amDb] = ZadnjiId();
         gArk[m][amX] = x;
         gArk[m][amY] = y;
         gArk[m][amZ] = z;

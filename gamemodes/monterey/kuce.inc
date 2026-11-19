@@ -29,24 +29,11 @@ static gKucaPonuda[MAX_PLAYERS], gApKuca[MAX_PLAYERS], gKucaSpawn[MAX_PLAYERS], 
 
 InitKuce()
 {
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, model INTEGER NOT NULL DEFAULT 0, price INTEGER NOT NULL, owner INTEGER NOT NULL DEFAULT 0, snap INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT interior, rent FROM houses LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN interior INTEGER NOT NULL DEFAULT -1"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN rent INTEGER NOT NULL DEFAULT 0"));
-    }
-    res = DB_ExecuteQuery(gDB, "SELECT locked FROM houses LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN locked INTEGER NOT NULL DEFAULT 1"));
-    res = DB_ExecuteQuery(gDB, "SELECT size FROM houses LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE houses ADD COLUMN size INTEGER NOT NULL DEFAULT 1"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, model INTEGER NOT NULL DEFAULT 0, price INTEGER NOT NULL, owner INTEGER NOT NULL DEFAULT 0, snap INTEGER NOT NULL DEFAULT 0, interior INTEGER NOT NULL DEFAULT -1, rent INTEGER NOT NULL DEFAULT 0, locked INTEGER NOT NULL DEFAULT 1, size INTEGER NOT NULL DEFAULT 1)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS house_renters (house INTEGER NOT NULL, account INTEGER NOT NULL, paid INTEGER NOT NULL, PRIMARY KEY (house, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_spawn (account INTEGER PRIMARY KEY, house INTEGER NOT NULL)"));
     KuceUvezi();
-    res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked, h.size FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked, h.size FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKuca[k][kuDb] = DB_GetFieldInt(res, 0);

@@ -187,14 +187,12 @@ public OnGameModeInit()
             zatvor INTEGER NOT NULL DEFAULT 0,\
             level INTEGER NOT NULL DEFAULT 1,\
             respekti INTEGER NOT NULL DEFAULT 0,\
-            playtime INTEGER NOT NULL DEFAULT 0\
+            playtime INTEGER NOT NULL DEFAULT 0,\
+            vozacka INTEGER NOT NULL DEFAULT 0,\
+            oruzje_dozvola INTEGER NOT NULL DEFAULT 0,\
+            job INTEGER NOT NULL DEFAULT 0,\
+            payday_earn INTEGER NOT NULL DEFAULT 0\
         )"));
-    if (!InitStats())
-    {
-        print("[Stats] Nije moguce pripremiti bazu statistike. Server se gasi.");
-        SendRconCommand("exit");
-        return 0;
-    }
     TekstPokreni();
     InitSteta();
     InitDialog();
@@ -299,6 +297,8 @@ public OnGameModeInit()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS police_records_acc ON police_records (account)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS phone_messages_acc ON phone_messages (account)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS stock_candles_stock ON stock_candles (stock)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_group_messages_grp ON social_group_messages (grp, id)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS locker_log_org ON locker_log (org, id)"));
     SetTimer("Sekunda", 1000, true);
 
     Ime = TextDrawCreate(580.0, 20.0, "Monterey");

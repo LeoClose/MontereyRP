@@ -255,6 +255,27 @@ bool:ProvjeriBroj(const s[])
     return true;
 }
 
+PlayerText:TdSlika(playerid, Float:x, Float:y, Float:w, Float:h, boja, const slika[] = "LD_SPAC:white")
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, slika);
+    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
+    PlayerTextDrawTextSize(playerid, td, w, h);
+    PlayerTextDrawColour(playerid, td, boja);
+    return td;
+}
+
+PlayerText:TdTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_FONT:font = TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT, obrub = 0)
+{
+    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
+    PlayerTextDrawFont(playerid, td, font);
+    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
+    PlayerTextDrawColour(playerid, td, boja);
+    PlayerTextDrawSetShadow(playerid, td, 0);
+    PlayerTextDrawSetOutline(playerid, td, obrub);
+    PlayerTextDrawAlignment(playerid, td, poravnanje);
+    return td;
+}
+
 ZadnjiId()
 {
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");

@@ -51,11 +51,6 @@ InitKurve()
     DB_FreeResultSet(res);
 }
 
-static KurvaGovor(p, const tekst[], const a[] = "", const b[] = "")
-{
-    PosaljiBlizu(p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
-}
-
 static KurvaMotor(v, motor)
 {
     new e, l, a, d, bn, bt, o;
@@ -89,7 +84,7 @@ KurvaUlica(playerid)
         gKurva[i][prRok] = GetTickCount() + KURVA_PONUDA_MS;
         gKurvaOd[playerid] = i + 1;
         valstr(cijena, KURVA_CIJENA);
-        KurvaGovor(playerid, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
+        Govor(playerid, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
         format(body, sizeof body, T(playerid, "Cijena: $%d"), KURVA_CIJENA);
         PrikaziDialog(playerid, DLG_KURVA, DIALOG_STYLE_MSGBOX, T(playerid, "Kurva"), body, T(playerid, "Prihvati"), T(playerid, "Odbij"));
         return 1;
@@ -210,7 +205,7 @@ KurvaPomak(npcid)
     GetVehiclePos(gKurva[i][prVozilo], vx, vy, vz);
     NPC_SetFacingAngle(npcid, atan2(vy - ny, vx - nx) - 90.0);
     valstr(cijena, KURVA_CIJENA);
-    KurvaGovor(p, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
+    Govor(p, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
     format(body, sizeof body, T(p, "Cijena: $%d"), KURVA_CIJENA);
     PrikaziDialog(p, DLG_KURVA, DIALOG_STYLE_MSGBOX, T(p, "Kurva"), body, T(p, "Prihvati"), T(p, "Odbij"));
 }
@@ -222,13 +217,13 @@ DLG:kurva(playerid, response)
     {
         if (!response)
         {
-            KurvaGovor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
-            KurvaGovor(playerid, "Kurva kaze: Kako hoces, dragi.");
+            Govor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
+            Govor(playerid, "Kurva kaze: Kako hoces, dragi.");
             KurvaUlicaKraj(i);
         }
         else if (!DajNovac(playerid, -KURVA_CIJENA))
         {
-            KurvaGovor(playerid, "Kurva kaze: Nemas ti toliko, dragi.");
+            Govor(playerid, "Kurva kaze: Nemas ti toliko, dragi.");
             KurvaUlicaKraj(i);
         }
         else KurvaUlicaPocni(i, playerid);
@@ -238,18 +233,18 @@ DLG:kurva(playerid, response)
     new v = gKurva[i][prVozilo];
     if (!response || GetVehicleOccupant(v, 1) != INVALID_PLAYER_ID)
     {
-        KurvaGovor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
-        KurvaGovor(playerid, "Kurva kaze: Kako hoces, dragi.");
+        Govor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
+        Govor(playerid, "Kurva kaze: Kako hoces, dragi.");
         KurvaVrati(i);
         return 1;
     }
     if (!DajNovac(playerid, -KURVA_CIJENA))
     {
-        KurvaGovor(playerid, "Kurva kaze: Nemas ti toliko, dragi.");
+        Govor(playerid, "Kurva kaze: Nemas ti toliko, dragi.");
         KurvaVrati(i);
         return 1;
     }
-    KurvaGovor(playerid, "%s kaze: Upadaj.", GetRPIme(playerid));
+    Govor(playerid, "%s kaze: Upadaj.", GetRPIme(playerid));
     KurvaMotor(v, 0);
     NPC_EnterVehicle(gKurva[i][prNpc], v, 1, NPC_MOVE_TYPE_WALK);
     gKurva[i][prStanje] = PR_ULAZI;
@@ -281,7 +276,7 @@ KurvaTick()
         if (st == PR_ULICA_PONUDA || st == PR_ULICA)
         {
             if (sad - gKurva[i][prRok] < 0) continue;
-            KurvaGovor(p, st == PR_ULICA ? ("Kurva kaze: Hvala, dragi. Navrati opet.") : ("Kurva kaze: Nemam cijelu noc, dragi."));
+            Govor(p, st == PR_ULICA ? ("Kurva kaze: Hvala, dragi. Navrati opet.") : ("Kurva kaze: Nemam cijelu noc, dragi."));
             KurvaUlicaKraj(i);
         }
         else if (st == PR_KRAJ)
@@ -316,8 +311,8 @@ KurvaTick()
             }
             else if (sad - gKurva[i][prRok] >= 0)
             {
-                if (st == PR_USLUGA) KurvaGovor(p, "Kurva kaze: Hvala, dragi. Trubi kad god pozelis.");
-                else KurvaGovor(p, "Kurva kaze: Nemam cijelu noc, dragi.");
+                if (st == PR_USLUGA) Govor(p, "Kurva kaze: Hvala, dragi. Trubi kad god pozelis.");
+                else Govor(p, "Kurva kaze: Nemam cijelu noc, dragi.");
                 KurvaVrati(i);
             }
             else if (st == PR_USLUGA && !gKurva[i][prAnim])

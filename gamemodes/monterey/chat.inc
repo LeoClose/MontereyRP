@@ -107,6 +107,11 @@ ZatamniBoju(color, step)
     return (r << 24) | (g << 16) | (b << 8) | (color & 0xFF);
 }
 
+Govor(p, const tekst[], const a[] = "", const b[] = "")
+{
+    PosaljiBlizu(p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
+}
+
 PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[] = "", prevedi = 0, const treci[] = "", const cetvrti[] = "")
 {
     new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid), tekst[160];

@@ -79,22 +79,13 @@ static StetaPrikazZa(Float:z)
 
 // HP
 
-static PlayerText:StetaKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
-{
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    return td;
-}
-
 static StetaTraka(playerid)
 {
     if (gStetaTd[playerid][0] == PlayerText:INVALID_TEXT_DRAW)
     {
-        gStetaTd[playerid][0] = StetaKutija(playerid, STETA_TD_X, STETA_TD_Y, STETA_TD_W, STETA_TD_H, 0x000000FF);
-        gStetaTd[playerid][1] = StetaKutija(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0x5A0C0EFF);
-        gStetaTd[playerid][2] = StetaKutija(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0xB4191DFF);
+        gStetaTd[playerid][0] = TdSlika(playerid, STETA_TD_X, STETA_TD_Y, STETA_TD_W, STETA_TD_H, 0x000000FF);
+        gStetaTd[playerid][1] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0x5A0C0EFF);
+        gStetaTd[playerid][2] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0xB4191DFF);
         gStetaTdVidljiv[playerid] = false;
     }
     PlayerTextDrawTextSize(playerid, gStetaTd[playerid][2], (STETA_TD_W - 3.7) * float(gStetaPrikaz[playerid]) / 100.0, STETA_TD_H - 3.5);

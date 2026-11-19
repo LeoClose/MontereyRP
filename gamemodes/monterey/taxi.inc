@@ -339,11 +339,6 @@ TaksiPoVozilu(veh)
     return -1;
 }
 
-static TaksiGovor(p, const tekst[], const a[] = "", const b[] = "")
-{
-    PosaljiBlizu(p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
-}
-
 static TaksiVozac(s, p, const tekst[], const a[] = "", const b[] = "")
 {
     new npc = gTaksi[s][tNpc];
@@ -471,7 +466,7 @@ TaksiPozovi(playerid)
         gTaksiPoziv[playerid][1] = y;
         MobitelPoziv(playerid, T(playerid, "Taksi"));
         SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
-        TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
+        Govor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
         TaksiDispecer(playerid, "Dispecer (telefon): U redu, javljamo vozacima.");
         return 1;
     }
@@ -578,7 +573,7 @@ static TaksiNpcPoziv(playerid, bool:telefon)
     {
         MobitelPoziv(playerid, T(playerid, "Taksi"));
         SetTimerEx("TaksiSpustiMobitel", TAKSI_MOBITEL_MS, false, "i", playerid);
-        TaksiGovor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
+        Govor(playerid, "%s kaze (telefon): Dobar dan, trebao bih taksi. Nalazim se u %s.", GetRPIme(playerid), CestaZona(x, y));
     }
     SetTimerEx("TaksiOdgovor", s >= TAKSI_FLOTA ? 500 : 2000, false, "iii", s, playerid, (sekundi + 59) / 60);
     return 1;
@@ -794,7 +789,7 @@ public OnNPCFinishMove(npcid)
         case TX_VOZI:
         {
             TaksiVozac(s, p, "Vozac kaze: Stigli smo. Hvala na voznji i ugodan dan!");
-            TaksiGovor(p, "%s kaze: Hvala, dovidenja.", GetRPIme(p));
+            Govor(p, "%s kaze: Hvala, dovidenja.", GetRPIme(p));
             TaksiOstavi(s);
         }
         case TX_ODLAZI: gTaksi[s][tStanje] = s < TAKSI_FLOTA ? TX_KUCI : TX_KRAJ;
@@ -914,7 +909,7 @@ TaksiPovratak(playerid)
     new zona[28], cijena[12];
     zona = CestaZona(cx, cy);
     valstr(cijena, gTaksi[s][tCijena]);
-    TaksiGovor(playerid, "%s kaze: Mozete li me odvesti do %s?", GetRPIme(playerid), zona);
+    Govor(playerid, "%s kaze: Mozete li me odvesti do %s?", GetRPIme(playerid), zona);
     TaksiVozac(s, playerid, "Vozac kaze: Naravno, do %s ce biti oko $%s.", zona, cijena);
     TaksiPotvrda(s, playerid);
 }
@@ -944,7 +939,7 @@ DLG:taksi(playerid, response)
     }
     if (!response)
     {
-        TaksiGovor(playerid, "%s kaze: Ipak necu, hvala.", GetRPIme(playerid));
+        Govor(playerid, "%s kaze: Ipak necu, hvala.", GetRPIme(playerid));
         TaksiVozac(s, playerid, "Vozac kaze: U redu, ugodan dan.");
         TaksiOstavi(s);
         return 1;
@@ -955,7 +950,7 @@ DLG:taksi(playerid, response)
         TaksiOstavi(s);
         return 1;
     }
-    TaksiGovor(playerid, "%s kaze: U redu, krenimo.", GetRPIme(playerid));
+    Govor(playerid, "%s kaze: U redu, krenimo.", GetRPIme(playerid));
     TaksiVozac(s, playerid, "Vozac kaze: Krecemo, vezite se.");
     gTaksi[s][tStanje] = TX_VOZI;
     gTaksi[s][tSkok] = 0;
@@ -1090,7 +1085,7 @@ TaksiKey(playerid, KEY:newkeys, KEY:oldkeys)
         return;
     }
     gTaksi[s][tBrzo] = true;
-    TaksiGovor(playerid, "%s kaze: Evo napojnica, pozurite malo.", GetRPIme(playerid));
+    Govor(playerid, "%s kaze: Evo napojnica, pozurite malo.", GetRPIme(playerid));
     TaksiVozac(s, playerid, "Vozac kaze: Hvala! Drzite se.");
 }
 

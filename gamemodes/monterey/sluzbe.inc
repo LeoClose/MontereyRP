@@ -38,7 +38,6 @@ forward bool:GarazaIzvana(db, &Float:x, &Float:y);
 #define RADIONICA_X         1207.18
 #define RADIONICA_Y         -981.57
 #define RADIONICA_Z         43.0
-#define RADIONICA_A         0.0
 #define MEHANICAR_ODGOVOR_MS 2000
 #define MEHANICAR_RAD_MS    6000
 #define KAMION_PO_TIPU      8

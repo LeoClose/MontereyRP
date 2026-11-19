@@ -13,12 +13,6 @@ static const gMdtTabovi[][] = { "Pocetna", "Osoba", "Vozilo", "Potjernice" };
 
 InitMdt()
 {
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT vozacka FROM accounts LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE accounts ADD COLUMN vozacka INTEGER NOT NULL DEFAULT 0"));
-    res = DB_ExecuteQuery(gDB, "SELECT oruzje_dozvola FROM accounts LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE accounts ADD COLUMN oruzje_dozvola INTEGER NOT NULL DEFAULT 0"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS police_records (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, type INTEGER NOT NULL, reason TEXT NOT NULL, officer TEXT NOT NULL, created INTEGER NOT NULL)"));
 }
 
@@ -29,25 +23,12 @@ MdtZapis(racun, tip, const razlog[], policajac)
 
 static PlayerText:MdtKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, MDT_X + x, MDT_Y + y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    gMdtTd[playerid][gMdtBroj[playerid]++] = td;
-    return td;
+    return gMdtTd[playerid][gMdtBroj[playerid]++] = TdSlika(playerid, MDT_X + x, MDT_Y + y, w, h, boja);
 }
 
 static PlayerText:MdtTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_FONT:font = TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, MDT_X + x, MDT_Y + y, tekst);
-    PlayerTextDrawFont(playerid, td, font);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawSetOutline(playerid, td, 0);
-    PlayerTextDrawAlignment(playerid, td, poravnanje);
-    gMdtTd[playerid][gMdtBroj[playerid]++] = td;
-    return td;
+    return gMdtTd[playerid][gMdtBroj[playerid]++] = TdTekst(playerid, MDT_X + x, MDT_Y + y, tekst, boja, sirina, visina, font, poravnanje);
 }
 
 static MdtPostavi(playerid, dio, const tekst[])

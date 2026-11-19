@@ -535,15 +535,11 @@ static AtcTdOsvjezi(playerid)
 
 static AtcTdPokazi(playerid)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, ATC_TD_X - 4.0, ATC_TD_Y - 4.0, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, 192.0, 28.0 + ATC_TD_RED * AVION_ATC_SLOTOVA + 26.0);
-    PlayerTextDrawColour(playerid, td, 0x0B1A2ACC);
-    gAtcTd[playerid][0] = td;
+    gAtcTd[playerid][0] = TdSlika(playerid, ATC_TD_X - 4.0, ATC_TD_Y - 4.0, 192.0, 28.0 + ATC_TD_RED * AVION_ATC_SLOTOVA + 26.0, 0x0B1A2ACC);
     gAtcTd[playerid][1] = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y, T(playerid, "Kontrolni toranj"), 0x5B8DBFFF, 0.3);
     for (new r = 0; r < AVION_ATC_SLOTOVA; r++)
     {
-        td = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y + 22.0 + ATC_TD_RED * r, "_", 0xDDDDDDFF, 0.22);
+        new PlayerText:td = AtcTekst(playerid, ATC_TD_X, ATC_TD_Y + 22.0 + ATC_TD_RED * r, "_", 0xDDDDDDFF, 0.22);
         PlayerTextDrawTextSize(playerid, td, ATC_TD_X + 186.0, ATC_TD_RED - 2.0);
         PlayerTextDrawSetSelectable(playerid, td, true);
         gAtcTd[playerid][2 + r] = td;

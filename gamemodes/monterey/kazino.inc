@@ -112,11 +112,8 @@ InitKazino()
     assert(VpOcjena(r1) == VP_ROYAL && VpOcjena(r2) == VP_STRAIGHT && VpOcjena(r3) == VP_JOB && VpOcjena(r4) == VP_FH && VpOcjena(r5) == VP_NISTA && VpOcjena(r6) == VP_2P);
     assert(BacBankerVuce(5, -1) && !BacBankerVuce(6, -1) && !BacBankerVuce(3, 8) && BacBankerVuce(6, 7) && !BacBankerVuce(4, 1) && BacBankerVuce(2, 9));
     assert(RulDobitak(45, 1) == 2 && RulDobitak(45, 2) == 0 && RulDobitak(39, 36) == 3 && RulDobitak(17, 17) == 36 && RulDobitak(44, 0) == 0 && RulDobitak(0, 0) == 36 && RulDobitak(40, 4) == 3 && RulDobitak(42, 36) == 3 && RulDobitak(41, 36) == 0);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS casino_dealers (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT igra FROM casino_dealers LIMIT 1");
-    if (res) DB_FreeResultSet(res);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE casino_dealers ADD COLUMN igra INTEGER NOT NULL DEFAULT 0"));
-    res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world, igra FROM casino_dealers ORDER BY id LIMIT %d", KAZINO_MAX);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS casino_dealers (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, world INTEGER NOT NULL, igra INTEGER NOT NULL DEFAULT 0)"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, world, igra FROM casino_dealers ORDER BY id LIMIT %d", KAZINO_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKaz[k][kzDb] = DB_GetFieldInt(res, 0);
@@ -232,11 +229,7 @@ static KzKarta(playerid)
 
 static KzSprite(playerid, idx, Float:x, Float:y, Float:w, Float:h, const sprite[], boja = -1)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, sprite);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    gKzTd[playerid][idx] = td;
+    gKzTd[playerid][idx] = TdSlika(playerid, x, y, w, h, boja, sprite);
     if (idx >= gKzTdN[playerid]) gKzTdN[playerid] = idx + 1;
 }
 

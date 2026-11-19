@@ -783,9 +783,7 @@ DLG:apanel_kos(playerid, response, listitem)
         GetPlayerFacingAngle(playerid, a);
         z -= 1.0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bb_hoops (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid)));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gKos[k][koDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gKos[k][koDb] = ZadnjiId();
         gKos[k][koX] = x;
         gKos[k][koY] = y;
         gKos[k][koZ] = z;

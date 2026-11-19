@@ -515,31 +515,8 @@ static gApTuning[MAX_PLAYERS], gTunSmjer[MAX_PLAYERS], gTunPonovi[MAX_PLAYERS], 
 InitTuning()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS tuning_garages (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS vehicle_tuning (vehicle INTEGER PRIMARY KEY, mods TEXT NOT NULL DEFAULT '', paintjob INTEGER NOT NULL DEFAULT 3, neon INTEGER NOT NULL DEFAULT 0, motor INTEGER NOT NULL DEFAULT 0, oklop INTEGER NOT NULL DEFAULT 0, rezervoar INTEGER NOT NULL DEFAULT 0, truba INTEGER NOT NULL DEFAULT 0, plamen INTEGER NOT NULL DEFAULT 0, zatamnjeno INTEGER NOT NULL DEFAULT 0)"));
-    new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT oklop FROM vehicle_tuning LIMIT 1");
-    if (stupac) DB_FreeResultSet(stupac);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN oklop INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN rezervoar INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN truba INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN plamen INTEGER NOT NULL DEFAULT 0"));
-    }
-    stupac = DB_ExecuteQuery(gDB, "SELECT zatamnjeno FROM vehicle_tuning LIMIT 1");
-    if (stupac) DB_FreeResultSet(stupac);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN zatamnjeno INTEGER NOT NULL DEFAULT 0"));
-    stupac = DB_ExecuteQuery(gDB, "SELECT natpis FROM vehicle_tuning LIMIT 1");
-    if (stupac) DB_FreeResultSet(stupac);
-    else
-    {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis TEXT NOT NULL DEFAULT ''"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis_font INTEGER NOT NULL DEFAULT 0"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN natpis_boja INTEGER NOT NULL DEFAULT 0"));
-    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS vehicle_tuning (vehicle INTEGER PRIMARY KEY, mods TEXT NOT NULL DEFAULT '', paintjob INTEGER NOT NULL DEFAULT 3, neon INTEGER NOT NULL DEFAULT 0, motor INTEGER NOT NULL DEFAULT 0, oklop INTEGER NOT NULL DEFAULT 0, rezervoar INTEGER NOT NULL DEFAULT 0, truba INTEGER NOT NULL DEFAULT 0, plamen INTEGER NOT NULL DEFAULT 0, zatamnjeno INTEGER NOT NULL DEFAULT 0, natpis TEXT NOT NULL DEFAULT '', natpis_font INTEGER NOT NULL DEFAULT 0, natpis_boja INTEGER NOT NULL DEFAULT 0, nitro INTEGER NOT NULL DEFAULT 0)"));
     SetTimer("TuningImena", 1000, true);
-    stupac = DB_ExecuteQuery(gDB, "SELECT COUNT(*) FROM pragma_table_info('vehicle_tuning') WHERE name = 'nitro'");
-    if (!DB_GetFieldInt(stupac, 0)) DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE vehicle_tuning ADD COLUMN nitro INTEGER NOT NULL DEFAULT 0"));
-    DB_FreeResultSet(stupac);
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM tuning_garages ORDER BY id LIMIT %d", TUNING_MAX);
     for (new g = 0, n = DB_GetRowCount(res); g < n; g++, DB_SelectNextRow(res))
     {
@@ -938,25 +915,12 @@ static TuningNitroCijena(c)
 
 static PlayerText:TuningKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, "LD_SPAC:white");
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    gTunTd[playerid][gTunTdBroj[playerid]++] = td;
-    return td;
+    return gTunTd[playerid][gTunTdBroj[playerid]++] = TdSlika(playerid, x, y, w, h, boja);
 }
 
 static PlayerText:TuningTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_FONT:font = TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
-    PlayerTextDrawFont(playerid, td, font);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawSetOutline(playerid, td, 0);
-    PlayerTextDrawAlignment(playerid, td, poravnanje);
-    gTunTd[playerid][gTunTdBroj[playerid]++] = td;
-    return td;
+    return gTunTd[playerid][gTunTdBroj[playerid]++] = TdTekst(playerid, x, y, tekst, boja, sirina, visina, font, poravnanje);
 }
 
 static TuningKamera(playerid, pogled)

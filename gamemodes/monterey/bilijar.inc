@@ -605,9 +605,7 @@ DLG:apanel_bilijar(playerid, response, listitem)
         GetPlayerFacingAngle(playerid, a);
         z -= 1.0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO pool_tables (x, y, z, a, interior, world) VALUES (%f, %f, %f, %f, %d, %d)", x, y, z, a, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid)));
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT last_insert_rowid()");
-        gBilijar[s][bsDb] = DB_GetFieldInt(res, 0);
-        DB_FreeResultSet(res);
+        gBilijar[s][bsDb] = ZadnjiId();
         gBilijar[s][bsX] = x;
         gBilijar[s][bsY] = y;
         gBilijar[s][bsZ] = z;

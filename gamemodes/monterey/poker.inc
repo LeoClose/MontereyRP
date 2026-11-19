@@ -228,11 +228,7 @@ static PlayerText:PokerTdGumb(playerid, Float:x, Float:y, Float:w, const tekst[]
 
 static PlayerText:PokerTdSprite(playerid, Float:x, Float:y, Float:w, Float:h, const sprite[], boja = -1)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, sprite);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_SPRITE_DRAW);
-    PlayerTextDrawTextSize(playerid, td, w, h);
-    PlayerTextDrawColour(playerid, td, boja);
-    return td;
+    return TdSlika(playerid, x, y, w, h, boja, sprite);
 }
 
 static PokerTdUnisti(playerid)

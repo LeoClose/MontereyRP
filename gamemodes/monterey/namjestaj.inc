@@ -50,11 +50,7 @@ InitNamjestaj()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture_shops (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL DEFAULT 0, aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0, izlog INTEGER NOT NULL DEFAULT 0, ix REAL NOT NULL DEFAULT 0, iy REAL NOT NULL DEFAULT 0, iz REAL NOT NULL DEFAULT 0, ia REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture_catalog (id INTEGER PRIMARY KEY AUTOINCREMENT, shop INTEGER NOT NULL, model INTEGER NOT NULL, price INTEGER NOT NULL, name TEXT NOT NULL)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, model INTEGER NOT NULL, name TEXT NOT NULL, house INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0)"));
-    new DBResult:stupac = DB_ExecuteQuery(gDB, "SELECT price FROM furniture LIMIT 1");
-    if (stupac) DB_FreeResultSet(stupac);
-    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "ALTER TABLE furniture ADD COLUMN price INTEGER NOT NULL DEFAULT 0"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE furniture SET price = IFNULL((SELECT MAX(c.price) FROM furniture_catalog c WHERE c.model = furniture.model), 0) WHERE price = 0"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS furniture (id INTEGER PRIMARY KEY AUTOINCREMENT, owner INTEGER NOT NULL, model INTEGER NOT NULL, name TEXT NOT NULL, house INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL DEFAULT 0, y REAL NOT NULL DEFAULT 0, z REAL NOT NULL DEFAULT 0, rx REAL NOT NULL DEFAULT 0, ry REAL NOT NULL DEFAULT 0, rz REAL NOT NULL DEFAULT 0, price INTEGER NOT NULL DEFAULT 0)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, aktor, ax, ay, az, aa, izlog, ix, iy, iz, ia FROM furniture_shops ORDER BY id LIMIT %d", NAMJESTAJ_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
     {
