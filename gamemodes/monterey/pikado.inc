@@ -23,6 +23,8 @@
 #define PIKADO_SNOP_ZOOM    2.1
 #define PIKADO_SNOP_DUZ     0.956
 #define PIKADO_SNOP_POLA    7.0
+#define PIKADO_SNOP_AX      0.9375
+#define PIKADO_SNOP_NAGIB   0.022
 #define PIKADO_PRSTEN_CRVENA 0xFF2A1FFF
 #define PIKADO_PRSTEN_ZELENA 0x22E05AFF
 #define PIKADO_TD           13
@@ -41,7 +43,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.12;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.03;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -85,14 +87,17 @@ static PikadoKrugPloce(Float:rmm, boja)
 static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : 1.0), Float:w = h * PIKADO_AX;
+    new Float:fi = atan2(floatsin(kut, degrees) / PIKADO_SNOP_AX, floatcos(kut, degrees));
+    new Float:e = floatsqroot(floatpower(PIKADO_SNOP_AX * floatsin(fi, degrees), 2.0) + floatpower(floatcos(fi, degrees), 2.0));
+    new Float:t = 1.0 - PIKADO_SNOP_NAGIB * (1.0 + floatcos(kut, degrees)) / 2.0;
+    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : 1.0) / (e * t), Float:w = h * PIKADO_AX;
     new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
     TextDrawTextSize(td, w, h);
     TextDrawBackgroundColour(td, 0x00000000);
     TextDrawColour(td, boja);
     TextDrawSetPreviewModel(td, PIKADO_SNOP_MODEL);
-    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - kut, rz, PIKADO_SNOP_ZOOM);
+    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - fi, rz, PIKADO_SNOP_ZOOM);
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
