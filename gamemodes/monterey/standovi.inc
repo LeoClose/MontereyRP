@@ -1,5 +1,5 @@
 #define STAND_MAX            32
-#define STAND_CIJENA         15000
+#define STAND_CIJENA         5000
 #define STAND_ZALIHA_CIJENA  1
 #define STAND_ZALIHA_MAX     300
 #define STAND_RADNIK_SAT     60
@@ -27,6 +27,8 @@
 #define KUPAC_ZAGLAVIO_S     150
 #define KUPAC_CEKA_S         60
 #define KUPAC_SPAWN_S        3
+#define KUPAC_DOLAZAK        3.0
+#define KUPAC_MIRNO_S        8
 
 static const gStandModeli[] = { 1340, 1341, 1342 };
 static const gStandVrsta[][] = { "Hot dog", "Sladoled", "Rezanci" };
@@ -53,7 +55,7 @@ static gStand[STAND_MAX][E_STAND];
 static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
 enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI }
-enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ }
+enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ, Float:kuPx, Float:kuPy, kuMirno }
 static gKupac[KUPAC_MAX][E_KUPAC], gNpcKupac[MAX_PLAYERS], gKupacRuta[STAZA_RUTA], gKupacZadnji;
 
 enum { SO_IME, SO_KASA, SO_ROBA, SO_RADNIK, SO_RADI }
@@ -624,10 +626,11 @@ static bool:KupacIdi(k, Float:tx, Float:ty, Float:tz)
         StazaTocka(gKupacRuta[i], x, y, z);
         NPC_AddPointToPath(put, x, y, HodTlo(x, y, z), 0.6);
     }
-    NPC_AddPointToPath(put, tx + float(random(11) - 5) / 10.0, ty + float(random(11) - 5) / 10.0, HodTlo(tx, ty, tz), 0.3);
+    NPC_AddPointToPath(put, tx + float(random(21) - 10) / 10.0, ty + float(random(21) - 10) / 10.0, HodTlo(tx, ty, tz), 1.0);
     gKupac[k][kuPut] = put;
     gKupac[k][kuStanje] = KU_HODA;
     gKupac[k][kuOd] = gettime();
+    gKupac[k][kuMirno] = 0;
     NPC_MoveByPath(npc, put, NPC_MOVE_TYPE_WALK);
     return true;
 }
@@ -715,21 +718,30 @@ KupacSpawn(npcid)
     if (s < 0 || !gStand[s][snIma] || !KupacIdi(k, gStand[s][snKx], gStand[s][snKy], gStand[s][snKz])) KupacMakni(k);
 }
 
-public OnNPCFinishMovePath(npcid, pathid)
+static KupacNaCilju(k)
 {
-    new k = gNpcKupac[npcid] - 1;
-    if (k < 0 || gKupac[k][kuPut] != pathid) return 1;
-    NPC_DestroyPath(pathid);
-    gKupac[k][kuPut] = -1;
+    if (gKupac[k][kuPut] != -1)
+    {
+        NPC_StopMove(gKupac[k][kuNpc]);
+        NPC_DestroyPath(gKupac[k][kuPut]);
+        gKupac[k][kuPut] = -1;
+    }
     new s = gKupac[k][kuCilj];
     if (s < 0 || !gStand[s][snIma])
     {
         KupacMakni(k);
-        return 1;
+        return;
     }
     gKupac[k][kuStanje] = KU_CEKA;
     gKupac[k][kuOd] = gettime();
     if (gStand[s][snKupac] == -1 && StandOtvoren(s)) StandSluzi(s, k);
+}
+
+public OnNPCFinishMovePath(npcid, pathid)
+{
+    new k = gNpcKupac[npcid] - 1;
+    if (k < 0 || gKupac[k][kuPut] != pathid || gKupac[k][kuStanje] != KU_HODA) return 1;
+    KupacNaCilju(k);
     return 1;
 }
 
@@ -800,7 +812,22 @@ StandTick()
             if (s >= 0 && gStand[s][snIma] && gStand[s][snKupac] == -1 && StandOtvoren(s)) StandSluzi(s, k);
             else if (sad - gKupac[k][kuOd] >= KUPAC_CEKA_S || s < 0 || !StandOtvoren(s)) KupacDalje(k);
         }
-        else if ((gKupac[k][kuStanje] == KU_HODA || gKupac[k][kuStanje] == KU_SPAWN) && sad - gKupac[k][kuOd] >= KUPAC_ZAGLAVIO_S) KupacMakni(k);
+        else if (gKupac[k][kuStanje] == KU_HODA)
+        {
+            new Float:x, Float:y, Float:z;
+            NPC_GetPos(gKupac[k][kuNpc], x, y, z);
+            if (s >= 0 && gStand[s][snIma] && VectorSize(x - gStand[s][snKx], y - gStand[s][snKy], 0.0) <= KUPAC_DOLAZAK)
+            {
+                KupacNaCilju(k);
+                continue;
+            }
+            if (VectorSize(x - gKupac[k][kuPx], y - gKupac[k][kuPy], 0.0) < 0.3) gKupac[k][kuMirno]++;
+            else gKupac[k][kuMirno] = 0;
+            gKupac[k][kuPx] = x;
+            gKupac[k][kuPy] = y;
+            if (gKupac[k][kuMirno] >= KUPAC_MIRNO_S || sad - gKupac[k][kuOd] >= KUPAC_ZAGLAVIO_S) KupacMakni(k);
+        }
+        else if (gKupac[k][kuStanje] == KU_SPAWN && sad - gKupac[k][kuOd] >= 10) KupacMakni(k);
     }
     if (sad - gKupacZadnji >= KUPAC_SPAWN_S && ukupno < KUPAC_MAX && aktivni < otvoreno * KUPAC_PO_STANDU)
     {
