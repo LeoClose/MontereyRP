@@ -474,14 +474,14 @@ static MobitelPrikazi(playerid)
     }
 }
 
-static MobitelOtvori(playerid)
+static MobitelOtvori(playerid, bool:stav = true)
 {
     new sat, minuta, vrijeme[8], g, m, d;
     VrijemeLokalno(g, m, d, sat, minuta);
     format(vrijeme, sizeof vrijeme, "%02d:%02d", sat, minuta);
     gMobitelOtvoren[playerid] = true;
     gMobitelURuci[playerid] = false;
-    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ApplyAnimation(playerid, "PED", "IDLE_stance", 4.1, true, false, false, false, 0, SYNC_ALL);
+    if (stav && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) ApplyAnimation(playerid, "PED", "IDLE_stance", 4.1, true, false, false, false, 0, SYNC_ALL);
     gMobitelEkran[playerid] = MOBITEL_IZBORNIK;
     gMobitelOdabir[playerid] = 0;
     gMobitelUlaz[playerid] = GetTickCount() - MOBITEL_ULAZ_MS;
@@ -581,7 +581,7 @@ static bool:MobitelDostupan(playerid)
 static MobitelDolazni(playerid, pozivatelj)
 {
     new broj[MOBITEL_BROJ];
-    if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid);
+    if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid, false);
     gMobitelDrugi[playerid] = pozivatelj;
     MobitelMojBroj(pozivatelj, broj);
     MobitelImeBroja(playerid, broj, gMobitelSugovornik[playerid]);
@@ -731,7 +731,7 @@ static MobitelSms(playerid, const posiljatelj[], const tekst[])
         SendClientMessage(playerid, COLOR_SMS, T(playerid, "Imate novu poruku od %s."), posiljatelj);
         return;
     }
-    if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid);
+    if (!gMobitelOtvoren[playerid]) MobitelOtvori(playerid, false);
     strcopy(gMobitelSugovornik[playerid], posiljatelj);
     strcopy(gMobitelPoruka[playerid], tekst);
     gMobitelEkran[playerid] = MOBITEL_PORUKA;

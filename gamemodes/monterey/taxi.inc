@@ -56,7 +56,7 @@ enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, 
 static gTaksi[TAKSI_SLOTOVA][E_TAKSI];
 static Float:gTaksiTocke[TAKSI_SLOTOVA][CESTA_MAX_TOCAKA][4];
 static gTaksiOd[MAX_PLAYERS], gTaksiCeka[MAX_PLAYERS], gTaksiPonuda[MAX_PLAYERS], bool:gTaksiVozac[MAX_PLAYERS];
-static gNpcTaksi[MAX_PLAYERS];
+static gNpcTaksi[MAX_PLAYERS], bool:gTaksiMetar[MAX_PLAYERS];
 static Text:gFade[FADE_SLOJEVA];
 
 static const Float:gTaksiStajaliste[][2] = {
@@ -993,12 +993,18 @@ static TaksiMetar(s, bool:odmah = false)
     gTaksi[s][tMetar] = iznos;
     format(info, sizeof info, T(p, "Trenutno: $%d~n~Do cilja: $%d"), iznos, gTaksi[s][tCijena]);
     IgraObavijestPanel(p, T(p, "Taksimetar"), TAKSI_METAR_BOJA, info);
+    gTaksiMetar[p] = true;
 }
 
 static TaksiMetarMakni(s)
 {
-    new p = gTaksi[s][tMusterija];
-    if (p == INVALID_PLAYER_ID || (gTaksi[s][tStanje] != TX_VOZI && gTaksi[s][tStanje] != TX_TELEPORT)) return;
+    TaksiMetarSkrij(gTaksi[s][tMusterija]);
+}
+
+static TaksiMetarSkrij(p)
+{
+    if (p == INVALID_PLAYER_ID || !gTaksiMetar[p]) return;
+    gTaksiMetar[p] = false;
     IgraObavijestUkloni(p);
 }
 
@@ -1147,6 +1153,7 @@ TaksiKey(playerid, KEY:newkeys, KEY:oldkeys)
 
 TaksiPlayerLeft(playerid)
 {
+    TaksiMetarSkrij(playerid);
     if (gTaksiOd[playerid]) TaksiMetarMakni(gTaksiOd[playerid] - 1);
     if (gTaksiOd[playerid]) TaksiOtidi(gTaksiOd[playerid] - 1);
     if (gTaksiCeka[playerid]) TaksiOcistiPonude(playerid);
@@ -1165,6 +1172,12 @@ static TaksiBezVozaca(s)
 
 TaksiTick()
 {
+    for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
+    {
+        if (!gTaksiMetar[p]) continue;
+        new s = gTaksiOd[p] - 1;
+        if (s < 0 || (gTaksi[s][tStanje] != TX_VOZI && gTaksi[s][tStanje] != TX_TELEPORT) || gTaksi[s][tMusterija] != p) TaksiMetarSkrij(p);
+    }
     new parkirani = 0;
     for (new s = 0; s < TAKSI_FLOTA; s++) if (gTaksi[s][tStanje] == TX_SLOBODAN && gTaksi[s][tNpc] != INVALID_PLAYER_ID) parkirani++;
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
