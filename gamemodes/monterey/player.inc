@@ -82,6 +82,7 @@ public OnPlayerDisconnect(playerid, reason)
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
     OruzarnicaDisconnect(playerid);
+    TrgovinaDisconnect(playerid);
     NamjestajDisconnect(playerid);
     MdtDisconnect(playerid);
     OdjecaDisconnect(playerid);

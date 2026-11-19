@@ -328,7 +328,7 @@ static GarazaUvezi(playerid, g, v)
     }
     GarazaPrebaci(v, x, y, z, a, db, playerid);
     VoziloSet(v, VP_MOTOR, 0);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo je parkirano u garazi. Upalite motor za izlazak."));
+    return ObavijestInfo(playerid, T(playerid, "Garaza"), T(playerid, "Vozilo je parkirano u garazi. Upalite motor za izlazak."));
 }
 
 GarazaParkiraj(playerid, v)

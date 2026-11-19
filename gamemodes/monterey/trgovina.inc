@@ -10,12 +10,17 @@
 #define TRGOVINA_PLIJEN_MIN     300
 #define TRGOVINA_PLIJEN_RASPON  700
 #define TRGOVINA_BANDA          0
+#define TRGOVINA_PULT           0.9
 
 enum E_TRGOVINA { bool:tgIma, tgDb, Float:tgX, Float:tgY, Float:tgZ, Float:tgA, bool:tgImaAktor, Float:tgAx, Float:tgAy, Float:tgAz, Float:tgAa, tgAktor, tgPljackano,
     STREAMER_TAG_PICKUP:tgPickup, STREAMER_TAG_PICKUP:tgPickupU, STREAMER_TAG_3D_TEXT_LABEL:tgTekst, STREAMER_TAG_3D_TEXT_LABEL:tgTekstU, STREAMER_TAG_3D_TEXT_LABEL:tgTekstA }
 
 static gTrg[TRGOVINA_MAX][E_TRGOVINA];
 static gApTrgovina[MAX_PLAYERS], gTrgPoruka[MAX_PLAYERS];
+enum { TGTD_LIJEVO, TGTD_DESNO, TGTD_INFO, TGTD_KUPI, TGTD_IZADI, TGTD_BROJ }
+static PlayerText:gTrgTd[MAX_PLAYERS][TGTD_BROJ], gTrgU[MAX_PLAYERS] = { -1, ... }, gTrgIdx[MAX_PLAYERS], gTrgObjekt[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... };
+
+forward PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true);
 static const Float:gTrgovinaUlaz[3] = { -25.884, -185.869, 1003.547 };
 static const gTrgovinaRoba[][2] = { { ITEM_CRIJEVO, 25 }, { ITEM_KANISTER, 25 }, { ITEM_MOBITEL, 300 } };
 
@@ -83,6 +88,7 @@ static TrgovinaIgraca(playerid)
 
 static TrgovinaVani(playerid, s)
 {
+    TrgovinaZatvori(playerid);
     PrebaciIgraca(playerid, 0, 0, gTrg[s][tgX], gTrg[s][tgY], gTrg[s][tgZ], gTrg[s][tgA] + 180.0);
 }
 
@@ -111,27 +117,90 @@ TrgovinaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
     new s = TrgovinaIgraca(playerid);
     if (s == -1 || !gTrg[s][tgImaAktor] || !IsPlayerInRangeOfPoint(playerid, TRGOVINA_KASA_DOMET, gTrg[s][tgAx], gTrg[s][tgAy], gTrg[s][tgAz])) return 0;
-    new list[512], row[64];
-    format(list, sizeof list, "%s\t%s\n", T(playerid, "Predmet"), T(playerid, "Cijena"));
-    new len = strlen(list);
-    for (new i = 0; i < sizeof gTrgovinaRoba; i++)
-    {
-        format(row, sizeof row, "%s\t$%d", T(playerid, gItems[gTrgovinaRoba[i][0]][ITEM_NAME]), gTrgovinaRoba[i][1]);
-        DodajStupac(list, len, row);
-    }
+    if (gTrgU[playerid] != -1) return 1;
     AktorKaze(playerid, gTrg[s][tgAktor], "Prodavac", "Izvolite, sto ce biti?");
-    PrikaziDialog(playerid, DLG_TRGOVINA, DIALOG_STYLE_TABLIST_HEADERS, T(playerid, "Trgovina"), list, T(playerid, "Kupi"), T(playerid, "Zatvori"));
+    TrgovinaOtvori(playerid, s);
     return 1;
 }
 
-DLG:trgovina(playerid, response, listitem)
+static TrgovinaPult(s, &Float:x, &Float:y)
 {
-    if (!response || listitem < 0 || listitem >= sizeof gTrgovinaRoba || TrgovinaIgraca(playerid) == -1) return 1;
-    new item = gTrgovinaRoba[listitem][0], cijena = gTrgovinaRoba[listitem][1];
-    if (gNovac[playerid] < cijena) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
-    if (!GiveItem(playerid, item, 1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
-    DajNovac(playerid, -cijena);
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), T(playerid, gItems[item][ITEM_NAME]), cijena);
+    new Float:a = gTrg[s][tgAa];
+    x = gTrg[s][tgAx] + TRGOVINA_PULT * floatsin(-a, degrees);
+    y = gTrg[s][tgAy] + TRGOVINA_PULT * floatcos(-a, degrees);
+}
+
+static TrgovinaPrikazi(playerid)
+{
+    new s = gTrgU[playerid], r = gTrgIdx[playerid], item = gTrgovinaRoba[r][0], info[96], Float:x, Float:y;
+    format(info, sizeof info, "%s~n~~g~$%d~n~~w~%d/%d", T(playerid, gItems[item][ITEM_NAME]), gTrgovinaRoba[r][1], r + 1, sizeof gTrgovinaRoba);
+    PlayerTextDrawSetString(playerid, gTrgTd[playerid][TGTD_INFO], info);
+    if (gTrgObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gTrgObjekt[playerid]);
+    TrgovinaPult(s, x, y);
+    gTrgObjekt[playerid] = CreatePlayerObject(playerid, gItems[item][ITEM_MODEL], x, y, gTrg[s][tgAz] + 0.05, 90.0, 0.0, gTrg[s][tgAa] + 90.0);
+}
+
+static TrgovinaOtvori(playerid, s)
+{
+    new Float:a = gTrg[s][tgAa], Float:x, Float:y;
+    TrgovinaPult(s, x, y);
+    gTrgU[playerid] = s;
+    gTrgIdx[playerid] = 0;
+    TogglePlayerControllable(playerid, false);
+    SetPlayerCameraPos(playerid, x + 1.1 * floatsin(-a, degrees), y + 1.1 * floatcos(-a, degrees), gTrg[s][tgAz] + 0.7);
+    SetPlayerCameraLookAt(playerid, x, y, gTrg[s][tgAz] + 0.05);
+    gTrgTd[playerid][TGTD_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
+    gTrgTd[playerid][TGTD_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
+    gTrgTd[playerid][TGTD_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
+    gTrgTd[playerid][TGTD_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
+    gTrgTd[playerid][TGTD_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    TrgovinaPrikazi(playerid);
+    SelectTextDraw(playerid, 0xD4A017FF);
+}
+
+TrgovinaZatvori(playerid)
+{
+    if (gTrgU[playerid] == -1) return;
+    gTrgU[playerid] = -1;
+    for (new i = 0; i < TGTD_BROJ; i++) PlayerTextDrawDestroy(playerid, gTrgTd[playerid][i]);
+    if (gTrgObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gTrgObjekt[playerid]);
+    gTrgObjekt[playerid] = INVALID_OBJECT_ID;
+    CancelSelectTextDraw(playerid);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+}
+
+TrgovinaKlik(playerid, PlayerText:td)
+{
+    if (gTrgU[playerid] == -1) return 0;
+    if (td == gTrgTd[playerid][TGTD_IZADI] || TrgovinaIgraca(playerid) != gTrgU[playerid])
+    {
+        TrgovinaZatvori(playerid);
+        return 1;
+    }
+    if (td == gTrgTd[playerid][TGTD_LIJEVO] || td == gTrgTd[playerid][TGTD_DESNO])
+    {
+        gTrgIdx[playerid] = (gTrgIdx[playerid] + (td == gTrgTd[playerid][TGTD_DESNO] ? 1 : sizeof gTrgovinaRoba - 1)) % sizeof gTrgovinaRoba;
+        TrgovinaPrikazi(playerid);
+        return 1;
+    }
+    if (td != gTrgTd[playerid][TGTD_KUPI]) return 1;
+    new item = gTrgovinaRoba[gTrgIdx[playerid]][0], cijena = gTrgovinaRoba[gTrgIdx[playerid]][1];
+    if (gNovac[playerid] < cijena) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    else if (!GiveItem(playerid, item, 1)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi toliko."));
+    else
+    {
+        DajNovac(playerid, -cijena);
+        PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste: %s ($%d)."), T(playerid, gItems[item][ITEM_NAME]), cijena);
+    }
+    return 1;
+}
+
+TrgovinaDisconnect(playerid)
+{
+    gTrgU[playerid] = -1;
+    gTrgObjekt[playerid] = INVALID_OBJECT_ID;
 }
 
 TrgovinaUpdate(playerid)

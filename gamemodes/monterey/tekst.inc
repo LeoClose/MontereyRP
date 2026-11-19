@@ -2060,13 +2060,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Mala kamp prikolica", "Small camper trailer", "Малый жилой прицеп", "Caravana pequena", "Kucuk karavan" },
     { "Velika kamp prikolica", "Large camper trailer", "Большой жилой прицеп", "Caravana grande", "Buyuk karavan" },
     { "+ Novo prodajno mjesto (prikolice se pojavljuju ispred vas)", "+ New sales point (trailers spawn in front of you)", "+ Новая точка продажи (прицепы появятся перед вами)", "+ Nuevo punto de venta (las caravanas aparecen delante)", "+ Yeni satis noktasi (karavanlar onunuzde cikar)" },
-    { "Izadjite iz prikolice da biste je prodali.", "Leave the trailer to sell it.", "Выйдите из прицепа, чтобы продать его.", "Sal de la caravana para venderla.", "Satmak icin karavandan cikin." },
     { "Kamp prikolica", "Camper trailer", "Жилой прицеп", "Caravana", "Karavan" },
     { "Kamp prikolice", "Camper trailers", "Жилые прицепы", "Caravanas", "Karavanlar" },
     { "Kupili ste kamp prikolicu za $%d. Zakacite je vozilom (/zakaci), a /kamp otvara izbornik.", "You bought a camper trailer for $%d. Hitch it with a vehicle (/zakaci), /kamp opens the menu.", "Вы купили жилой прицеп за $%d. Прицепите его (/zakaci), меню: /kamp.", "Compraste una caravana por $%d. Enganchala con un vehiculo (/zakaci), /kamp abre el menu.", "$%d karsiliginda karavan aldiniz. Araca takin (/zakaci), menu: /kamp." },
     { "Namjestaj se postavlja unutar prikolice.", "Furniture is placed inside the trailer.", "Мебель ставится внутри прицепа.", "Los muebles se colocan dentro de la caravana.", "Mobilya karavanin icine yerlestirilir." },
     { "Niste kod svoje kamp prikolice.", "You are not at your camper trailer.", "Вы не у своего жилого прицепа.", "No estas junto a tu caravana.", "Karavaninizin yaninda degilsiniz." },
-    { "Prodaj ($%d)", "Sell ($%d)", "Продать ($%d)", "Vender ($%d)", "Sat ($%d)" },
     { "Prodajno mjesto kamp prikolica je obrisano.", "Camper trailer sales point deleted.", "Точка продажи прицепов удалена.", "Punto de venta de caravanas eliminado.", "Karavan satis noktasi silindi." },
     { "Prodajno mjesto kamp prikolica je postavljeno.", "Camper trailer sales point placed.", "Точка продажи прицепов установлена.", "Punto de venta de caravanas colocado.", "Karavan satis noktasi yerlestirildi." },
     { "Prodajno mjesto se postavlja samo izvana.", "Sales points can only be placed outside.", "Точку продажи можно ставить только снаружи.", "El punto de venta solo se coloca afuera.", "Satis noktasi sadece disarida yerlestirilir." },
@@ -2207,7 +2205,15 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "1. mjesto: %d~n~2. mjesto: %d~n~3. mjesto: %d~n~Ostala mjesta: %d~n~DNF: %d~n~Zarada: $%d", "1st place: %d~n~2nd place: %d~n~3rd place: %d~n~Other places: %d~n~DNF: %d~n~Earned: $%d", "1 место: %d~n~2 место: %d~n~3 место: %d~n~Другие места: %d~n~DNF: %d~n~Заработок: $%d", "1er puesto: %d~n~2do puesto: %d~n~3er puesto: %d~n~Otros puestos: %d~n~DNF: %d~n~Ganancias: $%d", "1. sira: %d~n~2. sira: %d~n~3. sira: %d~n~Diger siralar: %d~n~DNF: %d~n~Kazanc: $%d" },
     { "Utrka %s je zavrsena. DNF - niste stigli do cilja.", "Race %s is over. DNF - you did not reach the finish.", "Гонка %s окончена. DNF - вы не доехали до финиша.", "La carrera %s termino. DNF - no llegaste a la meta.", "%s yarisi bitti. DNF - bitise ulasamadiniz." },
     { "Upisite ulog na sebe u chat (0 = bez uloga).", "Type your bet on yourself in the chat (0 = no bet).", "Введите ставку на себя в чат (0 = без ставки).", "Escribe tu apuesta por ti en el chat (0 = sin apuesta).", "Kendinize bahsinizi sohbete yazin (0 = bahis yok)." },
-    { "~y~N~w~ - napusti utrku", "~y~N~w~ - leave the race", "~y~N~w~ - покинуть гонку", "~y~N~w~ - abandonar la carrera", "~y~N~w~ - yaristan ayril" }
+    { "~y~N~w~ - napusti utrku", "~y~N~w~ - leave the race", "~y~N~w~ - покинуть гонку", "~y~N~w~ - abandonar la carrera", "~y~N~w~ - yaristan ayril" },
+    { "Kupi: %s - $%d", "Buy: %s - $%d", "Купить: %s - $%d", "Comprar: %s - $%d", "Satin al: %s - $%d" },
+    { "Prodaj svoju kamp prikolicu - $%d", "Sell your camper trailer - $%d", "Продать свой прицеп - $%d", "Vender tu caravana - $%d", "Karavaninizi satin - $%d" },
+    { "Prodavac prikolica", "Trailer dealer", "Продавец прицепов", "Vendedor de caravanas", "Karavan saticisi" },
+    { "Lijepa prikolica! Zelite kupiti novu ili prodati ovu?", "Nice trailer! Want to buy a new one or sell this one?", "Хороший прицеп! Хотите купить новый или продать этот?", "Bonita caravana! Quiere comprar una nueva o vender esta?", "Guzel karavan! Yenisini mi almak istersiniz, bunu mu satmak?" },
+    { "Dobar dan! Treba vam dom na kotacima?", "Good day! Need a home on wheels?", "Добрый день! Нужен дом на колёсах?", "Buenos dias! Necesita una casa sobre ruedas?", "Iyi gunler! Tekerlekli bir eve mi ihtiyaciniz var?" },
+    { "Nemate dovoljno novca? Navratite kad skupite.", "Not enough money? Come back when you have it.", "Не хватает денег? Заходите, когда накопите.", "No le alcanza el dinero? Vuelva cuando lo tenga.", "Paraniz yetmiyor mu? Biriktirince ugrayin." },
+    { "Odlican izbor! Prikolica vas ceka ispred, sretan put.", "Great choice! The trailer is waiting out front, safe travels.", "Отличный выбор! Прицеп ждёт впереди, счастливого пути.", "Excelente eleccion! La caravana le espera delante, buen viaje.", "Harika secim! Karavan onunuzde bekliyor, iyi yolculuklar." },
+    { "Dogovoreno, evo vasih novaca. Bilo je zadovoljstvo.", "Deal, here is your money. It was a pleasure.", "Договорились, вот ваши деньги. Было приятно.", "Trato hecho, aqui tiene su dinero. Fue un placer.", "Anlastik, iste paraniz. Memnun oldum." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

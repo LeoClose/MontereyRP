@@ -1,13 +1,15 @@
 #define KAMP_MAX            8
 #define KAMP_DOMET          2.0
 #define KAMP_ISPRED         6.0
-#define KAMP_OTKUP_POSTO    50
+#define KAMP_OTKUP_DIO      3
+#define KAMP_SKIN           161
+#define KAMP_PRODAJA_DOMET  30.0
 
 static const gKampModel[] = { PRIKOLICA_VELIKA };
 static const gKampIme[][] = { "Kamp prikolica" };
 static const gKampCijena[] = { 35000 };
 
-enum E_KAMP { bool:kpIma, kpDb, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, STREAMER_TAG_3D_TEXT_LABEL:kpTekst, kpIkona }
+enum E_KAMP { bool:kpIma, kpDb, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, STREAMER_TAG_3D_TEXT_LABEL:kpTekst, kpIkona, kpAktor }
 static gKamp[KAMP_MAX][E_KAMP], gKampU[MAX_PLAYERS] = { -1, ... }, gKampV[MAX_PLAYERS], gApKamp[MAX_PLAYERS][KAMP_MAX];
 
 InitKamp()
@@ -29,7 +31,9 @@ InitKamp()
 static KampStvori(s)
 {
     gKamp[s][kpIma] = true;
-    gKamp[s][kpTekst] = CreateDynamic3DTextLabel("Kamp prikolice", COLOR_ORG, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ] + 0.8, 15.0);
+    gKamp[s][kpAktor] = CreateActor(KAMP_SKIN, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ], gKamp[s][kpA]);
+    SetActorInvulnerable(gKamp[s][kpAktor], true);
+    gKamp[s][kpTekst] = CreateDynamic3DTextLabel("Kamp prikolice", COLOR_ORG, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ] + 1.2, 15.0);
     InterakcijaOznaka(gKamp[s][kpTekst]);
     gKamp[s][kpIkona] = MapaIkona(gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ], 51);
 }
@@ -40,13 +44,20 @@ KampKey(playerid)
     for (new s = 0; s < KAMP_MAX; s++)
     {
         if (!gKamp[s][kpIma] || !IsPlayerInRangeOfPoint(playerid, KAMP_DOMET, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ])) continue;
-        new list[256], red[64], len = 0;
+        new list[256], red[96], len = 0, v = KampZaProdaju(playerid, s);
         gKampU[playerid] = s;
+        gKampV[playerid] = v;
         for (new i = 0; i < sizeof gKampModel; i++)
         {
-            format(red, sizeof red, "%s - $%d", T(playerid, gKampIme[i]), gKampCijena[i]);
+            format(red, sizeof red, T(playerid, "Kupi: %s - $%d"), T(playerid, gKampIme[i]), gKampCijena[i]);
             DodajStupac(list, len, red);
         }
+        if (v)
+        {
+            format(red, sizeof red, T(playerid, "Prodaj svoju kamp prikolicu - $%d"), VlasnikCijena(v) / KAMP_OTKUP_DIO);
+            DodajStupac(list, len, red);
+        }
+        AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", v ? ("Lijepa prikolica! Zelite kupiti novu ili prodati ovu?") : ("Dobar dan! Treba vam dom na kotacima?"));
         PrikaziDialog(playerid, DLG_KAMP_KUPI, DIALOG_STYLE_LIST, T(playerid, "Kamp prikolice"), list, T(playerid, "Kupi"), T(playerid, "Zatvori"));
         return 1;
     }
@@ -56,10 +67,21 @@ KampKey(playerid)
 DLG:kamp_kupi(playerid, response, listitem)
 {
     new s = gKampU[playerid];
-    if (!response || s == -1 || listitem < 0 || listitem >= sizeof gKampModel || !gKamp[s][kpIma] || !IsPlayerInRangeOfPoint(playerid, KAMP_DOMET, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ])) return 1;
+    if (!response || s == -1 || listitem < 0 || !gKamp[s][kpIma] || !IsPlayerInRangeOfPoint(playerid, KAMP_DOMET, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ])) return 1;
+    if (listitem >= sizeof gKampModel)
+    {
+        new v = KampZaProdaju(playerid, s), body[160];
+        if (!v || v != gKampV[playerid]) return 1;
+        format(body, sizeof body, T(playerid, "Prodati kamp prikolicu za $%d? Namjestaj se vraca u skladiste."), VlasnikCijena(v) / KAMP_OTKUP_DIO);
+        return PrikaziDialog(playerid, DLG_KAMP_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Kamp prikolica"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
+    }
     new model = gKampModel[listitem], cijena = gKampCijena[listitem], c = random(128);
     if (BrojVlasnistava(gAccountId[playerid]) >= VLASNISTVO_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d vozila."), VLASNISTVO_MAX);
-    if (gNovac[playerid] < cijena) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
+    if (gNovac[playerid] < cijena)
+    {
+        AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", "Nemate dovoljno novca? Navratite kad skupite.");
+        return 1;
+    }
     new Float:a = gKamp[s][kpA], Float:x = gKamp[s][kpX] - KAMP_ISPRED * floatsin(a, degrees), Float:y = gKamp[s][kpY] + KAMP_ISPRED * floatcos(a, degrees), Float:z = gKamp[s][kpZ] + 0.5;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO player_vehicles (owner, model, c1, c2, x, y, z, a, price) VALUES (%d, %d, %d, %d, %f, %f, %f, %f, %d)", gAccountId[playerid], model, c, c, x, y, z, a, cijena));
     new db = ZadnjiId();
@@ -69,7 +91,21 @@ DLG:kamp_kupi(playerid, response, listitem)
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo trenutno nije moguce isporuciti."));
     }
     DajNovac(playerid, -cijena);
+    AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", "Odlican izbor! Prikolica vas ceka ispred, sretan put.");
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kupili ste kamp prikolicu za $%d. Zakacite je vozilom (/zakaci), a /kamp otvara izbornik."), cijena);
+}
+
+static KampZaProdaju(playerid, s)
+{
+    new vozila[VLASNISTVO_MAX], Float:x, Float:y, Float:z;
+    for (new i = 0, n = VlasnistvaIgraca(playerid, vozila); i < n; i++)
+    {
+        new v = vozila[i];
+        if (!JePrikolica(GetVehicleModel(v)) || GetVehicleVirtualWorld(v)) continue;
+        GetVehiclePos(v, x, y, z);
+        if (VectorSize(x - gKamp[s][kpX], y - gKamp[s][kpY], z - gKamp[s][kpZ]) <= KAMP_PRODAJA_DOMET) return v;
+    }
+    return 0;
 }
 
 static KampMoja(playerid, &bool:unutra)
@@ -83,7 +119,7 @@ static KampMoja(playerid, &bool:unutra)
 CMD:kamp(playerid, params[])
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;
-    new bool:unutra, v = KampMoja(playerid, unutra), list[256], red[64], len = 0;
+    new bool:unutra, v = KampMoja(playerid, unutra), list[256], len = 0;
     if (!v)
     {
         new vozila[VLASNISTVO_MAX];
@@ -93,8 +129,6 @@ CMD:kamp(playerid, params[])
     gKampV[playerid] = v;
     DodajStupac(list, len, PrikolicaZakljucana(v) ? T(playerid, "Otkljucaj") : T(playerid, "Zakljucaj"));
     DodajStupac(list, len, T(playerid, "Namjestaj"));
-    format(red, sizeof red, T(playerid, "Prodaj ($%d)"), VlasnikCijena(v) * KAMP_OTKUP_POSTO / 100);
-    DodajStupac(list, len, red);
     return PrikaziDialog(playerid, DLG_KAMP, DIALOG_STYLE_LIST, T(playerid, "Kamp prikolica"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -116,23 +150,18 @@ DLG:kamp(playerid, response, listitem)
             if (!unutra) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Namjestaj se postavlja unutar prikolice."));
             return NamjestajMeni(playerid, -VlasnikDb(v));
         }
-        case 2:
-        {
-            if (unutra && blizu) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Izadjite iz prikolice da biste je prodali."));
-            new body[128];
-            format(body, sizeof body, T(playerid, "Prodati kamp prikolicu za $%d? Namjestaj se vraca u skladiste."), VlasnikCijena(v) * KAMP_OTKUP_POSTO / 100);
-            return PrikaziDialog(playerid, DLG_KAMP_PRODAJ, DIALOG_STYLE_MSGBOX, T(playerid, "Kamp prikolica"), body, T(playerid, "Prodaj"), T(playerid, "Natrag"));
-        }
     }
     return 1;
 }
 
 DLG:kamp_prodaj(playerid, response)
 {
-    new v = gKampV[playerid];
-    if (!response || !v || VlasnikVozila(v) != gAccountId[playerid] || !JePrikolica(GetVehicleModel(v))) return 1;
+    new v = gKampV[playerid], s = gKampU[playerid];
+    if (!response || !v || s == -1 || !gKamp[s][kpIma] || VlasnikVozila(v) != gAccountId[playerid] || !JePrikolica(GetVehicleModel(v)) || KampZaProdaju(playerid, s) != v) return 1;
+    if (!IsPlayerInRangeOfPoint(playerid, KAMP_DOMET * 2.0, gKamp[s][kpX], gKamp[s][kpY], gKamp[s][kpZ])) return 1;
     if (!PrikolicaPrazna(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U prikolici je netko."));
-    new otkup = VlasnikCijena(v) * KAMP_OTKUP_POSTO / 100, db = VlasnikDb(v);
+    new otkup = VlasnikCijena(v) / KAMP_OTKUP_DIO, db = VlasnikDb(v);
+    AktorKaze(playerid, gKamp[s][kpAktor], "Prodavac prikolica", "Dogovoreno, evo vasih novaca. Bilo je zadovoljstvo.");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE furniture SET house = 0 WHERE house = %d", -db));
     VlasnikOtpad(v);
     DajNovac(playerid, otkup);
@@ -176,6 +205,7 @@ DLG:apanel_kamp(playerid, response, listitem)
     new s = gApKamp[playerid][listitem - 1];
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM trailer_shops WHERE id = %d", gKamp[s][kpDb]));
     DestroyDynamic3DTextLabel(gKamp[s][kpTekst]);
+    DestroyActor(gKamp[s][kpAktor]);
     MapaIkonaMakni(gKamp[s][kpIkona]);
     gKamp[s][kpIma] = false;
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Prodajno mjesto kamp prikolica je obrisano."));

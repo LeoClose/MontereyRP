@@ -432,7 +432,7 @@ CMD:hood(playerid, params[])
 #define PRIKOLICA_OBJEKT    3174
 #define PRIKOLICA_OBJEKT_VELIKA 3175
 #define PRIKOLICA_OBJ_Y     -1.0
-#define PRIKOLICA_OBJ_Y_VELIKA -3.0
+#define PRIKOLICA_OBJ_Y_VELIKA -2.0
 #define PRIKOLICA_OBJ_Z     -0.8
 #define PRIKOLICA_DOMET     2.5
 #define PRIKOLICA_STRANA    -1.0
@@ -503,7 +503,6 @@ static MaricaExit(playerid)
     GetVehicleZAngle(gMaricaU[playerid], a);
     SetPlayerFacingAngle(playerid, JePrikolica(GetVehicleModel(gMaricaU[playerid])) ? a - 90.0 * PRIKOLICA_STRANA : a + 180.0);
     MaricaReset(playerid);
-    if (!ImaLisice(playerid)) ApplyAnimation(playerid, "PED", "CAR_getout_LHS", 4.1, false, false, false, false, 0);
 }
 
 static UdjiUMaricu(playerid, v)
