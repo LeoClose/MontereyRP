@@ -5,9 +5,9 @@
 #define KAFIC_PC_DOMET      2.0
 #define KAFIC_VEZA          60.0
 #define KAFIC_MAPA_INT      15
-#define KAFIC_MAPA_X        1405.19
-#define KAFIC_MAPA_Y        1.25
-#define KAFIC_MAPA_Z        997.6
+#define KAFIC_MAPA_X        1403.5
+#define KAFIC_MAPA_Y        -14.6
+#define KAFIC_MAPA_Z        1001.0
 
 enum E_KAFIC { bool:kfIma, kfDb, Float:kfX, Float:kfY, Float:kfZ, Float:kfA, kfInt, kfSvijet, kfAktor, STREAMER_TAG_3D_TEXT_LABEL:kfTekst }
 enum E_KAFIC_PC { bool:kpIma, kpDb, kpKafic, Float:kpX, Float:kpY, Float:kpZ, Float:kpA, kpInt, kpSvijet, STREAMER_TAG_OBJECT:kpObjekt }

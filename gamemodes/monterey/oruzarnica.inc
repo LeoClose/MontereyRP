@@ -19,13 +19,13 @@ static const gOruzarnicaInt[][E_ORUZ_INT] = {
     { "Ammu-Nation 3", 6, 296.919, -108.071, 1001.515 },
     { "Ammu-Nation 4", 7, 314.820, -141.431, 999.601 },
     { "Ammu-Nation 5", 6, 316.524, -167.706, 999.593 },
-    { "Monterey Guns", ORUZ_MAPA_INT, 1390.5, -17.7, 1001.0 }
+    { "Monterey Guns", ORUZ_MAPA_INT, 1403.2, -28.74, 1001.0 }
 };
 
 CMD:oruzarnicaint(playerid, params[])
 {
     if (!gAdmin[playerid]) return 0;
-    AdminPrebaci(playerid, ORUZ_MAPA_INT, 0, 1390.5, -17.7, 1001.0);
+    AdminPrebaci(playerid, ORUZ_MAPA_INT, 0, gOruzarnicaInt[sizeof gOruzarnicaInt - 1][oiX], gOruzarnicaInt[sizeof gOruzarnicaInt - 1][oiY], gOruzarnicaInt[sizeof gOruzarnicaInt - 1][oiZ]);
     return 1;
 }
 
