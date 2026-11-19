@@ -224,8 +224,7 @@ public OnGameModeInit()
     MapaInternetKafic();
     MapaInternetKaficExtUkloni(INVALID_PLAYER_ID);
     MapaInternetKaficExt();
-    MapaFleecaBankaUkloni(INVALID_PLAYER_ID);
-    MapaFleecaBanka();
+    MapaFleeca();
     MapaOruzarnicaInt();
     MapaCartierExtUkloni(INVALID_PLAYER_ID);
     MapaCartierExt();
@@ -457,7 +456,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_cartier_zlatara.inc"
 #include "monterey/mape/mapa_internet_kafic.inc"
 #include "monterey/mape/mapa_internet_kafic_ext.inc"
-#include "monterey/mape/mapa_fleeca_banka.inc"
+#include "monterey/mape/mapa_fleeca.inc"
 #include "monterey/mape/mapa_oruzarnica_int.inc"
 #include "monterey/mape/mapa_cartier_ext.inc"
 #include "monterey/mape/mapa_central_bank.inc"

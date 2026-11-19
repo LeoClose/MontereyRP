@@ -15,7 +15,6 @@ public OnPlayerConnect(playerid)
     MapaBusTaxiUkloni(playerid);
     MapaCartierExtUkloni(playerid);
     MapaInternetKaficExtUkloni(playerid);
-    MapaFleecaBankaUkloni(playerid);
     MapaCentralBankUkloni(playerid);
     MapaCasinoExtUkloni(playerid);
     MapaMainStreetUkloni(playerid);
