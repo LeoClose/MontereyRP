@@ -1,29 +1,32 @@
 #define STAND_MAX            32
-#define STAND_CIJENA         30000
-#define STAND_PROIZVOD       12
-#define STAND_ZALIHA_CIJENA  5
+#define STAND_CIJENA         15000
+#define STAND_ZALIHA_CIJENA  1
 #define STAND_ZALIHA_MAX     300
-#define STAND_RADNIK_SAT     150
+#define STAND_RADNIK_SAT     60
 #define STAND_RADNIK_SKIN    168
-#define STAND_DOSTAVA        15
+#define STAND_DOSTAVA        6
 #define STAND_DOMET          3.0
 #define STAND_RADI_DOMET     4.0
 #define STAND_RADNIK_RAZMAK  1.7
 #define KUPAC_BLIZU_MIN      15.0
 #define KUPAC_BLIZU_MAX      45.0
 #define KUPAC_NA_OTVARANJE   2
-#define STAND_NARUDZBA_MS    12000
+#define STAND_IGRA_MS        12000
+#define STAND_HRANA_SLOT     4
+#define STAND_JEDENJE_MS     4500
+#define STAND_TRAKA_MS       40
+#define STAND_TRAKA_ZELENO   18.0
 #define STAND_RADNIK_MS      3000
 #define STAND_BOJA           0xE67E22FF
 #define STAND_SMS_BROJ       "558"
-#define KUPAC_MAX            12
-#define KUPAC_PO_STANDU      3
-#define KUPAC_SPAWN_MIN      100.0
-#define KUPAC_SPAWN_MAX      350.0
-#define KUPAC_SKRIVENO       60.0
+#define KUPAC_MAX            30
+#define KUPAC_PO_STANDU      4
+#define KUPAC_SPAWN_MIN      60.0
+#define KUPAC_SPAWN_MAX      220.0
+#define KUPAC_SKRIVENO       40.0
 #define KUPAC_ZAGLAVIO_S     150
 #define KUPAC_CEKA_S         60
-#define KUPAC_SPAWN_S        5
+#define KUPAC_SPAWN_S        3
 
 static const gStandModeli[] = { 1340, 1341, 1342 };
 static const gStandVrsta[][] = { "Hot dog", "Sladoled", "Rezanci" };
@@ -32,12 +35,22 @@ static const gStandMeni[][][] = {
     { "Sladoled od vanilije", "Cokoladni sladoled", "Sladoled od jagode" },
     { "Rezanci s piletinom", "Rezanci s govedinom", "Proljetna rolica" }
 };
+static const gStandCijene[][3] = { { 4, 5, 2 }, { 3, 3, 3 }, { 8, 8, 3 } };
+static const gStandHranaModel[][3] = { { 19346, 19346, 2647 }, { 19568, 19568, 19568 }, { 19811, 19811, 19811 } };
+static const Float:gStandZdravlje[][3] = { { 15.0, 18.0, 5.0 }, { 8.0, 8.0, 8.0 }, { 25.0, 25.0, 10.0 } };
+static gStandJede[MAX_PLAYERS];
+enum { SI_NEMA, SI_TRAKA, SI_TIPKE, SI_KUSUR }
+static const KEY:gStTipke[] = { KEY_YES, KEY_NO, KEY_WALK, KEY_SPRINT };
+static const gStTipkeIme[][] = { "Y", "N", "ALT", "SPACE" };
+static const gStNovcanice[] = { 5, 10, 20, 50 };
+static gStIgra[MAX_PLAYERS], gStIgraS[MAX_PLAYERS], gStIgraK[MAX_PLAYERS], gStIgraStvar[MAX_PLAYERS], gStIgraCijena[MAX_PLAYERS], gStIgraOdg[MAX_PLAYERS], gStIgraTipke[MAX_PLAYERS][4], gStIgraKorak[MAX_PLAYERS], gStIgraTimer[MAX_PLAYERS];
+static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:gStIgraZel[MAX_PLAYERS], PlayerText:gStIgraTd[MAX_PLAYERS][2];
 static const gKupacSkinovi[] = { 7, 14, 15, 20, 22, 23, 24, 26, 29, 35, 37, 44, 46, 47, 48, 56, 59, 60, 72, 73, 93, 98, 101, 141, 150, 151, 170, 184, 185, 188, 190, 192, 193, 211, 214, 216, 217, 223, 225, 226, 227, 233, 240, 250, 261, 289, 290, 291 };
 
 enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float:snRz, Float:snKx, Float:snKy, Float:snKz, snVlasnik, snVlasnikIme[MAX_PLAYER_NAME + 1], snIme[25],
     snZaliha, snKasa, bool:snRadnik, snRadnikDo, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd }
 static gStand[STAND_MAX][E_STAND];
-static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gStandNarudzba[MAX_PLAYERS][3], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
+static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
 enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI }
 enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ }
@@ -219,7 +232,20 @@ StandMeni(playerid)
     }
     if (gStand[s][snVlasnik] != gAccountId[playerid])
     {
+        if (!StandOtvoren(s))
+        {
+            ObavijestGreska(playerid, T(playerid, "Stand je trenutno zatvoren."));
+            return 1;
+        }
         if (gStand[s][snAktor] != INVALID_ACTOR_ID) AktorKaze(playerid, gStand[s][snAktor], "Prodavac", "Dobar dan! Izvolite, sve je svjeze.");
+        new lista[256], stavka[64], duljina = 0, v = gStand[s][snVrsta], naslov[25];
+        for (new i = 0; i < 3; i++)
+        {
+            format(stavka, sizeof stavka, "%s - $%d", T(playerid, gStandMeni[v][i]), gStandCijene[v][i]);
+            DodajStupac(lista, duljina, stavka);
+        }
+        StandImeIli(s, naslov, sizeof naslov);
+        PrikaziDialog(playerid, DLG_STAND_HRANA, DIALOG_STYLE_LIST, naslov, lista, T(playerid, "Kupi"), T(playerid, "Zatvori"));
         return 1;
     }
     new list[512], red[96], len = 0, n = 0, ime[25];
@@ -310,6 +336,7 @@ DLG:stand(playerid, response, listitem)
         {
             if (gStandRadi[playerid] == s + 1)
             {
+                if (gStIgra[playerid]) StandIgraKraj(playerid, false);
                 gStandRadi[playerid] = 0;
                 return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Prestali ste raditi."));
             }
@@ -350,28 +377,161 @@ DLG:stand_roba(playerid, response, const inputtext[])
     return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), tekst);
 }
 
+DLG:stand_hrana(playerid, response, listitem)
+{
+    new s = gStandMeniS[playerid];
+    if (!response || s < 0 || s >= STAND_MAX || listitem < 0 || listitem > 2 || StandBlizu(playerid) != s || !StandOtvoren(s)) return 1;
+    if (gStandJede[playerid]) return ObavijestGreska(playerid, T(playerid, "Vec jedete."));
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
+    new v = gStand[s][snVrsta], cijena = gStandCijene[v][listitem];
+    if (!DajNovac(playerid, -cijena)) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
+    gStand[s][snKasa] += cijena;
+    StandProdaja(s);
+    new Float:hp;
+    GetPlayerHealth(playerid, hp);
+    hp += gStandZdravlje[v][listitem];
+    SetPlayerHealth(playerid, hp > 100.0 ? 100.0 : hp);
+    SetPlayerAttachedObject(playerid, STAND_HRANA_SLOT, gStandHranaModel[v][listitem], 6, 0.06, 0.03, 0.02, 0.0, 0.0, 0.0);
+    if (gStandHranaModel[v][listitem] == 2647) ApplyAnimation(playerid, "VENDING", "VEND_Drink2_P", 4.1, false, false, false, false, 0, SYNC_ALL);
+    else ApplyAnimation(playerid, "FOOD", "EAT_Burger", 4.1, false, false, false, false, 0, SYNC_ALL);
+    gStandJede[playerid] = 1;
+    SetTimerEx("StandPojeo", STAND_JEDENJE_MS, false, "ii", playerid, gAccountId[playerid]);
+    new tekst[96];
+    format(tekst, sizeof tekst, T(playerid, "Kupili ste %s za $%d."), T(playerid, gStandMeni[v][listitem]), cijena);
+    return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), tekst);
+}
+
+forward StandPojeo(playerid, racun);
+public StandPojeo(playerid, racun)
+{
+    gStandJede[playerid] = 0;
+    if (IsPlayerConnected(playerid) && gAccountId[playerid] == racun) RemovePlayerAttachedObject(playerid, STAND_HRANA_SLOT);
+}
+
 static StandProdaja(s)
 {
     if (gStand[s][snZaliha] > 0) gStand[s][snZaliha]--;
     StandSpremi(s);
 }
 
-DLG:stand_narudzba(playerid, response, listitem)
+static StandIgraPanel(playerid)
 {
-    new s = gStandNarudzba[playerid][0] - 1, k = gStandNarudzba[playerid][1];
-    gStandNarudzba[playerid][0] = 0;
-    if (s < 0 || !gStand[s][snIma] || gStand[s][snKupac] != k) return 1;
-    if (response && listitem == gStandNarudzba[playerid][2] && gStand[s][snZaliha] > 0)
+    new tekst[256], red[128];
+    format(tekst, sizeof tekst, T(playerid, "Kupac zeli: %s ($%d)"), T(playerid, gStandMeni[gStand[gStIgraS[playerid]][snVrsta]][gStIgraStvar[playerid]]), gStIgraCijena[playerid]);
+    strcat(tekst, "~n~");
+    switch (gStIgra[playerid])
+    {
+        case SI_TRAKA: strcat(tekst, T(playerid, "Pritisnite ~y~SPACE~w~ kad je traka zelena."));
+        case SI_TIPKE:
+        {
+            strcat(tekst, T(playerid, "Pritisnite redom:"));
+            for (new i = 0; i < 4; i++)
+            {
+                format(red, sizeof red, " %s%s", i < gStIgraKorak[playerid] ? ("~g~") : ("~y~"), gStTipkeIme[gStIgraTipke[playerid][i]]);
+                strcat(tekst, red);
+            }
+        }
+        case SI_KUSUR:
+        {
+            format(red, sizeof red, T(playerid, "Kupac daje $%d. Upisite ostatak u chat."), gStIgraCijena[playerid] + gStIgraOdg[playerid]);
+            strcat(tekst, red);
+        }
+    }
+    IgraObavijestPanel(playerid, T(playerid, "Kupac"), STAND_BOJA, tekst);
+}
+
+static StandIgraPocni(playerid, s, k)
+{
+    new v = gStand[s][snVrsta], stvar = random(3);
+    gStIgraS[playerid] = s;
+    gStIgraK[playerid] = k;
+    gStIgraStvar[playerid] = stvar;
+    gStIgraCijena[playerid] = gStandCijene[v][stvar];
+    gStIgraKorak[playerid] = 0;
+    gStIgra[playerid] = 1 + random(3);
+    KupacKaze(k, "", gStandMeni[v][stvar]);
+    switch (gStIgra[playerid])
+    {
+        case SI_TRAKA:
+        {
+            gStIgraTraka[playerid] = 0.0;
+            gStIgraSmjer[playerid] = 3.5;
+            gStIgraZel[playerid] = float(25 + random(55));
+            SnagaBarStvori(playerid, gStIgraTd[playerid][0], gStIgraTd[playerid][1]);
+            gStIgraTimer[playerid] = SetTimerEx("StandTrakaKorak", STAND_TRAKA_MS, true, "i", playerid);
+        }
+        case SI_TIPKE: for (new i = 0; i < 4; i++) gStIgraTipke[playerid][i] = random(sizeof gStTipke);
+        case SI_KUSUR:
+        {
+            new opcije[sizeof gStNovcanice], n = 0;
+            for (new i = 0; i < sizeof gStNovcanice; i++) if (gStNovcanice[i] > gStIgraCijena[playerid]) opcije[n++] = gStNovcanice[i];
+            gStIgraOdg[playerid] = opcije[random(n)] - gStIgraCijena[playerid];
+        }
+    }
+    StandIgraPanel(playerid);
+}
+
+forward StandTrakaKorak(playerid);
+public StandTrakaKorak(playerid)
+{
+    if (gStIgra[playerid] != SI_TRAKA) return;
+    gStIgraTraka[playerid] += gStIgraSmjer[playerid];
+    if (gStIgraTraka[playerid] >= 100.0 || gStIgraTraka[playerid] <= 0.0) gStIgraSmjer[playerid] = -gStIgraSmjer[playerid];
+    SnagaBarPostavi(playerid, gStIgraTd[playerid][1], gStIgraTraka[playerid], gStIgraZel[playerid], gStIgraZel[playerid] + STAND_TRAKA_ZELENO);
+}
+
+static StandIgraKraj(playerid, bool:uspjeh)
+{
+    new s = gStIgraS[playerid], igra = gStIgra[playerid];
+    gStIgra[playerid] = SI_NEMA;
+    if (igra == SI_TRAKA)
+    {
+        if (gStIgraTimer[playerid]) KillTimer(gStIgraTimer[playerid]);
+        gStIgraTimer[playerid] = 0;
+        PlayerTextDrawDestroy(playerid, gStIgraTd[playerid][0]);
+        PlayerTextDrawDestroy(playerid, gStIgraTd[playerid][1]);
+    }
+    IgraObavijestUkloni(playerid);
+    if (!gStand[s][snIma] || gStand[s][snKupac] != gStIgraK[playerid]) return;
+    if (uspjeh && gStand[s][snZaliha] > 0)
     {
         StandProdaja(s);
-        DajNovac(playerid, STAND_PROIZVOD);
+        DajNovac(playerid, gStIgraCijena[playerid]);
         PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
         new tekst[96];
-        format(tekst, sizeof tekst, T(playerid, "Kupac je platio $%d."), STAND_PROIZVOD);
+        format(tekst, sizeof tekst, T(playerid, "Kupac je platio $%d."), gStIgraCijena[playerid]);
         ObavijestInfo(playerid, T(playerid, "Stand s hranom"), tekst);
     }
-    else ObavijestGreska(playerid, T(playerid, "Pogresna narudzba, kupac je otisao."));
+    else ObavijestGreska(playerid, T(playerid, "Kupac je otisao nezadovoljan."));
     StandKupacGotov(s);
+}
+
+StandKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (gStIgra[playerid] == SI_TRAKA)
+    {
+        if (!(newkeys & KEY_SPRINT) || (oldkeys & KEY_SPRINT)) return 0;
+        StandIgraKraj(playerid, gStIgraTraka[playerid] >= gStIgraZel[playerid] && gStIgraTraka[playerid] <= gStIgraZel[playerid] + STAND_TRAKA_ZELENO);
+        return 1;
+    }
+    if (gStIgra[playerid] != SI_TIPKE) return 0;
+    new pritisnuta = -1;
+    for (new i = 0; i < sizeof gStTipke; i++) if ((newkeys & gStTipke[i]) && !(oldkeys & gStTipke[i])) pritisnuta = i;
+    if (pritisnuta == -1) return 0;
+    if (pritisnuta != gStIgraTipke[playerid][gStIgraKorak[playerid]])
+    {
+        StandIgraKraj(playerid, false);
+        return 1;
+    }
+    if (++gStIgraKorak[playerid] >= 4) StandIgraKraj(playerid, true);
+    else StandIgraPanel(playerid);
+    return 1;
+}
+
+StandChat(playerid, const text[])
+{
+    if (gStIgra[playerid] != SI_KUSUR || !ProvjeriBroj(text) || strlen(text) > 4) return 0;
+    StandIgraKraj(playerid, strval(text) == gStIgraOdg[playerid]);
     return 1;
 }
 
@@ -393,13 +553,7 @@ static StandSluzi(s, k)
     new p = StandIgracRadi(s);
     if (p != INVALID_PLAYER_ID)
     {
-        new v = gStand[s][snVrsta], idx = random(3), list[192], len = 0;
-        KupacKaze(k, "", gStandMeni[v][idx]);
-        for (new i = 0; i < 3; i++) DodajStupac(list, len, T(p, gStandMeni[v][i]));
-        gStandNarudzba[p][0] = s + 1;
-        gStandNarudzba[p][1] = k;
-        gStandNarudzba[p][2] = idx;
-        PrikaziDialog(p, DLG_STAND_NARUDZBA, DIALOG_STYLE_LIST, T(p, "Narudzba - sto je kupac trazio?"), list, T(p, "Posluzi"), T(p, "Odbij"));
+        StandIgraPocni(p, s, k);
         return;
     }
     if (!StandRadnikRadi(s))
@@ -596,6 +750,7 @@ StandTick()
         StandRadnikMjesto(s, x, y, a);
         if (!gStand[s][snIma] || gStand[s][snVlasnik] != gAccountId[i] || !IsPlayerInRangeOfPoint(i, STAND_RADI_DOMET, x, y, gStand[s][snKz]))
         {
+            if (gStIgra[i]) StandIgraKraj(i, false);
             gStandRadi[i] = 0;
             ObavijestInfo(i, T(i, "Stand s hranom"), T(i, "Udaljili ste se od standa i prestali raditi."));
         }
@@ -612,20 +767,16 @@ StandTick()
             {
                 if (StandRadnikRadi(s) && gStand[s][snZaliha] > 0)
                 {
-                    gStand[s][snKasa] += STAND_PROIZVOD;
+                    gStand[s][snKasa] += gStandCijene[gStand[s][snVrsta]][random(3)];
                     StandProdaja(s);
                 }
                 StandKupacGotov(s);
             }
-            else if (ms >= STAND_NARUDZBA_MS)
+            else if (ms >= STAND_IGRA_MS)
             {
                 new p = StandIgracRadi(s);
-                if (p != INVALID_PLAYER_ID && gStandNarudzba[p][0] == s + 1)
-                {
-                    gStandNarudzba[p][0] = 0;
-                    ObavijestGreska(p, T(p, "Kupac se nije mogao nacekati i otisao je."));
-                }
-                StandKupacGotov(s);
+                if (p != INVALID_PLAYER_ID && gStIgra[p] && gStIgraS[p] == s) StandIgraKraj(p, false);
+                else StandKupacGotov(s);
             }
         }
     }
@@ -637,10 +788,12 @@ StandTick()
         if (otvoren && !gStandBio[s]) for (new k = 0; k < KUPAC_NA_OTVARANJE; k++) KupacNovi(s);
         gStandBio[s] = otvoren;
     }
+    new ukupno = 0;
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         if (gKupac[k][kuStanje] == KU_NEMA) continue;
-        aktivni++;
+        ukupno++;
+        if (gKupac[k][kuCilj] >= 0) aktivni++;
         new s = gKupac[k][kuCilj];
         if (gKupac[k][kuStanje] == KU_CEKA)
         {
@@ -649,7 +802,7 @@ StandTick()
         }
         else if ((gKupac[k][kuStanje] == KU_HODA || gKupac[k][kuStanje] == KU_SPAWN) && sad - gKupac[k][kuOd] >= KUPAC_ZAGLAVIO_S) KupacMakni(k);
     }
-    if (sad - gKupacZadnji >= KUPAC_SPAWN_S && aktivni < KUPAC_MAX && aktivni < otvoreno * KUPAC_PO_STANDU)
+    if (sad - gKupacZadnji >= KUPAC_SPAWN_S && ukupno < KUPAC_MAX && aktivni < otvoreno * KUPAC_PO_STANDU)
     {
         gKupacZadnji = sad;
         KupacNovi();
@@ -658,8 +811,11 @@ StandTick()
 
 StandDisconnect(playerid)
 {
+    if (gStIgra[playerid] && gStIgraTimer[playerid]) KillTimer(gStIgraTimer[playerid]);
+    gStIgra[playerid] = SI_NEMA;
+    gStIgraTimer[playerid] = 0;
     gStandRadi[playerid] = 0;
-    gStandNarudzba[playerid][0] = 0;
+    gStandJede[playerid] = 0;
     gStandUredi[playerid][0] = 0;
 }
 

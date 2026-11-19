@@ -2225,20 +2225,16 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Koliko komada narucujete? ($%d po komadu, najvise jos %d)", "How many pieces do you order? ($%d each, at most %d more)", "Сколько штук заказываете? ($%d за штуку, не более %d)", "Cuantas piezas pide? ($%d cada una, como maximo %d mas)", "Kac adet siparis ediyorsunuz? (adet $%d, en fazla %d daha)" },
     { "Kupac je platio $%d.", "The customer paid $%d.", "Покупатель заплатил $%d.", "El cliente pago $%d.", "Musteri $%d odedi." },
     { "Kupac kaze: %s", "Customer says: %s", "Покупатель говорит: %s", "El cliente dice: %s", "Musteri diyor ki: %s" },
-    { "Kupac se nije mogao nacekati i otisao je.", "The customer got tired of waiting and left.", "Покупатель не дождался и ушёл.", "El cliente se canso de esperar y se fue.", "Musteri beklemekten sikildi ve gitti." },
     { "Kupili ste stand. Narucite robu i zaposlite radnika ili radite sami (ALT kod standa).", "You bought the stand. Order stock and hire a worker or work yourself (ALT at the stand).", "Вы купили стенд. Закажите товар и наймите работника или работайте сами (ALT у стенда).", "Compraste el puesto. Pide mercancia y contrata a un empleado o trabaja tu (ALT en el puesto).", "Stanti satin aldiniz. Mal siparis edin ve calisan tutun ya da kendiniz calisin (stantta ALT)." },
     { "Kupiti %s stand za $%d?", "Buy the %s stand for $%d?", "Купить стенд %s за $%d?", "Comprar el puesto de %s por $%d?", "%s stantini $%d karsiliginda satin al?" },
     { "Naruci", "Order", "Заказать", "Pedir", "Siparis et" },
     { "Naruci robu", "Order stock", "Заказать товар", "Pedir mercancia", "Mal siparis et" },
     { "Naruci robu (zaliha %d/%d, $%d po komadu)", "Order stock (stock %d/%d, $%d each)", "Заказать товар (запас %d/%d, $%d за штуку)", "Pedir mercancia (stock %d/%d, $%d cada una)", "Mal siparis et (stok %d/%d, adet $%d)" },
     { "Narucili ste %d komada za $%d.", "You ordered %d pieces for $%d.", "Вы заказали %d штук за $%d.", "Pediste %d piezas por $%d.", "%d adet $%d karsiliginda siparis ettiniz." },
-    { "Narudzba - sto je kupac trazio?", "Order - what did the customer ask for?", "Заказ - что просил покупатель?", "Pedido - que pidio el cliente?", "Siparis - musteri ne istedi?" },
     { "Netko vec radi na ovom standu.", "Someone is already working at this stand.", "На этом стенде уже кто-то работает.", "Alguien ya trabaja en este puesto.", "Bu stantta zaten biri calisiyor." },
     { "Otpusti radnika", "Fire the worker", "Уволить работника", "Despedir al empleado", "Calisani kov" },
     { "Otpusti radnika (ceka placu)", "Fire the worker (waiting for pay)", "Уволить работника (ждёт зарплату)", "Despedir al empleado (espera su paga)", "Calisani kov (maas bekliyor)" },
     { "Otpustili ste radnika.", "You fired the worker.", "Вы уволили работника.", "Despediste al empleado.", "Calisani kovdunuz." },
-    { "Pogresna narudzba, kupac je otisao.", "Wrong order, the customer left.", "Неверный заказ, покупатель ушёл.", "Pedido equivocado, el cliente se fue.", "Yanlis siparis, musteri gitti." },
-    { "Posluzi", "Serve", "Подать", "Servir", "Servis et" },
     { "Prestali ste raditi.", "You stopped working.", "Вы перестали работать.", "Dejaste de trabajar.", "Calismayi biraktiniz." },
     { "Prestani raditi", "Stop working", "Прекратить работу", "Dejar de trabajar", "Calismayi birak" },
     { "Promijeni ime", "Change name", "Изменить название", "Cambiar nombre", "Adi degistir" },
@@ -2279,7 +2275,16 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "+ Novi ulaz u internet kafic na mojoj poziciji", "+ New internet cafe entrance at my position", "+ Новый вход в интернет-кафе на моей позиции", "+ Nueva entrada al cibercafe en mi posicion", "+ Konumumda yeni internet kafe girisi" },
     { "[%d] Ulaz (%s) - obrisi", "[%d] Entrance (%s) - delete", "[%d] Вход (%s) - удалить", "[%d] Entrada (%s) - borrar", "[%d] Giris (%s) - sil" },
     { "Ulaz u internet kafic je postavljen.", "The internet cafe entrance was placed.", "Вход в интернет-кафе установлен.", "Se coloco la entrada al cibercafe.", "Internet kafe girisi yerlestirildi." },
-    { "Ulaz u internet kafic je obrisan.", "The internet cafe entrance was deleted.", "Вход в интернет-кафе удалён.", "Se borro la entrada al cibercafe.", "Internet kafe girisi silindi." }
+    { "Ulaz u internet kafic je obrisan.", "The internet cafe entrance was deleted.", "Вход в интернет-кафе удалён.", "Se borro la entrada al cibercafe.", "Internet kafe girisi silindi." },
+    { "Kupac zeli: %s ($%d)", "Customer wants: %s ($%d)", "Покупатель хочет: %s ($%d)", "El cliente quiere: %s ($%d)", "Musteri istiyor: %s ($%d)" },
+    { "Pritisnite ~y~SPACE~w~ kad je traka zelena.", "Press ~y~SPACE~w~ when the bar is green.", "Нажмите ~y~SPACE~w~, когда полоса зелёная.", "Pulsa ~y~SPACE~w~ cuando la barra este verde.", "Cubuk yesilken ~y~SPACE~w~ basin." },
+    { "Pritisnite redom:", "Press in order:", "Нажмите по порядку:", "Pulsa en orden:", "Sirayla basin:" },
+    { "Kupac daje $%d. Upisite ostatak u chat.", "The customer gives $%d. Type the change in the chat.", "Покупатель даёт $%d. Введите сдачу в чат.", "El cliente da $%d. Escribe el cambio en el chat.", "Musteri $%d veriyor. Para ustunu sohbete yazin." },
+    { "Kupac", "Customer", "Покупатель", "Cliente", "Musteri" },
+    { "Kupac je otisao nezadovoljan.", "The customer left unhappy.", "Покупатель ушёл недовольным.", "El cliente se fue descontento.", "Musteri memnuniyetsiz ayrildi." },
+    { "Stand je trenutno zatvoren.", "The stand is closed right now.", "Стенд сейчас закрыт.", "El puesto esta cerrado ahora.", "Stant su an kapali." },
+    { "Vec jedete.", "You are already eating.", "Вы уже едите.", "Ya estas comiendo.", "Zaten yemek yiyorsunuz." },
+    { "Kupili ste %s za $%d.", "You bought %s for $%d.", "Вы купили %s за $%d.", "Compraste %s por $%d.", "%s urununu $%d karsiliginda aldiniz." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
