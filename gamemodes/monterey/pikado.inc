@@ -82,7 +82,7 @@ static PikadoKrugPloce(Float:rmm, boja)
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
-static PikadoSnop(Float:rmm, Float:kut, boja)
+static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
     new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ, Float:w = h * PIKADO_AX;
@@ -92,7 +92,7 @@ static PikadoSnop(Float:rmm, Float:kut, boja)
     TextDrawBackgroundColour(td, 0x00000000);
     TextDrawColour(td, boja);
     TextDrawSetPreviewModel(td, PIKADO_SNOP_MODEL);
-    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - kut, gPikadoRz, PIKADO_SNOP_ZOOM);
+    TextDrawSetPreviewRot(td, gPikadoRx, 90.0 - kut, rz, PIKADO_SNOP_ZOOM);
     gPikadoPloca[gPikadoPlocaN++] = td;
 }
 
@@ -105,8 +105,8 @@ static PikadoSloj(Float:rmm, parna, neparna, bool:prsten)
         new Float:s = float(i) * 18.0 - 9.0, boja = i % 2 ? neparna : parna;
         for (new d = prsten ? 1 : 2; d > 0; d--)
         {
-            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja);
-            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja);
+            PikadoSnop(rmm, s + PIKADO_SNOP_POLA, boja, prsten ? 90.0 : gPikadoRz);
+            PikadoSnop(rmm, s + 18.0 - PIKADO_SNOP_POLA, boja, prsten ? 90.0 : gPikadoRz);
         }
     }
 }
