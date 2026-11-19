@@ -41,7 +41,7 @@ static const gPikadoBroj[20] = { 20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 1
 
 static gPikado[PIKADO_MAX][E_PIKADO], gPikadoIgrac[MAX_PLAYERS] = { -1, ... }, gApPikado[MAX_PLAYERS][PIKADO_MAX];
 static PlayerText:gPkTd[MAX_PLAYERS][PIKADO_TD], bool:gPkTdIma[MAX_PLAYERS];
-static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy;
+static Text:gPikadoPloca[PIKADO_PLOCA], gPikadoPlocaN, Float:gPikadoRx, Float:gPikadoRz = 70.0, Float:gPikadoDx, Float:gPikadoDy, Float:gPikadoPrsten = 1.12;
 
 PikadoBodovi(Float:x, Float:y)
 {
@@ -85,7 +85,7 @@ static PikadoKrugPloce(Float:rmm, boja)
 static PikadoSnop(Float:rmm, Float:kut, boja, Float:rz)
 {
     if (gPikadoPlocaN >= PIKADO_PLOCA) return;
-    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ, Float:w = h * PIKADO_AX;
+    new Float:h = rmm * PIKADO_R / 170.0 * PIKADO_SNOP_ZOOM / PIKADO_SNOP_DUZ * (rz == 90.0 ? gPikadoPrsten : 1.0), Float:w = h * PIKADO_AX;
     new Text:td = TextDrawCreate(PIKADO_CX - w / 2.0 + gPikadoDx, PIKADO_CY - h / 2.0 + gPikadoDy, "_");
     TextDrawFont(td, TEXT_DRAW_FONT_MODEL_PREVIEW);
     TextDrawTextSize(td, w, h);
@@ -145,17 +145,18 @@ static PikadoPlocaStvori()
 CMD:pikadorot(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    new idx = 0, p1[16], p2[16], p3[16], p4[16];
-    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pikadorot [rx] [rz] [x] [y]"));
+    new idx = 0, p1[16], p2[16], p3[16], p4[16], p5[16];
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pikadorot [rx] [rz] [x] [y] [prsten]"));
     gPikadoRx = floatstr(p1);
     if (SljedeciParam(params, idx, p2)) gPikadoRz = floatstr(p2);
     if (SljedeciParam(params, idx, p3)) gPikadoDx = floatstr(p3);
     if (SljedeciParam(params, idx, p4)) gPikadoDy = floatstr(p4);
+    if (SljedeciParam(params, idx, p5) && floatstr(p5) > 0.3) gPikadoPrsten = floatstr(p5);
     for (new i = 0; i < gPikadoPlocaN; i++) TextDrawDestroy(gPikadoPloca[i]);
     gPikadoPlocaN = 0;
     PikadoPlocaStvori();
     for (new i = 0; i < MAX_PLAYERS; i++) if (gPkTdIma[i]) for (new k = 0; k < gPikadoPlocaN; k++) TextDrawShowForPlayer(i, gPikadoPloca[k]);
-    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f"), gPikadoRx, gPikadoRz, gPikadoDx, gPikadoDy);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f"), gPikadoRx, gPikadoRz, gPikadoDx, gPikadoDy, gPikadoPrsten);
 }
 
 static PikadoPolje(Float:x, Float:y, tekst[], size = sizeof tekst)

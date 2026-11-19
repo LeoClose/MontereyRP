@@ -2130,8 +2130,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Izlijecili ste igraca %s.", "You healed %s.", "Вы вылечили игрока %s.", "Curaste a %s.", "%s oyuncusunu iyilestirdiniz." },
     { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
     { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." },
-    { "Koristenje: /pikadorot [rx] [rz] [x] [y]", "Usage: /pikadorot [rx] [rz] [x] [y]", "Использование: /pikadorot [rx] [rz] [x] [y]", "Uso: /pikadorot [rx] [rz] [x] [y]", "Kullanim: /pikadorot [rx] [rz] [x] [y]" },
-    { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f" },
+    { "Koristenje: /pikadorot [rx] [rz] [x] [y] [prsten]", "Usage: /pikadorot [rx] [rz] [x] [y] [ring]", "Использование: /pikadorot [rx] [rz] [x] [y] [кольцо]", "Uso: /pikadorot [rx] [rz] [x] [y] [anillo]", "Kullanim: /pikadorot [rx] [rz] [x] [y] [halka]" },
+    { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f, ring %.2f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f, кольцо %.2f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f, anillo %.2f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f, halka %.2f" },
     { "Igra kosta $%d.", "The game costs $%d.", "Игра стоит $%d.", "El juego cuesta $%d.", "Oyun $%d tutar." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
