@@ -327,6 +327,7 @@ CMD:help(playerid, params[])
     DodajStupac(list, len, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
     DodajStupac(list, len, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
     DodajStupac(list, len, T(playerid, "  Ostalo: /admini"));
+    DodajStupac(list, len, T(playerid, "  Kuce: /kuca (vlasnik, adresa, cijena i najam najblize kuce)"));
     DodajStupac(list, len, T(playerid, "  Statistika: /stats"));
     if (gAdmin[playerid]) DodajStupac(list, len, T(playerid, "  Admin: /ahelp"));
     return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, T(playerid, "Komande:"), list, T(playerid, "Zatvori"));

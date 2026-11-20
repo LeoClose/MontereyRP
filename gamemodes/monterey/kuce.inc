@@ -324,6 +324,59 @@ KucaKey(playerid)
     return 1;
 }
 
+CMD:kuca(playerid, params[])
+{
+    if (!gUlogiran[playerid]) return 1;
+
+    new k = KucaIgraca(playerid);
+    if (k != -1 && gKuca[k][kuVlasnik] != gAccountId[playerid])
+        k = -1;
+
+    if (k == -1)
+    {
+        new Float:x, Float:y, Float:z;
+        GetPlayerPos(playerid, x, y, z);
+        new Float:najblizaDist = KUCA_DOMET, Float:d;
+        k = -1;
+        for (new i = 0; i < KUCA_MAX; i++)
+        {
+            if (!gKuca[i][kuIma] || gKuca[i][kuVlasnik] != gAccountId[playerid]) continue;
+            d = VectorSize(gKuca[i][kuX] - x, gKuca[i][kuY] - y, gKuca[i][kuZ] - z);
+            if (d <= najblizaDist)
+            {
+                najblizaDist = d;
+                k = i;
+            }
+        }
+    }
+    if (k == -1)
+        return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti blizu svoje kuce."));
+
+    new owner[MAX_PLAYER_NAME + 1], rent[32], body[512];
+    if (gKuca[k][kuVlasnik])
+    {
+        strcopy(owner, gKuca[k][kuVlasnikIme], sizeof owner);
+        for (new i = 0; owner[i]; i++) if (owner[i] == '_') owner[i] = ' ';
+    }
+    else
+        strcopy(owner, T(playerid, "Nema vlasnika"), sizeof owner);
+
+    if (gKuca[k][kuNajam])
+        format(rent, sizeof rent, "$%d dnevno", gKuca[k][kuNajam]);
+    else
+        strcopy(rent, T(playerid, "Nije postavljeno"), sizeof rent);
+
+    format(body, sizeof body,
+        "Vlasnik kuce: %s\nAdresa kuce: Kuca ID %d\nLokacija: %.1f, %.1f, %.1f\nPocetna cijena: $%d\nIznajmljivanje: %s",
+        owner,
+        gKuca[k][kuDb],
+        gKuca[k][kuX], gKuca[k][kuY], gKuca[k][kuZ],
+        gKuca[k][kuCijena],
+        rent);
+
+    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX, T(playerid, "Informacije o kuci"), body, T(playerid, "Zatvori"));
+}
+
 DLG:kuca(playerid, response)
 {
     new k = gKucaPonuda[playerid] - 1;
