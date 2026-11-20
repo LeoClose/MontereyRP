@@ -48,15 +48,14 @@ LoadAdmina(playerid)
 
 AdminPrijava(playerid)
 {
+    if (gAdmin[playerid] < 1) return;
+
     new name[MAX_PLAYER_NAME + 1];
     GetPlayerName(playerid, name, sizeof name);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!IsPlayerConnected(i) || !gUlogiran[i] || gAdmin[i] < 1) continue;
-        if (gAdmin[playerid])
-            SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se prijavio na server | Pozicija: Admin"), name);
-        else
-            SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se prijavio na server | Pozicija: Obican igrac"), name);
+        SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se prijavio na server | Pozicija: Admin"), name);
     }
 }
 
@@ -148,6 +147,17 @@ AdminConnect(playerid)
 
 AdminDisconnect(playerid)
 {
+    if (gAdmin[playerid] > 0)
+    {
+        new name[MAX_PLAYER_NAME + 1];
+        GetPlayerName(playerid, name, sizeof name);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        {
+            if (!IsPlayerConnected(i) || !gUlogiran[i] || gAdmin[i] < 1) continue;
+            SendClientMessage(i, COLOR_ADMIN, T(i, "Igrac: %s se izlogovao sa servera | Pozicija: Admin"), name);
+        }
+    }
+
     gAdmin[playerid] = 0;
     if (gAdminVeh[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gAdminVeh[playerid]);
     gAdminVeh[playerid] = INVALID_VEHICLE_ID;
