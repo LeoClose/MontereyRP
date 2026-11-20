@@ -682,6 +682,11 @@ KucaSpawn(playerid)
     }
 }
 
+KucaSpawnPocetak(playerid)
+{
+    gKucaSpawn[playerid] = 0;
+}
+
 KucaProdajaPopis(playerid)
 {
     new list[1024], row[96], len = 0, ima = 0;

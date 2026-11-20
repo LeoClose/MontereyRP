@@ -777,12 +777,30 @@ AdminHeal(playerid, const params[])
 CMD:kill(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
-    if (!params[0]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /kill [id/ime]"));
-    new target = FindPlayer(params);
+    new target = params[0] ? FindPlayer(params) : playerid;
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden ili nije prijavljen."));
     RanjenAdmin(target);
-    SetPlayerHealth(target, 0.0);
-    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ubili ste igraca %s."), GetRPIme(target));
+    KucaSpawnPocetak(target);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_lastpos WHERE account = %d", gAccountId[target]));
+    SetSpawnInfo(target, NO_TEAM, DEFAULT_SKIN, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
+    SpawnPlayer(target);
+    SetTimerEx("AdminKillGotov", 100, false, "i", target);
+    if (target == playerid)
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ubili ste sebe i vratili se na pocetni spawn."));
+    else
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Ubili ste igraca %s i vratili ga na pocetni spawn."), GetRPIme(target));
+    return 1;
+}
+
+forward AdminKillGotov(playerid);
+public AdminKillGotov(playerid)
+{
+    if (!IsPlayerConnected(playerid) || !gUlogiran[playerid]) return 1;
+    SetPlayerInterior(playerid, 0);
+    SetPlayerVirtualWorld(playerid, 0);
+    PrebaciIgraca(playerid, 0, 0, SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_A);
+    SetHP(playerid, 100.0);
+    SetArmor(playerid, 0.0);
     return 1;
 }
 
