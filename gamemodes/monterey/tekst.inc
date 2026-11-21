@@ -2369,7 +2369,9 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dok radite u kombiju kamera je u prvom licu.", "While working in the van the camera stays in first person.", "Пока вы работаете в фургоне, камера от первого лица.", "Mientras trabajas en la furgoneta la camara esta en primera persona.", "Minibuste calisirken kamera birinci sahis gorunumundedir." },
     { "Kamera u prvom licu je ukljucena (/fps za iskljucivanje).", "First person camera is on (/fps to turn it off).", "Камера от первого лица включена (/fps для выключения).", "Camara en primera persona activada (/fps para desactivarla).", "Birinci sahis kamera acik (/fps ile kapatin)." },
     { "Kamera u prvom licu je iskljucena.", "First person camera is off.", "Камера от первого лица выключена.", "Camara en primera persona desactivada.", "Birinci sahis kamera kapali." },
-    { "  Kamera: /fps (prvo lice)", "  Camera: /fps (first person)", "  Камера: /fps (от первого лица)", "  Camara: /fps (primera persona)", "  Kamera: /fps (birinci sahis)" }
+    { "  Kamera: /fps (prvo lice)", "  Camera: /fps (first person)", "  Камера: /fps (от первого лица)", "  Camara: /fps (primera persona)", "  Kamera: /fps (birinci sahis)" },
+    { "Kutija robe", "Box of goods", "Коробка товара", "Caja de mercancia", "Mal kutusu" },
+    { "Gradska banka", "City bank", "Городской банк", "Banco de la ciudad", "Sehir bankasi" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

@@ -70,6 +70,25 @@ static TakeFromGepek(playerid, v, item, n)
     return GEPEK_OK;
 }
 
+GepekPrebaci(playerid, v, item, n, bool:stavi)
+{
+    new rez = stavi ? PutInGepek(playerid, v, item, n) : TakeFromGepek(playerid, v, item, n);
+    if (rez == GEPEK_OK && item == ITEM_KUTIJA) StandKutijaGepek(playerid, v, stavi);
+    return rez;
+}
+
+GepekImaItem(v, item)
+{
+    return gGepek[v][item];
+}
+
+GepekMakniItem(v, item)
+{
+    if (!gGepek[v][item]) return;
+    gGepek[v][item] = 0;
+    SaveGepek(v, item);
+}
+
 static GepekCheck()
 {
     new t = MAX_PLAYERS - 1, v = MAX_VEHICLES - 1;
@@ -281,7 +300,7 @@ DLG:gepek_kolicina(playerid, response, const inputtext[])
         return ShowGepek(playerid);
     }
     new v = gGepekV[playerid], item = gGepekItem[playerid], n = strval(inputtext);
-    new rez = gGepekPut[playerid] ? PutInGepek(playerid, v, item, n) : TakeFromGepek(playerid, v, item, n);
+    new rez = GepekPrebaci(playerid, v, item, n, gGepekPut[playerid]);
     if (rez == GEPEK_NEMA) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko."));
     else if (rez == GEPEK_PUN) SendClientMessage(playerid, COLOR_ERROR, gGepekPut[playerid] ? T(playerid, "Prtljaznik je pun.") : T(playerid, "Ne mozete nositi toliko."));
     else PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, gGepekPut[playerid] ? ("* %s nesto stavlja u prtljaznik.") : ("* %s nesto uzima iz prtljaznika."), GetRPIme(playerid), "", 1);

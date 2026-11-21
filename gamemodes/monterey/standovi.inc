@@ -199,21 +199,34 @@ static StandKutijaUzmi(playerid)
     SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
 }
 
-StandGepekAlt(playerid, v)
+StandKutijaGepek(playerid, v, bool:stavi)
 {
-    if (gStandNar[playerid] == SN_NOSI && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY && ImaKljuc(playerid, v))
+    if (stavi)
     {
         RemovePlayerAttachedObject(playerid, STAND_KUTIJA_SLOT);
-        SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-        gStandNar[playerid] = SN_GEPEK;
-        gStandNarV[playerid] = v;
+        if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+        if (gStandNar[playerid] == SN_NOSI)
+        {
+            gStandNar[playerid] = SN_GEPEK;
+            gStandNarV[playerid] = v;
+        }
+        return;
+    }
+    if (gStandNar[playerid] == SN_GEPEK || gStandNar[playerid] == SN_NOSI) gStandNar[playerid] = SN_NOSI;
+    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) StandKutijaUzmi(playerid);
+}
+
+StandGepekAlt(playerid, v)
+{
+    if (gInv[playerid][ITEM_KUTIJA] && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY && ImaKljuc(playerid, v))
+    {
+        if (GepekPrebaci(playerid, v, ITEM_KUTIJA, 1, true) != GEPEK_OK) return 0;
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s stavlja kutiju u prtljaznik.", GetRPIme(playerid), "", 1);
         return 1;
     }
-    if (gStandNar[playerid] == SN_GEPEK && gStandNarV[playerid] == v)
+    if (gStandNar[playerid] == SN_GEPEK && gStandNarV[playerid] == v && GepekImaItem(v, ITEM_KUTIJA))
     {
-        gStandNar[playerid] = SN_NOSI;
-        StandKutijaUzmi(playerid);
+        if (GepekPrebaci(playerid, v, ITEM_KUTIJA, 1, false) != GEPEK_OK) return 0;
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s vadi kutiju iz prtljaznika.", GetRPIme(playerid), "", 1);
         return 1;
     }
@@ -488,6 +501,8 @@ DLG:stand_kupi(playerid, response)
 static StandNarudzbaKraj(playerid)
 {
     if (gStandNar[playerid] == SN_NEMA) return;
+    if (gStandNar[playerid] == SN_GEPEK && GepekImaItem(gStandNarV[playerid], ITEM_KUTIJA)) GepekMakniItem(gStandNarV[playerid], ITEM_KUTIJA);
+    if (gInv[playerid][ITEM_KUTIJA]) GiveItem(playerid, ITEM_KUTIJA, -gInv[playerid][ITEM_KUTIJA]);
     if (gStandNar[playerid] == SN_NOSI && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY)
     {
         RemovePlayerAttachedObject(playerid, STAND_KUTIJA_SLOT);
@@ -550,6 +565,7 @@ StandCheckpoint(playerid)
     }
     FirmaProdaja(FIRMA_TRGOVINA, t, iznos, false);
     gStandNar[playerid] = SN_NOSI;
+    GiveItem(playerid, ITEM_KUTIJA, 1);
     if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) StandKutijaUzmi(playerid);
     StandNarCp(playerid, true);
     return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Preuzeli ste robu. Odnesite je do standa."));
@@ -1468,7 +1484,7 @@ StandUgasi()
 
 StandDisconnect(playerid)
 {
-    gStandNar[playerid] = SN_NEMA;
+    StandNarudzbaKraj(playerid);
     new s = gStandRadi[playerid] - 1;
     if (s >= 0 && s < STAND_MAX && gStand[s][snIma])
     StandRadnikPauza(s, false);

@@ -29,7 +29,8 @@ static const gBankaInt[][E_BANKA_INT] = {
     { "Palomino Creek banka", 0, 2306.380, -15.240, 26.750 },
     { "Gradski ured", 3, 384.808, 173.804, 1008.382 },
     { "Atrium", 18, 1727.285, -1642.945, 20.225 },
-    { "Fleeca banka", 0, 2050.0, 2042.5, 1000.05 }
+    { "Fleeca banka", 0, 2050.0, 2042.5, 1000.05 },
+    { "Gradska banka", 0, 1411.9, -453.0, -76.2 }
 };
 
 enum { BA_OTVORI, BA_INFO, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, BA_POSALJI, BA_KREDIT, BA_OTPLATI, BA_KARTICA }
