@@ -250,6 +250,7 @@ public OnGameModeInit()
     InitSluzbe();
     InitGepek();
     InitVozilo();
+    InitFirme();
     InitTrgovina();
     InitKazino();
     InitBanka();
@@ -357,6 +358,7 @@ public Sekunda()
     DrogaTick();
     UtrkaTick();
     StandTick();
+    FirmaTick();
     KaznaTick();
     SpecTick();
     UpitTick();
@@ -415,6 +417,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/vozila.inc"
 #include "monterey/vlakovi.inc"
 #include "monterey/avioni.inc"
+#include "monterey/firme.inc"
 #include "monterey/trgovina.inc"
 #include "monterey/kazino.inc"
 #include "monterey/banka.inc"

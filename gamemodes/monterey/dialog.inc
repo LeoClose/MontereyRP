@@ -18,7 +18,8 @@ enum
     DLG_APANEL_KAZINO, DLG_APANEL_KAZINO_BRISI, DLG_APANEL_KAZINO_TIP, DLG_KAZINO_BLAGAJNA, DLG_KAZINO_BLAGAJNA_UNOS, DLG_STATS, DLG_LOKACIJE, DLG_LOKACIJE_LISTA, DLG_OPSTINA_POSAO, DLG_KAFIC, DLG_APANEL_KAFIC, DLG_APANEL_BILIJAR, DLG_APANEL_KOS, DLG_APANEL_ARKADA,
     DLG_APANEL_PIKADO, DLG_APANEL_KUGLANJE, DLG_APANEL_AC, DLG_APANEL_AC_LOG,
     DLG_BILJKA, DLG_DOBAVLJAC, DLG_LAB, DLG_LAB_KOL, DLG_APANEL_DROGA, DLG_SEF, DLG_SEF_STAVI, DLG_SEF_KOL, DLG_ORG_DNEVNIK, DLG_OKLADA,
-    DLG_STAND, DLG_STAND_KUPI, DLG_STAND_IME, DLG_STAND_ROBA, DLG_STAND_HRANA, DLG_APANEL_STAND, DLG_APANEL_STAND_MODEL, DLG_APANEL_STAND_MENI
+    DLG_STAND, DLG_STAND_KUPI, DLG_STAND_IME, DLG_STAND_ROBA, DLG_STAND_HRANA, DLG_APANEL_STAND, DLG_APANEL_STAND_MODEL, DLG_APANEL_STAND_MENI,
+    DLG_FIRMA, DLG_FIRMA_KUPI
 }
 
 static gDlg[MAX_PLAYERS];
@@ -205,6 +206,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_VOZILO_MENI:       return Dlg_vozilo_meni(playerid, response, listitem);
         case DLG_BOLNICA:           return Dlg_bolnica(playerid, response, listitem);
         case DLG_TUNING_NATPIS:     return Dlg_tuning_natpis(playerid, response, inputtext);
+        case DLG_FIRMA:             return Dlg_firma(playerid, response, listitem);
+        case DLG_FIRMA_KUPI:        return Dlg_firma_kupi(playerid, response);
         case DLG_STAND:             return Dlg_stand(playerid, response, listitem);
         case DLG_STAND_KUPI:        return Dlg_stand_kupi(playerid, response);
         case DLG_STAND_IME:         return Dlg_stand_ime(playerid, response, inputtext);

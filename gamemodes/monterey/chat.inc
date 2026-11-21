@@ -147,7 +147,7 @@ public OnPlayerText(playerid, text[])
     if (!gUlogiran[playerid]) return 0;
     if (KaznaBlokira(playerid)) return 0;
     RemoveBoje(text);
-    if (StandChat(playerid, text) || UtrkaChat(playerid, text) || MobitelText(playerid, text) || UpitChat(playerid, text)) return 0;
+    if (PosaoIgraChat(playerid, text) || UtrkaChat(playerid, text) || MobitelText(playerid, text) || UpitChat(playerid, text)) return 0;
     SendChat(playerid, text, CHAT_GOVOR);
     return 0;
 }

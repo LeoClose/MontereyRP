@@ -93,6 +93,7 @@ public OnPlayerDisconnect(playerid, reason)
     NovacDisconnect(playerid);
     UpitDisconnect(playerid);
     UtrkaDisconnect(playerid);
+    FirmaDisconnect(playerid);
     StandDisconnect(playerid);
     KaznaDisconnect(playerid);
     DostavaDisconnect(playerid);
@@ -196,7 +197,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
-    if (StandKey(playerid, newkeys, oldkeys)) return 1;
+    if (PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
     if (UtrkaKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
@@ -328,6 +329,7 @@ CMD:help(playerid, params[])
     DodajStupac(list, len, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
     DodajStupac(list, len, T(playerid, "  Ostalo: /admini"));
     DodajStupac(list, len, T(playerid, "  Kuce: /kuca (vlasnik, adresa, cijena i najam najblize kuce)"));
+    DodajStupac(list, len, T(playerid, "  Firme: /firma (unutar trgovine 24/7 ili frizera: kupnja, zarada, rad)"));
     DodajStupac(list, len, T(playerid, "  Statistika: /stats"));
     if (gAdmin[playerid]) DodajStupac(list, len, T(playerid, "  Admin: /ahelp"));
     return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, T(playerid, "Komande:"), list, T(playerid, "Zatvori"));

@@ -219,6 +219,7 @@ public OnNPCSpawn(npcid)
         VlakSpawn(npcid);
         AvionSpawn(npcid);
         KupacSpawn(npcid);
+        FirmaSpawn(npcid);
         BankaSpawn(npcid);
         PlaninaSpawn(npcid);
         return 1;

@@ -9,6 +9,8 @@
 #define ODJECA_SLOT_FRIZURA     7
 #define ODJECA_SISANJE_MS       6000
 
+#assert ODJECA_MAX <= FIRMA_MAX
+
 enum { ODJ_PRODAVAONICA, ODJ_FRIZER }
 enum { ODJ_SKIN, ODJ_KAPA, ODJ_FRIZURA }
 enum { OTD_INFO, OTD_LIJEVO, OTD_DESNO, OTD_KUPI, OTD_IZLAZ, OTD_ODJECA, OTD_KAPE }
@@ -139,6 +141,7 @@ static OdjecaStvori(s)
     gOdj[s][odPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2], svijet, gOdjecaInterijer[t]);
     gOdj[s][odTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gOdjecaUlaz[t][0], gOdjecaUlaz[t][1], gOdjecaUlaz[t][2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gOdjecaInterijer[t]);
     InterakcijaOznaka(gOdj[s][odTekstU], ODJECA_DOMET, SAVJET_IZLAZ);
+    if (t == ODJ_FRIZER) FirmaUcitaj(FIRMA_FRIZER, s, gOdj[s][odDb]);
 }
 
 static OdjecaAktor(s)
@@ -456,6 +459,7 @@ static OdjecaKupi(playerid)
     }
     DajNovac(playerid, -cijena);
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+    if (vrsta == ODJ_FRIZURA) FirmaProdaja(FIRMA_FRIZER, s, cijena, false);
     if (vrsta == ODJ_FRIZURA && gOdj[s][odImaAktor]) ApplyActorAnimation(gOdj[s][odAktor], "HAIRCUTS", "BRB_Cut", 4.1, true, false, false, false, ODJECA_SISANJE_MS);
     if (vrsta == ODJ_SKIN)
     {
@@ -516,9 +520,8 @@ OdjecaKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid) || gOdjecaU[playerid]) return 0;
     new s = OdjecaIgraca(playerid);
     if (s == -1 || !gOdj[s][odImaAktor] || !IsPlayerInRangeOfPoint(playerid, ODJECA_KASA_DOMET, gOdj[s][odAx], gOdj[s][odAy], gOdj[s][odAz])) return 0;
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    if ((gOdj[s][odTip] == ODJ_FRIZER && FirmaStolicaZauzeta(s)) || OdjecaStolicaZauzeta(s, playerid))
     {
-        if (i == playerid || gOdjecaU[i] != s + 1) continue;
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, gOdj[s][odTip] == ODJ_FRIZER ? ("Frizer je zauzet, pricekajte.") : ("Kabina je zauzeta, pricekajte.")));
         return 1;
     }
@@ -631,6 +634,7 @@ static OdjecaPostavi(playerid, s, bool:kabina)
 
 static OdjecaObrisi(s)
 {
+    FirmaMakni(FIRMA_FRIZER, s);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && OdjecaIgraca(i) == s) OdjecaVani(i, s);
     OdjecaMakniAktor(s);
     DestroyDynamicPickup(gOdj[s][odPickup]);
@@ -736,5 +740,31 @@ OdjecaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
     y = gOdj[i][odY];
     z = gOdj[i][odZ];
     a = gOdj[i][odA];
+    return 1;
+}
+
+OdjecaFrizerIgraca(playerid)
+{
+    new s = OdjecaIgraca(playerid);
+    return s != -1 && gOdj[s][odTip] == ODJ_FRIZER ? s : -1;
+}
+
+OdjecaStolicaZauzeta(s, osim = INVALID_PLAYER_ID)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (i != osim && gOdjecaU[i] == s + 1) return 1;
+    return 0;
+}
+
+OdjecaTocke(s, &interijer, &svijet, Float:ulaz[3], Float:cilj[4], Float:radnik[3])
+{
+    if (s < 0 || s >= ODJECA_MAX || !gOdj[s][odIma] || gOdj[s][odTip] != ODJ_FRIZER || !gOdj[s][odImaKabina]) return 0;
+    new t = gOdj[s][odTip];
+    interijer = gOdjecaInterijer[t];
+    svijet = ODJECA_SVIJET + s;
+    for (new i = 0; i < 3; i++) ulaz[i] = gOdjecaUlaz[t][i];
+    cilj[0] = radnik[0] = gOdj[s][odKx];
+    cilj[1] = radnik[1] = gOdj[s][odKy];
+    cilj[2] = radnik[2] = gOdj[s][odKz];
+    cilj[3] = gOdj[s][odKa];
     return 1;
 }

@@ -900,7 +900,7 @@ static const gVoziloBrzina[212] = {
 
 enum { VP_MOTOR, VP_SVJETLA, VP_ALARM, VP_VRATA }
 enum { PUMPA_NEMA, PUMPA_KRIVA, PUMPA_OK }
-enum E_PUMPA { bool:pmIma, pmDb, pmDizel, Float:pmX, Float:pmY, Float:pmZ, STREAMER_TAG_PICKUP:pmPickup, STREAMER_TAG_3D_TEXT_LABEL:pmTekst }
+enum E_PUMPA { bool:pmIma, pmDb, pmDizel, pmTrgovina, Float:pmX, Float:pmY, Float:pmZ, STREAMER_TAG_PICKUP:pmPickup, STREAMER_TAG_3D_TEXT_LABEL:pmTekst }
 
 static gPumpa[PUMPA_MAX][E_PUMPA];
 static gApPumpaDb[MAX_PLAYERS];
@@ -936,25 +936,40 @@ InitVozilo()
     ManualVehicleEngineAndLights();
     SetTimer("VoziloDash", 250, true);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gas_pumps (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, dizel INTEGER NOT NULL)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, dizel FROM gas_pumps ORDER BY id LIMIT %d", PUMPA_MAX);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gas_pump_shops (pump INTEGER PRIMARY KEY, shop INTEGER NOT NULL)"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.id, p.x, p.y, p.z, p.dizel, IFNULL(s.shop, 0) FROM gas_pumps p LEFT JOIN gas_pump_shops s ON s.pump = p.id ORDER BY p.id LIMIT %d", PUMPA_MAX);
     for (new p = 0, n = DB_GetRowCount(res); p < n; p++)
     {
         gPumpa[p][pmDb] = DB_GetFieldInt(res, 0);
-        PumpaStvori(p, DB_GetFieldInt(res, 4), DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3));
+        PumpaStvori(p, DB_GetFieldInt(res, 4), DB_GetFieldFloat(res, 1), DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldInt(res, 5));
         DB_SelectNextRow(res);
     }
     DB_FreeResultSet(res);
 }
 
-static PumpaStvori(p, dizel, Float:x, Float:y, Float:z)
+static PumpaStvori(p, dizel, Float:x, Float:y, Float:z, trgovina)
 {
     gPumpa[p][pmIma] = true;
     gPumpa[p][pmDizel] = dizel;
+    gPumpa[p][pmTrgovina] = trgovina;
     gPumpa[p][pmX] = x;
     gPumpa[p][pmY] = y;
     gPumpa[p][pmZ] = z;
     gPumpa[p][pmPickup] = CreateDynamicPickup(PUMPA_PICKUP, 1, x, y, z, 0, 0);
     gPumpa[p][pmTekst] = CreateDynamic3DTextLabel(dizel ? ("Dizel\n/tankaj") : ("Benzin\n/tankaj"), COLOR_ORG, x, y, z + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+}
+
+static PumpaTrgovina(playerid)
+{
+    for (new p = 0; p < PUMPA_MAX; p++)
+        if (gPumpa[p][pmIma] && gPumpa[p][pmTrgovina] && IsPlayerInRangeOfPoint(playerid, PUMPA_DOMET, gPumpa[p][pmX], gPumpa[p][pmY], gPumpa[p][pmZ])) return gPumpa[p][pmTrgovina];
+    return 0;
+}
+
+PumpeOdspoji(trgovina)
+{
+    for (new p = 0; p < PUMPA_MAX; p++) if (gPumpa[p][pmTrgovina] == trgovina) gPumpa[p][pmTrgovina] = 0;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM gas_pump_shops WHERE shop = %d", trgovina));
 }
 
 static PumpaBlizu(playerid, dizel)
@@ -971,19 +986,25 @@ static PumpaBlizu(playerid, dizel)
 
 ShowPumpe(playerid)
 {
-    new list[2048], row[64], len = 0;
+    new list[2048], row[96], len = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Nova pumpa za benzin na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Nova pumpa za dizel na mojoj poziciji"));
     for (new p = 0; p < PUMPA_MAX; p++)
     {
         if (!gPumpa[p][pmIma]) continue;
         format(row, sizeof row, "[%d] %s - %s", gPumpa[p][pmDb], CestaZona(gPumpa[p][pmX], gPumpa[p][pmY]), gPumpa[p][pmDizel] ? T(playerid, "Dizel") : T(playerid, "Benzin"));
+        if (gPumpa[p][pmTrgovina])
+        {
+            new veza[24];
+            format(veza, sizeof veza, " (24/7 #%d)", gPumpa[p][pmTrgovina]);
+            strcat(row, veza);
+        }
         DodajStupac(list, len, row);
     }
     return PrikaziDialog(playerid, DLG_APANEL_PUMPA, DIALOG_STYLE_LIST, T(playerid, "Pumpe goriva"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
-static PumpaNova(playerid, dizel)
+PumpaNova(playerid, dizel, trgovina = 0)
 {
     new Float:x, Float:y, Float:z, p = 0;
     GetPlayerPos(playerid, x, y, z);
@@ -991,7 +1012,8 @@ static PumpaNova(playerid, dizel)
     if (p == PUMPA_MAX || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Pumpa se ovdje ne moze postaviti."));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO gas_pumps (x, y, z, dizel) VALUES (%f, %f, %f, %d)", x, y, z, dizel));
     gPumpa[p][pmDb] = ZadnjiId();
-    PumpaStvori(p, dizel, x, y, z);
+    if (trgovina) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO gas_pump_shops (pump, shop) VALUES (%d, %d)", gPumpa[p][pmDb], trgovina));
+    PumpaStvori(p, dizel, x, y, z, trgovina);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Pumpa dodana: %s."), CestaZona(x, y));
 }
 
@@ -1027,6 +1049,7 @@ DLG:apanel_pumpa_brisi(playerid, response)
     DestroyDynamic3DTextLabel(gPumpa[p][pmTekst]);
     gPumpa[p][pmIma] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM gas_pumps WHERE id = %d", gApPumpaDb[playerid]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM gas_pump_shops WHERE pump = %d", gApPumpaDb[playerid]));
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Pumpa obrisana."));
     return ShowPumpe(playerid);
 }
@@ -1054,7 +1077,7 @@ static JeDizel(model)
     return 0;
 }
 
-static VoziloGet(v, param)
+VoziloGet(v, param)
 {
     new p[7];
     GetVehicleParamsEx(v, p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
@@ -1149,6 +1172,7 @@ public OnVehicleSpawn(vehicleid)
 {
     VoziloReset(vehicleid);
     VlasnickoSpawn(vehicleid);
+    StandKombiSpawn(vehicleid);
     return 1;
 }
 
@@ -1598,6 +1622,8 @@ static bool:MozeKljuc(v)
 
 ImaKljuc(playerid, v)
 {
+    new kombi = StandKombiVlasnik(v);
+    if (kombi != -1) return kombi == gAccountId[playerid] || gVoziloUkradeno[v];
     new vlasnik = VlasnikVozila(v);
     if (vlasnik == VLASNIK_PIJACA) return gAdmin[playerid] >= ALVL_ORG;
     if (vlasnik) return vlasnik == gAccountId[playerid] || gVoziloUkradeno[v];
@@ -1934,6 +1960,7 @@ static KanisterNapuni(playerid, litara)
     if (!gInv[playerid][item]) GiveItem(playerid, ITEM_KANISTER, -1);
     GiveItem(playerid, item, litara);
     DajNovac(playerid, -litara * cijena);
+    FirmaGorivo(PumpaTrgovina(playerid), litara * cijena);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s puni kanister gorivom.", GetRPIme(playerid), "", 1);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Natocili ste %d L za $%d."), litara, litara * cijena);
 }
@@ -1984,6 +2011,7 @@ static VoziloTankaj(playerid, litara)
     }
     if (litara > maks) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najvise mozete %d L."), maks);
     DajNovac(playerid, -litara * cijena);
+    FirmaGorivo(PumpaTrgovina(playerid), litara * cijena);
     gGorivo[v] += float(litara);
     if (pumpa == PUMPA_KRIVA) gKrivoGorivo[v] += float(litara);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s toci gorivo.", GetRPIme(playerid), "", 1);

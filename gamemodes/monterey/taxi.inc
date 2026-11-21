@@ -527,7 +527,7 @@ DLG:taksi_poziv(playerid, response)
 public OnPlayerEnterCheckpoint(playerid)
 {
     if (KaznaCheckpoint(playerid)) return 1;
-    if (DrogaCheckpoint(playerid) || DostavaCheckpoint(playerid)) return 1;
+    if (DrogaCheckpoint(playerid) || DostavaCheckpoint(playerid) || StandCheckpoint(playerid)) return 1;
     if (!gTaksiVozac[playerid]) return MobitelGpsStigao(playerid);
     gTaksiVozac[playerid] = false;
     DisablePlayerCheckpoint(playerid);
@@ -767,7 +767,7 @@ public TaksiPrepreke()
 
 public OnNPCFinishMove(npcid)
 {
-    if (NPCStigao(npcid)) return 1;
+    if (NPCStigao(npcid) || FirmaStigao(npcid)) return 1;
     KurvaPomak(npcid);
     SlucajNpcStigao(npcid);
     new s = gNpcTaksi[npcid] - 1;

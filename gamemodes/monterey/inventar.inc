@@ -140,7 +140,7 @@ enum
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
     ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE,
-    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE
+    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -190,7 +190,9 @@ new const gItems[][E_ITEM] = {
     { "Srebrne naocale",        "kom", 3,   0,  -1, 19023 },
     { "Metamfetamin",           "g",   200, 0,  -1, 1579  },
     { "Koka pasta",             "g",   500, 0,  -1, 1577  },
-    { "Kemikalije",             "l",   20,  0,  -1, 1576  }
+    { "Kemikalije",             "l",   20,  0,  -1, 1576  },
+    { "Cigarete",               "kom", 40,  0,  -1, 19896 },
+    { "Srecka",                 "kom", 10,  0,  -1, 1581  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -277,6 +279,15 @@ static KoristiItem(playerid, item)
     if (item == ITEM_KANISTER) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prazan kanister napunite na pumpi naredbom /tankaj."));
     if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return VoziloKanister(playerid, item, -1);
     if (item == ITEM_SJEME) return DrogaPosadi(playerid);
+    if (item == ITEM_SRECKA) return SreckaOgrebi(playerid);
+    if (item == ITEM_CIGARETE)
+    {
+        if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti pjeske."));
+        if (!GiveItem(playerid, item, -1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate tog predmeta."));
+        SetPlayerSpecialAction(playerid, SPECIAL_ACTION_SMOKE_CIGGY);
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali cigaretu.", GetRPIme(playerid), "", 1);
+        return 1;
+    }
     if (item == ITEM_KOKA || item == ITEM_KEMIKALIJE) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koka pasta i kemikalije preraduju se u laboratoriju mafije (/lab)."));
     if (item != ITEM_MARIHUANA && item != ITEM_KOKAIN && item != ITEM_METH)
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Municija se puni kad izvadite oruzje."));

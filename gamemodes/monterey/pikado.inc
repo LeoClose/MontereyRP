@@ -380,6 +380,13 @@ PikadoCilja(playerid)
     return s != -1 && gPikado[s][pkNisani] == playerid;
 }
 
+static PikadoKlijent(playerid)
+{
+    new verzija[24];
+    GetPlayerVersion(playerid, verzija, sizeof verzija);
+    return !strcmp(verzija, "0.3.DL", true, 6) || !strcmp(verzija, "0.3.7-R5", true, 8);
+}
+
 PikadoKey(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
@@ -394,6 +401,7 @@ PikadoKey(playerid)
     if (s == -1) return 0;
     new i = gPikado[s][pkIgrac][0] == INVALID_PLAYER_ID ? 0 : gPikado[s][pkIgrac][1] == INVALID_PLAYER_ID ? 1 : -1;
     if (i == -1 || gPikado[s][pkFaza] != PF_CEKA) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Ovdje se vec igra.")), 1;
+    if (!PikadoKlijent(playerid)) return IgraObavijest(playerid, T(playerid, "Pikado"), OBAVIJEST_GRESKA, T(playerid, "Pikado nije dostupan na vasoj verziji klijenta (potreban je 0.3.DL ili 0.3.7-R5).")), 1;
     new poruka[96];
     if (!DajNovac(playerid, -PIKADO_CIJENA))
     {
