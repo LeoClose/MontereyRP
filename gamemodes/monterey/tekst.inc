@@ -1342,7 +1342,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vrijeme na serveru postavljeno je na ID %d.", "Server weather set to ID %d.", "Погода на сервере установлена на ID %d.", "Clima del servidor establecido al ID %d.", "Sunucu havasi ID %d olarak ayarlandi." },
     { "Igrac: %s se prijavio na server | Pozicija: Admin", "Player: %s logged in to the server | Position: Admin", "Игрок: %s вошел на сервер | Роль: Админ", "Jugador: %s inicio sesion en el servidor | Posicion: Admin", "Oyuncu: %s sunucuya giris yapti | Rol: Admin" },
     { "Igrac: %s se prijavio na server | Pozicija: Obican igrac", "Player: %s logged in to the server | Position: Player", "Игрок: %s вошел на сервер | Роль: Игрок", "Jugador: %s inicio sesion en el servidor | Posicion: Jugador", "Oyuncu: %s sunucuya giris yapti | Rol: Oyuncu" },
-    { "Igrac: %s se izlogovao sa servera | Pozicija: Admin", "Player: %s logged out of the server | Position: Admin", "Игрок: %s вышел с сервера | Роль: Админ", "Jugador: %s cerró sesión en el servidor | Posición: Admin", "Oyuncu: %s sunucudan cikis yapti | Rol: Admin" },
+    { "Igrac: %s se izlogovao sa servera | Pozicija: Admin", "Player: %s logged out of the server | Position: Admin", "Игрок: %s вышел с сервера | Роль: Админ", "Jugador: %s cerro sesion en el servidor | Posicion: Admin", "Oyuncu: %s sunucudan cikis yapti | Rol: Admin" },
     { "Nije moguce promijeniti jetpack.", "Could not change the jetpack.", "Не удалось изменить состояние джетпака.", "No se pudo cambiar el jetpack.", "Jetpack degistirilemedi." },
     { "Jetpack je iskljucen.", "Jetpack disabled.", "Джетпак выключен.", "Jetpack desactivado.", "Jetpack kapatildi." },
     { "Jetpack je ukljucen.", "Jetpack enabled.", "Джетпак включен.", "Jetpack activado.", "Jetpack acildi." },
