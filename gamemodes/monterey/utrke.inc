@@ -537,9 +537,7 @@ UtrkaTick()
                 if (gUv[i] != u + 1) continue;
                 if (o > 0)
                 {
-                    new t[16];
-                    format(t, sizeof t, "~y~%d", o);
-                    GameTextForPlayer(i, t, 1000, 3);
+                    GameTextForPlayer(i, "~y~%d", 1000, 3, o);
                     PlayerPlaySound(i, 1056, 0.0, 0.0, 0.0);
                     continue;
                 }

@@ -2365,7 +2365,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Izvadite kutiju iz prtljaznika (ALT kod prtljaznika).", "Take the box out of the trunk (ALT at the trunk).", "Достаньте коробку из багажника (ALT у багажника).", "Saca la caja del maletero (ALT en el maletero).", "Kutuyu bagajdan cikarin (bagajda ALT)." },
     { "~y~ALT~w~ - prtljaznik", "~y~ALT~w~ - trunk", "~y~ALT~w~ - bagazhnik", "~y~ALT~w~ - maletero", "~y~ALT~w~ - bagaj" },
     { "* %s stavlja kutiju u prtljaznik.", "* %s puts a box in the trunk.", "* %s кладёт коробку в багажник.", "* %s pone una caja en el maletero.", "* %s bagaja bir kutu koyuyor." },
-    { "* %s vadi kutiju iz prtljaznika.", "* %s takes a box out of the trunk.", "* %s достаёт коробку из багажника.", "* %s saca una caja del maletero.", "* %s bagajdan bir kutu cikariyor." }
+    { "* %s vadi kutiju iz prtljaznika.", "* %s takes a box out of the trunk.", "* %s достаёт коробку из багажника.", "* %s saca una caja del maletero.", "* %s bagajdan bir kutu cikariyor." },
+    { "Dok radite u kombiju kamera je u prvom licu.", "While working in the van the camera stays in first person.", "Пока вы работаете в фургоне, камера от первого лица.", "Mientras trabajas en la furgoneta la camara esta en primera persona.", "Minibuste calisirken kamera birinci sahis gorunumundedir." },
+    { "Kamera u prvom licu je ukljucena (/fps za iskljucivanje).", "First person camera is on (/fps to turn it off).", "Камера от первого лица включена (/fps для выключения).", "Camara en primera persona activada (/fps para desactivarla).", "Birinci sahis kamera acik (/fps ile kapatin)." },
+    { "Kamera u prvom licu je iskljucena.", "First person camera is off.", "Камера от первого лица выключена.", "Camara en primera persona desactivada.", "Birinci sahis kamera kapali." },
+    { "  Kamera: /fps (prvo lice)", "  Camera: /fps (first person)", "  Камера: /fps (от первого лица)", "  Camara: /fps (primera persona)", "  Kamera: /fps (birinci sahis)" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

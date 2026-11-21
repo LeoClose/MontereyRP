@@ -561,8 +561,7 @@ static AtcTdOsvjezi(playerid)
         }
         PlayerTextDrawSetString(playerid, gAtcTd[playerid][2 + r], red);
     }
-    format(red, sizeof red, T(playerid, "Odobreno: %d~n~/toranj - kursor, ESC - kamera"), gInstOdobreno[k]);
-    PlayerTextDrawSetString(playerid, gAtcTd[playerid][2 + AVION_ATC_SLOTOVA], red);
+    PlayerTextDrawSetString(playerid, gAtcTd[playerid][2 + AVION_ATC_SLOTOVA], T(playerid, "Odobreno: %d~n~/toranj - kursor, ESC - kamera"), gInstOdobreno[k]);
 }
 
 static AtcTdPokazi(playerid)

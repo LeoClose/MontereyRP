@@ -1550,7 +1550,7 @@ static DashOkretaji(v, kmh, mjenjac)
 
 static DashOsvjezi(playerid, v)
 {
-    new Float:vx, Float:vy, Float:vz, Float:zdravlje, tekst[24], bool:motor = VoziloGet(v, VP_MOTOR) == 1;
+    new Float:vx, Float:vy, Float:vz, Float:zdravlje, bool:motor = VoziloGet(v, VP_MOTOR) == 1;
     GetVehicleVelocity(v, vx, vy, vz);
     new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), mjenjac = DashMjenjac(v, kmh, motor), skala = gDashStanje[playerid][DS_SKALA];
     new kut = -120 + 240 * (kmh > skala ? skala : kmh) / skala;
@@ -1563,15 +1563,13 @@ static DashOsvjezi(playerid, v)
     VoziloKmUcitaj(v);
     if (DashPromjena(playerid, DS_KM, floatround(gVoziloKm[v] / 1000.0, floatround_floor)))
     {
-        format(tekst, sizeof tekst, "%06d km", gDashStanje[playerid][DS_KM]);
-        PlayerTextDrawSetString(playerid, gDash[playerid][DT_KM], tekst);
+        PlayerTextDrawSetString(playerid, gDash[playerid][DT_KM], "%06d km", gDashStanje[playerid][DS_KM]);
     }
     new g, m, d, sat, minuta;
     VrijemeLokalno(g, m, d, sat, minuta);
     if (DashPromjena(playerid, DS_SAT, sat * 60 + minuta))
     {
-        format(tekst, sizeof tekst, "%02d:%02d", sat, minuta);
-        PlayerTextDrawSetString(playerid, gDash[playerid][DT_SAT], tekst);
+        PlayerTextDrawSetString(playerid, gDash[playerid][DT_SAT], "%02d:%02d", sat, minuta);
     }
     new boje[4], lamp = 0;
     if (zdravlje < VOZILO_KVAR_ZDRAVLJE) boje[0] = DASH_BOJA_CRVENO;

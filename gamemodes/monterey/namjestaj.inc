@@ -225,9 +225,8 @@ NamjestajUlaz(playerid)
 
 static NamjestajPrikazi(playerid)
 {
-    new s = gNamU[playerid], r = gNamIdx[playerid], info[96];
-    format(info, sizeof info, "%s~n~~g~$%d~n~~w~%d/%d", gNamRobaIme[s][r], gNamRobaCijena[s][r], r + 1, gNamRobaBroj[s]);
-    PlayerTextDrawSetString(playerid, gNamTd[playerid][NMTD_INFO], info);
+    new s = gNamU[playerid], r = gNamIdx[playerid];
+    PlayerTextDrawSetString(playerid, gNamTd[playerid][NMTD_INFO], "%s~n~~g~$%d~n~~w~%d/%d", gNamRobaIme[s][r], gNamRobaCijena[s][r], r + 1, gNamRobaBroj[s]);
     if (gNamPregled[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gNamPregled[playerid]);
     gNamPregled[playerid] = CreatePlayerObject(playerid, gNamRobaModel[s][r], gNam[s][nmIx], gNam[s][nmIy], gNam[s][nmIz] - 1.0, 0.0, 0.0, gNam[s][nmIa]);
 }

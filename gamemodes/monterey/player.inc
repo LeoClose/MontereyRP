@@ -95,6 +95,7 @@ public OnPlayerDisconnect(playerid, reason)
     UtrkaDisconnect(playerid);
     FirmaDisconnect(playerid);
     StandDisconnect(playerid);
+    FpsDisconnect(playerid);
     KaznaDisconnect(playerid);
     DostavaDisconnect(playerid);
     KaficDisconnect(playerid);
@@ -159,6 +160,7 @@ public OnPlayerSpawn(playerid)
     VrijemeIgrac(playerid);
     RanjenBolnica(playerid);
     SpecSpawn(playerid);
+    FpsSpawn(playerid);
     return 1;
 }
 
@@ -331,6 +333,7 @@ CMD:help(playerid, params[])
     DodajStupac(list, len, T(playerid, "  Kuce: /kuca (vlasnik, adresa, cijena i najam najblize kuce)"));
     DodajStupac(list, len, T(playerid, "  Firme: /firma (unutar trgovine 24/7 ili frizera: kupnja, zarada, rad)"));
     DodajStupac(list, len, T(playerid, "  Statistika: /stats"));
+    DodajStupac(list, len, T(playerid, "  Kamera: /fps (prvo lice)"));
     if (gAdmin[playerid]) DodajStupac(list, len, T(playerid, "  Admin: /ahelp"));
     return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, T(playerid, "Komande:"), list, T(playerid, "Zatvori"));
 }

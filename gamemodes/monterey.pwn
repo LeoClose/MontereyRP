@@ -11,6 +11,7 @@
 #include <fastcmd>
 #include <streamer>
 #include <kolizija>
+#include <samp_bcrypt>
 
 #include <Pawn.RakNet>
 forward OnCheatDetected(playerid, const ip_address[], type, code);
@@ -136,6 +137,7 @@ bool:DestroyVozilo(v)
 #define MAX_PASSWORD_LEN    64
 #define SALT_LEN            16
 #define HASH_ROUNDS         1000
+#define BCRYPT_NITI         4
 #define MAX_LOGIN_ATTEMPTS  3
 
 #define SPAWN_X     484.0
@@ -159,6 +161,7 @@ public OnGameModeInit()
 {
     SetGameModeText("©M:RP by Leo and Krti");
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
+    bcrypt_set_thread_limit(BCRYPT_NITI);
     DisableInteriorEnterExits();
     Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 960);
     Streamer_ToggleChunkStream(true);
@@ -246,6 +249,7 @@ public OnGameModeInit()
     MapaMontereyPeak();
     MapaGlenParkUkloni(INVALID_PLAYER_ID);
     MapaGlenPark();
+    InitStaze();
     InitMarica();
     InitPolicija();
     InitMdt();
@@ -478,6 +482,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/utrke.inc"
 #include "monterey/staze.inc"
 #include "monterey/staza.inc"
+#include "monterey/fps.inc"
 #include "monterey/standovi.inc"
 #include "monterey/kazne.inc"
 #include "monterey/planina.inc"
@@ -491,6 +496,8 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
 
+new gLozinkaCeka[MAX_PLAYERS];
+
 DLG:registracija(playerid, response, const inputtext[])
 {
     if (!response) return KickTimer(playerid);
@@ -499,14 +506,24 @@ DLG:registracija(playerid, response, const inputtext[])
     if (len < MIN_PASSWORD_LEN || len > MAX_PASSWORD_LEN)
         return PrikaziRegistraciju(playerid, "{FF6347}Lozinka mora imati 6-64 znakova.\n\n");
 
-    new name[MAX_PLAYER_NAME + 1], salt[SALT_LEN + 1], hash[65];
+    if (gLozinkaCeka[playerid] == gConnSerial[playerid]) return 1;
+    gLozinkaCeka[playerid] = gConnSerial[playerid];
+    bcrypt_hash(playerid, "RegistracijaHash", inputtext, BCRYPT_COST, "d", gConnSerial[playerid]);
+    return 1;
+}
+
+forward RegistracijaHash(playerid, hashid, serijal);
+public RegistracijaHash(playerid, hashid, serijal)
+{
+    new hash[BCRYPT_HASH_LENGTH], name[MAX_PLAYER_NAME + 1];
+    bcrypt_get_hash(hash);
+    if (!IsPlayerConnected(playerid) || gConnSerial[playerid] != serijal) return 1;
+    gLozinkaCeka[playerid] = 0;
     GetPlayerName(playerid, name, sizeof name);
-    GenerateSalt(salt);
-    HashPassword(inputtext, salt, hash);
 
     DB_FreeResultSet(DB_ExecuteQuery(gDB,
-        "INSERT INTO accounts (name, hash, salt, registered, last_login, jezik) VALUES ('%q', '%q', '%q', %d, %d, -1)",
-        name, hash, salt, gettime(), gettime()));
+        "INSERT INTO accounts (name, hash, salt, registered, last_login, jezik) VALUES ('%q', '%q', '', %d, %d, -1)",
+        name, hash, gettime(), gettime()));
 
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id FROM accounts WHERE name = '%q' LIMIT 1", name);
     if (!DB_GetRowCount(res))
@@ -526,6 +543,7 @@ DLG:prijava(playerid, response, const inputtext[])
 {
     if (!response) return KickTimer(playerid);
 
+    if (gLozinkaCeka[playerid] == gConnSerial[playerid]) return 1;
     new name[MAX_PLAYER_NAME + 1], salt[SALT_LEN + 1], stored[65], hash[65];
     GetPlayerName(playerid, name, sizeof name);
 
@@ -543,8 +561,38 @@ DLG:prijava(playerid, response, const inputtext[])
     if (!inputtext[0] || strlen(inputtext) > MAX_PASSWORD_LEN)
         return NevazecaLozinka(playerid);
 
+    if (stored[0] == '$')
+    {
+        gLozinkaCeka[playerid] = gConnSerial[playerid];
+        bcrypt_verify(playerid, "PrijavaProvjera", inputtext, stored, "dd", gConnSerial[playerid], id);
+        return 1;
+    }
     HashPassword(inputtext, salt, hash);
     if (strcmp(hash, stored) != 0) return NevazecaLozinka(playerid);
+    bcrypt_hash(playerid, "LozinkaPretvori", inputtext, BCRYPT_COST, "d", id);
+    return PrijavaUspjela(playerid, id);
+}
+
+forward PrijavaProvjera(playerid, bool:uspjeh, serijal, id);
+public PrijavaProvjera(playerid, bool:uspjeh, serijal, id)
+{
+    if (!IsPlayerConnected(playerid) || gConnSerial[playerid] != serijal) return 1;
+    gLozinkaCeka[playerid] = 0;
+    if (!uspjeh) return NevazecaLozinka(playerid);
+    return PrijavaUspjela(playerid, id);
+}
+
+forward LozinkaPretvori(playerid, hashid, id);
+public LozinkaPretvori(playerid, hashid, id)
+{
+    new hash[BCRYPT_HASH_LENGTH];
+    bcrypt_get_hash(hash);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET hash = '%q', salt = '' WHERE id = %d", hash, id));
+    return 1;
+}
+
+PrijavaUspjela(playerid, id)
+{
     new s = LoginIpIgraca(playerid, false);
     if (s != -1) gLoginIp[s][liGreske] = 0;
 
@@ -650,13 +698,6 @@ ZavrsiUlaz(playerid)
     TogglePlayerSpectating(playerid, false);
     AdminPrijava(playerid);
     return 1;
-}
-
-GenerateSalt(salt[SALT_LEN + 1])
-{
-    static const chars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    for (new i = 0; i < SALT_LEN; i++) salt[i] = chars[random(sizeof chars - 1)];
-    salt[SALT_LEN] = EOS;
 }
 
 HashPassword(const password[], const salt[], hash[65])

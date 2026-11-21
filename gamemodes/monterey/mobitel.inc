@@ -438,9 +438,7 @@ static MobitelPrikazi(playerid)
     else if (ekran == MOBITEL_UTRKE_OBRISI) PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Obrisi utrku"));
     else if (ekran == MOBITEL_ODVOZ)
     {
-        new naslov[48];
-        format(naslov, sizeof naslov, T(playerid, "Odvoz ($%d)"), MEHANICAR_ODVOZ);
-        PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], naslov);
+        PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, "Odvoz ($%d)"), MEHANICAR_ODVOZ);
     }
     else PlayerTextDrawSetString(playerid, gMobitelNaslov[playerid], T(playerid, gMobitelIzbornik[ekran]));
     PlayerTextDrawSetPos(playerid, gMobitelOznaka[playerid], MOBITEL_X + 15.0, MOBITEL_Y + MOBITEL_STAVKA_Y + float(odabir - pocetak) * MOBITEL_STAVKA_H);
@@ -452,9 +450,7 @@ static MobitelPrikazi(playerid)
         if (MobitelUnosEkran(ekran) && !i) PlayerTextDrawSetString(playerid, td, gMobitelUnos[playerid][0] ? gMobitelUnos[playerid] : "-");
         else if (ekran == MOBITEL_POSTAVKE && i == 1)
         {
-            new tekst[48];
-            format(tekst, sizeof tekst, T(playerid, "Moj broj: %s"), gMobitelMoj[playerid]);
-            PlayerTextDrawSetString(playerid, td, tekst);
+            PlayerTextDrawSetString(playerid, td, T(playerid, "Moj broj: %s"), gMobitelMoj[playerid]);
         }
         else if (s >= broj)
         {

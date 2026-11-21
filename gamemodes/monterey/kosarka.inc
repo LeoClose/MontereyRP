@@ -252,9 +252,8 @@ static KosHudOsvjezi(t)
     for (new p = 0, pZadnji = gIgracZadnji; p <= pZadnji; p++)
     {
         if (gKosTeren[p] != t) continue;
-        new nas = gKosTim[p], naslov[96];
-        format(naslov, sizeof naslov, "%s%s%s%s  ~w~%d : %d  %s%s%s%s", gKosTimBoja[0], nas == 0 ? ("[") : (""), T(p, gKosTimIme[0]), nas == 0 ? ("]") : (""), gKos[t][koBod][0], gKos[t][koBod][1], gKosTimBoja[1], nas == 1 ? ("[") : (""), T(p, gKosTimIme[1]), nas == 1 ? ("]") : (""));
-        PlayerTextDrawSetString(p, gKosHud[p][1], naslov);
+        new nas = gKosTim[p];
+        PlayerTextDrawSetString(p, gKosHud[p][1], "%s%s%s%s  ~w~%d : %d  %s%s%s%s", gKosTimBoja[0], nas == 0 ? ("[") : (""), T(p, gKosTimIme[0]), nas == 0 ? ("]") : (""), gKos[t][koBod][0], gKos[t][koBod][1], gKosTimBoja[1], nas == 1 ? ("[") : (""), T(p, gKosTimIme[1]), nas == 1 ? ("]") : (""));
         PlayerTextDrawSetString(p, gKosHud[p][2], popis[0]);
         PlayerTextDrawSetString(p, gKosHud[p][3], popis[1]);
     }
@@ -272,9 +271,7 @@ static bool:KosPridruzi(playerid, t, zeljeni = -1)
     gKosTim[playerid] = tim;
     KosHudStvori(playerid);
     KosHudOsvjezi(t);
-    new tekst[64];
-    format(tekst, sizeof tekst, "%s%s", gKosTimBoja[tim], T(playerid, gKosTimIme[tim]));
-    GameTextForPlayer(playerid, tekst, 2000, 6);
+    GameTextForPlayer(playerid, "%s%s", 2000, 6, gKosTimBoja[tim], T(playerid, gKosTimIme[tim]));
     new poruka[160];
     format(poruka, sizeof poruka, T(playerid, "Igrate za tim %s. Prvi do %d poena pobjeduje. Udaljite se s terena za izlaz."), T(playerid, gKosTimIme[tim]), KOS_POBJEDA);
     IgraObavijest(playerid, T(playerid, "Kosarka"), KOS_BOJA, poruka, 0);
@@ -319,9 +316,7 @@ static KosPobjeda(t, tim)
     {
         if (gKosTeren[i] != t) continue;
         if (gKosTim[i] == tim && n < sizeof pobjednici) pobjednici[n++] = i;
-        new tekst[64];
-        format(tekst, sizeof tekst, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
-        GameTextForPlayer(i, tekst, 3000, 3);
+        GameTextForPlayer(i, gKosTim[i] == tim ? ("~g~%s") : ("~r~%s"), 3000, 3, T(i, gKosTim[i] == tim ? ("POBJEDA!") : ("PORAZ")));
         new poruka[160];
         format(poruka, sizeof poruka, T(i, "[Kosarka] Tim %s je pobijedio %d : %d! Nova utakmica pocinje."), T(i, gKosTimIme[tim]), gKos[t][koBod][tim], gKos[t][koBod][1 - tim]);
         IgraObavijest(i, T(i, "Kosarka"), KOS_BOJA, poruka);

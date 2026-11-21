@@ -41,9 +41,7 @@ static NovacPromjena(playerid, amount)
         gNovacPromjena[playerid] = 0;
     }
     gNovacPromjena[playerid] += amount;
-    new tekst[24];
-    format(tekst, sizeof tekst, gNovacPromjena[playerid] < 0 ? ("-$%d") : ("+$%d"), gNovacPromjena[playerid] < 0 ? -gNovacPromjena[playerid] : gNovacPromjena[playerid]);
-    PlayerTextDrawSetString(playerid, gNovacTd[playerid], tekst);
+    PlayerTextDrawSetString(playerid, gNovacTd[playerid], gNovacPromjena[playerid] < 0 ? ("-$%d") : ("+$%d"), gNovacPromjena[playerid] < 0 ? -gNovacPromjena[playerid] : gNovacPromjena[playerid]);
     PlayerTextDrawColour(playerid, gNovacTd[playerid], gNovacPromjena[playerid] < 0 ? 0xB4191DFF : 0x36682CFF);
     PlayerTextDrawSetPos(playerid, gNovacTd[playerid], 608.0, GetPlayerWantedLevel(playerid) ? 125.0 : 101.0);
     PlayerTextDrawShow(playerid, gNovacTd[playerid]);

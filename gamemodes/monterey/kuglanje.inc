@@ -388,9 +388,7 @@ static KuglanjeNisanPostavi(s)
     SetDynamicObjectPos(gKg[s][kgKugla], wx, wy, z + KUGLANJE_KUGLA_Z);
     SetPlayerCameraPos(p, cx, cy, z + 2.3);
     SetPlayerCameraLookAt(p, tx, ty, z + 0.2);
-    new tekst[48];
-    format(tekst, sizeof tekst, "~w~%s %.1f", T(p, "KUT"), gKg[s][kgKut]);
-    PlayerTextDrawSetString(p, gKgTd[p], tekst);
+    PlayerTextDrawSetString(p, gKgTd[p], "~w~%s %.1f", T(p, "KUT"), gKg[s][kgKut]);
     SnagaBarPostavi(p, gKgBar[p][1], gKg[s][kgSnaga]);
 }
 

@@ -1100,8 +1100,7 @@ static TuningPrikazi(playerid)
     if (gTunKat[playerid] == -1) format(ime, sizeof ime, T(playerid, "KATEGORIJE"));
     else TuningKatIme(playerid, gTunKat[playerid], ime);
     PlayerTextDrawSetString(playerid, gTun[playerid][TTD_PODNASLOV], ime);
-    format(tekst, sizeof tekst, "%d / %d", gTunIdx[playerid] + 1, gTunBroj[playerid]);
-    PlayerTextDrawSetString(playerid, gTun[playerid][TTD_BROJAC], tekst);
+    PlayerTextDrawSetString(playerid, gTun[playerid][TTD_BROJAC], "%d / %d", gTunIdx[playerid] + 1, gTunBroj[playerid]);
     format(tekst, sizeof tekst, T(playerid, "Novac: ~g~$%d"), gNovac[playerid]);
     PlayerTextDrawSetString(playerid, gTun[playerid][TTD_NOVAC], tekst);
     for (new r = 0; r < TUNING_REDOVA; r++)

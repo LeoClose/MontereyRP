@@ -385,7 +385,7 @@ static SalonOtvori(playerid, s)
 
 static SalonPrikazi(playerid)
 {
-    new s = gUSalonu[playerid], i = gSalonIdx[playerid], model = gSalon[s][slModel][i], info[96];
+    new s = gUSalonu[playerid], i = gSalonIdx[playerid], model = gSalon[s][slModel][i];
     if (gSalonVozilo[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gSalonVozilo[playerid]);
     gSalonVozilo[playerid] = CreateVehicle(model, gSalonAuto[0], gSalonAuto[1], gSalonAuto[2], gSalonAuto[3], 1, 1, -1);
     if (gSalonVozilo[playerid] != INVALID_VEHICLE_ID)
@@ -393,8 +393,7 @@ static SalonPrikazi(playerid)
         LinkVehicleToInterior(gSalonVozilo[playerid], SALON_INT);
         SetVehicleVirtualWorld(gSalonVozilo[playerid], SALON_SVIJET + playerid);
     }
-    format(info, sizeof info, "%s~n~~g~$%d~n~~w~%d/%d", gImenaVozila[model - 400], gSalon[s][slCijena][i], i + 1, gSalon[s][slBroj]);
-    PlayerTextDrawSetString(playerid, gSalonTd[playerid][STD_INFO], info);
+    PlayerTextDrawSetString(playerid, gSalonTd[playerid][STD_INFO], "%s~n~~g~$%d~n~~w~%d/%d", gImenaVozila[model - 400], gSalon[s][slCijena][i], i + 1, gSalon[s][slBroj]);
 }
 
 static SalonZatvori(playerid, bool:vani = true)

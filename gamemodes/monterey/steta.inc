@@ -47,7 +47,7 @@ static const gSteta[STETA_ORUZJA][E_STETA] = {
 };
 
 static Float:gZivot[MAX_PLAYERS], Float:gOklop[MAX_PLAYERS], gStetaPrikaz[MAX_PLAYERS], gStetaPostavljeno[MAX_PLAYERS], gStetaBlok[MAX_PLAYERS];
-static gStetaZadnji[MAX_PLAYERS][MAX_PLAYERS];
+static gStetaZadnjaZrtva[MAX_PLAYERS] = { INVALID_PLAYER_ID, ... }, gStetaZadnjiMs[MAX_PLAYERS];
 static PlayerText:gStetaTd[MAX_PLAYERS][3], bool:gStetaTdVidljiv[MAX_PLAYERS];
 static gStetaNoz[MAX_PLAYERS], gStetaVozilo[MAX_PLAYERS];
 
@@ -253,8 +253,9 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bo
         if (StetaIza(playerid, damagedid)) StetaNoz(damagedid, playerid);
         return 1;
     }
-    if (sad - gStetaZadnji[playerid][damagedid] < gSteta[i][stRazmak]) return 1;
-    gStetaZadnji[playerid][damagedid] = sad;
+    if (gStetaZadnjaZrtva[playerid] == damagedid && sad - gStetaZadnjiMs[playerid] < gSteta[i][stRazmak]) return 1;
+    gStetaZadnjaZrtva[playerid] = damagedid;
+    gStetaZadnjiMs[playerid] = sad;
     new Float:dmg = gSteta[i][stDmg];
     if (gSteta[i][stKlijent] && amount < dmg) dmg = amount;
     RanjenRana(damagedid, bodypart, dmg);

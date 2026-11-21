@@ -48,6 +48,9 @@
 #define KUPAC_RANJEN_S       240
 #define KUPAC_IZBJEGNI_MS    200
 #define KUPAC_IZBJEGNI_S     2
+#define KUPAC_AUTO_RAZMAK    1.2
+#define STAND_VIDLJIV        250.0
+#define STAND_VIRT_S         18
 #define KUPAC_DOLAZAK        3.0
 #define KUPAC_MIRNO_S        3
 #define KUPAC_POKUSAJA       6
@@ -71,7 +74,7 @@ static gStandNar[MAX_PLAYERS], gStandNarS[MAX_PLAYERS], gStandNarKolicina[MAX_PL
 enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float:snRz, Float:snKx, Float:snKy, Float:snKz, snVlasnik, snVlasnikIme[MAX_PLAYER_NAME + 1], snIme[25],
     snZaliha, snKasa, bool:snRadnik, snRadnikDo, snRadnikPauzaOd, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd, snVozilo, bool:snParkiran }
 static gStand[STAND_MAX][E_STAND];
-static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
+static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], bool:gStandGledan[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
 enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI, KU_BORBA, KU_BJEZI, KU_RANJEN, KU_IZBJEGAVA }
 enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ, Float:kuPx, Float:kuPy, kuMirno, kuPokusaj, kuNovacDo, Float:kuTx, Float:kuTy, Float:kuTz, kuNapadac, kuNapadacRacun, kuStanjeOd }
@@ -335,8 +338,14 @@ StandBlizu(playerid)
 static StandSms(racun, const tekst[], const ime[], iznos = 0)
 {
     new poruka[144], i = IgracRacuna(racun);
-    if (i != INVALID_PLAYER_ID) format(poruka, sizeof poruka, T(i, tekst), ime, iznos);
-    else format(poruka, sizeof poruka, tekst, ime, iznos);
+    new bool:dva = BrojSpecifikatora(tekst) >= 2;
+    if (i != INVALID_PLAYER_ID)
+    {
+        if (dva) format(poruka, sizeof poruka, T(i, tekst), ime, iznos);
+        else format(poruka, sizeof poruka, T(i, tekst), ime);
+    }
+    else if (dva) format(poruka, sizeof poruka, tekst, ime, iznos);
+    else format(poruka, sizeof poruka, tekst, ime);
     MobitelPrimiPoruku(racun, STAND_SMS_BROJ, poruka);
 }
 
@@ -625,7 +634,11 @@ DLG:stand(playerid, response, listitem)
 
             SetPlayerPos(playerid, x, y, StandRadnikZ(s) + 0.1);
             SetPlayerFacingAngle(playerid, a);
-            if (gStand[s][snVrsta] == STAND_KOMBI) TogglePlayerControllable(playerid, false);
+            if (gStand[s][snVrsta] == STAND_KOMBI)
+            {
+                TogglePlayerControllable(playerid, false);
+                FpsPrisili(playerid, true);
+            }
 
             gStandRadi[playerid] = s + 1;
 
@@ -649,6 +662,7 @@ static StandIgracOdmakni(playerid, s)
         v[0] += STAND_KOMBI_IZLAZ * floatsin(r, degrees);
         v[1] -= STAND_KOMBI_IZLAZ * floatcos(r, degrees);
         TogglePlayerControllable(playerid, true);
+        FpsPrisili(playerid, false);
         SetPlayerPos(playerid, v[0], v[1], HodTlo(v[0], v[1], v[2]));
         SetPlayerFacingAngle(playerid, r);
         return;
@@ -873,7 +887,7 @@ static KupacOtvoreniStand(osim)
     new popis[STAND_MAX], n = 0;
     for (new s = 0; s < STAND_MAX; s++)
     {
-        if (s == osim || !StandOtvoren(s)) continue;
+        if (s == osim || !StandOtvoren(s) || !gStandGledan[s]) continue;
         new broj = 0;
         for (new k = 0; k < KUPAC_MAX; k++) if (gKupac[k][kuStanje] != KU_NEMA && gKupac[k][kuCilj] == s) broj++;
         if (broj < KUPAC_PO_STANDU) popis[n++] = s;
@@ -900,11 +914,40 @@ static KupacDalje(k)
     KupacMakni(k);
 }
 
-static bool:KupacSkriven(Float:x, Float:y, Float:z)
+static Float:gIgPoz[MAX_PLAYERS][3], gIgPozN, gIgPozOd = -1000000;
+
+static IgraciPozicije()
 {
+    new sad = GetTickCount();
+    if (sad - gIgPozOd < 500) return;
+    gIgPozOd = sad;
+    gIgPozN = 0;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
-        if (gUlogiran[i] && !IsPlayerNPC(i) && IsPlayerInRangeOfPoint(i, KUPAC_SKRIVENO, x, y, z)) return false;
+    {
+        if (!gUlogiran[i] || IsPlayerNPC(i) || GetPlayerVirtualWorld(i)) continue;
+        GetPlayerPos(i, gIgPoz[gIgPozN][0], gIgPoz[gIgPozN][1], gIgPoz[gIgPozN][2]);
+        gIgPozN++;
+    }
+}
+
+static bool:KupacSkriven(Float:x, Float:y, Float:z, Float:r = KUPAC_SKRIVENO)
+{
+    IgraciPozicije();
+    new Float:r2 = r * r;
+    for (new i = 0; i < gIgPozN; i++)
+    {
+        new Float:dx = gIgPoz[i][0] - x, Float:dy = gIgPoz[i][1] - y, Float:dz = gIgPoz[i][2] - z;
+        if (dx * dx + dy * dy + dz * dz <= r2) return false;
+    }
     return true;
+}
+
+static StandVirtualnaProdaja(s)
+{
+    if (!StandOtvoren(s) || gStandGledan[s] || StandIgracRadi(s) != INVALID_PLAYER_ID || !StandRadnikRadi(s) || random(STAND_VIRT_S)) return;
+    if (random(100) < STAND_RADNIK_GRESKA) return;
+    gStand[s][snKasa] += gStandCijene[gStand[s][snVrsta]][random(3)] + (random(100) < POSAO_NAPOJNICA_POSTO ? 1 + random(5) : 0);
+    StandProdaja(s);
 }
 
 static KupacNovi(cilj = -1)
@@ -1125,25 +1168,90 @@ public OnNPCTakeDamage(npcid, issuerid, Float:amount, WEAPON:weaponid, bodypart)
     return 1;
 }
 
+static Float:gParkirano[MAX_VEHICLES][4], gParkiranoN, gParkiranoOd = -1000000;
+static Float:gVozaci[MAX_PLAYERS][5], gVozaciN;
+
+static ParkiranaVozila()
+{
+    new sad = GetTickCount();
+    if (sad - gParkiranoOd < 1000) return;
+    gParkiranoOd = sad;
+    gParkiranoN = 0;
+    for (new i = 0; i < gVozilaCount; i++)
+    {
+        new v = gVozila[i], Float:vx, Float:vy, Float:vz, Float:sx, Float:sy, Float:sz;
+        if (GetVehicleVirtualWorld(v)) continue;
+        GetVehicleVelocity(v, vx, vy, vz);
+        if (vx * vx + vy * vy > 0.0004) continue;
+        GetVehiclePos(v, gParkirano[gParkiranoN][0], gParkirano[gParkiranoN][1], gParkirano[gParkiranoN][2]);
+        GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+        gParkirano[gParkiranoN][3] = (sx > sy ? sx : sy) / 2.0;
+        gParkiranoN++;
+    }
+}
+
+static Vozaci()
+{
+    gVozaciN = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (GetPlayerState(i) != PLAYER_STATE_DRIVER) continue;
+        new v = GetPlayerVehicleID(i), Float:vz;
+        GetVehicleVelocity(v, gVozaci[gVozaciN][3], gVozaci[gVozaciN][4], vz);
+        if (gVozaci[gVozaciN][3] * gVozaci[gVozaciN][3] + gVozaci[gVozaciN][4] * gVozaci[gVozaciN][4] < 0.02) continue;
+        GetVehiclePos(v, gVozaci[gVozaciN][0], gVozaci[gVozaciN][1], gVozaci[gVozaciN][2]);
+        gVozaciN++;
+    }
+}
+
+static bool:KupacZaobidi(k, Float:x, Float:y, Float:z)
+{
+    new npc = gKupac[k][kuNpc], Float:a;
+    NPC_GetFacingAngle(npc, a);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees);
+    for (new i = 0; i < gParkiranoN; i++)
+    {
+        new Float:vx = gParkirano[i][0], Float:vy = gParkirano[i][1], Float:vz = gParkirano[i][2], Float:r = gParkirano[i][3];
+        new Float:dx = vx - x, Float:dy = vy - y;
+        if (dx * dx + dy * dy > 64.0 || floatabs(vz - z) > 2.5) continue;
+        new Float:ispred = dx * fx + dy * fy, Float:bocno = dx * fy - dy * fx;
+        if (ispred <= 0.0 || ispred > r + KUPAC_AUTO_RAZMAK || floatabs(bocno) > r * 0.6 + KUPAC_AUTO_RAZMAK) continue;
+        for (new p = 0; p < 2; p++)
+        {
+            new Float:strana = (bocno > 0.0) == (p == 0) ? -1.0 : 1.0;
+            new Float:tx = vx + fy * strana * (r + KUPAC_AUTO_RAZMAK) + fx * (r + KUPAC_AUTO_RAZMAK), Float:ty = vy - fx * strana * (r + KUPAC_AUTO_RAZMAK) + fy * (r + KUPAC_AUTO_RAZMAK), Float:hx, Float:hy, Float:hz;
+            if (Kolizija_Zraka(x, y, z + 0.4, tx, ty, z + 0.4, hx, hy, hz)) continue;
+            gKupac[k][kuStanje] = KU_IZBJEGAVA;
+            gKupac[k][kuStanjeOd] = gettime() + KUPAC_IZBJEGNI_S;
+            NPC_Move(npc, tx, ty, HodTlo(tx, ty, z), NPC_MOVE_TYPE_WALK);
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
 forward KupacIzbjegavaj();
 public KupacIzbjegavaj()
 {
+    new bool:ima = false;
+    for (new k = 0; k < KUPAC_MAX && !ima; k++) ima = gKupac[k][kuStanje] == KU_HODA || gKupac[k][kuStanje] == KU_CEKA;
+    if (!ima) return;
+    Vozaci();
+    ParkiranaVozila();
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         new st = gKupac[k][kuStanje];
         if (st != KU_HODA && st != KU_CEKA) continue;
         new npc = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
         NPC_GetPos(npc, x, y, z);
-        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        if (st == KU_HODA && KupacZaobidi(k, x, y, z)) continue;
+        for (new i = 0; i < gVozaciN; i++)
         {
-            if (GetPlayerState(i) != PLAYER_STATE_DRIVER) continue;
-            new v = GetPlayerVehicleID(i), Float:vx, Float:vy, Float:vz, Float:px, Float:py, Float:pz;
-            GetVehiclePos(v, px, py, pz);
+            new Float:px = gVozaci[i][0], Float:py = gVozaci[i][1], Float:pz = gVozaci[i][2], Float:vx = gVozaci[i][3], Float:vy = gVozaci[i][4];
             new Float:dx = x - px, Float:dy = y - py;
             if (dx * dx + dy * dy > 400.0 || floatabs(z - pz) > 3.0) continue;
-            GetVehicleVelocity(v, vx, vy, vz);
             new Float:brzina2 = vx * vx + vy * vy;
-            if (brzina2 < 0.02) continue;
             new Float:t = (dx * vx + dy * vy) / brzina2;
             if (t <= 0.0 || t > 25.0) continue;
             new Float:bx = dx - vx * t, Float:by = dy - vy * t;
@@ -1216,6 +1324,7 @@ static KupacBorbaTick(k, sad)
 StandTick()
 {
     new sad = gettime();
+    for (new s = 0; s < STAND_MAX; s++) gStandGledan[s] = gStand[s][snIma] && !KupacSkriven(gStand[s][snKx], gStand[s][snKy], gStand[s][snKz], STAND_VIDLJIV);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if ((gStandNar[i] == SN_NOSI || gStandNar[i] == SN_GEPEK) && gStand[gStandNarS[i]][snVrsta] == STAND_KOMBI) StandNarCp(i, false);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
@@ -1240,6 +1349,7 @@ StandTick()
     {
         if (!gStand[s][snIma]) continue;
         if (sad % 60 == s % 60) StandPlaca(s);
+        StandVirtualnaProdaja(s);
         if (gStand[s][snVrsta] == STAND_KOMBI && StandKombiStoji(s) != gStand[s][snParkiran])
         {
             gStand[s][snParkiran] = !gStand[s][snParkiran];
@@ -1274,7 +1384,7 @@ StandTick()
     new otvoreno = 0, aktivni = 0;
     for (new s = 0; s < STAND_MAX; s++)
     {
-        new bool:otvoren = StandOtvoren(s);
+        new bool:otvoren = StandOtvoren(s) && gStandGledan[s];
         if (otvoren) otvoreno++;
         if (otvoren && !gStandBio[s]) for (new k = 0; k < KUPAC_NA_OTVARANJE; k++) KupacNovi(s);
         gStandBio[s] = otvoren;
@@ -1283,6 +1393,16 @@ StandTick()
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         if (gKupac[k][kuStanje] == KU_NEMA) continue;
+        if (gKupac[k][kuStanje] < KU_BORBA && gKupac[k][kuStanje] != KU_SPAWN)
+        {
+            new Float:kx, Float:ky, Float:kz, c = gKupac[k][kuCilj];
+            NPC_GetPos(gKupac[k][kuNpc], kx, ky, kz);
+            if ((c < 0 || !gStandGledan[c]) && KupacSkriven(kx, ky, kz, STAND_VIDLJIV))
+            {
+                KupacMakni(k);
+                continue;
+            }
+        }
         ukupno++;
         if (gKupac[k][kuCilj] >= 0) aktivni++;
         new s = gKupac[k][kuCilj];

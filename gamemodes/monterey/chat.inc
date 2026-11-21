@@ -112,9 +112,21 @@ Govor(p, const tekst[], const a[] = "", const b[] = "")
     PosaljiBlizu(p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
 }
 
+BrojSpecifikatora(const fmt[])
+{
+    new n = 0;
+    for (new i = 0; fmt[i]; i++)
+    {
+        if (fmt[i] != '%') continue;
+        if (fmt[i + 1] == '%') i++;
+        else n++;
+    }
+    return n;
+}
+
 PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[] = "", prevedi = 0, const treci[] = "", const cetvrti[] = "")
 {
-    new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid), tekst[160];
+    new Float:x, Float:y, Float:z, vw = GetPlayerVirtualWorld(playerid), interior = GetPlayerInterior(playerid), tekst[160], n = BrojSpecifikatora(msg);
     GetPlayerPos(playerid, x, y, z);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
@@ -123,7 +135,14 @@ PosaljiBlizu(playerid, Float:range, color, const msg[], const a[] = "", const b[
         new Float:d = GetPlayerDistanceFromPoint(i, x, y, z);
         if (d > range) continue;
         if (!prevedi) strcopy(tekst, msg);
-        else format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b, treci, cetvrti);
+        else switch (n)
+        {
+            case 0: strcopy(tekst, T(i, msg));
+            case 1: format(tekst, sizeof tekst, T(i, msg), a);
+            case 2: format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b);
+            case 3: format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b, treci);
+            default: format(tekst, sizeof tekst, T(i, msg), a, prevedi == 2 ? T(i, b) : b, treci, cetvrti);
+        }
         SendLong(i, ZatamniBoju(color, floatround(d / range * CHAT_FADE_STEPS, floatround_floor)), tekst);
     }
 }

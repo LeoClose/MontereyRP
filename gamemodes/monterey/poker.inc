@@ -379,8 +379,7 @@ static PokerOsvjeziIgraca(s, playerid)
     if (bira)
     {
         PokerRaspon(playerid, s, najmanje, najvise);
-        format(tekst, sizeof tekst, T(playerid, mod == PM_ULAZ ? ("Ulaz: %d") : ("Dizanje na: %d")), gPoIznos[playerid]);
-        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_IZNOS], tekst);
+        PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_IZNOS], T(playerid, mod == PM_ULAZ ? ("Ulaz: %d") : ("Dizanje na: %d")), gPoIznos[playerid]);
         PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_POTVRDI], T(playerid, mod == PM_ULAZ ? ("Sjedi") : ("Potvrdi")));
         PlayerTextDrawSetString(playerid, gPoTd[playerid][PTD_NATRAG], T(playerid, mod == PM_ULAZ ? ("Zatvori") : ("Natrag")));
     }
