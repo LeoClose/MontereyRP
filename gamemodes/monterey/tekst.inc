@@ -2361,7 +2361,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Cigarete", "Cigarettes","Сигареты", "Cigarrillos", "Sigara" },
     { "Srecka", "Scratch card", "Лотерейный билет", "Boleto rasca y gana", "Kazi kazan" },
     { "* %s pali cigaretu.", "* %s lights a cigarette.", "* %s закуривает сигарету.", "* %s enciende un cigarrillo.", "* %s bir sigara yakiyor." },
-    { "Pikado nije dostupan na vasoj verziji klijenta (potreban je 0.3.DL ili 0.3.7-R5).", "Darts is not available on your client version (0.3.DL or 0.3.7-R5 required).", "Дартс недоступен в вашей версии клиента (нужна 0.3.DL или 0.3.7-R5).", "Los dardos no estan disponibles en tu version del cliente (se necesita 0.3.DL o 0.3.7-R5).", "Dart istemci surumunuzde kullanilamiyor (0.3.DL veya 0.3.7-R5 gerekli)." }
+    { "Pikado nije dostupan na vasoj verziji klijenta (potreban je 0.3.DL ili 0.3.7-R5).", "Darts is not available on your client version (0.3.DL or 0.3.7-R5 required).", "Дартс недоступен в вашей версии клиента (нужна 0.3.DL или 0.3.7-R5).", "Los dardos no estan disponibles en tu version del cliente (se necesita 0.3.DL o 0.3.7-R5).", "Dart istemci surumunuzde kullanilamiyor (0.3.DL veya 0.3.7-R5 gerekli)." },
+    { "Izvadite kutiju iz prtljaznika (ALT kod prtljaznika).", "Take the box out of the trunk (ALT at the trunk).", "Достаньте коробку из багажника (ALT у багажника).", "Saca la caja del maletero (ALT en el maletero).", "Kutuyu bagajdan cikarin (bagajda ALT)." },
+    { "~y~ALT~w~ - prtljaznik", "~y~ALT~w~ - trunk", "~y~ALT~w~ - bagazhnik", "~y~ALT~w~ - maletero", "~y~ALT~w~ - bagaj" },
+    { "* %s stavlja kutiju u prtljaznik.", "* %s puts a box in the trunk.", "* %s кладёт коробку в багажник.", "* %s pone una caja en el maletero.", "* %s bagaja bir kutu koyuyor." },
+    { "* %s vadi kutiju iz prtljaznika.", "* %s takes a box out of the trunk.", "* %s достаёт коробку из багажника.", "* %s saca una caja del maletero.", "* %s bagajdan bir kutu cikariyor." }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 

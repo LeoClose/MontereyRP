@@ -103,6 +103,34 @@ static bool:HasGepek(v)
     return true;
 }
 
+static STREAMER_TAG_AREA:gGepekZona[MAX_VEHICLES];
+
+GepekZonaDodaj(v)
+{
+    if (!HasGepek(v) || JePrikolica(GetVehicleModel(v))) return;
+    new Float:sx, Float:sy, Float:sz;
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    gGepekZona[v] = InterakcijaZona(0.0, 0.0, 0.0, GEPEK_DOMET - 0.5, 0, 0, SAVJET_GEPEK);
+    AttachDynamicAreaToVehicle(gGepekZona[v], v, 0.0, -sy / 2.0, 0.0);
+}
+
+GepekZonaMakni(v)
+{
+    if (IsValidDynamicArea(gGepekZona[v])) DestroyDynamicArea(gGepekZona[v]);
+    gGepekZona[v] = STREAMER_TAG_AREA:0;
+}
+
+GepekAlt(playerid)
+{
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !gUlogiran[playerid]) return 0;
+    new v = GepekVozilo(playerid, -1.0);
+    if (!v || !HasGepek(v)) return 0;
+    if (StandGepekAlt(playerid, v)) return 1;
+    new prazno[1];
+    cmd_trunk(playerid, prazno);
+    return 1;
+}
+
 static bool:BlizuKraja(playerid, v, Float:smjer)
 {
     new Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;

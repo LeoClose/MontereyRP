@@ -6,6 +6,10 @@
 #define STAND_KOMBI_RADNIK   1.8
 #define STAND_KOMBI_KUPAC    3.4
 #define STAND_KOMBI_DOMET    4.5
+#define STAND_KOMBI_UNUTRA   0.5
+#define STAND_KOMBI_VISINA   0.4
+#define STAND_KOMBI_IZLAZ    4.0
+#define STAND_CP_POMAK       5.0
 #define STAND_PREUZMI_DOMET  6.0
 #define STAND_KUTIJA_SLOT    2
 #define STAND_KUTIJA_MODEL   1220
@@ -61,8 +65,8 @@ static const gStandCijene[][3] = { { 4, 5, 2 }, { 3, 3, 3 }, { 8, 8, 3 }, { 5, 7
 static const gStandHranaModel[][3] = { { 19346, 19346, 2647 }, { 19568, 19568, 19568 }, { 19811, 19811, 19811 }, { 19346, 2703, 2647 } };
 static const Float:gStandZdravlje[][3] = { { 15.0, 18.0, 5.0 }, { 8.0, 8.0, 8.0 }, { 25.0, 25.0, 10.0 }, { 15.0, 22.0, 5.0 } };
 static gStandJede[MAX_PLAYERS], gStandIgraKupac[MAX_PLAYERS];
-enum { SN_NEMA, SN_TRGOVINA, SN_NOSI }
-static gStandNar[MAX_PLAYERS], gStandNarS[MAX_PLAYERS], gStandNarKolicina[MAX_PLAYERS], gStandNarTrgovina[MAX_PLAYERS];
+enum { SN_NEMA, SN_TRGOVINA, SN_NOSI, SN_GEPEK }
+static gStandNar[MAX_PLAYERS], gStandNarS[MAX_PLAYERS], gStandNarKolicina[MAX_PLAYERS], gStandNarTrgovina[MAX_PLAYERS], gStandNarV[MAX_PLAYERS], Float:gStandNarCp[MAX_PLAYERS][3];
 
 enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float:snRz, Float:snKx, Float:snKy, Float:snKz, snVlasnik, snVlasnikIme[MAX_PLAYER_NAME + 1], snIme[25],
     snZaliha, snKasa, bool:snRadnik, snRadnikDo, snRadnikPauzaOd, bool:snRadnikCeka, snAktor, STREAMER_TAG_OBJECT:snObjekt, STREAMER_TAG_3D_TEXT_LABEL:snTekst, snKupac, snKupacOd, snVozilo, bool:snParkiran }
@@ -147,8 +151,8 @@ static StandRadnikMjesto(s, &Float:x, &Float:y, &Float:a)
     if (d < 0.1) d = 1.0;
     if (gStand[s][snVrsta] == STAND_KOMBI)
     {
-        x = gStand[s][snKx] + dx / d * STAND_KOMBI_RADNIK;
-        y = gStand[s][snKy] + dy / d * STAND_KOMBI_RADNIK;
+        x = gStand[s][snX] - dx / d * STAND_KOMBI_UNUTRA;
+        y = gStand[s][snY] - dy / d * STAND_KOMBI_UNUTRA;
     }
     else
     {
@@ -156,6 +160,61 @@ static StandRadnikMjesto(s, &Float:x, &Float:y, &Float:a)
         y = gStand[s][snY] + dy / d * STAND_RADNIK_RAZMAK;
     }
     a = atan2(-dy, -dx) - 90.0;
+}
+
+static Float:StandRadnikZ(s)
+{
+    return gStand[s][snVrsta] == STAND_KOMBI ? gStand[s][snZ] + STAND_KOMBI_VISINA : gStand[s][snKz];
+}
+
+static StandNarCilj(s, &Float:x, &Float:y, &Float:z)
+{
+    if (gStand[s][snVrsta] == STAND_KOMBI && !gStand[s][snParkiran])
+    {
+        GetVehiclePos(gStand[s][snVozilo], x, y, z);
+        return;
+    }
+    x = gStand[s][snKx];
+    y = gStand[s][snKy];
+    z = gStand[s][snKz];
+}
+
+static StandNarCp(playerid, bool:uvijek)
+{
+    new Float:x, Float:y, Float:z;
+    StandNarCilj(gStandNarS[playerid], x, y, z);
+    if (!uvijek && VectorSize(x - gStandNarCp[playerid][0], y - gStandNarCp[playerid][1], 0.0) < STAND_CP_POMAK) return;
+    gStandNarCp[playerid][0] = x;
+    gStandNarCp[playerid][1] = y;
+    gStandNarCp[playerid][2] = z;
+    SetPlayerCheckpoint(playerid, x, y, z, 3.0);
+}
+
+static StandKutijaUzmi(playerid)
+{
+    SetPlayerAttachedObject(playerid, STAND_KUTIJA_SLOT, STAND_KUTIJA_MODEL, 5, 0.1, 0.1, 0.15, 0.0, 90.0, 90.0, 0.6, 0.6, 0.6);
+    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
+}
+
+StandGepekAlt(playerid, v)
+{
+    if (gStandNar[playerid] == SN_NOSI && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY && ImaKljuc(playerid, v))
+    {
+        RemovePlayerAttachedObject(playerid, STAND_KUTIJA_SLOT);
+        SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+        gStandNar[playerid] = SN_GEPEK;
+        gStandNarV[playerid] = v;
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s stavlja kutiju u prtljaznik.", GetRPIme(playerid), "", 1);
+        return 1;
+    }
+    if (gStandNar[playerid] == SN_GEPEK && gStandNarV[playerid] == v)
+    {
+        gStandNar[playerid] = SN_NOSI;
+        StandKutijaUzmi(playerid);
+        PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s vadi kutiju iz prtljaznika.", GetRPIme(playerid), "", 1);
+        return 1;
+    }
+    return 0;
 }
 
 static StandKombiPozicija(s)
@@ -204,7 +263,7 @@ static StandAktor(s)
     if (!gStand[s][snRadnik] || gStand[s][snRadnikCeka] || gStand[s][snRadnikPauzaOd] || (gStand[s][snVrsta] == STAND_KOMBI && !gStand[s][snParkiran])) return;
     new Float:x, Float:y, Float:a;
     StandRadnikMjesto(s, x, y, a);
-    gStand[s][snAktor] = CreateActor(STAND_RADNIK_SKIN, x, y, gStand[s][snKz], a);
+    gStand[s][snAktor] = CreateActor(STAND_RADNIK_SKIN, x, y, StandRadnikZ(s), a);
     SetActorInvulnerable(gStand[s][snAktor], true);
 }
 
@@ -420,7 +479,7 @@ DLG:stand_kupi(playerid, response)
 static StandNarudzbaKraj(playerid)
 {
     if (gStandNar[playerid] == SN_NEMA) return;
-    if (gStandNar[playerid] == SN_NOSI)
+    if (gStandNar[playerid] == SN_NOSI && GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY)
     {
         RemovePlayerAttachedObject(playerid, STAND_KUTIJA_SLOT);
         if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
@@ -460,6 +519,12 @@ StandCheckpoint(playerid)
 {
     if (gStandNar[playerid] == SN_NEMA) return 0;
     new s = gStandNarS[playerid];
+    if (gStandNar[playerid] == SN_GEPEK)
+    {
+        if (StandBlizu(playerid) != s) return 0;
+        ObavijestGreska(playerid, T(playerid, "Izvadite kutiju iz prtljaznika (ALT kod prtljaznika)."));
+        return 1;
+    }
     if (gStandNar[playerid] == SN_NOSI)
     {
         if (StandBlizu(playerid) != s) return 0;
@@ -476,12 +541,8 @@ StandCheckpoint(playerid)
     }
     FirmaProdaja(FIRMA_TRGOVINA, t, iznos, false);
     gStandNar[playerid] = SN_NOSI;
-    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
-    {
-        SetPlayerAttachedObject(playerid, STAND_KUTIJA_SLOT, STAND_KUTIJA_MODEL, 5, 0.1, 0.1, 0.15, 0.0, 90.0, 90.0, 0.6, 0.6, 0.6);
-        SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
-    }
-    SetPlayerCheckpoint(playerid, gStand[s][snKx], gStand[s][snKy], gStand[s][snKz], 3.0);
+    if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT) StandKutijaUzmi(playerid);
+    StandNarCp(playerid, true);
     return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), T(playerid, "Preuzeli ste robu. Odnesite je do standa."));
 }
 
@@ -562,8 +623,9 @@ DLG:stand(playerid, response, listitem)
             new Float:x, Float:y, Float:a;
             StandRadnikMjesto(s, x, y, a);
 
-            SetPlayerPos(playerid, x, y, gStand[s][snKz] + 0.1);
+            SetPlayerPos(playerid, x, y, StandRadnikZ(s) + 0.1);
             SetPlayerFacingAngle(playerid, a);
+            if (gStand[s][snVrsta] == STAND_KOMBI) TogglePlayerControllable(playerid, false);
 
             gStandRadi[playerid] = s + 1;
 
@@ -579,6 +641,18 @@ DLG:stand(playerid, response, listitem)
 
 static StandIgracOdmakni(playerid, s)
 {
+    if (gStand[s][snVrsta] == STAND_KOMBI)
+    {
+        new Float:v[3], Float:r;
+        GetVehiclePos(gStand[s][snVozilo], v[0], v[1], v[2]);
+        GetVehicleZAngle(gStand[s][snVozilo], r);
+        v[0] += STAND_KOMBI_IZLAZ * floatsin(r, degrees);
+        v[1] -= STAND_KOMBI_IZLAZ * floatcos(r, degrees);
+        TogglePlayerControllable(playerid, true);
+        SetPlayerPos(playerid, v[0], v[1], HodTlo(v[0], v[1], v[2]));
+        SetPlayerFacingAngle(playerid, r);
+        return;
+    }
     new Float:x, Float:y, Float:a;
     StandRadnikMjesto(s, x, y, a);
 
@@ -1143,14 +1217,17 @@ StandTick()
 {
     new sad = gettime();
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        if ((gStandNar[i] == SN_NOSI || gStandNar[i] == SN_GEPEK) && gStand[gStandNarS[i]][snVrsta] == STAND_KOMBI) StandNarCp(i, false);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         new s = gStandRadi[i] - 1;
         if (s < 0) continue;
         new Float:x, Float:y, Float:a;
         StandRadnikMjesto(s, x, y, a);
-        if (!gStand[s][snIma] || gStand[s][snVlasnik] != gAccountId[i] || (gStand[s][snVrsta] == STAND_KOMBI && !gStand[s][snParkiran]) || !IsPlayerInRangeOfPoint(i, STAND_RADI_DOMET, x, y, gStand[s][snKz]))
+        if (!gStand[s][snIma] || gStand[s][snVlasnik] != gAccountId[i] || (gStand[s][snVrsta] == STAND_KOMBI && !gStand[s][snParkiran]) || !IsPlayerInRangeOfPoint(i, STAND_RADI_DOMET, x, y, StandRadnikZ(s)))
         {
             if (PosaoIgraZa(i, IZVOR_STAND, s)) PosaoIgraKraj(i, false);
+            if (gStand[s][snIma] && gStand[s][snVrsta] == STAND_KOMBI) StandIgracOdmakni(i, s);
 
             gStandRadi[i] = 0;
             StandRadnikPauza(s, false);

@@ -104,6 +104,7 @@ CreateVozilo(model, Float:x, Float:y, Float:z, Float:a, c1, c2, respawn, bool:si
         gVozila[gVozilaCount] = v;
         gVoziloMjesto[v] = ++gVozilaCount;
         PrikolicaDodaj(v);
+        GepekZonaDodaj(v);
         VoziloDodaj(v);
     }
     return v;
@@ -120,6 +121,7 @@ bool:DestroyVozilo(v)
         VoziloKmSpremi(v);
         ClearGepek(v);
         PrikolicaMakni(v);
+        GepekZonaMakni(v);
         VlasnikMakni(v);
     }
     return !!DestroyVehicle(v);
