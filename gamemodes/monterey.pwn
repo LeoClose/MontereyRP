@@ -253,6 +253,8 @@ public OnGameModeInit()
     MapaGlenPark();
     MapaChinatownUkloni(INVALID_PLAYER_ID);
     MapaChinatown();
+	SurenosiUkloni(INVALID_PLAYER_ID);
+	Surenosi();
     Lik_OsvjeziMapu();
     InitMarica();
     InitPolicija();
@@ -483,6 +485,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_spawn.inc"
 #include "monterey/mape/mapa_monterey_peak.inc"
 #include "monterey/mape/mapa_glen_park.inc"
+#include "monterey/mape/mapa_surenosi.inc"
 #include "monterey/brod.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
