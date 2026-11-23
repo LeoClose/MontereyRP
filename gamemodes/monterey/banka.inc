@@ -37,7 +37,7 @@ enum { BA_OTVORI, BA_INFO, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, 
 static const gBankaAkcija[][] = { "Otvori racun ($%d)", "Informacije", "Uplati novac", "Podigni novac", "Prebaci na stednju", "Podigni sa stednje", "Posalji novac", "Podigni kredit", "Otplati kredit", "Nova kartica ($%d)" };
 
 static gBanka[BANKA_MAX][E_BANKA];
-static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_PLAYER_ID, ... }, ... }, gBankaCuvarDb[BANKA_MAX][BANKA_CUVARI], Float:gBankaCuvarPoz[BANKA_MAX][BANKA_CUVARI][4], gNpcBanka[MAX_PLAYERS] = { -1, ... }, gBankaPoruka[MAX_PLAYERS];
+static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_LIK, ... }, ... }, gBankaCuvarDb[BANKA_MAX][BANKA_CUVARI], Float:gBankaCuvarPoz[BANKA_MAX][BANKA_CUVARI][4], gBankaPoruka[MAX_PLAYERS];
 static Float:gApBankaPoz[MAX_PLAYERS][4], gApBanka[MAX_PLAYERS], gBankaMeni[MAX_PLAYERS][sizeof gBankaAkcija], gBankaOdabir[MAX_PLAYERS], gBankaSat;
 
 static BankaDug(iznos)
@@ -136,23 +136,26 @@ static BankaVani(playerid, s)
 
 static BankaCuvarStvori(s, c)
 {
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, "Cuvar_%d", gBankaCuvarDb[s][c]);
-    new npc = NPC_Create(name);
-    gBankaCuvar[s][c] = npc;
-    if (npc == INVALID_PLAYER_ID) return;
-    gNpcBanka[npc] = s * BANKA_CUVARI + c;
-    NPC_Spawn(npc);
+    new lik = Lik_Stvori(BANKA_CUVAR_SKIN, gBankaCuvarPoz[s][c][0], gBankaCuvarPoz[s][c][1], gBankaCuvarPoz[s][c][2], gBankaCuvarPoz[s][c][3], BANKA_SVIJET + s, gBanka[s][bkInt]);
+    gBankaCuvar[s][c] = lik;
+    if (lik == INVALID_LIK) return;
+    Lik_Oruzje(lik, _:WEAPON_COLT45, 500);
+    Lik_Preciznost(lik, 0.5);
 }
 
 static BankaCuvarMakni(s, c)
 {
-    new npc = gBankaCuvar[s][c];
+    new lik = gBankaCuvar[s][c];
     gBankaCuvarDb[s][c] = 0;
-    gBankaCuvar[s][c] = INVALID_PLAYER_ID;
-    if (npc == INVALID_PLAYER_ID) return;
-    gNpcBanka[npc] = -1;
-    NPC_Destroy(npc);
+    gBankaCuvar[s][c] = INVALID_LIK;
+    if (lik != INVALID_LIK) Lik_Ukloni(lik);
+}
+
+BankaCuvarLika(lik)
+{
+    if (lik == INVALID_LIK) return -1;
+    for (new s = 0; s < BANKA_MAX; s++) for (new c = 0; c < BANKA_CUVARI; c++) if (gBankaCuvar[s][c] == lik) return s * BANKA_CUVARI + c;
+    return -1;
 }
 
 static BankaUcitajCuvare(s)
@@ -165,23 +168,6 @@ static BankaUcitajCuvare(s)
         BankaCuvarStvori(s, c);
     }
     DB_FreeResultSet(res);
-}
-
-BankaSpawn(npcid)
-{
-    new k = gNpcBanka[npcid];
-    if (k == -1) return;
-    new s = k / BANKA_CUVARI, c = k % BANKA_CUVARI;
-    NPC_SetSkin(npcid, BANKA_CUVAR_SKIN);
-    NPC_SetInterior(npcid, gBanka[s][bkInt]);
-    NPC_SetVirtualWorld(npcid, BANKA_SVIJET + s);
-    NPC_SetPos(npcid, gBankaCuvarPoz[s][c][0], gBankaCuvarPoz[s][c][1], gBankaCuvarPoz[s][c][2]);
-    NPC_SetFacingAngle(npcid, gBankaCuvarPoz[s][c][3]);
-    NPC_SetHealth(npcid, 100.0);
-    NPC_SetAmmo(npcid, 500);
-    NPC_SetWeapon(npcid, WEAPON_COLT45);
-    NPC_SetWeaponAccuracy(npcid, WEAPON_COLT45, 0.5);
-    NPC_EnableReloading(npcid, true);
 }
 
 static BankaEkipa(playerid, s)
@@ -207,10 +193,10 @@ static BankaPljackaStani(s)
     if (gBanka[s][bkImaAktor]) ClearActorAnimations(gBanka[s][bkAktor]);
     for (new c = 0; c < BANKA_CUVARI; c++)
     {
-        new npc = gBankaCuvar[s][c];
-        if (npc == INVALID_PLAYER_ID) continue;
-        if (NPC_IsDead(npc)) NPC_Respawn(npc);
-        else NPC_StopAim(npc);
+        new lik = gBankaCuvar[s][c];
+        if (lik == INVALID_LIK) continue;
+        if (Lik_Mrtav(lik)) Lik_Ozivi(lik, gBankaCuvarPoz[s][c][0], gBankaCuvarPoz[s][c][1], gBankaCuvarPoz[s][c][2], gBankaCuvarPoz[s][c][3]);
+        else Lik_PrestaniCiljati(lik);
     }
 }
 
@@ -219,8 +205,8 @@ BankaUpdate(playerid)
     if (!gUlogiran[playerid] || !gOrg[playerid]) return;
     new s = BankaIgraca(playerid), WEAPON:w = GetPlayerWeapon(playerid);
     if (s == -1 || gBanka[s][bkPljacka] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN || !OruzjeLegit(playerid, w)) return;
-    new meta = GetPlayerTargetPlayer(playerid), bool:cilj = gBanka[s][bkImaAktor] && GetPlayerTargetActor(playerid) == gBanka[s][bkAktor];
-    if (!cilj && meta != INVALID_PLAYER_ID && gNpcBanka[meta] != -1 && gNpcBanka[meta] / BANKA_CUVARI == s) cilj = true;
+    new cuvar = BankaCuvarLika(Lik_CiljIgraca(playerid)), bool:cilj = gBanka[s][bkImaAktor] && GetPlayerTargetActor(playerid) == gBanka[s][bkAktor];
+    if (!cilj && cuvar != -1 && cuvar / BANKA_CUVARI == s) cilj = true;
     if (!cilj || BankaEkipa(playerid, s) < BANKA_PLJACKASA) return;
     new sad = gettime();
     if (gBanka[s][bkPljackano] && sad - gBanka[s][bkPljackano] < BANKA_PLJACKA_PAUZA)
@@ -274,15 +260,15 @@ static BankaPljackaTick()
         }
         for (new c = 0; c < BANKA_CUVARI; c++)
         {
-            new npc = gBankaCuvar[s][c], meta = INVALID_PLAYER_ID, Float:naj = 100.0, Float:x, Float:y, Float:z;
-            if (npc == INVALID_PLAYER_ID || NPC_IsDead(npc)) continue;
-            NPC_GetPos(npc, x, y, z);
+            new lik = gBankaCuvar[s][c], meta = INVALID_PLAYER_ID, Float:naj = 100.0, Float:x, Float:y, Float:z;
+            if (lik == INVALID_LIK || Lik_Mrtav(lik)) continue;
+            Lik_Pozicija(lik, x, y, z);
             for (new k = 0; k < n; k++)
             {
                 new Float:d = GetPlayerDistanceFromPoint(prisutni[k], x, y, z);
                 if (d < naj) { naj = d; meta = prisutni[k]; }
             }
-            if (meta != INVALID_PLAYER_ID && !NPC_IsAimingAtPlayer(npc, meta)) NPC_AimAtPlayer(npc, meta, true, 400 + random(400));
+            if (meta != INVALID_PLAYER_ID && !Lik_Cilja(lik, meta)) Lik_Nacilja(lik, meta, true, 400 + random(400));
         }
     }
 }

@@ -11,6 +11,7 @@
 #include <fastcmd>
 #include <streamer>
 #include <kolizija>
+#include <lik>
 #include <samp_bcrypt>
 
 #include <Pawn.RakNet>
@@ -250,7 +251,6 @@ public OnGameModeInit()
     MapaMontereyPeak();
     MapaGlenParkUkloni(INVALID_PLAYER_ID);
     MapaGlenPark();
-    InitStaze();
     InitMarica();
     InitPolicija();
     InitMdt();
@@ -293,7 +293,6 @@ public OnGameModeInit()
     InitVlakovi();
     InitAvioni();
     InitPlaca();
-    InitHod();
     InitSef();
     InitDroga();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
@@ -485,8 +484,6 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/utrke.inc"
-#include "monterey/staze.inc"
-#include "monterey/staza.inc"
 #include "monterey/fps.inc"
 #include "monterey/standovi.inc"
 #include "monterey/kazne.inc"
@@ -500,6 +497,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/registracija.inc"
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
+#include "monterey/likovi.inc"
 
 new gLozinkaCeka[MAX_PLAYERS];
 

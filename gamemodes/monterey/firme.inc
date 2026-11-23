@@ -34,7 +34,7 @@ static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:g
 
 enum E_FIRMA { bool:fIma, fDb, fVlasnik, fVlasnikIme[MAX_PLAYER_NAME + 1], fKasa, fZaliha, fRadnik, fGost, fGostFaza, fGostOd, fSljedeci, fCijena, fRoba[32] }
 static gFirma[FIRMA_VRSTA][FIRMA_MAX][E_FIRMA];
-static gNpcFirma[MAX_PLAYERS], gFirmaMeni[MAX_PLAYERS][2], gFirmaOpcija[MAX_PLAYERS][3], gFirmaOpcijaN[MAX_PLAYERS];
+static gFirmaMeni[MAX_PLAYERS][2], gFirmaOpcija[MAX_PLAYERS][3], gFirmaOpcijaN[MAX_PLAYERS];
 static const gFirmaIme[FIRMA_VRSTA][] = { "Trgovina 24/7", "Frizerski salon" };
 static const gFirmaCijena[FIRMA_VRSTA] = { FIRMA_TRGOVINA_CIJENA, FIRMA_FRIZER_CIJENA };
 
@@ -64,7 +64,7 @@ FirmaUcitaj(k, s, db)
     gFirma[k][s][fKasa] = 0;
     gFirma[k][s][fZaliha] = FIRMA_ZALIHA_MAX;
     gFirma[k][s][fRadnik] = INVALID_PLAYER_ID;
-    gFirma[k][s][fGost] = INVALID_PLAYER_ID;
+    gFirma[k][s][fGost] = INVALID_LIK;
     gFirma[k][s][fGostFaza] = FG_NEMA;
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT owner, owner_name, till, stock FROM business_owners WHERE kind = %d AND place = %d", k, db);
     if (DB_GetRowCount(res))
@@ -245,81 +245,55 @@ DLG:firma(playerid, response, listitem)
 
 static FirmaGostKaze(k, s, const tekst[])
 {
-    new npc = gFirma[k][s][fGost], Float:x, Float:y, Float:z, svijet;
-    if (npc == INVALID_PLAYER_ID) return;
-    NPC_GetPos(npc, x, y, z);
-    svijet = GetPlayerVirtualWorld(npc);
+    new lik = gFirma[k][s][fGost], Float:x, Float:y, Float:z, interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
+    if (lik == INVALID_LIK || !FirmaTocke(k, s, interijer, svijet, u, c, r)) return;
+    Lik_Pozicija(lik, x, y, z);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUlogiran[i] && GetPlayerVirtualWorld(i) == svijet && IsPlayerInRangeOfPoint(i, 15.0, x, y, z)) SendClientMessage(i, COLOR_CHAT, T(i, "Kupac kaze: %s"), T(i, tekst));
 }
 
 static FirmaGostMakni(k, s)
 {
-    new npc = gFirma[k][s][fGost];
-    if (npc != INVALID_PLAYER_ID)
-    {
-        gNpcFirma[npc] = 0;
-        NPC_Destroy(npc);
-    }
-    gFirma[k][s][fGost] = INVALID_PLAYER_ID;
+    if (gFirma[k][s][fGost] != INVALID_LIK) Lik_Ukloni(gFirma[k][s][fGost]);
+    gFirma[k][s][fGost] = INVALID_LIK;
     gFirma[k][s][fGostFaza] = FG_NEMA;
     gFirma[k][s][fSljedeci] = gettime() + FIRMA_GOST_RAZMAK_MIN + random(FIRMA_GOST_RAZMAK_MAX - FIRMA_GOST_RAZMAK_MIN + 1);
 }
 
 static FirmaGostOdlazi(k, s)
 {
-    new npc = gFirma[k][s][fGost], interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
-    if (npc == INVALID_PLAYER_ID || !FirmaTocke(k, s, interijer, svijet, u, c, r))
+    new lik = gFirma[k][s][fGost], interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
+    if (lik == INVALID_LIK || !FirmaTocke(k, s, interijer, svijet, u, c, r))
     {
         FirmaGostMakni(k, s);
         return;
     }
     gFirma[k][s][fGostFaza] = FG_ODLAZI;
     gFirma[k][s][fGostOd] = gettime();
-    NPC_ClearAnimations(npc);
-    NPC_Move(npc, u[0], u[1], u[2], NPC_MOVE_TYPE_WALK);
+    Lik_OcistiAnimaciju(lik);
+    Lik_Idi(lik, u[0], u[1], u[2], LIK_HOD);
 }
 
 static FirmaGostNovi(k, s)
 {
-    new interijer, svijet, Float:u[3], Float:c[4], Float:r[3], ime[MAX_PLAYER_NAME + 1];
+    new interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
     gFirma[k][s][fSljedeci] = gettime() + 5;
     if (!FirmaTocke(k, s, interijer, svijet, u, c, r) || (k == FIRMA_FRIZER && OdjecaStolicaZauzeta(s))) return;
-    format(ime, sizeof ime, "Gost_%d_%d", k, s);
-    new npc = NPC_Create(ime);
-    if (npc == INVALID_PLAYER_ID) return;
-    gFirma[k][s][fGost] = npc;
+    new lik = Lik_Stvori(gKupacSkinovi[random(sizeof gKupacSkinovi)], u[0], u[1], u[2], 0.0, svijet, interijer);
+    if (lik == INVALID_LIK) return;
+    gFirma[k][s][fGost] = lik;
     gFirma[k][s][fGostFaza] = FG_DOLAZI;
     gFirma[k][s][fGostOd] = gettime();
-    gNpcFirma[npc] = k * FIRMA_MAX + s + 1;
-    NPC_Spawn(npc);
+    SetTimerEx("FirmaGostKreni", FIRMA_GOST_KRENI_MS, false, "ii", k * FIRMA_MAX + s, lik);
 }
 
-FirmaSpawn(npcid)
-{
-    new id = gNpcFirma[npcid] - 1;
-    if (id < 0) return;
-    new k = id / FIRMA_MAX, s = id % FIRMA_MAX, interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
-    if (!FirmaTocke(k, s, interijer, svijet, u, c, r))
-    {
-        FirmaGostMakni(k, s);
-        return;
-    }
-    NPC_SetSkin(npcid, gKupacSkinovi[random(sizeof gKupacSkinovi)]);
-    NPC_SetInvulnerable(npcid, true);
-    NPC_SetInterior(npcid, interijer);
-    NPC_SetVirtualWorld(npcid, svijet);
-    NPC_SetPos(npcid, u[0], u[1], u[2]);
-    SetTimerEx("FirmaGostKreni", FIRMA_GOST_KRENI_MS, false, "ii", id, npcid);
-}
-
-forward FirmaGostKreni(id, npcid);
-public FirmaGostKreni(id, npcid)
+forward FirmaGostKreni(id, lik);
+public FirmaGostKreni(id, lik)
 {
     new k = id / FIRMA_MAX, s = id % FIRMA_MAX, interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
-    if (gFirma[k][s][fGost] != npcid || gFirma[k][s][fGostFaza] != FG_DOLAZI) return;
+    if (gFirma[k][s][fGost] != lik || gFirma[k][s][fGostFaza] != FG_DOLAZI) return;
     if (!FirmaTocke(k, s, interijer, svijet, u, c, r)) FirmaGostMakni(k, s);
-    else NPC_Move(npcid, c[0], c[1], c[2], NPC_MOVE_TYPE_WALK);
+    else Lik_Idi(lik, c[0], c[1], c[2], LIK_HOD);
 }
 
 static FirmaPosluzi(k, s)
@@ -335,18 +309,18 @@ static FirmaPosluzi(k, s)
 
 static FirmaGostNaCilju(k, s)
 {
-    new npc = gFirma[k][s][fGost], interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
+    new lik = gFirma[k][s][fGost], interijer, svijet, Float:u[3], Float:c[4], Float:r[3];
     if (!FirmaTocke(k, s, interijer, svijet, u, c, r))
     {
         FirmaGostMakni(k, s);
         return;
     }
-    NPC_StopMove(npc);
-    NPC_SetPos(npc, c[0], c[1], c[2]);
-    NPC_SetFacingAngle(npc, c[3]);
+    Lik_Stani(lik);
+    Lik_Postavi(lik, c[0], c[1], c[2]);
+    Lik_Kut(lik, c[3]);
     if (k == FIRMA_FRIZER)
     {
-        NPC_ApplyAnimation(npc, "HAIRCUTS", "BRB_Sit_Loop", 4.1, true, false, false, true, 0);
+        Lik_Animacija(lik, "HAIRCUTS", "BRB_Sit_Loop", 4.1, 1, 0, 0, 1, 0);
         strcopy(gFirma[k][s][fRoba], "Sisanje", 32);
         gFirma[k][s][fCijena] = FIRMA_SISANJE_MIN + random(FIRMA_SISANJE_RASPON);
     }
@@ -362,15 +336,16 @@ static FirmaGostNaCilju(k, s)
     FirmaPosluzi(k, s);
 }
 
-FirmaStigao(npcid)
+FirmaStigao(lik)
 {
-    new id = gNpcFirma[npcid] - 1;
-    if (id < 0) return 0;
-    new k = id / FIRMA_MAX, s = id % FIRMA_MAX;
-    if (gFirma[k][s][fGost] != npcid) return 1;
-    if (gFirma[k][s][fGostFaza] == FG_DOLAZI) FirmaGostNaCilju(k, s);
-    else if (gFirma[k][s][fGostFaza] == FG_ODLAZI) FirmaGostMakni(k, s);
-    return 1;
+    for (new k = 0; k < sizeof gFirma; k++) for (new s = 0; s < FIRMA_MAX; s++)
+    {
+        if (gFirma[k][s][fGost] != lik) continue;
+        if (gFirma[k][s][fGostFaza] == FG_DOLAZI) FirmaGostNaCilju(k, s);
+        else if (gFirma[k][s][fGostFaza] == FG_ODLAZI) FirmaGostMakni(k, s);
+        return 1;
+    }
+    return 0;
 }
 
 FirmaIgraGotova(playerid, id, bool:uspjeh, cijena)
@@ -398,7 +373,7 @@ static FirmaPrestani(k, s)
     new p = gFirma[k][s][fRadnik];
     if (p != INVALID_PLAYER_ID && gStIgra[p] && gStIgraIzvor[p] == IZVOR_FIRMA && gStIgraId[p] == k * FIRMA_MAX + s) PosaoIgraKraj(p, false);
     gFirma[k][s][fRadnik] = INVALID_PLAYER_ID;
-    if (gFirma[k][s][fGost] != INVALID_PLAYER_ID) FirmaGostMakni(k, s);
+    if (gFirma[k][s][fGost] != INVALID_LIK) FirmaGostMakni(k, s);
 }
 
 FirmaTick()

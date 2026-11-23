@@ -17,20 +17,23 @@ enum { PR_NEMA, PR_STOJI, PR_DOLAZI, PR_PONUDA, PR_ULAZI, PR_USLUGA, PR_IZLAZI, 
 enum E_KURVA { prStanje, prDb, prSkin, prNpc, prKupac, prVozilo, prRok, bool:prAnim, Float:prX, Float:prY, Float:prZ, Float:prA }
 static gKurva[MAX_KURVI][E_KURVA], STREAMER_TAG_AREA:gKurvaZona[MAX_KURVI];
 static gKurvaOd[MAX_PLAYERS];
-static gNpcKurva[MAX_PLAYERS];
 static gApKurvaDb[MAX_PLAYERS];
 static const gKurvaSkin[] = { 63, 64, 85, 152, 178, 207, 237, 238 };
 
 static KurvaStvori(i)
 {
-    new ime[MAX_PLAYER_NAME + 1];
-    format(ime, sizeof ime, "Prost_%d", gKurva[i][prDb]);
-    new npc = NPC_Create(ime);
-    gKurva[i][prNpc] = npc;
-    if (npc == INVALID_PLAYER_ID) return;
+    new lik = Lik_Stvori(gKurva[i][prSkin], gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], gKurva[i][prA]);
+    gKurva[i][prNpc] = lik;
+    if (lik == INVALID_LIK) return;
+    Lik_Neranjiv(lik, true);
     if (!gKurvaZona[i]) gKurvaZona[i] = InterakcijaZona(gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], KURVA_PJESKE, 0, 0);
-    gNpcKurva[npc] = i + 1;
-    NPC_Spawn(npc);
+}
+
+static KurvaLika(lik)
+{
+    if (lik == INVALID_LIK) return -1;
+    for (new i = 0; i < MAX_KURVI; i++) if (gKurva[i][prStanje] != PR_NEMA && gKurva[i][prNpc] == lik) return i;
+    return -1;
 }
 
 InitKurve()
@@ -78,7 +81,7 @@ KurvaUlica(playerid)
     if (!gUlogiran[playerid] || gKurvaOd[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
     for (new i = 0; i < MAX_KURVI; i++)
     {
-        if (gKurva[i][prStanje] != PR_STOJI || gKurva[i][prNpc] == INVALID_PLAYER_ID || GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, KURVA_PJESKE, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) continue;
+        if (gKurva[i][prStanje] != PR_STOJI || gKurva[i][prNpc] == INVALID_LIK || GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, KURVA_PJESKE, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) continue;
         new cijena[12];
         gKurva[i][prStanje] = PR_ULICA_PONUDA;
         gKurva[i][prKupac] = playerid;
@@ -101,7 +104,7 @@ static KurvaUlicaKraj(i)
     {
         TogglePlayerControllable(p, true);
         ClearAnimations(p);
-        NPC_ClearAnimations(gKurva[i][prNpc]);
+        Lik_OcistiAnimaciju(gKurva[i][prNpc]);
     }
     gKurva[i][prStanje] = PR_STOJI;
 }
@@ -116,7 +119,7 @@ static KurvaUlicaPocni(i, p)
     SetCameraBehindPlayer(p);
     TogglePlayerControllable(p, false);
     ApplyAnimation(p, "BLOWJOBZ", "BJ_STAND_LOOP_P", 4.1, true, false, false, false, KURVA_TRAJANJE_MS, SYNC_ALL);
-    NPC_ApplyAnimation(gKurva[i][prNpc], "BLOWJOBZ", "BJ_STAND_LOOP_W", 4.1, true, false, false, false, KURVA_TRAJANJE_MS);
+    Lik_Animacija(gKurva[i][prNpc], "BLOWJOBZ", "BJ_STAND_LOOP_W", 4.1, 1, 0, 0, 0, KURVA_TRAJANJE_MS);
 }
 
 CMD:kurva(playerid, params[])
@@ -140,7 +143,7 @@ KurvaPotrubiKey(playerid, KEY:newkeys, KEY:oldkeys)
     for (new i = 0; i < MAX_KURVI; i++)
     {
         new npc = gKurva[i][prNpc], Float:x, Float:y, Float:z;
-        if (gKurva[i][prStanje] != PR_STOJI || npc == INVALID_PLAYER_ID || !IsPlayerInRangeOfPoint(playerid, KURVA_TRUBA, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) continue;
+        if (gKurva[i][prStanje] != PR_STOJI || npc == INVALID_LIK || !IsPlayerInRangeOfPoint(playerid, KURVA_TRUBA, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) continue;
         gKurva[i][prKupac] = playerid;
         gKurva[i][prVozilo] = v;
         gKurva[i][prStanje] = PR_DOLAZI;
@@ -148,20 +151,10 @@ KurvaPotrubiKey(playerid, KEY:newkeys, KEY:oldkeys)
         gKurva[i][prAnim] = false;
         gKurvaOd[playerid] = i + 1;
         KurvaProzor(v, x, y, z);
-        NPCHodaj(npc, x, y, z, NPC_MOVE_TYPE_WALK);
+        Lik_IdiDo(npc, x, y, z, LIK_HOD);
         return 1;
     }
     return 1;
-}
-
-KurvaSpawn(npcid)
-{
-    new i = gNpcKurva[npcid] - 1;
-    if (i < 0) return;
-    NPC_SetSkin(npcid, gKurva[i][prSkin]);
-    NPC_SetInvulnerable(npcid, true);
-    NPC_SetPos(npcid, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ]);
-    NPC_SetFacingAngle(npcid, gKurva[i][prA]);
 }
 
 static KurvaVrati(i)
@@ -176,37 +169,40 @@ static KurvaVrati(i)
     gKurva[i][prKupac] = INVALID_PLAYER_ID;
     if (st == PR_USLUGA)
     {
-        NPC_ExitVehicle(npc);
+        Lik_OcistiAnimaciju(npc);
+        Lik_Izadji(npc);
         gKurva[i][prStanje] = PR_IZLAZI;
         gKurva[i][prRok] = GetTickCount() + KURVA_IZLAZAK_MS;
         return;
     }
     if (st == PR_ULAZI)
     {
-        NPC_RemoveFromVehicle(npc);
+        Lik_Stani(npc);
+        if (Lik_DajVozilo(npc) != -1) Lik_Izadji(npc, true);
         KurvaProzor(v, x, y, z);
-        NPC_SetPos(npc, x, y, z);
+        Lik_Postavi(npc, x, y, z);
         KurvaMotor(v, 1);
     }
     gKurva[i][prStanje] = PR_ODLAZI;
-    NPCHodaj(npc, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], NPC_MOVE_TYPE_WALK);
+    Lik_IdiDo(npc, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], LIK_HOD);
 }
 
 KurvaPomak(npcid)
 {
-    new i = gNpcKurva[npcid] - 1;
-    if (i < 0) return;
+    new i = KurvaLika(npcid);
+    if (i < 0) return 0;
     if (gKurva[i][prStanje] == PR_ODLAZI) gKurva[i][prStanje] = PR_KRAJ;
-    if (gKurva[i][prStanje] != PR_DOLAZI) return;
+    if (gKurva[i][prStanje] != PR_DOLAZI) return 1;
     new p = gKurva[i][prKupac], cijena[12], Float:nx, Float:ny, Float:nz, Float:vx, Float:vy, Float:vz;
     gKurva[i][prStanje] = PR_PONUDA;
     gKurva[i][prRok] = GetTickCount() + KURVA_PONUDA_MS;
-    NPC_GetPos(npcid, nx, ny, nz);
+    Lik_Pozicija(npcid, nx, ny, nz);
     GetVehiclePos(gKurva[i][prVozilo], vx, vy, vz);
-    NPC_SetFacingAngle(npcid, atan2(vy - ny, vx - nx) - 90.0);
+    Lik_Kut(npcid, atan2(vy - ny, vx - nx) - 90.0);
     valstr(cijena, KURVA_CIJENA);
     Govor(p, "Kurva kaze: Hej dragi, za $%s ti uljepsam dan. Sto kazes?", cijena);
     KurvaPitaj(p);
+    return 1;
 }
 
 static KurvaPitaj(playerid)
@@ -262,7 +258,7 @@ static KurvaOdgovor(playerid, response)
     }
     Govor(playerid, "%s kaze: Upadaj.", GetRPIme(playerid));
     KurvaMotor(v, 0);
-    NPC_EnterVehicle(gKurva[i][prNpc], v, 1, NPC_MOVE_TYPE_WALK);
+    Lik_Udji(gKurva[i][prNpc], v, 1, LIK_HOD);
     gKurva[i][prStanje] = PR_ULAZI;
     gKurva[i][prRok] = GetTickCount() + KURVA_ULAZAK_MS;
     return 1;
@@ -298,31 +294,31 @@ KurvaTick()
         }
         else if (st == PR_KRAJ)
         {
-            NPC_SetFacingAngle(npc, gKurva[i][prA]);
+            Lik_Kut(npc, gKurva[i][prA]);
             gKurva[i][prStanje] = PR_STOJI;
         }
         else if (st == PR_IZLAZI && sad - gKurva[i][prRok] >= 0)
         {
-            new v = gKurva[i][prVozilo], Float:x, Float:y, Float:z, bool:sjedi = NPC_GetVehicle(npc) == v;
+            new v = gKurva[i][prVozilo], Float:x, Float:y, Float:z, bool:sjedi = Lik_DajVozilo(npc) == v;
             if (sjedi && sad - gKurva[i][prRok] < KURVA_IZLAZAK_ROK) continue;
             if (sjedi)
             {
-                NPC_RemoveFromVehicle(npc);
+                Lik_Izadji(npc, true);
                 KurvaProzor(v, x, y, z);
-                NPC_SetPos(npc, x, y, z);
+                Lik_Postavi(npc, x, y, z);
             }
             KurvaMotor(v, 1);
             gKurva[i][prStanje] = PR_ODLAZI;
-            NPCHodaj(npc, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], NPC_MOVE_TYPE_WALK);
+            Lik_IdiDo(npc, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ], LIK_HOD);
         }
         else if (st == PR_DOLAZI || st == PR_PONUDA || st == PR_ULAZI || st == PR_USLUGA)
         {
             if (!IsPlayerInVehicle(p, gKurva[i][prVozilo]) || !IsPlayerInRangeOfPoint(p, KURVA_BJEG, gKurva[i][prX], gKurva[i][prY], gKurva[i][prZ])) KurvaVrati(i);
             else if (st == PR_ULAZI)
             {
-                new bool:sjedi = NPC_GetVehicle(npc) == gKurva[i][prVozilo] && !NPC_IsEnteringVehicle(npc);
+                new bool:sjedi = Lik_DajVozilo(npc) == gKurva[i][prVozilo];
                 if (!sjedi && sad - gKurva[i][prRok] < 0) continue;
-                if (!sjedi) NPC_PutInVehicle(npc, gKurva[i][prVozilo], 1);
+                if (!sjedi) Lik_UVozilo(npc, gKurva[i][prVozilo], 1);
                 gKurva[i][prStanje] = PR_USLUGA;
                 gKurva[i][prRok] = sad + KURVA_TRAJANJE_MS;
             }
@@ -336,7 +332,7 @@ KurvaTick()
             {
                 gKurva[i][prAnim] = true;
                 ApplyAnimation(p, "BLOWJOBZ", "BJ_CAR_LOOP_P", 4.1, true, false, false, false, KURVA_TRAJANJE_MS, SYNC_ALL);
-                NPC_ApplyAnimation(npc, "BLOWJOBZ", "BJ_CAR_LOOP_W", 4.1, true, false, false, false, KURVA_TRAJANJE_MS);
+                Lik_Animacija(npc, "BLOWJOBZ", "BJ_CAR_LOOP_W", 4.1, 1, 0, 0, 0, KURVA_TRAJANJE_MS);
                 KurvaNjihaj(i, 1);
             }
         }
@@ -419,11 +415,8 @@ DLG:apanel_kurve_brisi(playerid, response)
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kurva je trenutno zauzeta, pokusajte kasnije."));
         return ShowKurve(playerid);
     }
-    if (gKurva[i][prNpc] != INVALID_PLAYER_ID)
-    {
-        gNpcKurva[gKurva[i][prNpc]] = 0;
-        NPC_Destroy(gKurva[i][prNpc]);
-    }
+    if (gKurva[i][prNpc] != INVALID_LIK) Lik_Ukloni(gKurva[i][prNpc]);
+    gKurva[i][prNpc] = INVALID_LIK;
     gKurva[i][prStanje] = PR_NEMA;
     if (gKurvaZona[i]) DestroyDynamicArea(gKurvaZona[i]);
     gKurvaZona[i] = STREAMER_TAG_AREA:0;

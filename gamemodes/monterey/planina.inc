@@ -8,9 +8,11 @@
 #define PLANINA_NAGIB        1.3
 #define PLANINA_PAUZA_MIN    4000
 #define PLANINA_PAUZA_MAX    15000
+#define PLANINA_TOCAKA       40
 
-enum E_PLANINAR { plNpc, plGore, plDolje, bool:plNaVrhu, Float:plDx, Float:plDy, Float:plDz, Float:plVx, Float:plVy, Float:plVz }
-static gPlaninar[PLANINA_NPC][E_PLANINAR], gPlaninarN, gNpcPlaninar[MAX_PLAYERS];
+enum E_PLANINAR { plLik, plBroj, bool:plNaVrhu }
+static gPlaninar[PLANINA_NPC][E_PLANINAR], gPlaninarN;
+static Float:gPlaninaGore[PLANINA_NPC][PLANINA_TOCAKA * 3], Float:gPlaninaDolje[PLANINA_NPC][PLANINA_TOCAKA * 3];
 static const gPlaninarSkinovi[] = { 7, 14, 23, 26, 29, 37, 44, 56, 59, 72, 93, 101, 141, 170, 184, 192, 211, 216, 250, 261 };
 
 static Float:PlaninaTlo(Float:x, Float:y)
@@ -37,7 +39,6 @@ static PlaninaPut(Float:vx, Float:vy, Float:vz, Float:kut, Float:tx[], Float:ty[
 
 InitPlanina()
 {
-    for (new i = 0; i < MAX_PLAYERS; i++) gNpcPlaninar[i] = -1;
     new Float:vx = PLANINA_X, Float:vy = PLANINA_Y, Float:vz = -100.0;
     for (new dx = -PLANINA_SKEN; dx <= PLANINA_SKEN; dx += 5) for (new dy = -PLANINA_SKEN; dy <= PLANINA_SKEN; dy += 5)
     {
@@ -45,60 +46,43 @@ InitPlanina()
         if (z > vz) { vx = x; vy = y; vz = z; }
     }
     if (vz < 50.0) return;
-    new Float:tx[40], Float:ty[40], Float:tz[40];
+    new Float:tx[PLANINA_TOCAKA], Float:ty[PLANINA_TOCAKA], Float:tz[PLANINA_TOCAKA];
     for (new p = 0; p < PLANINA_NPC; p++)
     {
         new n = 0;
         for (new pomak = 0; pomak < 36 && !n; pomak += 6) n = PlaninaPut(vx, vy, vz, float(p * 36 + pomak), tx, ty, tz, sizeof tx);
         if (!n) continue;
-        new g = gPlaninarN, gore = NPC_CreatePath(), dolje = NPC_CreatePath();
-        for (new i = n - 1; i >= 0; i--) NPC_AddPointToPath(gore, tx[i], ty[i], tz[i] + 1.0, 0.8);
-        for (new i = 0; i < n; i++) NPC_AddPointToPath(dolje, tx[i], ty[i], tz[i] + 1.0, 0.8);
-        gPlaninar[g][plGore] = gore;
-        gPlaninar[g][plDolje] = dolje;
-        gPlaninar[g][plDx] = tx[n - 1]; gPlaninar[g][plDy] = ty[n - 1]; gPlaninar[g][plDz] = tz[n - 1] + 1.0;
-        gPlaninar[g][plVx] = tx[0]; gPlaninar[g][plVy] = ty[0]; gPlaninar[g][plVz] = tz[0] + 1.0;
-        gPlaninar[g][plNaVrhu] = g % 2 == 1;
-        new ime[MAX_PLAYER_NAME + 1];
-        format(ime, sizeof ime, "Planinar_%d", g);
-        gPlaninar[g][plNpc] = NPC_Create(ime);
-        if (gPlaninar[g][plNpc] == INVALID_PLAYER_ID)
+        new g = gPlaninarN, bool:vrh = g % 2 == 1, k = vrh ? 0 : n - 1;
+        for (new i = 0; i < n; i++)
         {
-            NPC_DestroyPath(gore);
-            NPC_DestroyPath(dolje);
-            continue;
+            gPlaninaGore[g][i * 3] = tx[n - 1 - i]; gPlaninaGore[g][i * 3 + 1] = ty[n - 1 - i]; gPlaninaGore[g][i * 3 + 2] = tz[n - 1 - i] + 1.0;
+            gPlaninaDolje[g][i * 3] = tx[i]; gPlaninaDolje[g][i * 3 + 1] = ty[i]; gPlaninaDolje[g][i * 3 + 2] = tz[i] + 1.0;
         }
-        gNpcPlaninar[gPlaninar[g][plNpc]] = g;
+        new lik = Lik_Stvori(gPlaninarSkinovi[random(sizeof gPlaninarSkinovi)], tx[k], ty[k], tz[k] + 1.0);
+        if (lik < 0) continue;
+        gPlaninar[g][plLik] = lik;
+        gPlaninar[g][plBroj] = n;
+        gPlaninar[g][plNaVrhu] = vrh;
         gPlaninarN++;
-        NPC_Spawn(gPlaninar[g][plNpc]);
+        SetTimerEx("PlaninarKreni", 1000 + random(PLANINA_PAUZA_MAX), false, "i", g);
     }
 }
 
-PlaninaSpawn(npcid)
+forward PlaninarKreni(g);
+public PlaninarKreni(g)
 {
-    new g = gNpcPlaninar[npcid];
-    if (g == -1) return 0;
-    NPC_SetSkin(npcid, gPlaninarSkinovi[random(sizeof gPlaninarSkinovi)]);
-    NPC_SetInvulnerable(npcid, true);
-    if (gPlaninar[g][plNaVrhu]) NPC_SetPos(npcid, gPlaninar[g][plVx], gPlaninar[g][plVy], gPlaninar[g][plVz]);
-    else NPC_SetPos(npcid, gPlaninar[g][plDx], gPlaninar[g][plDy], gPlaninar[g][plDz]);
-    SetTimerEx("PlaninarKreni", 1000 + random(PLANINA_PAUZA_MAX), false, "ii", g, npcid);
-    return 1;
+    if (gPlaninar[g][plNaVrhu]) Lik_IdiPutem(gPlaninar[g][plLik], gPlaninaDolje[g], gPlaninar[g][plBroj], LIK_HOD);
+    else Lik_IdiPutem(gPlaninar[g][plLik], gPlaninaGore[g], gPlaninar[g][plBroj], LIK_HOD);
 }
 
-forward PlaninarKreni(g, npcid);
-public PlaninarKreni(g, npcid)
+PlaninaStigao(lik)
 {
-    if (gPlaninar[g][plNpc] != npcid) return;
-    NPC_MoveByPath(npcid, gPlaninar[g][plNaVrhu] ? gPlaninar[g][plDolje] : gPlaninar[g][plGore], NPC_MOVE_TYPE_WALK);
-}
-
-PlaninaPutGotov(npcid, pathid)
-{
-    new g = gNpcPlaninar[npcid];
-    if (g == -1) return 0;
-    if (pathid != gPlaninar[g][plGore] && pathid != gPlaninar[g][plDolje]) return 1;
-    gPlaninar[g][plNaVrhu] = pathid == gPlaninar[g][plGore];
-    SetTimerEx("PlaninarKreni", PLANINA_PAUZA_MIN + random(PLANINA_PAUZA_MAX - PLANINA_PAUZA_MIN), false, "ii", g, npcid);
-    return 1;
+    for (new g = 0; g < gPlaninarN; g++)
+    {
+        if (gPlaninar[g][plLik] != lik) continue;
+        gPlaninar[g][plNaVrhu] = !gPlaninar[g][plNaVrhu];
+        SetTimerEx("PlaninarKreni", PLANINA_PAUZA_MIN + random(PLANINA_PAUZA_MAX - PLANINA_PAUZA_MIN), false, "i", g);
+        return 1;
+    }
+    return 0;
 }

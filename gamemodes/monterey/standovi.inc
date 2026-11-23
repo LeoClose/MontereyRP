@@ -43,17 +43,10 @@
 #define KUPAC_NOVAC_MAX      8
 #define KUPAC_NOVAC_PAUZA_S  900
 #define STAND_RADNIK_GRESKA  20
-#define KUPAC_BORBA_S        20
-#define KUPAC_BORBA_DOMET    30.0
 #define KUPAC_RANJEN_S       240
-#define KUPAC_IZBJEGNI_MS    200
-#define KUPAC_IZBJEGNI_S     2
-#define KUPAC_AUTO_RAZMAK    1.2
 #define STAND_VIDLJIV        250.0
 #define STAND_VIRT_S         18
 #define KUPAC_DOLAZAK        3.0
-#define KUPAC_MIRNO_S        3
-#define KUPAC_POKUSAJA       6
 #define KUPAC_KRENI_MS       700
 
 static const gStandModeli[] = { 1340, 1341, 1342, STAND_KOMBI_MODEL };
@@ -76,21 +69,16 @@ enum E_STAND { bool:snIma, snDb, snVrsta, Float:snX, Float:snY, Float:snZ, Float
 static gStand[STAND_MAX][E_STAND];
 static gStandRadi[MAX_PLAYERS], gStandMeniS[MAX_PLAYERS], gStandOpcija[MAX_PLAYERS][8], gStandOpcijaN[MAX_PLAYERS], gStandUredi[MAX_PLAYERS][2], bool:gStandBio[STAND_MAX], bool:gStandGledan[STAND_MAX], gApStand[MAX_PLAYERS], gApStandLista[MAX_PLAYERS][STAND_MAX];
 
-enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI, KU_BORBA, KU_BJEZI, KU_RANJEN, KU_IZBJEGAVA }
-enum E_KUPAC { kuStanje, kuNpc, kuPut, kuCilj, kuPosjeta, kuOd, Float:kuX, Float:kuY, Float:kuZ, Float:kuPx, Float:kuPy, kuMirno, kuPokusaj, kuNovacDo, Float:kuTx, Float:kuTy, Float:kuTz, kuNapadac, kuNapadacRacun, kuStanjeOd }
-static gKupac[KUPAC_MAX][E_KUPAC], gNpcKupac[MAX_PLAYERS], gKupacRuta[STAZA_RUTA], gKupacZadnji;
+enum { KU_NEMA, KU_SPAWN, KU_HODA, KU_CEKA, KU_SLUZI, KU_REAGIRA, KU_RANJEN }
+enum E_KUPAC { kuStanje, kuNpc, kuCilj, kuPosjeta, kuOd, kuNovacDo, Float:kuTx, Float:kuTy, Float:kuTz, kuNapadac, kuNapadacRacun, kuStanjeOd }
+static gKupac[KUPAC_MAX][E_KUPAC], gKupacZadnji;
 
 enum { SO_IME, SO_KASA, SO_ROBA, SO_RADNIK, SO_RADI }
 
 InitStandovi()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS food_stands (id INTEGER PRIMARY KEY AUTOINCREMENT, kind INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, rz REAL NOT NULL, kx REAL NOT NULL, ky REAL NOT NULL, kz REAL NOT NULL, owner INTEGER NOT NULL DEFAULT 0, owner_name TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', stock INTEGER NOT NULL DEFAULT 0, till INTEGER NOT NULL DEFAULT 0, worker INTEGER NOT NULL DEFAULT 0, worker_until INTEGER NOT NULL DEFAULT 0)"));
-    for (new k = 0; k < KUPAC_MAX; k++)
-    {
-        gKupac[k][kuNpc] = INVALID_PLAYER_ID;
-        gKupac[k][kuPut] = -1;
-    }
-    SetTimer("KupacIzbjegavaj", KUPAC_IZBJEGNI_MS, true);
+    for (new k = 0; k < KUPAC_MAX; k++) gKupac[k][kuNpc] = INVALID_LIK;
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, kind, x, y, z, rz, kx, ky, kz, owner, owner_name, name, stock, till, worker, worker_until FROM food_stands LIMIT %d", STAND_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++, DB_SelectNextRow(res))
     {
@@ -799,9 +787,9 @@ StandIgraGotova(playerid, s, bool:uspjeh, cijena)
 
 static KupacKaze(k, const tekst[], const a[] = "")
 {
-    new npc = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
-    if (npc == INVALID_PLAYER_ID) return;
-    NPC_GetPos(npc, x, y, z);
+    new lik = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
+    if (lik == INVALID_LIK) return;
+    Lik_Pozicija(lik, x, y, z);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if (gUlogiran[i] && IsPlayerInRangeOfPoint(i, 15.0, x, y, z)) SendClientMessage(i, COLOR_CHAT, T(i, "Kupac kaze: %s"), a[0] ? T(i, a) : T(i, tekst));
 }
@@ -811,7 +799,7 @@ static StandSluzi(s, k)
     gStand[s][snKupac] = k;
     gStand[s][snKupacOd] = GetTickCount();
     gKupac[k][kuStanje] = KU_SLUZI;
-    NPC_SetFacingAngle(gKupac[k][kuNpc], atan2(gStand[s][snY] - gStand[s][snKy], gStand[s][snX] - gStand[s][snKx]) - 90.0);
+    Lik_Kut(gKupac[k][kuNpc], atan2(gStand[s][snY] - gStand[s][snKy], gStand[s][snX] - gStand[s][snKx]) - 90.0);
     new p = StandIgracRadi(s);
     if (p != INVALID_PLAYER_ID)
     {
@@ -859,42 +847,22 @@ DostavaStandPreuzmi(s)
 
 static KupacMakni(k)
 {
-    new npc = gKupac[k][kuNpc];
-    if (gKupac[k][kuPut] != -1) NPC_DestroyPath(gKupac[k][kuPut]);
-    gKupac[k][kuPut] = -1;
-    if (npc != INVALID_PLAYER_ID)
-    {
-        gNpcKupac[npc] = 0;
-        NPC_Destroy(npc);
-    }
-    gKupac[k][kuNpc] = INVALID_PLAYER_ID;
+    if (gKupac[k][kuNpc] != INVALID_LIK) Lik_Ukloni(gKupac[k][kuNpc]);
+    gKupac[k][kuNpc] = INVALID_LIK;
     for (new s = 0; s < STAND_MAX; s++) if (gStand[s][snIma] && gStand[s][snKupac] == k) gStand[s][snKupac] = -1;
     gKupac[k][kuStanje] = KU_NEMA;
 }
 
 static bool:KupacIdi(k, Float:tx, Float:ty, Float:tz)
 {
-    new npc = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
-    NPC_GetPos(npc, x, y, z);
-    new a = StazaNajbliza(x, y, z), b = StazaNajbliza(tx, ty, tz), n = StazaPut(a, b, gKupacRuta, sizeof gKupacRuta);
-    if (!n) return false;
-    if (gKupac[k][kuPut] != -1) NPC_DestroyPath(gKupac[k][kuPut]);
-    new put = NPC_CreatePath();
-    if (!NPC_IsValidPath(put)) return false;
-    for (new i = 0; i < n; i++)
-    {
-        StazaTocka(gKupacRuta[i], x, y, z);
-        NPC_AddPointToPath(put, x, y, HodTlo(x, y, z), 0.6);
-    }
-    NPC_AddPointToPath(put, tx + float(random(21) - 10) / 10.0, ty + float(random(21) - 10) / 10.0, HodTlo(tx, ty, tz), 1.0);
-    gKupac[k][kuPut] = put;
+    new lik = gKupac[k][kuNpc];
+    Lik_OcistiAnimaciju(lik);
+    if (!Lik_IdiDo(lik, tx + float(random(21) - 10) / 10.0, ty + float(random(21) - 10) / 10.0, tz, LIK_HOD)) return false;
     gKupac[k][kuStanje] = KU_HODA;
     gKupac[k][kuOd] = gettime();
-    gKupac[k][kuMirno] = 0;
     gKupac[k][kuTx] = tx;
     gKupac[k][kuTy] = ty;
     gKupac[k][kuTz] = tz;
-    NPC_MoveByPath(npc, put, NPC_MOVE_TYPE_WALK);
     return true;
 }
 
@@ -972,73 +940,48 @@ static KupacNovi(cilj = -1)
     for (new i = 0; i < KUPAC_MAX && k == -1; i++) if (gKupac[i][kuStanje] == KU_NEMA) k = i;
     if (k == -1) return;
     new s = cilj == -1 ? KupacOtvoreniStand(-1) : cilj;
-    if (s == -1) return;
-    new cvor = -1, Float:x, Float:y, Float:z;
-    for (new pokusaj = 0; pokusaj < (cilj != -1 ? 400 : 40) && cvor == -1; pokusaj++)
+    if (s == -1 || !gStand[s][snIma]) return;
+    new Float:x, Float:y, Float:z, bool:ima = false;
+    for (new pokusaj = 0; pokusaj < 8 && !ima; pokusaj++)
     {
-        new c = random(StazaBrojTocaka());
-        StazaTocka(c, x, y, z);
-        new Float:d = VectorSize(x - gStand[s][snKx], y - gStand[s][snKy], 0.0);
-        if (cilj != -1 ? (d >= KUPAC_BLIZU_MIN && d <= KUPAC_BLIZU_MAX) : (d >= KUPAC_SPAWN_MIN && d <= KUPAC_SPAWN_MAX && KupacSkriven(x, y, z))) cvor = c;
+        if (cilj != -1) ima = Lik_TockaStaze(gStand[s][snKx], gStand[s][snKy], KUPAC_BLIZU_MIN, KUPAC_BLIZU_MAX, x, y, z);
+        else ima = Lik_TockaStaze(gStand[s][snKx], gStand[s][snKy], KUPAC_SPAWN_MIN, KUPAC_SPAWN_MAX, x, y, z) && KupacSkriven(x, y, z);
     }
-    if (cvor == -1) return;
-    new ime[MAX_PLAYER_NAME + 1];
-    format(ime, sizeof ime, "Kupac_%d", k);
-    new npc = NPC_Create(ime);
-    if (npc == INVALID_PLAYER_ID) return;
-    gKupac[k][kuNpc] = npc;
+    if (!ima) return;
+    new lik = Lik_Stvori(gKupacSkinovi[random(sizeof gKupacSkinovi)], x, y, z, float(random(360)));
+    if (lik == INVALID_LIK) return;
+    Lik_Ponasanje(lik, LIK_REAGIRA | LIK_IZBJEGAVA | LIK_RANJIV, KUPAC_RANJEN_HP);
+    gKupac[k][kuNpc] = lik;
     gKupac[k][kuCilj] = s;
     gKupac[k][kuPosjeta] = 0;
     gKupac[k][kuNovacDo] = 0;
     gKupac[k][kuStanje] = KU_SPAWN;
     gKupac[k][kuOd] = gettime();
-    gKupac[k][kuPut] = -1;
-    gKupac[k][kuX] = x;
-    gKupac[k][kuY] = y;
-    gKupac[k][kuZ] = HodTlo(x, y, z);
-    gNpcKupac[npc] = k + 1;
-    NPC_Spawn(npc);
-}
-
-KupacSpawn(npcid)
-{
-    new k = gNpcKupac[npcid] - 1;
-    if (k < 0) return;
-    new s = gKupac[k][kuCilj];
-    NPC_SetSkin(npcid, gKupacSkinovi[random(sizeof gKupacSkinovi)]);
-    NPC_SetInvulnerable(npcid, false);
-    NPC_SetHealth(npcid, 100.0);
-    NPC_SetWeapon(npcid, WEAPON_FIST);
     gKupac[k][kuNapadac] = INVALID_PLAYER_ID;
     gKupac[k][kuNapadacRacun] = 0;
-    NPC_SetPos(npcid, gKupac[k][kuX], gKupac[k][kuY], gKupac[k][kuZ]);
-    gKupac[k][kuPokusaj] = 0;
-    if (s < 0 || !gStand[s][snIma])
-    {
-        KupacMakni(k);
-        return;
-    }
     gKupac[k][kuTx] = gStand[s][snKx];
     gKupac[k][kuTy] = gStand[s][snKy];
     gKupac[k][kuTz] = gStand[s][snKz];
-    SetTimerEx("KupacKreni", KUPAC_KRENI_MS, false, "ii", k, npcid);
+    SetTimerEx("KupacKreni", KUPAC_KRENI_MS, false, "ii", k, lik);
 }
 
-forward KupacKreni(k, npcid);
-public KupacKreni(k, npcid)
+static KupacLika(lik)
 {
-    if (gKupac[k][kuNpc] != npcid || gKupac[k][kuStanje] != KU_SPAWN) return;
+    if (lik == INVALID_LIK) return -1;
+    for (new k = 0; k < KUPAC_MAX; k++) if (gKupac[k][kuStanje] != KU_NEMA && gKupac[k][kuNpc] == lik) return k;
+    return -1;
+}
+
+forward KupacKreni(k, lik);
+public KupacKreni(k, lik)
+{
+    if (gKupac[k][kuNpc] != lik || gKupac[k][kuStanje] != KU_SPAWN) return;
     if (!KupacIdi(k, gKupac[k][kuTx], gKupac[k][kuTy], gKupac[k][kuTz])) KupacMakni(k);
 }
 
 static KupacNaCilju(k)
 {
-    if (gKupac[k][kuPut] != -1)
-    {
-        NPC_StopMove(gKupac[k][kuNpc]);
-        NPC_DestroyPath(gKupac[k][kuPut]);
-        gKupac[k][kuPut] = -1;
-    }
+    Lik_Stani(gKupac[k][kuNpc]);
     new s = gKupac[k][kuCilj];
     if (s < 0 || !gStand[s][snIma])
     {
@@ -1050,35 +993,33 @@ static KupacNaCilju(k)
     if (gStand[s][snKupac] == -1 && StandOtvoren(s)) StandSluzi(s, k);
 }
 
-public OnNPCFinishMovePath(npcid, pathid)
+KupacStigao(lik)
 {
-    if (PlaninaPutGotov(npcid, pathid)) return 1;
-    new k = gNpcKupac[npcid] - 1;
-    if (k < 0 || gKupac[k][kuPut] != pathid || gKupac[k][kuStanje] != KU_HODA) return 1;
-    KupacNaCilju(k);
+    new k = KupacLika(lik);
+    if (k == -1) return 0;
+    if (gKupac[k][kuStanje] == KU_HODA)
+    {
+        if (gKupac[k][kuCilj] >= 0) KupacNaCilju(k);
+        else KupacMakni(k);
+    }
     return 1;
 }
 
-KupacSmrt(npcid, killerid)
+KupacSmrt(lik, killerid)
 {
-    new k = gNpcKupac[npcid] - 1;
-    if (k < 0) return;
+    new k = KupacLika(lik);
+    if (k == -1) return 0;
     if (killerid != INVALID_PLAYER_ID && IsPlayerConnected(killerid) && !IsPlayerNPC(killerid))
     {
         DodajWanted(killerid);
         DodajWanted(killerid);
     }
     KupacMakni(k);
+    return 1;
 }
 
 static KupacPrekiniPosao(k)
 {
-    if (gKupac[k][kuPut] != -1)
-    {
-        NPC_StopMove(gKupac[k][kuNpc]);
-        NPC_DestroyPath(gKupac[k][kuPut]);
-        gKupac[k][kuPut] = -1;
-    }
     for (new s = 0; s < STAND_MAX; s++)
     {
         if (!gStand[s][snIma] || gStand[s][snKupac] != k) continue;
@@ -1088,41 +1029,36 @@ static KupacPrekiniPosao(k)
     }
 }
 
-static KupacNastavi(k)
+KupacSmiren(lik)
 {
-    gKupac[k][kuStanje] = KU_HODA;
-    NPC_StopMeleeAttack(gKupac[k][kuNpc]);
-    NPC_ClearAnimations(gKupac[k][kuNpc]);
-    if (!KupacIdi(k, gKupac[k][kuTx], gKupac[k][kuTy], gKupac[k][kuTz])) KupacMakni(k);
+    new k = KupacLika(lik);
+    if (k == -1) return 0;
+    if (gKupac[k][kuStanje] == KU_REAGIRA && !KupacIdi(k, gKupac[k][kuTx], gKupac[k][kuTy], gKupac[k][kuTz])) KupacMakni(k);
+    return 1;
 }
 
-static KupacRanjen(k)
+KupacRanjen(lik)
 {
-    new npc = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
+    new k = KupacLika(lik);
+    if (k == -1) return 0;
+    new Float:x, Float:y, Float:z;
     KupacPrekiniPosao(k);
-    NPC_StopMeleeAttack(npc);
-    NPC_SetHealth(npc, KUPAC_RANJEN_HP);
-    NPC_SetInvulnerable(npc, true);
-    NPC_StopMove(npc);
-    NPC_GetPos(npc, x, y, z);
-    new Float:hx, Float:hy, Float:hz;
-    if (Kolizija_Zraka(x, y, z + 1.0, x, y, z - 50.0, hx, hy, hz)) NPC_SetPos(npc, x, y, hz + 1.0);
-    NPC_ApplyAnimation(npc, "CRACK", "crckidle1", 4.1, true, false, false, true, 0);
     gKupac[k][kuStanje] = KU_RANJEN;
     gKupac[k][kuStanjeOd] = gettime();
-    NPC_GetPos(npc, x, y, z);
+    Lik_Pozicija(lik, x, y, z);
     if (gettime() >= gKupac[k][kuNovacDo])
     {
         gKupac[k][kuNovacDo] = gettime() + KUPAC_NOVAC_PAUZA_S;
         BaciNovac(x + float(random(11) - 5) / 10.0, y + float(random(11) - 5) / 10.0, z, 0, 0, KUPAC_NOVAC_MIN + random(KUPAC_NOVAC_MAX - KUPAC_NOVAC_MIN + 1));
     }
-    HitnaZaNpc(npc, x, y, z);
+    HitnaZaNpc(LIK_PACIJENT + lik, x, y, z);
+    return 1;
 }
 
-KupacJeRanjen(npcid)
+KupacJeRanjen(pacijent)
 {
-    if (npcid < 0 || npcid >= MAX_PLAYERS) return 0;
-    new k = gNpcKupac[npcid] - 1;
+    if (pacijent < LIK_PACIJENT) return 0;
+    new k = KupacLika(pacijent - LIK_PACIJENT);
     return k >= 0 && gKupac[k][kuStanje] == KU_RANJEN ? 1 : 0;
 }
 
@@ -1132,39 +1068,39 @@ KupacNajbliziRanjen(playerid, Float:domet)
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         if (gKupac[k][kuStanje] != KU_RANJEN) continue;
-        NPC_GetPos(gKupac[k][kuNpc], x, y, z);
+        Lik_Pozicija(gKupac[k][kuNpc], x, y, z);
         new Float:d = GetPlayerDistanceFromPoint(playerid, x, y, z);
         if (d < bd)
         {
             bd = d;
-            best = gKupac[k][kuNpc];
+            best = LIK_PACIJENT + gKupac[k][kuNpc];
         }
     }
     return best;
 }
 
-KupacOzivi(npcid, bool:spasen)
+KupacOzivi(pacijent, bool:spasen)
 {
-    new k = gNpcKupac[npcid] - 1;
+    if (pacijent < LIK_PACIJENT) return;
+    new lik = pacijent - LIK_PACIJENT, k = KupacLika(lik);
     if (k < 0 || gKupac[k][kuStanje] != KU_RANJEN) return;
     if (!spasen)
     {
         KupacMakni(k);
         return;
     }
-    NPC_ClearAnimations(npcid);
-    NPC_SetInvulnerable(npcid, false);
-    NPC_SetHealth(npcid, 100.0);
+    Lik_Pridigni(lik);
     gKupac[k][kuCilj] = -1;
     new Float:x, Float:y, Float:z;
     if (RestoranBroj() && RestoranPozicija(random(RestoranBroj()), x, y, z) && KupacIdi(k, x, y, z)) return;
     KupacMakni(k);
 }
 
-public OnNPCTakeDamage(npcid, issuerid, Float:amount, WEAPON:weaponid, bodypart)
+KupacPogoden(lik, issuerid, Float:amount, WEAPON:weaponid)
 {
-    new k = gNpcKupac[npcid] - 1;
-    if (k < 0) return 1;
+    #pragma unused amount, weaponid
+    new k = KupacLika(lik);
+    if (k < 0) return -1;
     if (gKupac[k][kuStanje] == KU_RANJEN) return 0;
     if (issuerid != INVALID_PLAYER_ID && IsPlayerConnected(issuerid) && !IsPlayerNPC(issuerid))
     {
@@ -1172,169 +1108,13 @@ public OnNPCTakeDamage(npcid, issuerid, Float:amount, WEAPON:weaponid, bodypart)
         gKupac[k][kuNapadac] = issuerid;
         gKupac[k][kuNapadacRacun] = gAccountId[issuerid];
     }
-    if (NPC_GetHealth(npcid) - amount <= KUPAC_RANJEN_HP)
+    if (gKupac[k][kuStanje] != KU_REAGIRA)
     {
-        KupacRanjen(k);
-        return 0;
+        KupacPrekiniPosao(k);
+        gKupac[k][kuStanje] = KU_REAGIRA;
+        gKupac[k][kuStanjeOd] = gettime();
     }
-    if (gKupac[k][kuNapadac] == INVALID_PLAYER_ID || gKupac[k][kuStanje] == KU_BORBA || gKupac[k][kuStanje] == KU_BJEZI) return 1;
-    KupacPrekiniPosao(k);
-    gKupac[k][kuStanje] = _:weaponid > _:WEAPON_SPRAYCAN || (_:weaponid >= 22 && _:weaponid <= 38) ? KU_BJEZI : KU_BORBA;
-    gKupac[k][kuStanjeOd] = gettime();
     return 1;
-}
-
-static Float:gParkirano[MAX_VEHICLES][4], gParkiranoN, gParkiranoOd = -1000000;
-static Float:gVozaci[MAX_PLAYERS][5], gVozaciN;
-
-static ParkiranaVozila()
-{
-    new sad = GetTickCount();
-    if (sad - gParkiranoOd < 1000) return;
-    gParkiranoOd = sad;
-    gParkiranoN = 0;
-    for (new i = 0; i < gVozilaCount; i++)
-    {
-        new v = gVozila[i], Float:vx, Float:vy, Float:vz, Float:sx, Float:sy, Float:sz;
-        if (GetVehicleVirtualWorld(v)) continue;
-        GetVehicleVelocity(v, vx, vy, vz);
-        if (vx * vx + vy * vy > 0.0004) continue;
-        GetVehiclePos(v, gParkirano[gParkiranoN][0], gParkirano[gParkiranoN][1], gParkirano[gParkiranoN][2]);
-        GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-        gParkirano[gParkiranoN][3] = (sx > sy ? sx : sy) / 2.0;
-        gParkiranoN++;
-    }
-}
-
-static Vozaci()
-{
-    gVozaciN = 0;
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
-    {
-        if (GetPlayerState(i) != PLAYER_STATE_DRIVER) continue;
-        new v = GetPlayerVehicleID(i), Float:vz;
-        GetVehicleVelocity(v, gVozaci[gVozaciN][3], gVozaci[gVozaciN][4], vz);
-        if (gVozaci[gVozaciN][3] * gVozaci[gVozaciN][3] + gVozaci[gVozaciN][4] * gVozaci[gVozaciN][4] < 0.02) continue;
-        GetVehiclePos(v, gVozaci[gVozaciN][0], gVozaci[gVozaciN][1], gVozaci[gVozaciN][2]);
-        gVozaciN++;
-    }
-}
-
-static bool:KupacZaobidi(k, Float:x, Float:y, Float:z)
-{
-    new npc = gKupac[k][kuNpc], Float:a;
-    NPC_GetFacingAngle(npc, a);
-    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees);
-    for (new i = 0; i < gParkiranoN; i++)
-    {
-        new Float:vx = gParkirano[i][0], Float:vy = gParkirano[i][1], Float:vz = gParkirano[i][2], Float:r = gParkirano[i][3];
-        new Float:dx = vx - x, Float:dy = vy - y;
-        if (dx * dx + dy * dy > 64.0 || floatabs(vz - z) > 2.5) continue;
-        new Float:ispred = dx * fx + dy * fy, Float:bocno = dx * fy - dy * fx;
-        if (ispred <= 0.0 || ispred > r + KUPAC_AUTO_RAZMAK || floatabs(bocno) > r * 0.6 + KUPAC_AUTO_RAZMAK) continue;
-        for (new p = 0; p < 2; p++)
-        {
-            new Float:strana = (bocno > 0.0) == (p == 0) ? -1.0 : 1.0;
-            new Float:tx = vx + fy * strana * (r + KUPAC_AUTO_RAZMAK) + fx * (r + KUPAC_AUTO_RAZMAK), Float:ty = vy - fx * strana * (r + KUPAC_AUTO_RAZMAK) + fy * (r + KUPAC_AUTO_RAZMAK), Float:hx, Float:hy, Float:hz;
-            if (Kolizija_Zraka(x, y, z + 0.4, tx, ty, z + 0.4, hx, hy, hz)) continue;
-            gKupac[k][kuStanje] = KU_IZBJEGAVA;
-            gKupac[k][kuStanjeOd] = gettime() + KUPAC_IZBJEGNI_S;
-            NPC_Move(npc, tx, ty, HodTlo(tx, ty, z), NPC_MOVE_TYPE_WALK);
-            return true;
-        }
-        return false;
-    }
-    return false;
-}
-
-forward KupacIzbjegavaj();
-public KupacIzbjegavaj()
-{
-    new bool:ima = false;
-    for (new k = 0; k < KUPAC_MAX && !ima; k++) ima = gKupac[k][kuStanje] == KU_HODA || gKupac[k][kuStanje] == KU_CEKA;
-    if (!ima) return;
-    Vozaci();
-    ParkiranaVozila();
-    for (new k = 0; k < KUPAC_MAX; k++)
-    {
-        new st = gKupac[k][kuStanje];
-        if (st != KU_HODA && st != KU_CEKA) continue;
-        new npc = gKupac[k][kuNpc], Float:x, Float:y, Float:z;
-        NPC_GetPos(npc, x, y, z);
-        if (st == KU_HODA && KupacZaobidi(k, x, y, z)) continue;
-        for (new i = 0; i < gVozaciN; i++)
-        {
-            new Float:px = gVozaci[i][0], Float:py = gVozaci[i][1], Float:pz = gVozaci[i][2], Float:vx = gVozaci[i][3], Float:vy = gVozaci[i][4];
-            new Float:dx = x - px, Float:dy = y - py;
-            if (dx * dx + dy * dy > 400.0 || floatabs(z - pz) > 3.0) continue;
-            new Float:brzina2 = vx * vx + vy * vy;
-            new Float:t = (dx * vx + dy * vy) / brzina2;
-            if (t <= 0.0 || t > 25.0) continue;
-            new Float:bx = dx - vx * t, Float:by = dy - vy * t;
-            if (bx * bx + by * by > 6.25) continue;
-            new Float:b = VectorSize(bx, by, 0.0);
-            if (b < 0.1)
-            {
-                b = floatsqroot(brzina2);
-                bx = -vy / b;
-                by = vx / b;
-            }
-            else
-            {
-                bx /= b;
-                by /= b;
-            }
-            KupacPrekiniPosao(k);
-            gKupac[k][kuStanje] = KU_IZBJEGAVA;
-            gKupac[k][kuStanjeOd] = gettime();
-            NPC_ApplyAnimation(npc, "PED", "EV_dive", 4.1, false, true, true, false, 0);
-            NPC_Move(npc, x + bx * 3.0, y + by * 3.0, z, NPC_MOVE_TYPE_SPRINT);
-            break;
-        }
-    }
-}
-
-static KupacBorbaTick(k, sad)
-{
-    new npc = gKupac[k][kuNpc], st = gKupac[k][kuStanje];
-    if (st == KU_RANJEN)
-    {
-        if (sad - gKupac[k][kuStanjeOd] >= KUPAC_RANJEN_S) KupacMakni(k);
-        return;
-    }
-    if (st == KU_IZBJEGAVA)
-    {
-        if (sad - gKupac[k][kuStanjeOd] >= KUPAC_IZBJEGNI_S) KupacNastavi(k);
-        return;
-    }
-    new p = gKupac[k][kuNapadac], Float:x, Float:y, Float:z, Float:px, Float:py, Float:pz;
-    if (p == INVALID_PLAYER_ID || !IsPlayerConnected(p) || gAccountId[p] != gKupac[k][kuNapadacRacun] || sad - gKupac[k][kuStanjeOd] >= KUPAC_BORBA_S)
-    {
-        KupacNastavi(k);
-        return;
-    }
-    NPC_GetPos(npc, x, y, z);
-    GetPlayerPos(p, px, py, pz);
-    new Float:d = VectorSize(px - x, py - y, 0.0);
-    if (d > KUPAC_BORBA_DOMET || IsRanjen(p))
-    {
-        KupacNastavi(k);
-        return;
-    }
-    if (st == KU_BJEZI)
-    {
-        NPC_Move(npc, x + (x - px) / d * 15.0, y + (y - py) / d * 15.0, z, NPC_MOVE_TYPE_SPRINT);
-        return;
-    }
-    if (d > 1.2 || IsPlayerInAnyVehicle(p))
-    {
-        NPC_StopMeleeAttack(npc);
-        NPC_MoveToPlayer(npc, p, NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 0.8, 250, true);
-        return;
-    }
-    NPC_StopMove(npc);
-    NPC_SetFacingAngle(npc, atan2(py - y, px - x) - 90.0);
-    NPC_MeleeAttack(npc, 1000);
 }
 
 StandTick()
@@ -1409,10 +1189,10 @@ StandTick()
     for (new k = 0; k < KUPAC_MAX; k++)
     {
         if (gKupac[k][kuStanje] == KU_NEMA) continue;
-        if (gKupac[k][kuStanje] < KU_BORBA && gKupac[k][kuStanje] != KU_SPAWN)
+        if (gKupac[k][kuStanje] < KU_REAGIRA && gKupac[k][kuStanje] != KU_SPAWN)
         {
             new Float:kx, Float:ky, Float:kz, c = gKupac[k][kuCilj];
-            NPC_GetPos(gKupac[k][kuNpc], kx, ky, kz);
+            Lik_Pozicija(gKupac[k][kuNpc], kx, ky, kz);
             if ((c < 0 || !gStandGledan[c]) && KupacSkriven(kx, ky, kz, STAND_VIDLJIV))
             {
                 KupacMakni(k);
@@ -1430,45 +1210,13 @@ StandTick()
         else if (gKupac[k][kuStanje] == KU_HODA)
         {
             new Float:x, Float:y, Float:z;
-            NPC_GetPos(gKupac[k][kuNpc], x, y, z);
-            if (s >= 0 && gStand[s][snIma] && VectorSize(x - gStand[s][snKx], y - gStand[s][snKy], 0.0) <= KUPAC_DOLAZAK)
-            {
-                KupacNaCilju(k);
-                continue;
-            }
-            if (VectorSize(x - gKupac[k][kuPx], y - gKupac[k][kuPy], 0.0) < 0.3) gKupac[k][kuMirno]++;
-            else
-            {
-                gKupac[k][kuMirno] = 0;
-                gKupac[k][kuPokusaj] = 0;
-            }
-            gKupac[k][kuPx] = x;
-            gKupac[k][kuPy] = y;
-            if (sad - gKupac[k][kuOd] >= KUPAC_ZAGLAVIO_S)
-            {
-                KupacMakni(k);
-                continue;
-            }
-            if (gKupac[k][kuMirno] < KUPAC_MIRNO_S) continue;
-            if (++gKupac[k][kuPokusaj] > KUPAC_POKUSAJA || (gKupac[k][kuPokusaj] > 2 && KupacSkriven(x, y, z)))
-            {
-                KupacMakni(k);
-                continue;
-            }
-            new pokusaj = gKupac[k][kuPokusaj], Float:tx = gKupac[k][kuTx], Float:ty = gKupac[k][kuTy], Float:tz = gKupac[k][kuTz];
-            NPC_StopMove(gKupac[k][kuNpc]);
-            NPC_ClearAnimations(gKupac[k][kuNpc]);
-            if (pokusaj > 1)
-            {
-                new c = StazaNajbliza(x, y, z), Float:cx, Float:cy, Float:cz;
-                StazaTocka(c, cx, cy, cz);
-                NPC_SetPos(gKupac[k][kuNpc], cx, cy, HodTlo(cx, cy, cz));
-            }
-            if (!KupacIdi(k, tx, ty, tz)) KupacMakni(k);
-            else gKupac[k][kuPokusaj] = pokusaj;
+            Lik_Pozicija(gKupac[k][kuNpc], x, y, z);
+            if (s >= 0 && gStand[s][snIma] && VectorSize(x - gStand[s][snKx], y - gStand[s][snKy], 0.0) <= KUPAC_DOLAZAK) KupacNaCilju(k);
+            else if (sad - gKupac[k][kuOd] >= KUPAC_ZAGLAVIO_S) KupacMakni(k);
         }
         else if (gKupac[k][kuStanje] == KU_SPAWN && sad - gKupac[k][kuOd] >= 10) KupacMakni(k);
-        else if (gKupac[k][kuStanje] >= KU_BORBA) KupacBorbaTick(k, sad);
+        else if (gKupac[k][kuStanje] == KU_RANJEN && sad - gKupac[k][kuStanjeOd] >= KUPAC_RANJEN_S) KupacMakni(k);
+        else if (gKupac[k][kuStanje] == KU_REAGIRA && sad - gKupac[k][kuStanjeOd] >= 60) KupacMakni(k);
     }
     if (sad - gKupacZadnji >= KUPAC_SPAWN_S && ukupno < KUPAC_MAX && aktivni < otvoreno * KUPAC_PO_STANDU)
     {

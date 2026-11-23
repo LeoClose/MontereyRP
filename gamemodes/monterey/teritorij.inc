@@ -29,7 +29,6 @@ static gTerNpcDb[MAX_TER][MAX_TER_NPC];
 static STREAMER_TAG_AREA:gTerNpcZona[MAX_TER][MAX_TER_NPC];
 static Float:gTerNpcPos[MAX_TER][MAX_TER_NPC][4];
 static gTerNpcSkin[MAX_TER][MAX_TER_NPC];
-static gNpcTer[MAX_PLAYERS] = { -1, ... };
 static gTerOdabran[MAX_PLAYERS];
 static gTerPopis[MAX_PLAYERS][BROJ_ITEMA];
 static gTerPorukaTick[MAX_PLAYERS];
@@ -44,7 +43,7 @@ static gTerNpcMunicija[MAX_TER][MAX_TER_NPC];
 InitTeritorij()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS org_colors (org INTEGER PRIMARY KEY, color INTEGER NOT NULL)"));
-    for (new t = 0; t < MAX_TER; t++) for (new n = 0; n < MAX_TER_NPC; n++) gTerNpc[t][n] = INVALID_PLAYER_ID;
+    for (new t = 0; t < MAX_TER; t++) for (new n = 0; n < MAX_TER_NPC; n++) gTerNpc[t][n] = INVALID_LIK;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS territories (\
         id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, type INTEGER NOT NULL,\
         minx REAL NOT NULL, miny REAL NOT NULL, maxx REAL NOT NULL, maxy REAL NOT NULL,\
@@ -155,49 +154,53 @@ static DrogaTeritorija(t)
     return gTer[t][terTip] == TER_CRACKHOUSE ? ITEM_KOKAIN : ITEM_MARIHUANA;
 }
 
-static DilerPostavi(npc, t, n)
+static DilerPostavi(lik, t, n)
 {
     gTerMrtav[t][n] = false;
-    NPC_SetSkin(npc, gTerNpcSkin[t][n]);
-    NPC_SetPos(npc, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2]);
-    NPC_SetFacingAngle(npc, gTerNpcPos[t][n][3]);
-    NPC_SetHealth(npc, 100.0);
-    NPC_SetInvulnerable(npc, true);
-    NPC_SetWeapon(npc, WEAPON_FIST);
+    Lik_Stani(lik);
+    Lik_Povuci(lik);
+    Lik_OcistiAnimaciju(lik);
+    Lik_Skin(lik, gTerNpcSkin[t][n]);
+    Lik_Postavi(lik, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2]);
+    Lik_Kut(lik, gTerNpcPos[t][n][3]);
+    Lik_Zdravlje(lik, 100.0);
+    Lik_Neranjiv(lik, true);
+    Lik_Oruzje(lik, 0, 0);
 }
 
-static DilerNaoruzaj(npc, t, n)
+static DilerNaoruzaj(lik, t, n)
 {
     new item = gTer[t][terOruzje];
-    NPC_SetInvulnerable(npc, false);
+    Lik_Neranjiv(lik, false);
     if (item == -1 || !gTerNpcMunicija[t][n]) return;
-    new WEAPON:oruzje = WEAPON:gItems[item][ITEM_WEAPON], metaka = gTerNpcMunicija[t][n], klip = NPC_GetWeaponClipSize(npc, oruzje);
-    NPC_SetAmmo(npc, metaka);
-    NPC_SetWeapon(npc, oruzje);
-    NPC_SetAmmoInClip(npc, klip > 0 && klip < metaka ? klip : metaka);
-    NPC_EnableReloading(npc, true);
+    Lik_Oruzje(lik, gItems[item][ITEM_WEAPON], gTerNpcMunicija[t][n]);
 }
 
 static KreirajNPCa(t, n)
 {
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, "Diler_%d_%d", gTer[t][terDb], gTerNpcDb[t][n]);
-    new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return;
-    gTerNpc[t][n] = npc;
-    gNpcTer[npc] = t * MAX_TER_NPC + n;
-    NPC_Spawn(npc);
+    new lik = Lik_Stvori(gTerNpcSkin[t][n], gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], gTerNpcPos[t][n][3]);
+    if (lik == INVALID_LIK) return;
+    gTerNpc[t][n] = lik;
+    DilerPostavi(lik, t, n);
     if (!gTerNpcZona[t][n]) gTerNpcZona[t][n] = InterakcijaZona(gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], TER_NPC_RANGE, 0, 0);
 }
 
 static ObrisiNPCa(t, n)
 {
-    new npc = gTerNpc[t][n];
-    if (npc == INVALID_PLAYER_ID) return;
-    gNpcTer[npc] = -1;
-    NPC_Destroy(npc);
-    gTerNpc[t][n] = INVALID_PLAYER_ID;
+    new lik = gTerNpc[t][n];
+    if (lik == INVALID_LIK) return;
+    Lik_Ukloni(lik);
+    gTerNpc[t][n] = INVALID_LIK;
 }
+
+static DilerLika(lik)
+{
+    if (lik == INVALID_LIK) return -1;
+    for (new t = 0; t < MAX_TER; t++) for (new n = 0; n < MAX_TER_NPC; n++) if (gTerNpc[t][n] == lik) return t * MAX_TER_NPC + n;
+    return -1;
+}
+
+
 
 static MakniDilera(t, n)
 {
@@ -209,22 +212,9 @@ static MakniDilera(t, n)
 
 public OnNPCSpawn(npcid)
 {
-    new k = gNpcTer[npcid];
-    if (k == -1)
-    {
-        TaksiSpawn(npcid);
-        KurvaSpawn(npcid);
-        SlucajSpawn(npcid);
-        HeliSpawn(npcid);
-        VlakSpawn(npcid);
-        AvionSpawn(npcid);
-        KupacSpawn(npcid);
-        FirmaSpawn(npcid);
-        BankaSpawn(npcid);
-        PlaninaSpawn(npcid);
-        return 1;
-    }
-    DilerPostavi(npcid, k / MAX_TER_NPC, k % MAX_TER_NPC);
+    HeliSpawn(npcid);
+    VlakSpawn(npcid);
+    AvionSpawn(npcid);
     return 1;
 }
 
@@ -293,8 +283,7 @@ static StartNapad(t, org, const ids[], count)
     for (new n = 0; n < MAX_TER_NPC; n++)
     {
         gTerNpcMunicija[t][n] = 0;
-        NoviPolozaj(t, n);
-        if (!gTerNpcDb[t][n] || gTerMrtav[t][n] || gTerNpc[t][n] == INVALID_PLAYER_ID) continue;
+        if (!gTerNpcDb[t][n] || gTerMrtav[t][n] || gTerNpc[t][n] == INVALID_LIK) continue;
         gTerNpcMunicija[t][n] = po;
         gTer[t][terMunicija] -= po;
         DilerNaoruzaj(gTerNpc[t][n], t, n);
@@ -308,13 +297,11 @@ static FinishNapad(t, bool:zauzet)
 {
     for (new n = 0; n < MAX_TER_NPC; n++)
     {
-        new npc = gTerNpc[t][n];
-        if (npc == INVALID_PLAYER_ID) continue;
-        if (!gTerMrtav[t][n] && NPC_GetWeapon(npc) != WEAPON_FIST) gTer[t][terMunicija] += NPC_GetAmmo(npc);
-        NPC_StopMove(npc);
-        NPC_StopAim(npc);
-        if (gTerMrtav[t][n]) NPC_Respawn(npc);
-        DilerPostavi(npc, t, n);
+        new lik = gTerNpc[t][n];
+        if (lik == INVALID_LIK) continue;
+        if (!gTerMrtav[t][n] && Lik_DajOruzje(lik)) gTer[t][terMunicija] += Lik_DajMuniciju(lik);
+        if (gTerMrtav[t][n]) Lik_Ozivi(lik, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], gTerNpcPos[t][n][3]);
+        DilerPostavi(lik, t, n);
     }
     if (zauzet)
     {
@@ -377,10 +364,11 @@ TeritorijDeath(playerid)
     }
 }
 
-DilerPogodak(playerid, npcid)
+DilerPogodak(playerid, lik)
 {
-    new k = gNpcTer[npcid];
-    if (k == -1 || IsShootingBlocked(playerid)) return 1;
+    new k = DilerLika(lik);
+    if (k == -1) return -1;
+    if (IsShootingBlocked(playerid)) return 1;
     new t = k / MAX_TER_NPC;
     if (!gTer[t][terNapadac])
     {
@@ -408,10 +396,14 @@ DilerPogodak(playerid, npcid)
 
 public OnNPCDeath(npcid, killerid, WEAPON:reason)
 {
-    new k = gNpcTer[npcid];
-    TaksiNpcDead(npcid);
-    KupacSmrt(npcid, killerid);
-    if (k != -1) gTerMrtav[k / MAX_TER_NPC][k % MAX_TER_NPC] = true;
+    return 1;
+}
+
+DilerUmro(lik)
+{
+    new k = DilerLika(lik);
+    if (k == -1) return 0;
+    gTerMrtav[k / MAX_TER_NPC][k % MAX_TER_NPC] = true;
     return 1;
 }
 
@@ -427,54 +419,20 @@ static GetNearestNapadac(t, Float:x, Float:y, Float:z)
     return best;
 }
 
-static Float:gTerKut[MAX_TER][MAX_TER_NPC];
-static Float:gTerRazmak[MAX_TER][MAX_TER_NPC];
-
-static NoviPolozaj(t, n)
-{
-    gTerKut[t][n] = float(n * (360 / MAX_TER_NPC) + random(70) - 35);
-    gTerRazmak[t][n] = float(6 + random(7));
-}
-
-static IdiPremaMetu(npc, t, n, target, bool:saka, NPC_MOVE_TYPE:nacin)
-{
-    new Float:tx, Float:ty, Float:tz, Float:r = saka ? 0.8 : gTerRazmak[t][n];
-    GetPlayerPos(target, tx, ty, tz);
-    NPCHodaj(npc, tx + r * floatcos(gTerKut[t][n], degrees), ty + r * floatsin(gTerKut[t][n], degrees), tz, nacin, NPC_MOVE_SPEED_AUTO, 0.5);
-}
-
 static VodiDilera(t, n)
 {
-    new npc = gTerNpc[t][n], Float:x, Float:y, Float:z;
-    if (npc == INVALID_PLAYER_ID || gTerMrtav[t][n]) return;
-    if (NPC_GetWeapon(npc) != WEAPON_FIST && !NPC_GetAmmo(npc)) NPC_SetWeapon(npc, WEAPON_FIST);
-    new bool:saka = NPC_GetWeapon(npc) == WEAPON_FIST;
+    new lik = gTerNpc[t][n], Float:x, Float:y, Float:z;
+    if (lik == INVALID_LIK || gTerMrtav[t][n]) return;
     new target = GetNearestNapadac(t, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2]);
-    NPC_GetPos(npc, x, y, z);
-    if (target == INVALID_PLAYER_ID)
+    if (target != INVALID_PLAYER_ID)
     {
-        NPC_StopAim(npc);
-        if (!NPC_IsMoving(npc) && VectorSize(x - gTerNpcPos[t][n][0], y - gTerNpcPos[t][n][1], z - gTerNpcPos[t][n][2]) > 2.0)
-            NPCHodaj(npc, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], NPC_MOVE_TYPE_JOG);
+        Lik_Napadni(lik, target);
         return;
     }
-    new Float:d = GetPlayerDistanceFromPoint(target, x, y, z);
-    if (saka)
-    {
-        if (d > TER_UDARAC)
-        {
-            IdiPremaMetu(npc, t, n, target, true, NPC_MOVE_TYPE_SPRINT);
-            return;
-        }
-        if (NPC_IsMoving(npc)) NPC_StopMove(npc);
-        NPC_SetAngleToPlayer(npc, target);
-        if (!NPC_IsMeleeAttacking(npc)) NPC_MeleeAttack(npc, 600 + random(500));
-        return;
-    }
-    if (!random(4)) NoviPolozaj(t, n);
-    if (d > gTerRazmak[t][n] + 4.0) IdiPremaMetu(npc, t, n, target, false, NPC_MOVE_TYPE_SPRINT);
-    else if (!NPC_IsMoving(npc) && !random(3)) IdiPremaMetu(npc, t, n, target, false, NPC_MOVE_TYPE_JOG);
-    if (!NPC_IsAimingAtPlayer(npc, target)) NPC_AimAtPlayer(npc, target, true, 300 + random(400));
+    Lik_Povuci(lik);
+    Lik_Pozicija(lik, x, y, z);
+    if (!Lik_Krece(lik) && VectorSize(x - gTerNpcPos[t][n][0], y - gTerNpcPos[t][n][1], z - gTerNpcPos[t][n][2]) > 2.0)
+        Lik_IdiDo(lik, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2], LIK_TRK);
 }
 
 TeritorijTick()
@@ -527,7 +485,7 @@ static NpcBlizu(playerid)
     {
         if (!gTer[t][terDb] || gTer[t][terNapadac]) continue;
         for (new n = 0; n < MAX_TER_NPC; n++)
-            if (gTerNpcDb[t][n] && !gTerMrtav[t][n] && gTerNpc[t][n] != INVALID_PLAYER_ID
+            if (gTerNpcDb[t][n] && !gTerMrtav[t][n] && gTerNpc[t][n] != INVALID_LIK
                 && IsPlayerInRangeOfPoint(playerid, TER_NPC_RANGE, gTerNpcPos[t][n][0], gTerNpcPos[t][n][1], gTerNpcPos[t][n][2])) return t * MAX_TER_NPC + n;
     }
     return -1;
@@ -573,9 +531,9 @@ static DilerKupi(playerid, amount)
     GetPlayerPos(playerid, x, y, z);
     new Float:kut = atan2(gTerNpcPos[t][n][1] - y, gTerNpcPos[t][n][0] - x) - 90.0;
     SetPlayerFacingAngle(playerid, kut);
-    NPC_SetFacingAngle(gTerNpc[t][n], kut + 180.0);
+    Lik_Kut(gTerNpc[t][n], kut + 180.0);
     ApplyAnimation(playerid, "DEALER", "DEALER_DEAL", 4.1, false, false, false, false, 0, SYNC_ALL);
-    NPC_ApplyAnimation(gTerNpc[t][n], "DEALER", "DEALER_DEAL", 4.1, false, false, false, false, 0);
+    Lik_Animacija(gTerNpc[t][n], "DEALER", "DEALER_DEAL", 4.1, 0, 0, 0, 0, 0);
     SetTimerEx("DilerDone", 3000, false, "i", k);
     format(poruka, sizeof poruka, T(playerid, "Kupili ste %d %s %s za $%d."), amount, T(playerid, gItems[item][ITEM_UNIT]), T(playerid, gItems[item][ITEM_NAME]), cost);
     return ObavijestInfo(playerid, T(playerid, "Diler"), poruka);
@@ -585,9 +543,9 @@ forward DilerDone(k);
 public DilerDone(k)
 {
     new t = k / MAX_TER_NPC, n = k % MAX_TER_NPC;
-    if (gTerNpc[t][n] == INVALID_PLAYER_ID) return;
-    NPC_ClearAnimations(gTerNpc[t][n]);
-    NPC_SetFacingAngle(gTerNpc[t][n], gTerNpcPos[t][n][3]);
+    if (gTerNpc[t][n] == INVALID_LIK) return;
+    Lik_OcistiAnimaciju(gTerNpc[t][n]);
+    Lik_Kut(gTerNpc[t][n], gTerNpcPos[t][n][3]);
 }
 
 static ShowTeritorij(playerid)
@@ -795,7 +753,7 @@ CreateTer(playerid, const params[])
     gTer[t][terMinX] = x - h; gTer[t][terMinY] = y - h; gTer[t][terMaxX] = x + h; gTer[t][terMaxY] = y + h;
     gTer[t][terOrg] = 0; gTer[t][terZaliha] = 0; gTer[t][terCijena] = 50; gTer[t][terProfit] = 0;
     gTer[t][terSjemenke] = 0; gTer[t][terOruzje] = -1; gTer[t][terMunicija] = 0; gTer[t][terNapadac] = 0;
-    for (new n = 0; n < MAX_TER_NPC; n++) { gTerNpcDb[t][n] = 0; gTerNpc[t][n] = INVALID_PLAYER_ID; }
+    for (new n = 0; n < MAX_TER_NPC; n++) { gTerNpcDb[t][n] = 0; gTerNpc[t][n] = INVALID_LIK; }
     gTer[t][terZona] = GangZoneCreate(x - h, y - h, x + h, y + h);
     ShowZonu(t);
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teritorij '%s' stvoren. Dilere dodajte u izborniku teritorija."), name);

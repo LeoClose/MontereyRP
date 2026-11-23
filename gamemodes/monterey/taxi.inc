@@ -56,7 +56,7 @@ enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, 
 static gTaksi[TAKSI_SLOTOVA][E_TAKSI];
 static Float:gTaksiTocke[TAKSI_SLOTOVA][CESTA_MAX_TOCAKA][4];
 static gTaksiOd[MAX_PLAYERS], gTaksiCeka[MAX_PLAYERS], gTaksiPonuda[MAX_PLAYERS], bool:gTaksiVozac[MAX_PLAYERS];
-static gNpcTaksi[MAX_PLAYERS], bool:gTaksiMetar[MAX_PLAYERS];
+static bool:gTaksiMetar[MAX_PLAYERS];
 static Text:gFade[FADE_SLOJEVA];
 
 static const Float:gTaksiStajaliste[][2] = {
@@ -240,7 +240,7 @@ InitTaksi()
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
     {
         gTaksi[s][tVozilo] = INVALID_VEHICLE_ID;
-        gTaksi[s][tNpc] = INVALID_PLAYER_ID;
+        gTaksi[s][tNpc] = INVALID_LIK;
         gTaksi[s][tMusterija] = INVALID_PLAYER_ID;
         if (s < TAKSI_FLOTA) gTaksi[s][tStanje] = TX_NEMA;
     }
@@ -287,13 +287,26 @@ static bool:TaksiNaVidiku(Float:x, Float:y, Float:z, osimVozila = INVALID_VEHICL
 
 static bool:TaksiNoviVozac(s)
 {
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, "Taksi_%d", s);
-    new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return false;
-    gTaksi[s][tNpc] = npc;
-    gNpcTaksi[npc] = s + 1;
+    new Float:x = 0.0, Float:y = 0.0, Float:z = -50.0;
+    if (gTaksi[s][tVozilo] != INVALID_VEHICLE_ID && GetVehicleModel(gTaksi[s][tVozilo])) GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
+    new lik = Lik_Stvori(s >= TAKSI_FLOTA ? PREMIUM_SKIN : TAKSI_SKIN, x, y, z);
+    if (lik == INVALID_LIK) return false;
+    Lik_Neranjiv(lik, true);
+    gTaksi[s][tNpc] = lik;
     return true;
+}
+
+static TaksiVozacUdji(s)
+{
+    Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
+    SetTimerEx("TaksiKreni", 1000, false, "i", s);
+}
+
+static TaksiLika(lik)
+{
+    if (lik == INVALID_LIK) return -1;
+    for (new s = 0; s < TAKSI_SLOTOVA; s++) if (gTaksi[s][tNpc] == lik) return s;
+    return -1;
 }
 
 static TaksiNajblizaBaza(Float:x, Float:y)
@@ -317,13 +330,14 @@ static TaksiPutOdVozila(s, cilj, &sekundi = 0)
 
 static TaksiKorak(s)
 {
-    new i = gTaksi[s][tIdx];
-    NPC_Move(gTaksi[s][tNpc], gTaksiTocke[s][i][0], gTaksiTocke[s][i][1], gTaksiTocke[s][i][2], NPC_MOVE_TYPE_DRIVE, gTaksiTocke[s][i][3] * float(gTaksi[s][tSporo]) / 100.0 * (gTaksi[s][tBrzo] ? TAKSI_NAPOJNICA_BRZE : 1.0));
+    new n = gTaksi[s][tBroj] - 1;
+    if (n < 0) return;
+    Lik_Vozi(gTaksi[s][tNpc], gTaksiTocke[s][n][0], gTaksiTocke[s][n][1], gTaksiTocke[s][n][2], gTaksi[s][tBrzo] ? 13.0 * TAKSI_NAPOJNICA_BRZE : 13.0, false);
 }
 
 static TaksiVozi(s)
 {
-    NPC_StopMove(gTaksi[s][tNpc]);
+    Lik_Stani(gTaksi[s][tNpc]);
     TaksiMotor(s, 1);
     gTaksi[s][tCeka] = 0;
     gTaksi[s][tObilazi] = false;
@@ -342,8 +356,8 @@ TaksiPoVozilu(veh)
 
 static TaksiVozac(s, p, const tekst[], const a[] = "", const b[] = "")
 {
-    new npc = gTaksi[s][tNpc];
-    PosaljiBlizu(npc != INVALID_PLAYER_ID && IsPlayerConnected(npc) ? npc : p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
+    #pragma unused s
+    PosaljiBlizu(p, CHAT_RANGE, COLOR_CHAT, tekst, a, b, 1);
 }
 
 static TaksiDispecer(p, const tekst[], const a[] = "")
@@ -401,7 +415,7 @@ static TaksiOtidi(s)
     GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
     if (s < TAKSI_FLOTA && VectorSize(x - gTaksiPoza[s][0], y - gTaksiPoza[s][1], 0.0) < 25.0)
     {
-        NPC_StopMove(gTaksi[s][tNpc]);
+        Lik_Stani(gTaksi[s][tNpc]);
         gTaksi[s][tStanje] = TX_KUCI;
         return;
     }
@@ -433,7 +447,7 @@ static TaksiNajbliziSlobodan(Float:x, Float:y)
     new best = -1, Float:bd = 1.0e12, Float:vx, Float:vy, Float:vz;
     for (new s = 0; s < TAKSI_FLOTA; s++)
     {
-        if (gTaksi[s][tStanje] != TX_SLOBODAN && (gTaksi[s][tStanje] != TX_ODLAZI || gTaksi[s][tNpc] == INVALID_PLAYER_ID)) continue;
+        if (gTaksi[s][tStanje] != TX_SLOBODAN && (gTaksi[s][tStanje] != TX_ODLAZI || gTaksi[s][tNpc] == INVALID_LIK)) continue;
         GetVehiclePos(gTaksi[s][tVozilo], vx, vy, vz);
         new Float:d = VectorSize(vx - x, vy - y, 0.0);
         if (d < bd) { bd = d; best = s; }
@@ -554,7 +568,7 @@ static TaksiNpcPoziv(playerid, bool:telefon)
         s = TaksiNajbliziSlobodan(x, y);
         if (s != -1) duljina = TaksiPutOdVozila(s, cilj, sekundi);
     }
-    new bool:imaVozaca = s != -1 && gTaksi[s][tNpc] != INVALID_PLAYER_ID;
+    new bool:imaVozaca = s != -1 && gTaksi[s][tNpc] != INVALID_LIK;
     if (duljina < 0 || (!imaVozaca && !TaksiNoviVozac(s))) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi taksiji su zauzeti, pokusajte kasnije."));
 
     gTaksi[s][tMusterija] = playerid;
@@ -570,7 +584,7 @@ static TaksiNpcPoziv(playerid, bool:telefon)
         }
     }
     if (imaVozaca) TaksiVozi(s);
-    else NPC_Spawn(gTaksi[s][tNpc]);
+    else TaksiVozacUdji(s);
     gTaksiPoziv[playerid][0] = x;
     gTaksiPoziv[playerid][1] = y;
     if (telefon)
@@ -601,25 +615,10 @@ public TaksiOdgovor(s, playerid, minuta)
     SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Pricekajte taksi na mjestu gdje ste ga pozvali."));
 }
 
-TaksiSpawn(npcid)
-{
-    new s = gNpcTaksi[npcid] - 1;
-    if (s < 0) return;
-    NPC_SetSkin(npcid, s >= TAKSI_FLOTA ? PREMIUM_SKIN : TAKSI_SKIN);
-    NPC_SetInvulnerable(npcid, true);
-    NPC_PutInVehicle(npcid, gTaksi[s][tVozilo], 0);
-    SetTimerEx("TaksiKreni", 1000, false, "i", s);
-}
-
 forward TaksiKreni(s);
 public TaksiKreni(s)
 {
     if (gTaksi[s][tStanje] == TX_DOLAZI || gTaksi[s][tStanje] == TX_ODLAZI) TaksiVozi(s);
-}
-
-TaksiNpcDead(npcid)
-{
-    if (gNpcTaksi[npcid]) TaksiPrekini(gNpcTaksi[npcid] - 1);
 }
 
 static TaksiStigao(s)
@@ -635,15 +634,15 @@ static TaksiStigao(s)
 forward TaksiTrubi(s, korak);
 public TaksiTrubi(s, korak)
 {
-    if (gTaksi[s][tNpc] == INVALID_PLAYER_ID) return;
-    NPC_SetKeys(gTaksi[s][tNpc], 0, 0, korak % 2 ? 0 : _:KEY_CROUCH);
-    if (korak < 3) SetTimerEx("TaksiTrubi", 300, false, "ii", s, korak + 1);
+    #pragma unused korak
+    if (gTaksi[s][tNpc] == INVALID_LIK) return;
+    Lik_Trubi(gTaksi[s][tNpc], 900);
 }
 
 TaksiUVoznji(v)
 {
     new s = TaksiPoVozilu(v);
-    if (s == -1 || gTaksi[s][tNpc] == INVALID_PLAYER_ID || gTaksi[s][tStaje]) return 0;
+    if (s == -1 || gTaksi[s][tNpc] == INVALID_LIK || gTaksi[s][tStaje]) return 0;
     new st = gTaksi[s][tStanje];
     return st == TX_DOLAZI || st == TX_VOZI || st == TX_ODLAZI ? s + 1 : 0;
 }
@@ -667,7 +666,7 @@ TaksiNaRub(s, ms = TAKSI_POLICIJA_MS)
     gTaksi[s][tObilazi] = false;
     new Float:bok = TAKSI_RUB * 0.6;
     if (!CestaSlobodno(x, y, z, x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z)) bok = 0.0;
-    NPC_Move(gTaksi[s][tNpc], x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z, NPC_MOVE_TYPE_DRIVE, brzina);
+    Lik_Vozi(gTaksi[s][tNpc], x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z, brzina, false);
 }
 
 static TaksiRubKraj(s)
@@ -677,16 +676,16 @@ static TaksiRubKraj(s)
     gTaksi[s][tRub] = 2;
     new Float:bok = TAKSI_RUB * 0.4;
     if (!CestaSlobodno(x, y, z, x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z)) bok = 0.0;
-    NPC_Move(gTaksi[s][tNpc], x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z, NPC_MOVE_TYPE_DRIVE, TAKSI_RUB_SPORO);
+    Lik_Vozi(gTaksi[s][tNpc], x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z, TAKSI_RUB_SPORO, false);
 }
 
 forward TaksiPrepreke();
 public TaksiPrepreke()
 {
-    new sad = GetTickCount(), bool:snimljeno = false;
+    new sad = GetTickCount();
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
     {
-        new st = gTaksi[s][tStanje], bool:kupac, Float:x, Float:y, Float:z, Float:ox, Float:oy;
+        new st = gTaksi[s][tStanje];
         if (st != TX_DOLAZI && st != TX_VOZI && st != TX_ODLAZI) continue;
         if (gTaksi[s][tStaje])
         {
@@ -704,93 +703,24 @@ public TaksiPrepreke()
             }
             continue;
         }
-        if (sad - gTaksi[s][tProguraj] < 0) continue;
-        if (gTaksi[s][tObilazi])
-        {
-            gTaksi[s][tObilazi] = false;
-            CestaNastavi(gTaksi[s][tVozilo], gTaksiTocke[s], gTaksi[s][tBroj], gTaksi[s][tIdx]);
-            TaksiKorak(s);
-        }
-        GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-        if (!TaksiVidljivo(x, y, z, TAKSI_BLIZU))
-        {
-            gTaksi[s][tSporo] = 100;
-            if (gTaksi[s][tCeka])
-            {
-                gTaksi[s][tCeka] = 0;
-                TaksiKorak(s);
-            }
-            continue;
-        }
-        if (!snimljeno)
-        {
-            TaksiSnimi();
-            snimljeno = true;
-        }
-        new Float:d = CestaPrepreka(gTaksi[s][tVozilo], gTaksi[s][tMusterija], x, y, z, kupac, ox, oy);
-        gTaksi[s][tSporo] = d >= TAKSI_USPORI ? 100 : clamp(floatround(d / TAKSI_USPORI * 100.0), 30, 100);
-        if (d >= TAKSI_STOP)
-        {
-            if (gTaksi[s][tCeka])
-            {
-                gTaksi[s][tCeka] = 0;
-                TaksiKorak(s);
-            }
-            continue;
-        }
-        if (kupac && st == TX_DOLAZI)
-        {
-            NPC_StopMove(gTaksi[s][tNpc]);
-            TaksiStigao(s);
-        }
-        else if (!gTaksi[s][tCeka])
+        if (Lik_Zaglavio(gTaksi[s][tNpc], 4000) && sad - gTaksi[s][tCeka] >= TAKSI_CEKA_MS)
         {
             gTaksi[s][tCeka] = sad;
-            NPC_StopMove(gTaksi[s][tNpc]);
             TaksiTrubi(s, 0);
         }
-        else if (sad - gTaksi[s][tCeka] >= TAKSI_CEKA_MS)
-        {
-            gTaksi[s][tCeka] = 0;
-            gTaksi[s][tProguraj] = sad + TAKSI_PROGURAJ_MS;
-            gTaksi[s][tSporo] = 100;
-            if (CestaObidi(gTaksi[s][tNpc], gTaksi[s][tVozilo], ox, oy, gTaksiTocke[s][gTaksi[s][tIdx]][3])) gTaksi[s][tObilazi] = true;
-            else
-            {
-                gTaksi[s][tCeka] = sad;
-                gTaksi[s][tProguraj] = 0;
-            }
-        }
     }
-    SlucajPrepreke(sad, snimljeno);
 }
 
-public OnNPCFinishMove(npcid)
+TaksiLikStigao(lik)
 {
-    if (NPCStigao(npcid) || FirmaStigao(npcid)) return 1;
-    KurvaPomak(npcid);
-    SlucajNpcStigao(npcid);
-    new s = gNpcTaksi[npcid] - 1;
-    if (s >= 0 && gTaksi[s][tStaje] && gTaksi[s][tRub] == 1)
+    new s = TaksiLika(lik);
+    if (s < 0) return 0;
+    if (gTaksi[s][tStaje] && gTaksi[s][tRub] == 1)
     {
         TaksiRubKraj(s);
         return 1;
     }
-    if (s < 0 || gTaksi[s][tStanje] == TX_SLOBODAN || gTaksi[s][tCeka] || gTaksi[s][tStaje]) return 1;
-    if (gTaksi[s][tObilazi])
-    {
-        gTaksi[s][tObilazi] = false;
-        gTaksi[s][tProguraj] = 0;
-        CestaNastavi(gTaksi[s][tVozilo], gTaksiTocke[s], gTaksi[s][tBroj], gTaksi[s][tIdx]);
-        TaksiKorak(s);
-        return 1;
-    }
-    if (++gTaksi[s][tIdx] < gTaksi[s][tBroj])
-    {
-        if (s >= TAKSI_FLOTA && gTaksi[s][tStanje] == TX_VOZI && !gTaksi[s][tSkok] && GetTickCount() - gTaksi[s][tRok] >= PREMIUM_VOZNJA_MS) TaksiPocniSkok(s);
-        TaksiKorak(s);
-        return 1;
-    }
+    if (gTaksi[s][tStanje] == TX_SLOBODAN || gTaksi[s][tStaje]) return 1;
     new p = gTaksi[s][tMusterija];
     switch (gTaksi[s][tStanje])
     {
@@ -805,6 +735,11 @@ public OnNPCFinishMove(npcid)
         case TX_ODLAZI: gTaksi[s][tStanje] = s < TAKSI_FLOTA ? TX_KUCI : TX_KRAJ;
     }
     return 1;
+}
+
+TaksiTeleportProvjera(s)
+{
+    if (s >= TAKSI_FLOTA && gTaksi[s][tStanje] == TX_VOZI && !gTaksi[s][tSkok] && GetTickCount() - gTaksi[s][tRok] >= PREMIUM_VOZNJA_MS) TaksiPocniSkok(s);
 }
 
 public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
@@ -852,10 +787,10 @@ TaksiStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
         if (s < 0 && gTaksi[t][tStanje] >= TX_CEKA && gTaksi[t][tStanje] <= TX_POTVRDA) return;
         if (s < 0 && t < TAKSI_FLOTA && gTaksi[t][tStanje] == TX_SLOBODAN)
         {
-            new bool:imaVozaca = gTaksi[t][tNpc] != INVALID_PLAYER_ID;
+            new bool:imaVozaca = gTaksi[t][tNpc] != INVALID_LIK;
             if (imaVozaca || TaksiNoviVozac(t))
             {
-                if (!imaVozaca) NPC_Spawn(gTaksi[t][tNpc]);
+                if (!imaVozaca) TaksiVozacUdji(t);
                 gTaksi[t][tMusterija] = playerid;
                 gTaksiOd[playerid] = t + 1;
                 TaksiNaKartu(t, playerid);
@@ -1014,7 +949,7 @@ static TaksiZavrsiRano(s)
 {
     new p = gTaksi[s][tMusterija], iznos = TaksiIznos(s), cijena[12];
     gTaksi[s][tZavrsi] = false;
-    NPC_StopMove(gTaksi[s][tNpc]);
+    Lik_Stani(gTaksi[s][tNpc]);
     valstr(cijena, iznos);
     TaksiVozac(s, p, "Vozac kaze: Izvolite, to je $%s. Ugodan dan!", cijena);
     TaksiNaplati(p, iznos);
@@ -1043,7 +978,7 @@ static TaksiPocniSkok(s)
 static TaksiPreskoci(s, playerid)
 {
     new j = gTaksi[s][tSkok], stari = gTaksi[s][tVozilo], stariZnak = gTaksi[s][tZnak], sjedalo = GetPlayerVehicleSeat(playerid);
-    NPC_StopMove(gTaksi[s][tNpc]);
+    Lik_Stani(gTaksi[s][tNpc]);
     TaksiVozilo(s, gTaksiTocke[s][j][0], gTaksiTocke[s][j][1], gTaksiTocke[s][j][2], atan2(gTaksiTocke[s][j + 1][1] - gTaksiTocke[s][j][1], gTaksiTocke[s][j + 1][0] - gTaksiTocke[s][j][0]) - 90.0);
     if (gTaksi[s][tVozilo] == INVALID_VEHICLE_ID)
     {
@@ -1054,7 +989,7 @@ static TaksiPreskoci(s, playerid)
         for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (i == playerid || (gUlogiran[i] && IsPlayerInVehicle(i, stari))) TaksiFade(s, i, FADE_SLOJEVA + 1);
         return;
     }
-    NPC_PutInVehicle(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
+    Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
     TaksiMotor(s, 1);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
@@ -1166,10 +1101,9 @@ TaksiPlayerLeft(playerid)
 
 static TaksiBezVozaca(s)
 {
-    if (gTaksi[s][tNpc] == INVALID_PLAYER_ID) return;
-    gNpcTaksi[gTaksi[s][tNpc]] = 0;
-    NPC_Destroy(gTaksi[s][tNpc]);
-    gTaksi[s][tNpc] = INVALID_PLAYER_ID;
+    if (gTaksi[s][tNpc] == INVALID_LIK) return;
+    Lik_Ukloni(gTaksi[s][tNpc]);
+    gTaksi[s][tNpc] = INVALID_LIK;
 }
 
 TaksiTick()
@@ -1181,11 +1115,15 @@ TaksiTick()
         if (s < 0 || (gTaksi[s][tStanje] != TX_VOZI && gTaksi[s][tStanje] != TX_TELEPORT) || gTaksi[s][tMusterija] != p) TaksiMetarSkrij(p);
     }
     new parkirani = 0;
-    for (new s = 0; s < TAKSI_FLOTA; s++) if (gTaksi[s][tStanje] == TX_SLOBODAN && gTaksi[s][tNpc] != INVALID_PLAYER_ID) parkirani++;
+    for (new s = 0; s < TAKSI_FLOTA; s++) if (gTaksi[s][tStanje] == TX_SLOBODAN && gTaksi[s][tNpc] != INVALID_LIK) parkirani++;
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
     {
         new st = gTaksi[s][tStanje], Float:x, Float:y, Float:z;
-        if (st == TX_VOZI) TaksiMetar(s);
+        if (st == TX_VOZI)
+        {
+            TaksiMetar(s);
+            TaksiTeleportProvjera(s);
+        }
         if ((st == TX_DOLAZI || st == TX_CEKA) && gTaksi[s][tMusterija] != INVALID_PLAYER_ID)
         {
             new p = gTaksi[s][tMusterija];
@@ -1200,11 +1138,11 @@ TaksiTick()
         if (st == TX_SLOBODAN && s < TAKSI_FLOTA)
         {
             GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-            if (gTaksi[s][tNpc] == INVALID_PLAYER_ID)
+            if (gTaksi[s][tNpc] == INVALID_LIK)
             {
                 if (parkirani < TAKSI_MAX_PARKIRANIH && TaksiVidljivo(x, y, z) && TaksiNoviVozac(s))
                 {
-                    NPC_Spawn(gTaksi[s][tNpc]);
+                    Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
                     parkirani++;
                 }
             }

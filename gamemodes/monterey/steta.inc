@@ -240,13 +240,21 @@ static bool:NapadValidanProvjera(playerid, damagedid, WEAPON:weaponid)
 }
 
 #define STETA_NPC_UDARAC    12.0
+
+StetaOdLika(playerid, WEAPON:oruzje, dio)
+{
+    if (!IsPlayerConnected(playerid) || !gUlogiran[playerid] || IsRanjen(playerid)) return;
+    new i = _:oruzje, Float:dmg = STETA_NPC_UDARAC;
+    if (i >= 0 && i < STETA_ORUZJA && gSteta[i][stDmg] > 0.0 && gSteta[i][stDomet] > 3.0) dmg = gSteta[i][stDmg];
+    RanjenRana(playerid, dio, dmg);
+    StetaPrimijeni(playerid, dmg, oruzje);
+}
 #define STETA_NPC_RAZMAK    500
 static gStetaNpc[MAX_PLAYERS];
 
 public OnPlayerGiveDamage(playerid, damagedid, Float:amount, WEAPON:weaponid, bodypart)
 {
     new i = _:weaponid, sad = GetTickCount();
-    if (IsPlayerNPC(damagedid)) return DilerPogodak(playerid, damagedid);
     if (!NapadValidanProvjera(playerid, damagedid, weaponid)) return 1;
     if (weaponid == WEAPON_KNIFE && amount >= STETA_NOZ_KRADOM)
     {

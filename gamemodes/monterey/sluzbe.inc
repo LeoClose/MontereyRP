@@ -74,8 +74,7 @@ enum { SL_NEMA, SL_POZIV, SL_IGRAC, SL_NPC, SL_IZLAZI, SL_PJESKE, SL_PRISTANAK, 
 enum E_SLUCAJ { slStanje, slTip, slPacijent, slPoziv, STREAMER_TAG_OBJECT:slObjekt, slRok, slGasenje, slIgrac, slNpc, slVozilo, slIdx, slBroj, slKamion, slCeka, slProguraj, slSporo, bool:slObilazi, bool:slPjeske, slNastavi, bool:slNastavak, Float:slX, Float:slY, Float:slZ, slPosao }
 
 static gSlucaj[SLUCAJ_MAX][E_SLUCAJ];
-static Float:gSlucajTocke[SLUCAJ_MAX][CESTA_MAX_TOCAKA][4];
-static gSlucajPoziv[MAX_PLAYERS], gNpcSlucaj[MAX_PLAYERS], gMehanicar[MAX_PLAYERS], gMehanicarVozilo[MAX_PLAYERS];
+static gSlucajPoziv[MAX_PLAYERS], gMehanicar[MAX_PLAYERS], gMehanicarVozilo[MAX_PLAYERS];
 
 enum E_KAMION { bool:kIma, kTip, kDb, kVozilo, kSlucaj, Float:kX, Float:kY, Float:kZ, Float:kA }
 
@@ -260,12 +259,11 @@ static bool:SlucajImaPoziva(s)
 
 static SlucajMakniKamion(s, bool:vrati = true)
 {
-    new npc = gSlucaj[s][slNpc], k = gSlucaj[s][slKamion] - 1;
-    if (npc != INVALID_PLAYER_ID)
+    new lik = gSlucaj[s][slNpc], k = gSlucaj[s][slKamion] - 1;
+    if (lik != INVALID_LIK)
     {
-        gNpcSlucaj[npc] = 0;
-        NPC_Destroy(npc);
-        gSlucaj[s][slNpc] = INVALID_PLAYER_ID;
+        Lik_Ukloni(lik);
+        gSlucaj[s][slNpc] = INVALID_LIK;
     }
     if (k >= 0)
     {
@@ -276,25 +274,38 @@ static SlucajMakniKamion(s, bool:vrati = true)
     gSlucaj[s][slVozilo] = 0;
 }
 
-static SlucajKorak(s)
+static SlucajLika(lik)
 {
-    new i = gSlucaj[s][slIdx];
-    NPC_Move(gSlucaj[s][slNpc], gSlucajTocke[s][i][0], gSlucajTocke[s][i][1], gSlucajTocke[s][i][2], NPC_MOVE_TYPE_DRIVE, gSlucajTocke[s][i][3] * float(gSlucaj[s][slSporo]) / 100.0 * (gSlucaj[s][slStanje] == SL_NPC ? SLUCAJ_BRZE : 1.0));
+    if (lik == INVALID_LIK) return -1;
+    for (new s = 0; s < SLUCAJ_MAX; s++) if (gSlucaj[s][slStanje] && gSlucaj[s][slNpc] == lik) return s;
+    return -1;
+}
+
+static SlucajHodaj(lik, Float:x, Float:y, Float:z, Float:domet, nacin = LIK_TRK)
+{
+    new Float:lx, Float:ly, Float:lz;
+    Lik_Pozicija(lik, lx, ly, lz);
+    new Float:dx = lx - x, Float:dy = ly - y, Float:d = VectorSize(dx, dy, 0.0);
+    if (d > domet && d > 0.01)
+    {
+        x += dx / d * domet;
+        y += dy / d * domet;
+    }
+    Lik_IdiDo(lik, x, y, HodTlo(x, y, z), nacin);
 }
 
 static SlucajVozi(s)
 {
-    new e, l, a, d, bn, bt, o;
-    GetVehicleParamsEx(gSlucaj[s][slVozilo], e, l, a, d, bn, bt, o);
-    SetVehicleParamsEx(gSlucaj[s][slVozilo], 1, 1, a, d, bn, bt, o);
-    NPC_StopMove(gSlucaj[s][slNpc]);
-    NPC_UseVehicleSiren(gSlucaj[s][slNpc], gSlucaj[s][slStanje] == SL_NPC);
-    gSlucaj[s][slCeka] = 0;
-    gSlucaj[s][slProguraj] = 0;
-    gSlucaj[s][slObilazi] = false;
-    gSlucaj[s][slSporo] = 100;
-    gSlucaj[s][slIdx] = 1;
-    SlucajKorak(s);
+    new e, l, a, d, bn, bt, o, v = gSlucaj[s][slVozilo], bool:hitno = gSlucaj[s][slStanje] == SL_NPC;
+    GetVehicleParamsEx(v, e, l, a, d, bn, bt, o);
+    SetVehicleParamsEx(v, 1, 1, a, d, bn, bt, o);
+    if (hitno) Lik_Vozi(gSlucaj[s][slNpc], gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], 17.0, true);
+    else
+    {
+        new k = gSlucaj[s][slKamion] - 1;
+        if (k < 0) return;
+        Lik_Vozi(gSlucaj[s][slNpc], gKamion[k][kX], gKamion[k][kY], gKamion[k][kZ], 13.0, false);
+    }
 }
 
 static bool:KamionSlobodan(k)
@@ -319,14 +330,6 @@ static SlucajNajbliziKamion(s)
     return best;
 }
 
-static SlucajPutOdKamiona(s, v, cilj)
-{
-    new sekundi, Float:x, Float:y, Float:z, Float:a;
-    GetVehiclePos(v, x, y, z);
-    GetVehicleZAngle(v, a);
-    return CestaPut(CestaPocetak(x, y, z, a), cilj, gSlucajTocke[s], CESTA_MAX_TOCAKA, gSlucaj[s][slBroj], sekundi, true, x, y, z, a);
-}
-
 static SlucajGrupa(s)
 {
     if (gSlucaj[s][slTip] != ORG_MEDICINSKA) return 0;
@@ -340,15 +343,14 @@ static SlucajGrupa(s)
 
 static SlucajPredaj(s, n, ostaje)
 {
-    new npc = gSlucaj[s][slNpc], k = gSlucaj[s][slKamion];
+    new lik = gSlucaj[s][slNpc], k = gSlucaj[s][slKamion];
     SlucajOcistiPozive(n);
-    gSlucaj[n][slNpc] = npc;
+    gSlucaj[n][slNpc] = lik;
     gSlucaj[n][slVozilo] = gSlucaj[s][slVozilo];
     gSlucaj[n][slKamion] = k;
     gSlucaj[n][slPjeske] = gSlucaj[s][slPjeske];
-    gNpcSlucaj[npc] = n + 1;
     gKamion[k - 1][kSlucaj] = n + 1;
-    gSlucaj[s][slNpc] = INVALID_PLAYER_ID;
+    gSlucaj[s][slNpc] = INVALID_LIK;
     gSlucaj[s][slVozilo] = 0;
     gSlucaj[s][slKamion] = 0;
     gSlucaj[s][slPjeske] = false;
@@ -357,12 +359,12 @@ static SlucajPredaj(s, n, ostaje)
 
 static bool:SlucajPutDo(s, v)
 {
-    return SlucajPutOdKamiona(s, v, CestaNajbliza(gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ])) >= 0;
+    return gSlucaj[s][slStanje] != SL_NEMA && GetVehicleModel(v) != 0;
 }
 
 static SlucajNaPut(s)
 {
-    NPC_SetKeys(gSlucaj[s][slNpc], 0, 0, 0);
+    Lik_TipkeVozila(gSlucaj[s][slNpc], 0);
     gSlucaj[s][slStanje] = SL_NPC;
     SlucajVozi(s);
 }
@@ -416,29 +418,18 @@ static SlucajPosaljiKamion(s)
         return;
     }
     if (k == -1) return;
+    new v = gKamion[k][kVozilo], Float:x, Float:y, Float:z, Float:a;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    new lik = Lik_Stvori(gSlucaj[s][slTip] == ORG_VATROGASCI ? KAMION_SKIN : gSlucaj[s][slTip] == ORG_MEDICINSKA ? AMBULANTA_SKIN : MEHANICAR_SKIN, x, y, z, a);
+    if (lik == INVALID_LIK) return;
+    Lik_Neranjiv(lik, true);
+    Lik_UVozilo(lik, v, 0);
     gSlucaj[s][slStanje] = SL_NPC;
-    new v = gKamion[k][kVozilo];
-    if (SlucajPutOdKamiona(s, v, CestaNajbliza(gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ])) < 0) return;
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, gSlucaj[s][slTip] == ORG_VATROGASCI ? ("Vatrogasac_%d") : gSlucaj[s][slTip] == ORG_MEDICINSKA ? ("Bolnicar_%d") : ("Mehanicar_%d"), s);
-    new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return;
-    gSlucaj[s][slNpc] = npc;
+    gSlucaj[s][slNpc] = lik;
     gSlucaj[s][slVozilo] = v;
-    gSlucaj[s][slIdx] = 0;
     gSlucaj[s][slKamion] = k + 1;
     gKamion[k][kSlucaj] = s + 1;
-    gNpcSlucaj[npc] = s + 1;
-    NPC_Spawn(npc);
-}
-
-SlucajSpawn(npcid)
-{
-    new s = gNpcSlucaj[npcid] - 1;
-    if (s < 0) return;
-    NPC_SetSkin(npcid, gSlucaj[s][slTip] == ORG_VATROGASCI ? KAMION_SKIN : gSlucaj[s][slTip] == ORG_MEDICINSKA ? AMBULANTA_SKIN : MEHANICAR_SKIN);
-    NPC_SetInvulnerable(npcid, true);
-    NPC_PutInVehicle(npcid, gSlucaj[s][slVozilo], 0);
     SetTimerEx("SlucajKreni", 1000, false, "i", s);
 }
 
@@ -448,15 +439,15 @@ public SlucajKreni(s)
     if (gSlucaj[s][slStanje] == SL_NPC && gSlucaj[s][slVozilo]) SlucajVozi(s);
 }
 
-SlucajNpcStigao(npcid)
+SlucajNpcStigao(lik)
 {
-    new s = gNpcSlucaj[npcid] - 1;
-    if (s < 0) return;
+    new s = SlucajLika(lik);
+    if (s < 0) return 0;
     new st = gSlucaj[s][slStanje], bool:vatra = gSlucaj[s][slTip] == ORG_VATROGASCI;
     if (st == SL_RADI)
     {
         MehanicarAnim(s);
-        return;
+        return 1;
     }
     if (st == SL_PJESKE)
     {
@@ -465,169 +456,67 @@ SlucajNpcStigao(npcid)
             gSlucaj[s][slStanje] = SL_PRISTANAK;
             gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
             MehanicarPonudi(gSlucaj[s][slPacijent], s);
-            return;
+            return 1;
         }
         if (!vatra)
         {
             if (KupacJeRanjen(gSlucaj[s][slPacijent]))
             {
                 gSlucaj[s][slStanje] = SL_GASI;
-                NPC_ApplyAnimation(npcid, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
-                return;
+                Lik_Animacija(lik, "BOMBER", "BOM_Plant_Loop", 4.1, 1, 0, 0, 0, 0);
+                return 1;
             }
             gSlucaj[s][slStanje] = SL_PRISTANAK;
             RanjenPonudi(gSlucaj[s][slPacijent], RANJEN_NPC);
-            return;
+            return 1;
         }
         gSlucaj[s][slStanje] = SL_GASI;
-        NPC_AimAt(npcid, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ] - CESTA_Z_VOZILA, true);
-        return;
-    }
-    if (st == SL_POVRATAK)
-    {
-        gSlucaj[s][slStanje] = SL_ULAZI;
-        NPC_EnterVehicle(npcid, gSlucaj[s][slVozilo], 0, NPC_MOVE_TYPE_WALK);
-        return;
-    }
-    if ((st != SL_NPC && st != SL_ODLAZI) || gSlucaj[s][slCeka]) return;
-    if (gSlucaj[s][slObilazi])
-    {
-        gSlucaj[s][slObilazi] = false;
-        gSlucaj[s][slProguraj] = 0;
-        CestaNastavi(gSlucaj[s][slVozilo], gSlucajTocke[s], gSlucaj[s][slBroj], gSlucaj[s][slIdx]);
-        SlucajKorak(s);
-        return;
-    }
-    if (++gSlucaj[s][slIdx] < gSlucaj[s][slBroj])
-    {
-        SlucajKorak(s);
-        return;
+        Lik_NaciljaTocku(lik, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ] - CESTA_Z_VOZILA, true);
+        return 1;
     }
     if (st == SL_ODLAZI)
     {
         gSlucaj[s][slStanje] = SL_KRAJ;
-        return;
+        return 1;
     }
+    if (st != SL_NPC) return 1;
     new Float:x, Float:y, Float:z;
     GetVehiclePos(gSlucaj[s][slVozilo], x, y, z);
     if (vatra && VectorSize(gSlucaj[s][slX] - x, gSlucaj[s][slY] - y, 0.0) <= SLUCAJ_DOMET_CIJEV)
     {
         gSlucaj[s][slStanje] = SL_GASI;
-        NPC_SetKeys(npcid, 0, 0, _:KEY_FIRE);
-        return;
+        Lik_TipkeVozila(lik, _:KEY_FIRE);
+        return 1;
     }
     gSlucaj[s][slStanje] = SL_IZLAZI;
     gSlucaj[s][slPjeske] = true;
     new e, l, al, d, bn, bt, o;
     GetVehicleParamsEx(gSlucaj[s][slVozilo], e, l, al, d, bn, bt, o);
     SetVehicleParamsEx(gSlucaj[s][slVozilo], e, 0, al, d, bn, bt, o);
-    NPC_ExitVehicle(npcid);
+    Lik_Izadji(lik);
     SetTimerEx("SlucajPjeske", SLUCAJ_IZLAZAK_MS, false, "i", s);
-}
-
-static SlucajMakniTaksije(v, Float:x, Float:y, Float:z)
-{
-    new Float:a;
-    GetVehicleZAngle(v, a);
-    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees);
-    for (new i = 0; i < gVozilaCount; i++)
-    {
-        new w = gVozila[i], t = TaksiUVoznji(w), Float:vx, Float:vy, Float:vz, Float:wa;
-        if (!t || w == v) continue;
-        GetVehiclePos(w, vx, vy, vz);
-        GetVehicleZAngle(w, wa);
-        vx -= x;
-        vy -= y;
-        new Float:uz = vx * fx + vy * fy;
-        if (uz <= 0.0 || uz > SLUCAJ_RUB_DOMET || floatabs(vx * fy - vy * fx) > SLUCAJ_RUB_SIRINA || floatabs(vz - z) > 4.0 || -floatsin(wa, degrees) * fx + floatcos(wa, degrees) * fy < 0.3) continue;
-        TaksiNaRub(t - 1, SLUCAJ_RUB_MS);
-    }
-}
-
-SlucajPrepreke(sad, bool:snimljeno)
-{
-    for (new s = 0; s < SLUCAJ_MAX; s++)
-    {
-        new st = gSlucaj[s][slStanje], v = gSlucaj[s][slVozilo], bool:kupac, Float:x, Float:y, Float:z, Float:ox, Float:oy;
-        if ((st != SL_NPC && st != SL_ODLAZI) || !v || !gSlucaj[s][slIdx] || sad - gSlucaj[s][slProguraj] < 0) continue;
-        if (gSlucaj[s][slObilazi])
-        {
-            gSlucaj[s][slObilazi] = false;
-            CestaNastavi(v, gSlucajTocke[s], gSlucaj[s][slBroj], gSlucaj[s][slIdx]);
-            SlucajKorak(s);
-        }
-        if (!snimljeno)
-        {
-            TaksiSnimi();
-            snimljeno = true;
-        }
-        GetVehiclePos(v, x, y, z);
-        if (st == SL_NPC) SlucajMakniTaksije(v, x, y, z);
-        new Float:d = CestaPrepreka(v, gSlucaj[s][slPacijent], x, y, z, kupac, ox, oy);
-        gSlucaj[s][slSporo] = d >= TAKSI_USPORI ? 100 : clamp(floatround(d / TAKSI_USPORI * 100.0), 30, 100);
-        if (d >= TAKSI_STOP)
-        {
-            if (gSlucaj[s][slCeka])
-            {
-                gSlucaj[s][slCeka] = 0;
-                SlucajKorak(s);
-            }
-            continue;
-        }
-        if (st == SL_NPC && (kupac || VectorSize(gSlucaj[s][slX] - x, gSlucaj[s][slY] - y, 0.0) <= SLUCAJ_PJESKE_DOMET))
-        {
-            NPC_StopMove(gSlucaj[s][slNpc]);
-            gSlucaj[s][slCeka] = 0;
-            gSlucaj[s][slIdx] = gSlucaj[s][slBroj] - 1;
-            SlucajNpcStigao(gSlucaj[s][slNpc]);
-        }
-        else if (!gSlucaj[s][slCeka])
-        {
-            gSlucaj[s][slCeka] = sad;
-            NPC_StopMove(gSlucaj[s][slNpc]);
-        }
-        else if (sad - gSlucaj[s][slCeka] >= SLUCAJ_CEKA_MS)
-        {
-            gSlucaj[s][slCeka] = 0;
-            gSlucaj[s][slProguraj] = sad + SLUCAJ_PROGURAJ_MS;
-            gSlucaj[s][slSporo] = 100;
-            if (CestaObidi(gSlucaj[s][slNpc], v, ox, oy, gSlucajTocke[s][gSlucaj[s][slIdx]][3])) gSlucaj[s][slObilazi] = true;
-            else
-            {
-                gSlucaj[s][slCeka] = sad;
-                gSlucaj[s][slProguraj] = 0;
-            }
-        }
-    }
+    return 1;
 }
 
 forward SlucajPjeske(s);
 public SlucajPjeske(s)
 {
     if (gSlucaj[s][slStanje] != SL_IZLAZI) return;
-    new npc = gSlucaj[s][slNpc], bool:vatra = gSlucaj[s][slTip] == ORG_VATROGASCI;
-    if (NPC_GetVehicle(npc) == gSlucaj[s][slVozilo]) NPC_RemoveFromVehicle(npc);
-    if (vatra)
-    {
-        NPC_SetAmmo(npc, SLUCAJ_MUNICIJA);
-        NPC_SetWeapon(npc, WEAPON_FIREEXTINGUISHER);
-    }
+    new lik = gSlucaj[s][slNpc], bool:vatra = gSlucaj[s][slTip] == ORG_VATROGASCI;
+    if (Lik_DajVozilo(lik) != -1) Lik_Izadji(lik, true);
+    if (vatra) Lik_Oruzje(lik, _:WEAPON_FIREEXTINGUISHER, SLUCAJ_MUNICIJA);
     gSlucaj[s][slStanje] = SL_PJESKE;
-    NPCHodaj(npc, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, vatra ? SLUCAJ_DOMET_NPC : gSlucaj[s][slTip] == ORG_MEHANICAR ? MEHANICAR_DOMET : RANJEN_DOMET_NPC);
+    SlucajHodaj(lik, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ], vatra ? SLUCAJ_DOMET_NPC : gSlucaj[s][slTip] == ORG_MEHANICAR ? MEHANICAR_DOMET : RANJEN_DOMET_NPC);
 }
 
 static SlucajUKamion(s)
 {
-    new npc = gSlucaj[s][slNpc], v = gSlucaj[s][slVozilo], Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
-    NPC_StopMove(npc);
-    NPC_StopAim(npc);
-    NPC_ClearAnimations(npc);
-    NPC_SetWeapon(npc, WEAPON_FIST);
-    GetVehiclePos(v, x, y, z);
-    GetVehicleZAngle(v, a);
-    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:px = x - fy * (sx / 2.0 + 1.0) + fx * (sy / 4.0), Float:py = y + fx * (sx / 2.0 + 1.0) + fy * (sy / 4.0);
-    NPCHodaj(npc, px, py, HodTlo(px, py, z), NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, 1.0);
+    new lik = gSlucaj[s][slNpc];
+    Lik_Stani(lik);
+    Lik_PrestaniCiljati(lik);
+    Lik_OcistiAnimaciju(lik);
+    Lik_Oruzje(lik, 0, 0);
+    Lik_Udji(lik, gSlucaj[s][slVozilo], 0, LIK_TRK);
     gSlucaj[s][slStanje] = SL_POVRATAK;
     gSlucaj[s][slRok] = SLUCAJ_POVRATAK_S;
 }
@@ -635,8 +524,8 @@ static SlucajUKamion(s)
 static SlucajVratiKamion(s)
 {
     new k = gSlucaj[s][slKamion] - 1;
-    NPC_SetKeys(gSlucaj[s][slNpc], 0, 0, 0);
-    if (SlucajPutOdKamiona(s, gSlucaj[s][slVozilo], CestaNajbliza(gKamion[k][kX], gKamion[k][kY], gKamion[k][kZ])) < 0)
+    Lik_TipkeVozila(gSlucaj[s][slNpc], 0);
+    if (k < 0)
     {
         gSlucaj[s][slStanje] = SL_KRAJ;
         return;
@@ -664,7 +553,7 @@ static bool:SlucajSljedeci(s)
         }
         if (n == -1) return false;
     }
-    new st = gSlucaj[s][slStanje], npc = gSlucaj[s][slNpc], bool:pjeske = gSlucaj[s][slPjeske];
+    new st = gSlucaj[s][slStanje], lik = gSlucaj[s][slNpc], bool:pjeske = gSlucaj[s][slPjeske];
     if (!pjeske && !SlucajPutDo(n, gSlucaj[s][slVozilo])) return false;
     SlucajPredaj(s, n, SL_NEMA);
     if (!pjeske)
@@ -684,10 +573,10 @@ static bool:SlucajSljedeci(s)
         SetTimerEx("SlucajPjeske", SLUCAJ_IZLAZAK_MS, false, "i", n);
         return true;
     }
-    NPC_StopMove(npc);
-    NPC_ClearAnimations(npc);
+    Lik_Stani(lik);
+    Lik_OcistiAnimaciju(lik);
     gSlucaj[n][slStanje] = SL_PJESKE;
-    NPCHodaj(npc, gSlucaj[n][slX], gSlucaj[n][slY], gSlucaj[n][slZ], NPC_MOVE_TYPE_JOG, NPC_MOVE_SPEED_AUTO, RANJEN_DOMET_NPC);
+    SlucajHodaj(lik, gSlucaj[n][slX], gSlucaj[n][slY], gSlucaj[n][slZ], RANJEN_DOMET_NPC);
     return true;
 }
 
@@ -773,8 +662,8 @@ SlucajTick()
         }
         if (st == SL_POVRATAK || st == SL_ULAZI)
         {
-            new npc = gSlucaj[s][slNpc], v = gSlucaj[s][slVozilo];
-            if (NPC_GetVehicle(npc) == v && !NPC_IsEnteringVehicle(npc))
+            new lik = gSlucaj[s][slNpc], v = gSlucaj[s][slVozilo];
+            if (Lik_DajVozilo(lik) == v)
             {
                 gSlucaj[s][slPjeske] = false;
                 if (!gSlucaj[s][slNastavak]) SlucajVratiKamion(s);
@@ -791,7 +680,8 @@ SlucajTick()
             }
             else if (--gSlucaj[s][slRok] <= 0)
             {
-                NPC_PutInVehicle(npc, v, 0);
+                Lik_Stani(lik);
+                Lik_UVozilo(lik, v, 0);
                 gSlucaj[s][slRok] = SLUCAJ_POVRATAK_S;
             }
             continue;
@@ -854,7 +744,7 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slRok] = vatra ? SLUCAJ_TRAJANJE_S : RANJEN_TRAJANJE_S;
     gSlucaj[s][slGasenje] = 0;
     gSlucaj[s][slIgrac] = INVALID_PLAYER_ID;
-    gSlucaj[s][slNpc] = INVALID_PLAYER_ID;
+    gSlucaj[s][slNpc] = INVALID_LIK;
     gSlucaj[s][slVozilo] = 0;
     gSlucaj[s][slKamion] = 0;
     gSlucaj[s][slPjeske] = false;
@@ -1196,22 +1086,26 @@ static MehanicarRadi(s, v, posao)
     gSlucaj[s][slStanje] = SL_RADI;
     gSlucaj[s][slPosao] = posao;
     gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
-    NPCHodaj(gSlucaj[s][slNpc], px, py, HodTlo(px, py, z), NPC_MOVE_TYPE_WALK, NPC_MOVE_SPEED_AUTO, 0.3);
+    Lik_IdiDo(gSlucaj[s][slNpc], px, py, HodTlo(px, py, z), LIK_HOD);
 }
 
 static MehanicarAnim(s)
 {
-    new npc = gSlucaj[s][slNpc], p = gSlucaj[s][slPacijent], Float:x, Float:y, Float:z;
-    if (p != INVALID_PLAYER_ID && GetVehiclePos(gMehanicarVozilo[p], x, y, z)) NPC_SetAngleToPos(npc, x, y, z);
+    new lik = gSlucaj[s][slNpc], p = gSlucaj[s][slPacijent], Float:x, Float:y, Float:z, Float:lx, Float:ly, Float:lz;
+    if (p != INVALID_PLAYER_ID && GetVehiclePos(gMehanicarVozilo[p], x, y, z))
+    {
+        Lik_Pozicija(lik, lx, ly, lz);
+        Lik_Kut(lik, atan2(y - ly, x - lx) - 90.0);
+    }
     if (gSlucaj[s][slPosao] == 1)
     {
         new Float:kut;
-        NPC_GetFacingAngle(npc, kut);
-        NPC_SetFacingAngle(npc, kut + 180.0);
-        NPC_ApplyAnimation(npc, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0);
+        Lik_DajKut(lik, kut);
+        Lik_Kut(lik, kut + 180.0);
+        Lik_Animacija(lik, "CAR", "Fixn_Car_Loop", 4.1, 1, 0, 0, 0, 0);
     }
-    else if (gSlucaj[s][slPosao] == 3) NPC_ApplyAnimation(npc, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
-    else NPC_ApplyAnimation(npc, "BAR", "Barserve_bottle", 4.1, true, false, false, false, 0);
+    else if (gSlucaj[s][slPosao] == 3) Lik_Animacija(lik, "BOMBER", "BOM_Plant_Loop", 4.1, 1, 0, 0, 0, 0);
+    else Lik_Animacija(lik, "BAR", "Barserve_bottle", 4.1, 1, 0, 0, 0, 0);
     SetTimerEx("MehanicarGotov", MEHANICAR_RAD_MS, false, "i", s);
 }
 
@@ -1220,7 +1114,7 @@ public MehanicarGotov(s)
 {
     if (gSlucaj[s][slStanje] != SL_RADI) return;
     new p = gSlucaj[s][slPacijent];
-    if (gSlucaj[s][slNpc] != INVALID_PLAYER_ID) NPC_ClearAnimations(gSlucaj[s][slNpc]);
+    if (gSlucaj[s][slNpc] != INVALID_LIK) Lik_OcistiAnimaciju(gSlucaj[s][slNpc]);
     else if (gSlucaj[s][slIgrac] != INVALID_PLAYER_ID) ClearAnimations(gSlucaj[s][slIgrac]);
     gSlucaj[s][slStanje] = SL_PRISTANAK;
     gSlucaj[s][slRok] = MEHANICAR_CEKA_S;
@@ -1457,7 +1351,7 @@ RanjenUpit(playerid, bool:response)
         return 1;
     }
     gSlucaj[s][slStanje] = SL_GASI;
-    NPC_ApplyAnimation(gSlucaj[s][slNpc], "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
+    Lik_Animacija(gSlucaj[s][slNpc], "BOMBER", "BOM_Plant_Loop", 4.1, 1, 0, 0, 0, 0);
     return 1;
 }
 
