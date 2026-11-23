@@ -18,6 +18,7 @@ public OnPlayerConnect(playerid)
     MapaCentralBankUkloni(playerid);
     MapaCasinoExtUkloni(playerid);
     MapaMainStreetUkloni(playerid);
+    MapaChinatownUkloni(playerid);
     MapaJeffersonFlatsUkloni(playerid);
     MapaSpawnUkloni(playerid);
     MapaMontereyPeakUkloni(playerid);
