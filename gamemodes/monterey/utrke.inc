@@ -4,6 +4,8 @@
 #define UTRKA_VOZACA        12
 #define UTRKA_IME           25
 #define UTRKA_CP            8.0
+#define UTRKA_LIK_ZONA      2000
+#define UTRKA_LIK_SIRINA    40.0
 #define UTRKA_UKLONI_DOMET  6.0
 #define UTRKA_ODBROJ        5
 #define UTRKA_LOBBY_S       300
@@ -236,6 +238,7 @@ static UtrkaIzbaci(playerid, bool:makniObavijest = true)
 
 static UtrkaKraj(u)
 {
+    Lik_UkloniZonu(UTRKA_LIK_ZONA + u);
     new bool:vozilo = gUk[u][ukStanje] >= UK_ODBROJ, pot = gUk[u][ukPot], dobitnik = INVALID_PLAYER_ID, najbolje = cellmax;
     if (gUk[u][ukCp])
     {
@@ -433,6 +436,7 @@ static UtrkaOdbroj(u)
 {
     gUk[u][ukStanje] = UK_ODBROJ;
     gUk[u][ukOdbroj] = UTRKA_ODBROJ;
+    for (new c = 0; c + 1 < gUk[u][ukBroj]; c++) Lik_ZonaPut(UTRKA_LIK_ZONA + u, gUkTocke[u][c][0], gUkTocke[u][c][1], gUkTocke[u][c + 1][0], gUkTocke[u][c + 1][1], UTRKA_LIK_SIRINA, 0.5);
     gUk[u][ukRok] = gettime() + UTRKA_TRAJE_S;
     if (gUk[u][ukCp])
     {

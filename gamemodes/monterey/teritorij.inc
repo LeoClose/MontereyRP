@@ -1,6 +1,7 @@
 #define MAX_TER             16
 #define MAX_TER_NPC         4
 #define TER_NPC_RANGE       3.0
+#define TER_LIK_ZONA        1000
 #define TER_OBRANA_RANGE    60.0
 #define TER_NAPAD_MS        60000
 #define TER_MIN_NAPADACA    3
@@ -272,6 +273,7 @@ static StartNapad(t, org, const ids[], count)
     gTerOdabrani[t][1] = ids[b];
     for (new i = 0; i < TER_ODABRANIH; i++) gTerOdabraniAcc[t][i] = gAccountId[gTerOdabrani[t][i]];
     GangZoneFlashForAll(gTer[t][terZona], 0xFF000080);
+    Lik_Zona(TER_LIK_ZONA + t, gTer[t][terMinX], gTer[t][terMinY], gTer[t][terMaxX], gTer[t][terMaxY], 0.0);
     for (new n = 0; n < MAX_TER_NPC; n++)
     {
         gTerNpcMunicija[t][n] = 0;
@@ -305,6 +307,7 @@ static FinishNapad(t, bool:zauzet)
     else SendNapad(t, "Napad je propao.");
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gTerUmro[i] == t + 1) gTerUmro[i] = 0;
     gTer[t][terNapadac] = 0;
+    Lik_UkloniZonu(TER_LIK_ZONA + t);
     gTer[t][terZastitaKraj] = GetTickCount() + TER_ZASTITA_MS;
     ShowZonu(t);
     SaveTeritorij(t);
