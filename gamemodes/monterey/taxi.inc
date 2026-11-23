@@ -6,7 +6,6 @@
 #define TAKSI_MODEL         420
 #define TAKSI_SKIN          262
 #define TAKSI_MAX_PARKIRANIH 6
-#define TAKSI_VIDIK_COS     0.4
 #define TAKSI_VIDIK_BLIZU   12.0
 #define TAKSI_RUB_RAVNO     6.0
 #define TAKSI_RUB_PRIJELAZ  30.0
@@ -316,25 +315,7 @@ static bool:TaksiVidljivo(Float:x, Float:y, Float:z, Float:radijus = TAKSI_SKRIV
 
 static bool:TaksiNaVidiku(Float:x, Float:y, Float:z, osimVozila = INVALID_VEHICLE_ID, Float:radijus = TAKSI_SKRIVENO)
 {
-    new Float:cx, Float:cy, Float:cz, Float:fx, Float:fy, Float:fz;
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
-    {
-        if (!gUlogiran[i] || GetPlayerVehicleID(i) == osimVozila || !IsPlayerInRangeOfPoint(i, radijus, x, y, z)) continue;
-        GetPlayerCameraPos(i, cx, cy, cz);
-        GetPlayerCameraFrontVector(i, fx, fy, fz);
-        new v = GetPlayerVehicleID(i);
-        if (v)
-        {
-            new Float:a;
-            GetVehicleZAngle(v, a);
-            fx = -floatsin(a, degrees);
-            fy = floatcos(a, degrees);
-            fz = 0.0;
-        }
-        new Float:d = VectorSize(x - cx, y - cy, z - cz);
-        if (d < TAKSI_VIDIK_BLIZU || ((x - cx) * fx + (y - cy) * fy + (z - cz) * fz) / d > TAKSI_VIDIK_COS) return true;
-    }
-    return false;
+    return !Lik_Skriveno(x, y, z, TAKSI_VIDIK_BLIZU, radijus, osimVozila == INVALID_VEHICLE_ID ? -1 : osimVozila);
 }
 
 static bool:TaksiNoviVozac(s)
@@ -367,7 +348,7 @@ static TaksiNajblizaBaza(Float:x, Float:y)
     for (new b = 0; b < sizeof gTaksiBaza; b++)
     {
         new Float:d = VectorSize(gTaksiBaza[b][0] - x, gTaksiBaza[b][1] - y, 0.0);
-        if (d < bd && !TaksiVidljivo(gTaksiBaza[b][0], gTaksiBaza[b][1], gTaksiBaza[b][2])) { bd = d; best = b; }
+        if (d < bd && !TaksiNaVidiku(gTaksiBaza[b][0], gTaksiBaza[b][1], gTaksiBaza[b][2])) { bd = d; best = b; }
     }
     return best;
 }
@@ -1223,7 +1204,7 @@ TaksiTick()
         if (st == TX_SLOBODAN && s < TAKSI_FLOTA)
         {
             GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-            new bool:doma = VectorSize(x - gTaksiPoza[s][0], y - gTaksiPoza[s][1], 0.0) < 25.0, bool:skriven = !TaksiVidljivo(x, y, z, TAKSI_SKRIVENO + 50.0) && !TaksiVidljivo(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
+            new bool:doma = VectorSize(x - gTaksiPoza[s][0], y - gTaksiPoza[s][1], 0.0) < 25.0, bool:skriven = !TaksiNaVidiku(x, y, z) && !TaksiNaVidiku(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
             if (!doma && skriven)
             {
                 TaksiBezVozaca(s);
@@ -1233,7 +1214,7 @@ TaksiTick()
             }
             else if (gTaksi[s][tNpc] == INVALID_LIK)
             {
-                if ((!doma || parkirani < TAKSI_MAX_PARKIRANIH) && TaksiVidljivo(x, y, z) && TaksiNoviVozac(s))
+                if ((!doma || parkirani < TAKSI_MAX_PARKIRANIH) && TaksiVidljivo(x, y, z) && !TaksiNaVidiku(x, y, z) && TaksiNoviVozac(s))
                 {
                     Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
                     SetTimerEx("TaksiKreniKruziti", 1500, false, "i", s);
@@ -1263,7 +1244,7 @@ TaksiTick()
         }
         else if (st == TX_NESTAO)
         {
-            if (TaksiVidljivo(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2])) continue;
+            if (TaksiNaVidiku(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2])) continue;
             TaksiVozilo(s, gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2], gTaksiPoza[s][3]);
             if (gTaksi[s][tVozilo] != INVALID_VEHICLE_ID) gTaksi[s][tStanje] = TX_SLOBODAN;
         }

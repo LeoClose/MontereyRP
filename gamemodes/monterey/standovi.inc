@@ -898,34 +898,6 @@ static KupacDalje(k)
     KupacMakni(k);
 }
 
-static Float:gIgPoz[MAX_PLAYERS][3], gIgPozN, gIgPozOd = -1000000;
-
-static IgraciPozicije()
-{
-    new sad = GetTickCount();
-    if (sad - gIgPozOd < 500) return;
-    gIgPozOd = sad;
-    gIgPozN = 0;
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
-    {
-        if (!gUlogiran[i] || IsPlayerNPC(i) || GetPlayerVirtualWorld(i)) continue;
-        GetPlayerPos(i, gIgPoz[gIgPozN][0], gIgPoz[gIgPozN][1], gIgPoz[gIgPozN][2]);
-        gIgPozN++;
-    }
-}
-
-static bool:KupacSkriven(Float:x, Float:y, Float:z, Float:r = KUPAC_SKRIVENO)
-{
-    IgraciPozicije();
-    new Float:r2 = r * r;
-    for (new i = 0; i < gIgPozN; i++)
-    {
-        new Float:dx = gIgPoz[i][0] - x, Float:dy = gIgPoz[i][1] - y, Float:dz = gIgPoz[i][2] - z;
-        if (dx * dx + dy * dy + dz * dz <= r2) return false;
-    }
-    return true;
-}
-
 static StandVirtualnaProdaja(s)
 {
     if (!StandOtvoren(s) || gStandGledan[s] || StandIgracRadi(s) != INVALID_PLAYER_ID || !StandRadnikRadi(s) || random(STAND_VIRT_S)) return;
@@ -945,7 +917,7 @@ static KupacNovi(cilj = -1)
     for (new pokusaj = 0; pokusaj < 8 && !ima; pokusaj++)
     {
         if (cilj != -1) ima = Lik_TockaStaze(gStand[s][snKx], gStand[s][snKy], KUPAC_BLIZU_MIN, KUPAC_BLIZU_MAX, x, y, z);
-        else ima = Lik_TockaStaze(gStand[s][snKx], gStand[s][snKy], KUPAC_SPAWN_MIN, KUPAC_SPAWN_MAX, x, y, z) && KupacSkriven(x, y, z);
+        else ima = Lik_TockaStaze(gStand[s][snKx], gStand[s][snKy], KUPAC_SPAWN_MIN, KUPAC_SPAWN_MAX, x, y, z) && Lik_Skriveno(x, y, z, KUPAC_SKRIVENO);
     }
     if (!ima) return;
     new lik = Lik_Stvori(gKupacSkinovi[random(sizeof gKupacSkinovi)], x, y, z, float(random(360)));
@@ -1121,7 +1093,7 @@ KupacPogoden(lik, issuerid, Float:amount, WEAPON:weaponid)
 StandTick()
 {
     new sad = gettime();
-    for (new s = 0; s < STAND_MAX; s++) gStandGledan[s] = gStand[s][snIma] && !KupacSkriven(gStand[s][snKx], gStand[s][snKy], gStand[s][snKz], STAND_VIDLJIV);
+    for (new s = 0; s < STAND_MAX; s++) gStandGledan[s] = gStand[s][snIma] && !Lik_Skriveno(gStand[s][snKx], gStand[s][snKy], gStand[s][snKz], STAND_VIDLJIV, STAND_VIDLJIV);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         if ((gStandNar[i] == SN_NOSI || gStandNar[i] == SN_GEPEK) && gStand[gStandNarS[i]][snVrsta] == STAND_KOMBI) StandNarCp(i, false);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
@@ -1194,7 +1166,7 @@ StandTick()
         {
             new Float:kx, Float:ky, Float:kz, c = gKupac[k][kuCilj];
             Lik_Pozicija(gKupac[k][kuNpc], kx, ky, kz);
-            if ((c < 0 || !gStandGledan[c]) && KupacSkriven(kx, ky, kz, STAND_VIDLJIV))
+            if ((c < 0 || !gStandGledan[c]) && Lik_Skriveno(kx, ky, kz, STAND_VIDLJIV, STAND_VIDLJIV))
             {
                 KupacMakni(k);
                 continue;
