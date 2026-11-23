@@ -37,6 +37,12 @@ public OnLikRanjen(lik, napadac)
     return 1;
 }
 
+public OnLikSnimkaKraj(lik)
+{
+    if (!HeliSnimkaKraj(lik) && !AvionPlaybackEnd(lik)) VlakPlaybackEnd(lik);
+    return 1;
+}
+
 public OnLikIzbacen(lik, playerid)
 {
     return 0;

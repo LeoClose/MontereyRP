@@ -272,7 +272,7 @@ static const gAvionModeli[] = { 577, 592, 519, 553, 519, 553, 593, 511, 513, 512
 static const gAtcZahtjevi[][] = { "", "rulanje do parkinga", "guranje i rulanje", "polijetanje" };
 static const gAtcStanja[][] = { "slobodno", "na prilazu", "ceka rulanje", "rula do parkinga", "parkiran", "guranje i rulanje", "polijece", "prelijece", "ceka polijetanje" };
 
-static gAvionNpc[AVION_SLOTOVA], gAvionVozilo[AVION_SLOTOVA], gAvionModel[AVION_SLOTOVA], gAvionFaza[AVION_SLOTOVA], gAvionStajaliste[AVION_SLOTOVA], gAvionRuta[AVION_SLOTOVA], gAvionToken[AVION_SLOTOVA], gNpcAvion[MAX_PLAYERS];
+static gAvionNpc[AVION_SLOTOVA], gAvionVozilo[AVION_SLOTOVA], gAvionModel[AVION_SLOTOVA], gAvionFaza[AVION_SLOTOVA], gAvionStajaliste[AVION_SLOTOVA], gAvionRuta[AVION_SLOTOVA], gAvionToken[AVION_SLOTOVA];
 static bool:gAvionOdobreno[AVION_SLOTOVA], gAvionZahtjev[AVION_SLOTOVA], gAvionZahtjevOd[AVION_SLOTOVA];
 static gInstVlasnik[AVION_INSTANCI], gInstJuzna[AVION_INSTANCI], gInstSjeverna[AVION_INSTANCI], gInstZauzeto[AVION_INSTANCI][AVION_STAJALISTA], gInstOdobreno[AVION_INSTANCI];
 static gAtcInst[MAX_PLAYERS], PlayerText:gAtcTd[MAX_PLAYERS][AVION_ATC_SLOTOVA + 3];
@@ -357,7 +357,7 @@ static AvionPauza(i)
 
 InitAvioni()
 {
-    for (new i = 0; i < AVION_SLOTOVA; i++) gAvionNpc[i] = INVALID_PLAYER_ID;
+    for (new i = 0; i < AVION_SLOTOVA; i++) gAvionNpc[i] = INVALID_LIK;
     for (new i = 0; i < AVION_JAVNI; i++)
     {
         gAvionToken[i]++;
@@ -368,24 +368,24 @@ InitAvioni()
 
 static bool:AvionPilot(i)
 {
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, "Kapetan_%d", i);
-    new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return false;
-    gAvionNpc[i] = npc;
-    gNpcAvion[npc] = i + 1;
-    NPC_Spawn(npc);
+    new Float:x, Float:y, Float:z, k = AvionInst(i);
+    GetVehiclePos(gAvionVozilo[i], x, y, z);
+    new lik = Lik_Stvori(AVION_SKIN, x, y, z, 0.0, k ? AVION_ATC_SVIJET + k : 0);
+    if (lik == INVALID_LIK) return false;
+    gAvionNpc[i] = lik;
+    Lik_Neranjiv(lik, true);
+    SetVehicleParamsEx(gAvionVozilo[i], 1, 1, 0, 0, 0, 0, 0);
+    Lik_UVozilo(lik, gAvionVozilo[i], 0);
+    SetTimerEx("AvionKreni", 1000, false, "ii", i, gAvionToken[i]);
     return true;
 }
 
 static AvionBezPilota(i)
 {
-    new npc = gAvionNpc[i];
-    if (npc == INVALID_PLAYER_ID) return;
-    gAvionNpc[i] = INVALID_PLAYER_ID;
-    if (gNpcAvion[npc] != i + 1) return;
-    gNpcAvion[npc] = 0;
-    NPC_Destroy(npc);
+    new lik = gAvionNpc[i];
+    if (lik == INVALID_LIK) return;
+    gAvionNpc[i] = INVALID_LIK;
+    Lik_Ukloni(lik);
 }
 
 static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a, bool:pilot = true)
@@ -396,7 +396,7 @@ static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a, bool:pilot
     SetVehicleVirtualWorld(v, k ? AVION_ATC_SVIJET + k : 0);
     gAvionVozilo[i] = v;
     gAvionModel[i] = model;
-    gAvionNpc[i] = INVALID_PLAYER_ID;
+    gAvionNpc[i] = INVALID_LIK;
     if (pilot && !AvionPilot(i))
     {
         DestroyVehicle(v);
@@ -409,7 +409,7 @@ static bool:AvionStvori(i, model, Float:x, Float:y, Float:z, Float:a, bool:pilot
 static AvionPoleti(i, seg)
 {
     gAvionRuta[i] = seg;
-    if (gAvionNpc[i] != INVALID_PLAYER_ID) AvionSnimka(i, seg);
+    if (gAvionNpc[i] != INVALID_LIK) AvionSnimka(i, seg);
     else if (!AvionPilot(i)) AvionKraj(i);
 }
 
@@ -492,7 +492,7 @@ static AvionSnimka(i, seg)
 {
     new ime[16];
     format(ime, sizeof ime, "av_%d_%d", seg, gAvionModel[i]);
-    if (!NPC_StartPlayback(gAvionNpc[i], ime)) AvionKraj(i);
+    if (!Lik_Snimka(gAvionNpc[i], ime)) AvionKraj(i);
 }
 
 static AvionIme(model, ime[], size = sizeof (ime))
@@ -719,19 +719,6 @@ public AvionPistaSlobodna(i, token)
     if (token == gAvionToken[i] && gInstJuzna[k] == i + 1) gInstJuzna[k] = 0;
 }
 
-AvionSpawn(npcid)
-{
-    new i = gNpcAvion[npcid] - 1;
-    if (i < 0) return;
-    new k = AvionInst(i);
-    NPC_SetSkin(npcid, AVION_SKIN);
-    NPC_SetInvulnerable(npcid, true);
-    NPC_SetVirtualWorld(npcid, k ? AVION_ATC_SVIJET + k : 0);
-    SetVehicleParamsEx(gAvionVozilo[i], 1, 1, 0, 0, 0, 0, 0);
-    NPC_PutInVehicle(npcid, gAvionVozilo[i], 0);
-    SetTimerEx("AvionKreni", 1000, false, "ii", i, gAvionToken[i]);
-}
-
 forward AvionKreni(i, token);
 public AvionKreni(i, token)
 {
@@ -739,10 +726,11 @@ public AvionKreni(i, token)
     AvionSnimka(i, gAvionRuta[i]);
 }
 
-AvionPlaybackEnd(npcid)
+AvionPlaybackEnd(lik)
 {
-    new i = gNpcAvion[npcid] - 1;
-    if (i < 0) return 0;
+    new i = -1;
+    for (new j = 0; j < AVION_SLOTOVA; j++) if (gAvionNpc[j] == lik) i = j;
+    if (i < 0 || lik == INVALID_LIK) return 0;
     new k = AvionInst(i);
     switch (gAvionFaza[i])
     {

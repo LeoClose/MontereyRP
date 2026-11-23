@@ -210,14 +210,6 @@ static MakniDilera(t, n)
     gTerNpcDb[t][n] = 0;
 }
 
-public OnNPCSpawn(npcid)
-{
-    HeliSpawn(npcid);
-    VlakSpawn(npcid);
-    AvionSpawn(npcid);
-    return 1;
-}
-
 static ZiviDileri(t)
 {
     new count = 0;
@@ -391,11 +383,6 @@ DilerPogodak(playerid, lik)
         }
         StartNapad(t, org, ids, count);
     }
-    return 1;
-}
-
-public OnNPCDeath(npcid, killerid, WEAPON:reason)
-{
     return 1;
 }
 

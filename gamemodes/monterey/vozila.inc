@@ -783,7 +783,7 @@ static const Float:gHeliStart[HELI_BROJ][4] = {
     { 2583.38, -2197.27, 92.83, 87.96 }
 };
 
-static gHeliNpc[HELI_BROJ], gHeliVozilo[HELI_BROJ], gNpcHeli[MAX_PLAYERS], gHeliZapis[MAX_PLAYERS], gHeliVijest;
+static gHeliNpc[HELI_BROJ], gHeliVozilo[HELI_BROJ], gHeliZapis[MAX_PLAYERS], gHeliVijest;
 
 InitHeli()
 {
@@ -793,30 +793,19 @@ InitHeli()
 forward HeliStvori(i);
 public HeliStvori(i)
 {
-    new name[MAX_PLAYER_NAME + 1];
-    format(name, sizeof name, "Pilot_%d", i);
-    new npc = NPC_Create(name);
-    if (npc == INVALID_PLAYER_ID) return;
     new v = CreateVehicle(i < HELI_LSPD ? HELI_MODEL_LSPD : HELI_MODEL_NEWS, gHeliStart[i][0], gHeliStart[i][1], gHeliStart[i][2], gHeliStart[i][3], -1, -1, -1);
-    if (v == INVALID_VEHICLE_ID)
+    if (v == INVALID_VEHICLE_ID) return;
+    new lik = Lik_Stvori(i < HELI_LSPD ? HELI_SKIN_LSPD : HELI_SKIN_NEWS, gHeliStart[i][0], gHeliStart[i][1], gHeliStart[i][2], gHeliStart[i][3]);
+    if (lik == INVALID_LIK)
     {
-        NPC_Destroy(npc);
+        DestroyVehicle(v);
         return;
     }
-    gHeliNpc[i] = npc;
+    gHeliNpc[i] = lik;
     gHeliVozilo[i] = v;
-    gNpcHeli[npc] = i + 1;
-    NPC_Spawn(npc);
-}
-
-HeliSpawn(npcid)
-{
-    new i = gNpcHeli[npcid] - 1;
-    if (i < 0) return;
-    NPC_SetSkin(npcid, i < HELI_LSPD ? HELI_SKIN_LSPD : HELI_SKIN_NEWS);
-    NPC_SetInvulnerable(npcid, true);
-    SetVehicleParamsEx(gHeliVozilo[i], 1, 1, 0, 0, 0, 0, 0);
-    NPC_PutInVehicle(npcid, gHeliVozilo[i], 0);
+    Lik_Neranjiv(lik, true);
+    SetVehicleParamsEx(v, 1, 1, 0, 0, 0, 0, 0);
+    Lik_UVozilo(lik, v, 0);
     SetTimerEx("HeliLeti", 1000, false, "i", i);
 }
 
@@ -826,14 +815,18 @@ public HeliLeti(i)
     if (!gHeliVozilo[i]) return;
     new ime[16];
     format(ime, sizeof ime, i < HELI_LSPD ? ("heli_lspd_%d") : ("heli_news_%d"), i < HELI_LSPD ? i + 1 : i - HELI_LSPD + 1);
-    NPC_StartPlayback(gHeliNpc[i], ime);
+    Lik_Snimka(gHeliNpc[i], ime);
 }
 
-public OnNPCPlaybackEnd(npcid, recordid)
+HeliSnimkaKraj(lik)
 {
-    if (gNpcHeli[npcid]) HeliLeti(gNpcHeli[npcid] - 1);
-    else if (!AvionPlaybackEnd(npcid)) VlakPlaybackEnd(npcid);
-    return 1;
+    for (new i = 0; i < HELI_BROJ; i++)
+    {
+        if (!gHeliVozilo[i] || gHeliNpc[i] != lik) continue;
+        HeliLeti(i);
+        return 1;
+    }
+    return 0;
 }
 
 static bool:HeliVidi(playerid, &bool:vijest)
@@ -844,7 +837,7 @@ static bool:HeliVidi(playerid, &bool:vijest)
     for (new i = 0; i < HELI_BROJ; i++)
     {
         if (!gHeliVozilo[i]) continue;
-        NPC_GetPos(gHeliNpc[i], hx, hy, hz);
+        Lik_Pozicija(gHeliNpc[i], hx, hy, hz);
         if (VectorSize(hx - x, hy - y, hz - z) > HELI_DOMET || Kolizija_Zraka(hx, hy, hz - 2.0, x, y, z + 0.5)) continue;
         vidi = true;
         if (i >= HELI_LSPD) vijest = true;
@@ -892,8 +885,7 @@ HeliMrtav(v)
     for (new i = 0; i < HELI_BROJ; i++)
     {
         if (gHeliVozilo[i] != v) continue;
-        gNpcHeli[gHeliNpc[i]] = 0;
-        NPC_Destroy(gHeliNpc[i]);
+        Lik_Ukloni(gHeliNpc[i]);
         DestroyVehicle(v);
         gHeliVozilo[i] = 0;
         SetTimerEx("HeliStvori", HELI_RESPAWN_MS, false, "i", i);
