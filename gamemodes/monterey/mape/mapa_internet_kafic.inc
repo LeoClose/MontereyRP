@@ -631,8 +631,6 @@ MapaInternetKafic()
     SetDynamicObjectMaterial(tmpobjid, 0, 18868, "mobilephone4", "mobilephone4-3", 0xFFFFFFFF);
     tmpobjid = CreateDynamicObjectEx(8674, 1417.474731, -12.837286, 1004.663635, 180.000000, 0.000000, 0.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, 6487, "councl_law2", "tennisnet_64", 0xFF000000);
-    tmpobjid = CreateDynamicObjectEx(8674, 1427.653808, -15.144539, 1004.663635, 360.000000, 90.000000, 142.500000, 300.00, 300.00);
-    SetDynamicObjectMaterial(tmpobjid, 0, 6487, "councl_law2", "tennisnet_64", 0xFF000000);
     tmpobjid = CreateDynamicObjectEx(2125, 1418.315307, -12.193977, 1000.223876, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 1, 18868, "mobilephone4", "mobilephone4-3", 0x00000000);
     tmpobjid = CreateDynamicObjectEx(2125, 1419.546264, -12.193977, 1000.223876, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
