@@ -98,10 +98,19 @@ static TaksiPrimiRutu(s, n, &sekundi)
     return floatround(m * 10.0);
 }
 
+static TaksiSmjer(s, &Float:x, &Float:y, &Float:z, &Float:fx, &Float:fy)
+{
+    new Float:a;
+    VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
+    if (!Lik_DajKut(gTaksi[s][tNpc], a)) return;
+    fx = -floatsin(a, degrees);
+    fy = floatcos(a, degrees);
+}
+
 static TaksiNastavi(s)
 {
     new Float:x, Float:y, Float:z, Float:fx, Float:fy;
-    VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
+    TaksiSmjer(s, x, y, z, fx, fy);
     while (gTaksi[s][tIdx] < gTaksi[s][tBroj] - 1)
     {
         new i = gTaksi[s][tIdx], Float:dx = gTaksiTocke[s][i][0] - x, Float:dy = gTaksiTocke[s][i][1] - y;
@@ -367,7 +376,7 @@ static TaksiPutOdVozila(s, Float:tx, Float:ty, Float:tz, &sekundi = 0)
 {
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-    GetVehicleZAngle(gTaksi[s][tVozilo], a);
+    if (!Lik_DajKut(gTaksi[s][tNpc], a)) GetVehicleZAngle(gTaksi[s][tVozilo], a);
     new n = Lik_Ruta(x, y, a, tx, ty, tz, gTaksiBuf);
     if (n == 1)
     {
@@ -711,7 +720,7 @@ TaksiNaRub(s, ms = TAKSI_POLICIJA_MS)
         return;
     }
     new Float:x, Float:y, Float:z, Float:fx, Float:fy, Float:vx, Float:vy, Float:vz;
-    VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
+    TaksiSmjer(s, x, y, z, fx, fy);
     GetVehicleVelocity(gTaksi[s][tVozilo], vx, vy, vz);
     new Float:brzina = VectorSize(vx, vy, 0.0) * 50.0;
     if (brzina < TAKSI_RUB_SPORO * 2.0) brzina = TAKSI_RUB_SPORO * 2.0;
@@ -727,7 +736,7 @@ TaksiNaRub(s, ms = TAKSI_POLICIJA_MS)
 static TaksiRubKraj(s)
 {
     new Float:x, Float:y, Float:z, Float:fx, Float:fy;
-    VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
+    TaksiSmjer(s, x, y, z, fx, fy);
     gTaksi[s][tRub] = 2;
     new Float:bok = TAKSI_RUB * 0.4;
     if (!TaksiSlobodno(x, y, z, x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z)) bok = 0.0;
