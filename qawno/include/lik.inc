@@ -51,6 +51,7 @@ forward OnLikStigao(lik);
 forward OnLikPogoden(lik, playerid, Float:steta, oruzje, dio);
 forward OnLikPogodio(lik, playerid, Float:steta, oruzje, dio);
 native Lik_CiljIgraca(playerid);
+native bool:Lik_IgracRanjen(playerid, bool:ranjen);
 
 native bool:Lik_IdiDo(lik, Float:x, Float:y, Float:z, nacin = LIK_HOD);
 native bool:Lik_Ponasanje(lik, zastavice, Float:prag = 0.0);

@@ -806,6 +806,7 @@ SlucajDisconnect(playerid)
     gSlucajPoziv[playerid] = 0;
     gMehanicar[playerid] = 0;
     gRanjen[playerid] = RN_NE;
+    Lik_IgracRanjen(playerid, false);
     gRanjenPonuda[playerid] = 0;
     for (new s = 0; s < SLUCAJ_MAX; s++)
     {
@@ -1179,6 +1180,7 @@ RanjenPadni(playerid)
     if (gRanjen[playerid] == RN_DOLJE)
     {
         gRanjen[playerid] = RN_CEKA;
+        Lik_IgracRanjen(playerid, true);
         return 1;
     }
     GetPlayerPos(playerid, gRanjenPos[playerid][0], gRanjenPos[playerid][1], gRanjenPos[playerid][2]);
@@ -1186,6 +1188,7 @@ RanjenPadni(playerid)
     gRanjenInt[playerid] = GetPlayerInterior(playerid);
     gRanjenSvijet[playerid] = GetPlayerVirtualWorld(playerid);
     gRanjen[playerid] = RN_CEKA;
+    Lik_IgracRanjen(playerid, true);
     SpremiSvoOruzje(playerid);
     return 1;
 }
@@ -1195,6 +1198,7 @@ RanjenSpawn(playerid)
     if (gRanjen[playerid] != RN_CEKA) return;
     new bool:prvi = SlucajPacijenta(playerid) == -1;
     gRanjen[playerid] = RN_DOLJE;
+    Lik_IgracRanjen(playerid, true);
     gRanjenOd[playerid] = GetTickCount();
     gRanjenPogoci[playerid] = 0;
     SetPlayerInterior(playerid, gRanjenInt[playerid]);
@@ -1361,6 +1365,7 @@ RanjenAdmin(playerid)
     new s = SlucajPacijenta(playerid);
     if (s != -1) SlucajKraj(s, true);
     gRanjen[playerid] = RN_NE;
+    Lik_IgracRanjen(playerid, false);
     gRanjenPonuda[playerid] = 0;
     TogglePlayerControllable(playerid, true);
     ClearAnimations(playerid);
@@ -1370,6 +1375,7 @@ RanjenPrimijeni(playerid, bool:spasen)
 {
     UpitMakni(playerid, UPIT_RANJEN);
     gRanjen[playerid] = RN_NE;
+    Lik_IgracRanjen(playerid, false);
     gRanjenPonuda[playerid] = 0;
     SetPlayerHealth(playerid, 100.0);
     TogglePlayerControllable(playerid, true);
