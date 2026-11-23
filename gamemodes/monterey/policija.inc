@@ -785,13 +785,18 @@ CMD:stop(playerid, params[])
         taksi = t;
         vozac = d;
     }
-    if (taksi) TaksiNaRub(taksi - 1);
-    else if (vozac != INVALID_PLAYER_ID)
+    new Float:kut;
+    GetVehicleZAngle(v, kut);
+    if (!Lik_ZaustaviPromet(playerid, kut, naj, PD_STOP_SIRINA))
     {
-        GameTextForPlayer(vozac, T(vozac, "~r~POLICIJA~n~~w~Zaustavite vozilo"), 4000, 3);
-        SendClientMessage(vozac, COLOR_ERROR, T(vozac, "Policija vam nalaze da se zaustavite uz rub ceste."));
+        if (taksi) TaksiNaRub(taksi - 1);
+        else if (vozac != INVALID_PLAYER_ID)
+        {
+            GameTextForPlayer(vozac, T(vozac, "~r~POLICIJA~n~~w~Zaustavite vozilo"), 4000, 3);
+            SendClientMessage(vozac, COLOR_ERROR, T(vozac, "Policija vam nalaze da se zaustavite uz rub ceste."));
+        }
+        else return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ispred vas nema vozila."));
     }
-    else return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ispred vas nema vozila."));
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s signalizira vozacu da se zaustavi.", GetRPIme(playerid), "", 1);
     return 1;
 }
@@ -852,7 +857,7 @@ CMD:heal(playerid, params[])
             target = i;
         }
     }
-    new npc = KupacNajbliziRanjen(playerid, PD_BLIZU);
+    new npc = NpcNajbliziRanjen(playerid, PD_BLIZU);
     if (npc != INVALID_PLAYER_ID && (target == INVALID_PLAYER_ID || !IsRanjen(target)))
     {
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pruza prvu pomoc ranjenom prolazniku.", GetRPIme(playerid), "", 1);

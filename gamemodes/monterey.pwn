@@ -496,6 +496,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/registracija.inc"
 #include "monterey/stats.inc"
 #include "monterey/player.inc"
+#include "monterey/civili.inc"
 #include "monterey/likovi.inc"
 
 new gLozinkaCeka[MAX_PLAYERS];

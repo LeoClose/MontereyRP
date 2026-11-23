@@ -708,7 +708,7 @@ TaksiUVoznji(v)
     new s = TaksiPoVozilu(v);
     if (s == -1 || gTaksi[s][tNpc] == INVALID_LIK || gTaksi[s][tStaje]) return 0;
     new st = gTaksi[s][tStanje];
-    return st == TX_DOLAZI || st == TX_VOZI || st == TX_ODLAZI ? s + 1 : 0;
+    return st == TX_DOLAZI || st == TX_VOZI || st == TX_ODLAZI || st == TX_SLOBODAN ? s + 1 : 0;
 }
 
 TaksiNaRub(s, ms = TAKSI_POLICIJA_MS)
@@ -750,7 +750,7 @@ public TaksiPrepreke()
     for (new s = 0; s < TAKSI_SLOTOVA; s++)
     {
         new st = gTaksi[s][tStanje];
-        if (st != TX_DOLAZI && st != TX_VOZI && st != TX_ODLAZI) continue;
+        if (st != TX_DOLAZI && st != TX_VOZI && st != TX_ODLAZI && (st != TX_SLOBODAN || gTaksi[s][tNpc] == INVALID_LIK)) continue;
         if (gTaksi[s][tStaje])
         {
             if (sad - gTaksi[s][tStaje] >= 0)
@@ -762,8 +762,12 @@ public TaksiPrepreke()
                     TaksiZavrsiRano(s);
                     continue;
                 }
-                TaksiNastavi(s);
-                TaksiKorak(s);
+                if (st == TX_SLOBODAN) TaksiKruzi(s);
+                else
+                {
+                    TaksiNastavi(s);
+                    TaksiKorak(s);
+                }
             }
             continue;
         }
@@ -784,7 +788,12 @@ TaksiLikStigao(lik)
         TaksiRubKraj(s);
         return 1;
     }
-    if (gTaksi[s][tStanje] == TX_SLOBODAN || gTaksi[s][tStaje]) return 1;
+    if (gTaksi[s][tStaje]) return 1;
+    if (gTaksi[s][tStanje] == TX_SLOBODAN)
+    {
+        TaksiKruzi(s);
+        return 1;
+    }
     new p = gTaksi[s][tMusterija];
     switch (gTaksi[s][tStanje])
     {
@@ -827,8 +836,19 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
     return 1;
 }
 
+static TaksiKruzi(s)
+{
+    if (gTaksi[s][tNpc] == INVALID_LIK || gTaksi[s][tStanje] != TX_SLOBODAN || gTaksi[s][tStaje]) return;
+    new Float:x, Float:y, Float:z, Float:cx, Float:cy, Float:cz, Float:a = float(random(360)), Float:d = 300.0 + float(random(400));
+    GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
+    if (Lik_Cesta(x + floatsin(a, degrees) * d, y + floatcos(a, degrees) * d, 0.0, cx, cy, cz) > TAKSI_MAX_OD_CESTE) return;
+    TaksiMotor(s, 1);
+    Lik_Vozi(gTaksi[s][tNpc], cx, cy, cz, 11.0, false);
+}
+
 static TaksiNaKartu(s, playerid)
 {
+    if (gTaksi[s][tNpc] != INVALID_LIK) Lik_Stani(gTaksi[s][tNpc]);
     gTaksi[s][tStanje] = TX_KARTA;
     gTaksi[s][tKlik] = 0;
     gTaksi[s][tRok] = GetTickCount() + TAKSI_ODREDISTE_MS;
@@ -1208,14 +1228,22 @@ TaksiTick()
                 if (parkirani < TAKSI_MAX_PARKIRANIH && TaksiVidljivo(x, y, z) && TaksiNoviVozac(s))
                 {
                     Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
+                    SetTimerEx("TaksiKreniKruziti", 1500, false, "i", s);
                     parkirani++;
                 }
             }
             else if (!TaksiVidljivo(x, y, z, TAKSI_SKRIVENO + 50.0))
             {
                 TaksiBezVozaca(s);
+                TaksiMotor(s, 0);
+                if (!TaksiVidljivo(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]))
+                {
+                    SetVehiclePos(gTaksi[s][tVozilo], gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
+                    SetVehicleZAngle(gTaksi[s][tVozilo], gTaksiPoza[s][3]);
+                }
                 parkirani--;
             }
+            else if (!Lik_Krece(gTaksi[s][tNpc]) && Lik_Zaglavio(gTaksi[s][tNpc], 8000)) TaksiKruzi(s);
         }
         else if (st == TX_KUCI)
         {
@@ -1248,4 +1276,10 @@ TaksiTick()
             TaksiOstavi(s);
         }
     }
+}
+
+forward TaksiKreniKruziti(s);
+public TaksiKreniKruziti(s)
+{
+    TaksiKruzi(s);
 }

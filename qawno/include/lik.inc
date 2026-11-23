@@ -54,6 +54,7 @@ native Lik_CiljIgraca(playerid);
 native bool:Lik_IgracRanjen(playerid, bool:ranjen);
 native bool:Lik_Snimka(lik, const ime[]);
 native bool:Lik_ZaustaviSnimku(lik);
+native bool:Lik_ZaustaviPromet(playerid, Float:kut, Float:domet, Float:sirina);
 native Float:Lik_Cesta(Float:x, Float:y, Float:z, &Float:ox, &Float:oy, &Float:oz);
 native Lik_Ruta(Float:sx, Float:sy, Float:kut, Float:tx, Float:ty, Float:tz, Float:tocke[], max = sizeof tocke);
 native Lik_RutaDo(Float:tx, Float:ty, Float:tz, Float:metara, Float:tocke[], max = sizeof tocke);

@@ -60,6 +60,7 @@ InitPlanina()
         }
         new lik = Lik_Stvori(gPlaninarSkinovi[random(sizeof gPlaninarSkinovi)], tx[k], ty[k], tz[k] + 1.0);
         if (lik < 0) continue;
+        CivilPostavi(lik);
         gPlaninar[g][plLik] = lik;
         gPlaninar[g][plBroj] = n;
         gPlaninar[g][plNaVrhu] = vrh;

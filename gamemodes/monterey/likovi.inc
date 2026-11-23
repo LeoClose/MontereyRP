@@ -16,7 +16,7 @@ public OnLikPogoden(lik, playerid, Float:steta, oruzje, dio)
     if (r != -1) return r;
     r = DilerPogodak(playerid, lik);
     if (r != -1) return r;
-    return 1;
+    return CivilPogoden(lik, playerid);
 }
 
 public OnLikPogodio(lik, playerid, Float:steta, oruzje, dio)
@@ -33,7 +33,8 @@ public OnLikSmiren(lik)
 
 public OnLikRanjen(lik, napadac)
 {
-    KupacRanjen(lik);
+    #pragma unused napadac
+    if (!KupacRanjen(lik)) CivilRanjen(lik);
     return 1;
 }
 
@@ -52,5 +53,6 @@ public OnLikUmro(lik, ubojica, oruzje)
 {
     if (KupacSmrt(lik, ubojica)) return 1;
     if (DilerUmro(lik)) return 1;
+    CivilUmro(lik, ubojica);
     return 1;
 }

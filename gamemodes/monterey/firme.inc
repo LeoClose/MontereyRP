@@ -281,6 +281,7 @@ static FirmaGostNovi(k, s)
     if (!FirmaTocke(k, s, interijer, svijet, u, c, r) || (k == FIRMA_FRIZER && OdjecaStolicaZauzeta(s))) return;
     new lik = Lik_Stvori(gKupacSkinovi[random(sizeof gKupacSkinovi)], u[0], u[1], u[2], 0.0, svijet, interijer);
     if (lik == INVALID_LIK) return;
+    CivilPostavi(lik, interijer != 0 || svijet != 0);
     gFirma[k][s][fGost] = lik;
     gFirma[k][s][fGostFaza] = FG_DOLAZI;
     gFirma[k][s][fGostOd] = gettime();

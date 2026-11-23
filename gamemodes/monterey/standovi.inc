@@ -1014,6 +1014,7 @@ KupacSmrt(lik, killerid)
         DodajWanted(killerid);
         DodajWanted(killerid);
     }
+    HitnaNpcUmro(LIK_PACIJENT + lik);
     KupacMakni(k);
     return 1;
 }
@@ -1101,7 +1102,7 @@ KupacPogoden(lik, issuerid, Float:amount, WEAPON:weaponid)
     #pragma unused amount, weaponid
     new k = KupacLika(lik);
     if (k < 0) return -1;
-    if (gKupac[k][kuStanje] == KU_RANJEN) return 0;
+    if (gKupac[k][kuStanje] == KU_RANJEN) return 1;
     if (issuerid != INVALID_PLAYER_ID && IsPlayerConnected(issuerid) && !IsPlayerNPC(issuerid))
     {
         if (gKupac[k][kuNapadacRacun] != gAccountId[issuerid]) DodajWanted(issuerid);
