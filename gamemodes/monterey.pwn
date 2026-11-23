@@ -262,6 +262,7 @@ public OnGameModeInit()
     InitKazino();
     InitBanka();
     InitRacunalo();
+    InitVijesti();
     LoginIpCheck();
     InitKafic();
     InitUtrke();
@@ -350,6 +351,7 @@ public Sekunda()
     VlakTick();
     BankaTick();
     RacunaloTick();
+    VijestiTick();
     ZlataraTick();
     VrijemeTick();
     IkoneTick();
@@ -428,6 +430,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/trgovina.inc"
 #include "monterey/kazino.inc"
 #include "monterey/banka.inc"
+#include "monterey/vijesti.inc"
 #include "monterey/racunalo.inc"
 #include "monterey/kafic.inc"
 #include "monterey/oklada.inc"

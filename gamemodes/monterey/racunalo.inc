@@ -46,28 +46,30 @@
 #define GRAF_H              96.0
 #define GRAF_SIRINA         14.0
 
-enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA, PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_DODAJ, PC_GRUPA_PORUKA }
+enum { PC_BANKA_POSALJI, PC_BANKA_OTPLATI, PC_OGLAS, PC_KOLICINA, PC_OBJAVA, PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_DODAJ, PC_GRUPA_PORUKA, PC_VIJEST_NASLOV, PC_VIJEST_TEKST, PC_REKLAMA }
 #define LS_GRUPA_IME        24
 enum { LS_FEED, LS_OBJAVA, LS_PRIJATELJI, LS_PORUKE, LS_RAZGOVOR, LS_PROFIL, LS_GRUPE, LS_GRUPA, LS_TRAZI, LS_CLANOVI, LS_DODAJ }
-enum { PP_NISTA, PP_OBJAVA, PP_KOMENTAR, PP_GRUPA, PP_CLAN, PP_OGLAS }
+enum { PP_NISTA, PP_OBJAVA, PP_KOMENTAR, PP_GRUPA, PP_CLAN, PP_OGLAS, PP_VIJEST, PP_REKLAMA }
+enum { VI_LISTA, VI_CLANAK, VI_REKLAME }
 enum { LS_NISTA, LS_POSLAO, LS_PRIMIO, LS_PRIJATELJ }
 enum { KT_BOK, KT_LISTIC, KT_TAB, KT_KAT = KT_TAB + 3, KT_LIGA = KT_KAT + 5, KT_MEC = KT_LIGA + 7, KT_RED, KT_KOEF = KT_RED + KLAD_RED, KT_STR_L = KT_KOEF + KLAD_RED * 3, KT_STR, KT_STR_D, KT_NASLOV, KT_PAR, KT_UKUPNO = KT_PAR + KLAD_PAROVA, KT_MINUS, KT_ULOG, KT_PLUS, KT_DOBITAK, KT_UPLATI, KLAD_TD }
-enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA }
+enum { PCE_POCETNA, PCE_BANKA, PCE_OGLASI, PCE_DIONICE, PCE_LIFESTALKER, PCE_KLADIONICA, PCE_VIJESTI }
 enum { SV_O, SV_H, SV_L, SV_C }
-enum { PTD_START, PTD_TRAKA, PTD_PROZOR = PTD_TRAKA + 6, PTD_NASLOV = PTD_PROZOR + 3, PTD_PROZOR_MIN, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 17, PTD_APP,
-    PTD_AKCIJA = PTD_APP + 6, PTD_DIONICA = PTD_AKCIJA + 4, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 6, PTD_LSAVATAR = PTD_LSTAB + 6, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_LSEMOJI, PTD_KLAD = PTD_LSEMOJI + OBJAVA_REDOVA, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_KARTICA = PTD_JEZIK_MENI + BROJ_JEZIKA, PTD_MREZA = PTD_KARTICA + 5, PTD_IMENOVANI = PTD_MREZA + 3 }
+enum { PTD_START, PTD_TRAKA, PTD_PROZOR = PTD_TRAKA + 7, PTD_NASLOV = PTD_PROZOR + 3, PTD_PROZOR_MIN, PTD_ZATVORI, PTD_SADRZAJ, PTD_START_PANEL, PTD_UGASI = PTD_START_PANEL + 19, PTD_APP,
+    PTD_AKCIJA = PTD_APP + 7, PTD_DIONICA = PTD_AKCIJA + 4, PTD_GRAF = PTD_DIONICA + 5, PTD_TIJELO, PTD_FITILJ = PTD_TIJELO + SVIJECA, PTD_OBJAVA = PTD_FITILJ + SVIJECA, PTD_KOL = PTD_OBJAVA + OBJAVA_REDOVA, PTD_APPIME = PTD_KOL + 3, PTD_LSTAB = PTD_APPIME + 7, PTD_LSAVATAR = PTD_LSTAB + 6, PTD_LSPROFIL = PTD_LSAVATAR + OBJAVA_REDOVA, PTD_LSPOKRIV = PTD_LSPROFIL + 1, PTD_LSINFO = PTD_LSPOKRIV + 8, PTD_LSEMOJI, PTD_KLAD = PTD_LSEMOJI + OBJAVA_REDOVA, PTD_SAT = PTD_KLAD + KLAD_TD, PTD_DATUM, PTD_OBAVIJEST, PTD_OBAVIJEST_TEKST, PTD_JEZIK, PTD_JEZIK_MENI, PTD_KARTICA = PTD_JEZIK_MENI + BROJ_JEZIKA, PTD_MREZA = PTD_KARTICA + 5, PTD_IMENOVANI = PTD_MREZA + 3 }
 
 static const gDionicaIme[][] = { "Monterey Motors", "LS Nafta", "Vinewood Media", "Pacific Banka", "Grove Tech" };
 static const gDionicaKratko[][] = { "MMOT", "LSNF", "VWMD", "PACB", "GRVT" };
 static const gDionicaPocetna[] = { 12000, 8000, 6000, 15000, 4000 };
 static gDionica[sizeof gDionicaIme], gSvijeca[sizeof gDionicaIme][SVIJECA][4], gSvijecaBroj[sizeof gDionicaIme], gTrenutna[sizeof gDionicaIme][4], gDionicaSat, gDionicaKorak;
 static gPcAkcija[MAX_PLAYERS], gPcDionica[MAX_PLAYERS], gOglasZadnji[MAX_PLAYERS], gObjavaZadnja[MAX_PLAYERS], gPcEkran[MAX_PLAYERS], bool:gPcOtvoren[MAX_PLAYERS], bool:gPcStart[MAX_PLAYERS], gPcObjava[MAX_PLAYERS][OBJAVA_REDOVA], gPcKomadaPamti[MAX_PLAYERS][sizeof gDionicaIme], gPcTrosak[MAX_PLAYERS][sizeof gDionicaIme], gPcGrafN[MAX_PLAYERS], gPcGrafMin[MAX_PLAYERS], gPcGrafMax[MAX_PLAYERS], gPcKolicina[MAX_PLAYERS], gLsPogled[MAX_PLAYERS], gLsCilj[MAX_PLAYERS], gLsOdabran[MAX_PLAYERS], gLsZadnje[MAX_PLAYERS], gLsAvatara[MAX_PLAYERS];
+static gViPogled[MAX_PLAYERS], gViCilj[MAX_PLAYERS], gViOdabran[MAX_PLAYERS], gViNaslov[MAX_PLAYERS][VIJEST_NASLOV + 1], gViTekst[MAX_PLAYERS][VIJEST_TEKST + 1];
 static const gLsTab[][] = { "Objave", "Prijatelji", "Poruke", "Grupe", "Trazi", "Profil" };
 static const gLsTabPogled[] = { LS_FEED, LS_PRIJATELJI, LS_PORUKE, LS_GRUPE, LS_TRAZI, LS_PROFIL };
 static gPcPotvrda[MAX_PLAYERS], bool:gPcMojiOglasi[MAX_PLAYERS], gPcOglasOdabran[MAX_PLAYERS], gLsTrazi[MAX_PLAYERS][24], bool:gLsSamoPrijatelji[MAX_PLAYERS];
 static PlayerText:gPcTd[MAX_PLAYERS][PC_TD], gPcBroj[MAX_PLAYERS], PlayerText:gPc[MAX_PLAYERS][PTD_IMENOVANI];
 static gPcOtvorene[MAX_PLAYERS], gPcPozOd[MAX_PLAYERS], gPcPozDo[MAX_PLAYERS], bool:gPcJezikMeni[MAX_PLAYERS], bool:gPcPuno;
-static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker", "Kladionica" };
+static const gPcAplikacije[][] = { "Pocetna", "Banka", "Oglasnik", "Dionice", "LifeStalker", "Kladionica", "LS News" };
 static const gPcIkonaSlika[][] = { "LD_SPAC:white", "LD_POOL:ball" };
 enum E_PC_IKONA { piApp, Float:piX, Float:piY, Float:piW, Float:piH, piBoja, piSlika }
 static const gPcIkonaDio[][E_PC_IKONA] = {
@@ -76,11 +78,12 @@ static const gPcIkonaDio[][E_PC_IKONA] = {
     { 3, 6.0, 24.0, 18.0, 1.0, 0xFFFFFFFF, 0 }, { 3, 7.0, 17.0, 4.0, 7.0, 0xFFFFFFFF, 0 }, { 3, 13.0, 13.0, 4.0, 11.0, 0xFFFFFFFF, 0 }, { 3, 19.0, 8.0, 4.0, 16.0, 0xFFFFFFFF, 0 },
     { 4, 6.0, 8.0, 18.0, 12.0, 0xFFFFFFFF, 0 }, { 4, 9.0, 20.0, 4.0, 3.0, 0xFFFFFFFF, 0 },
     { 5, 8.0, 5.0, 14.0, 20.0, 0xFFFFFFFF, 0 }, { 5, 10.0, 8.0, 10.0, 1.5, 0x00897BFF, 0 }, { 5, 10.0, 12.0, 10.0, 1.0, 0x9E9E9EFF, 0 }, { 5, 10.0, 15.0, 7.0, 1.0, 0x9E9E9EFF, 0 },
-    { 5, 15.0, 16.0, 10.0, 10.0, 0xFFD54FFF, 1 }, { 5, 18.5, 19.5, 3.0, 3.0, 0xF57F17FF, 1 }
+    { 5, 15.0, 16.0, 10.0, 10.0, 0xFFD54FFF, 1 }, { 5, 18.5, 19.5, 3.0, 3.0, 0xF57F17FF, 1 },
+    { 6, 7.0, 6.0, 16.0, 18.0, 0xFFFFFFFF, 0 }, { 6, 9.0, 8.0, 12.0, 3.0, 0xC62828FF, 0 }
 };
 static const gPcJezici[BROJ_JEZIKA][] = { "Hrvatski", "English", "Russkiy", "Espanol", "Turkce" };
 static PlayerText:gPcIkonaTd[MAX_PLAYERS][sizeof gPcIkonaDio];
-static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF, 0xE91E63FF, 0x00897BFF };
+static const gPcIkonaBoja[] = { 0, 0x2E7D32FF, 0xEF6C00FF, 0x6A1B9AFF, 0xE91E63FF, 0x00897BFF, 0xC62828FF };
 static gKladPar[MAX_PLAYERS][KLAD_PAROVA][16], gKladTip[MAX_PLAYERS][KLAD_PAROVA], gKladKoefPar[MAX_PLAYERS][KLAD_PAROVA], gKladN[MAX_PLAYERS], gKladStr[MAX_PLAYERS], bool:gKladIma[MAX_PLAYERS], gKladRed[MAX_PLAYERS][KLAD_RED][16], gKladSat;
 static gPcObavijestDo[MAX_PLAYERS], gKladLiga[MAX_PLAYERS] = { -1, ... }, gKladMecId[MAX_PLAYERS][16], gKladMecLin[MAX_PLAYERS][3], gKladLin[MAX_PLAYERS][KLAD_PAROVA], gKladTab[MAX_PLAYERS], gKladKat[MAX_PLAYERS], gKladUlog[MAX_PLAYERS], gKladDetalj[MAX_PLAYERS], gKladRedKoef[MAX_PLAYERS][KLAD_RED][3], gKladRedIme[MAX_PLAYERS][KLAD_RED][24], gKladParIme[MAX_PLAYERS][KLAD_PAROVA][24], gKladRedListic[MAX_PLAYERS][KLAD_RED];
 static const gKladTabovi[][] = { "Ponuda", "U igri", "Zavrseni" };
@@ -274,7 +277,7 @@ static PcTrakaOsvjezi(playerid)
             PlayerTextDrawHide(playerid, td);
             continue;
         }
-        PlayerTextDrawSetPos(playerid, td, PC_X + 58.0 + 56.0 * float(k++), PC_Y + 229.0);
+        PlayerTextDrawSetPos(playerid, td, PC_X + 58.0 + 47.0 * float(k++), PC_Y + 229.0);
         PlayerTextDrawBoxColour(playerid, td, gPcEkran[playerid] == i ? 0xFFFFFF44 : 0xFFFFFF16);
         PlayerTextDrawShow(playerid, td);
     }
@@ -295,7 +298,7 @@ static PcStart(playerid, bool:otvori)
     gPcStart[playerid] = otvori;
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        if (12.0 + float(i - 1) * 42.0 + 40.0 < 100.0 || gPcEkran[playerid] != PCE_POCETNA) continue;
+        if (12.0 + float((i - 1) % 5) * 42.0 + 40.0 < 85.0 || gPcEkran[playerid] != PCE_POCETNA) continue;
         PcAplikacijaVidljiva(playerid, i, !otvori);
     }
     for (new i = PTD_START_PANEL; i <= PTD_UGASI; i++)
@@ -1496,6 +1499,11 @@ static PcEkran(playerid, ekran)
             KladEkran(playerid);
             return;
         }
+        case PCE_VIJESTI:
+        {
+            VijestiEkran(playerid);
+            return;
+        }
     }
     PcPostavi(playerid, PTD_SADRZAJ, tekst);
 }
@@ -1556,6 +1564,8 @@ static PcOtvori(playerid)
     gKladMecId[playerid][0] = EOS;
     gLsPogled[playerid] = LS_FEED;
     gLsOdabran[playerid] = 0;
+    gViPogled[playerid] = VI_LISTA;
+    gViOdabran[playerid] = 0;
     gLsTrazi[playerid][0] = EOS;
     gLsSamoPrijatelji[playerid] = false;
     PcUcitajKomade(playerid);
@@ -1572,7 +1582,7 @@ static PcOtvori(playerid)
     PcTekst(playerid, 290.0, 110.0, "Monterey", 0xFFFFFF22, 0.9, 3.0, TEXT_DRAW_FONT_0, TEXT_DRAW_ALIGN_CENTER);
     for (new i = 1; i < sizeof gPcAplikacije; i++)
     {
-        new Float:y = 12.0 + float(i - 1) * 42.0, Float:x = 16.0;
+        new Float:y = 12.0 + float((i - 1) % 5) * 42.0, Float:x = 16.0 + float((i - 1) / 5) * 44.0;
         gPc[playerid][PTD_APP + i] = PcKutija(playerid, x, y, 30.0, 30.0, gPcIkonaBoja[i]);
         PlayerTextDrawSetSelectable(playerid, gPc[playerid][PTD_APP + i], true);
         for (new di = 0; di < sizeof gPcIkonaDio; di++)
@@ -1626,26 +1636,26 @@ static PcOtvori(playerid)
     gPc[playerid][PTD_LSPOKRIV + 1] = PcKutija(playerid, 30.0, 224.0, 131.0, 3.5, 0x0D141CFF);
     gPc[playerid][PTD_LSPOKRIV + 2] = PcKutija(playerid, 30.0, 227.5, 131.0, 16.5, 0x0D141CFF);
     gPc[playerid][PTD_LSPOKRIV + 3] = PcKutija(playerid, 30.0, 244.0, 131.0, 4.0, 0x111111FF);
-    for (new i = 1; i < sizeof gPcAplikacije; i++) gPc[playerid][PTD_TRAKA + i] = PcGumb(playerid, 58.0, 229.0, 52.0, 0xFFFFFF16, T(playerid, gPcAplikacije[i]));
+    for (new i = 1; i < sizeof gPcAplikacije; i++) gPc[playerid][PTD_TRAKA + i] = PcGumb(playerid, 58.0, 229.0, 44.0, 0xFFFFFF16, T(playerid, gPcAplikacije[i]));
     for (new j = 0; j < BROJ_JEZIKA; j++) gPc[playerid][PTD_JEZIK_MENI + j] = PcGumb(playerid, 346.0, 152.0 + 14.0 * float(j), 54.0, j == gJezik[playerid] ? 0x2C5A8CF2 : 0x1B2430F2, gPcJezici[j]);
     new ime[MAX_PLAYER_NAME + 1], slovo[2];
     format(ime, sizeof ime, "%s", GetRPIme(playerid));
     format(slovo, sizeof slovo, "%c", ime[0]);
-    gPc[playerid][PTD_START_PANEL] = PcKutija(playerid, 4.0, 100.0, 150.0, 124.0, 0x1B2430F2);
-    gPc[playerid][PTD_START_PANEL + 1] = PcKutija(playerid, 4.0, 100.0, 150.0, 26.0, 0x24344AFF);
-    gPc[playerid][PTD_START_PANEL + 2] = PcSlika(playerid, 9.0, 104.0, 18.0, 18.0, 0x4FC3F7FF, "LD_POOL:ball");
-    gPc[playerid][PTD_START_PANEL + 3] = PcTekst(playerid, 18.0, 107.5, slovo, 0x0D141CFF, 0.25, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
-    gPc[playerid][PTD_START_PANEL + 4] = PcTekst(playerid, 32.0, 104.0, ime, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
-    gPc[playerid][PTD_START_PANEL + 5] = PcTekst(playerid, 32.0, 114.0, "KALTRIX OS 11", 0x8AA0B6FF, 0.13, 0.6, TEXT_DRAW_FONT_1);
-    for (new k = 0; k < 5; k++)
+    gPc[playerid][PTD_START_PANEL] = PcKutija(playerid, 4.0, 85.0, 150.0, 139.0, 0x1B2430F2);
+    gPc[playerid][PTD_START_PANEL + 1] = PcKutija(playerid, 4.0, 85.0, 150.0, 26.0, 0x24344AFF);
+    gPc[playerid][PTD_START_PANEL + 2] = PcSlika(playerid, 9.0, 89.0, 18.0, 18.0, 0x4FC3F7FF, "LD_POOL:ball");
+    gPc[playerid][PTD_START_PANEL + 3] = PcTekst(playerid, 18.0, 92.5, slovo, 0x0D141CFF, 0.25, 1.1, TEXT_DRAW_FONT_2, TEXT_DRAW_ALIGN_CENTER);
+    gPc[playerid][PTD_START_PANEL + 4] = PcTekst(playerid, 32.0, 89.0, ime, 0xFFFFFFFF, 0.18, 0.85, TEXT_DRAW_FONT_1);
+    gPc[playerid][PTD_START_PANEL + 5] = PcTekst(playerid, 32.0, 99.0, "KALTRIX OS 11", 0x8AA0B6FF, 0.13, 0.6, TEXT_DRAW_FONT_1);
+    for (new k = 0; k < sizeof gPcAplikacije - 1; k++)
     {
-        gPc[playerid][PTD_START_PANEL + 6 + k] = PcKutija(playerid, 10.0, 131.0 + 15.0 * float(k), 8.0, 8.0, gPcIkonaBoja[k + 1]);
-        new PlayerText:red = gPc[playerid][PTD_START_PANEL + 11 + k] = PcRed(playerid, 24.0, 130.5 + 15.0 * float(k), 124.0);
+        gPc[playerid][PTD_START_PANEL + 6 + k] = PcKutija(playerid, 10.0, 116.0 + 15.0 * float(k), 8.0, 8.0, gPcIkonaBoja[k + 1]);
+        new PlayerText:red = gPc[playerid][PTD_START_PANEL + 12 + k] = PcRed(playerid, 24.0, 115.5 + 15.0 * float(k), 124.0);
         PlayerTextDrawBoxColour(playerid, red, 0x24344AFF);
         PlayerTextDrawColour(playerid, red, 0xFFFFFFFF);
         PlayerTextDrawSetString(playerid, red, T(playerid, gPcAplikacije[k + 1]));
     }
-    gPc[playerid][PTD_START_PANEL + 16] = PcKutija(playerid, 8.0, 206.0, 142.0, 0.6, 0x3A4656FF);
+    gPc[playerid][PTD_START_PANEL + 18] = PcKutija(playerid, 8.0, 206.0, 142.0, 0.6, 0x3A4656FF);
     gPc[playerid][PTD_UGASI] = PcGumb(playerid, 115.0, 211.0, 66.0, 0xC62828FF, T(playerid, "Ugasi"));
     for (new i = 0; i < gPcBroj[playerid]; i++) PlayerTextDrawShow(playerid, gPcTd[playerid][i]);
     gPc[playerid][PTD_OBAVIJEST] = PcTekst(playerid, 266.0, 192.0, "_", 0xFFFFFFFF, 0.1, 0.15, TEXT_DRAW_FONT_1);
@@ -1740,6 +1750,200 @@ CMD:computer(playerid, params[])
 
 CMD:racunalo(playerid, params[]) return cmd_computer(playerid, params);
 
+static VijestPrelomi(const tekst[], out[], len)
+{
+    new duz = 0, z[2];
+    for (new i = 0; tekst[i]; i++)
+    {
+        if (tekst[i] == ' ' && duz >= VIJEST_RED)
+        {
+            strcat(out, "~n~", len);
+            duz = 0;
+            continue;
+        }
+        z[0] = tekst[i];
+        strcat(out, z, len);
+        duz++;
+    }
+}
+
+static VijestiEkran(playerid)
+{
+    new red[160], naslov[VIJEST_NASLOV + 1], ime[MAX_PLAYER_NAME + 1], datum[16], gumb[32], bool:clan = VijestiClan(playerid);
+    if (gViPogled[playerid] == VI_REKLAME && !clan) gViPogled[playerid] = VI_LISTA;
+    for (new r = 0; r < OBJAVA_REDOVA; r++) gPcObjava[playerid][r] = 0;
+    switch (gViPogled[playerid])
+    {
+        case VI_CLANAK:
+        {
+            new DBResult:res = DB_ExecuteQuery(gDB, "SELECT c.naslov, c.tekst, replace(IFNULL(a.name, '?'), '_', ' '), strftime('%%d.%%m.%%Y', c.created, 'unixepoch') FROM lsn_clanci c LEFT JOIN accounts a ON a.id = c.account WHERE c.id = %d", gViCilj[playerid]);
+            if (!DB_GetRowCount(res))
+            {
+                DB_FreeResultSet(res);
+                gViPogled[playerid] = VI_LISTA;
+                return VijestiEkran(playerid);
+            }
+            new tekst[VIJEST_TEKST + 1], prikaz[1024];
+            DB_GetFieldString(res, 0, naslov, sizeof naslov);
+            DB_GetFieldString(res, 1, tekst, sizeof tekst);
+            DB_GetFieldString(res, 2, ime, sizeof ime);
+            DB_GetFieldString(res, 3, datum, sizeof datum);
+            DB_FreeResultSet(res);
+            TdCisti(naslov);
+            TdCisti(tekst);
+            TdCisti(ime);
+            format(prikaz, sizeof prikaz, "~r~%s~n~~b~%s, %s~n~~l~", naslov, ime, datum);
+            VijestPrelomi(tekst, prikaz, sizeof prikaz);
+            PcPostavi(playerid, PTD_SADRZAJ, prikaz);
+            if (clan) strcat(gumb, T(playerid, "Obrisi clanak"));
+            LsAkcije(playerid, T(playerid, "Natrag"), gumb);
+        }
+        case VI_REKLAME:
+        {
+            new sad = gettime(), oglas[48];
+            new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, substr(tekst, 1, 44), (istek - %d + 86399) / 86400 FROM lsn_reklame WHERE istek > %d ORDER BY id LIMIT %d", sad, sad, OBJAVA_REDOVA);
+            new n = DB_GetRowCount(res);
+            for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+            {
+                new id = DB_GetFieldInt(res, 0);
+                DB_GetFieldString(res, 1, oglas, sizeof oglas);
+                TdCisti(oglas);
+                format(red, sizeof red, T(playerid, "%s%s~n~~b~jos %d d."), oglas, id == gViOdabran[playerid] ? (" ~r~<") : (""), DB_GetFieldInt(res, 2));
+                gPcObjava[playerid][r] = id;
+                PcPostavi(playerid, PTD_OBJAVA + r, red);
+            }
+            DB_FreeResultSet(res);
+            format(red, sizeof red, T(playerid, "~r~Reklame~n~~l~%d/%d"), n, REKLAMA_MAX);
+            if (!n) format(red, sizeof red, "%s~n~~n~%s", red, T(playerid, "Nema aktivnih reklama."));
+            PcPostavi(playerid, PTD_SADRZAJ, red);
+            if (gViOdabran[playerid]) strcat(gumb, T(playerid, "Obrisi reklamu"));
+            LsAkcije(playerid, T(playerid, "Natrag"), T(playerid, "Nova reklama"), gumb);
+        }
+        default:
+        {
+            new DBResult:res = DB_ExecuteQuery(gDB, "SELECT c.id, c.naslov, replace(IFNULL(a.name, '?'), '_', ' '), strftime('%%d.%%m.', c.created, 'unixepoch') FROM lsn_clanci c LEFT JOIN accounts a ON a.id = c.account ORDER BY c.id DESC LIMIT %d", OBJAVA_REDOVA);
+            new n = DB_GetRowCount(res);
+            for (new r = 0; r < n; r++, DB_SelectNextRow(res))
+            {
+                gPcObjava[playerid][r] = DB_GetFieldInt(res, 0);
+                DB_GetFieldString(res, 1, naslov, sizeof naslov);
+                DB_GetFieldString(res, 2, ime, sizeof ime);
+                DB_GetFieldString(res, 3, datum, sizeof datum);
+                TdCisti(naslov);
+                TdCisti(ime);
+                format(red, sizeof red, "~r~%s~n~~b~%s, %s", naslov, ime, datum);
+                PcPostavi(playerid, PTD_OBJAVA + r, red);
+            }
+            DB_FreeResultSet(res);
+            if (n) PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "~r~LS NEWS"));
+            else PcPostavi(playerid, PTD_SADRZAJ, T(playerid, "Jos nema vijesti."));
+            if (clan) LsAkcije(playerid, T(playerid, "Napisi clanak"), T(playerid, "Reklame"));
+            else LsAkcije(playerid, "");
+        }
+    }
+    return 1;
+}
+
+static VijestiOsvjeziSve()
+{
+    for (new k = 0, kZadnji = gIgracZadnji; k <= kZadnji; k++) if (gPcOtvoren[k] && gPcEkran[k] == PCE_VIJESTI) PcEkran(k, PCE_VIJESTI);
+}
+
+static VijestiKlik(playerid, PlayerText:td)
+{
+    for (new r = 0; r < OBJAVA_REDOVA; r++)
+    {
+        if (td != gPc[playerid][PTD_OBJAVA + r] || !gPcObjava[playerid][r]) continue;
+        if (gViPogled[playerid] == VI_LISTA)
+        {
+            gViPogled[playerid] = VI_CLANAK;
+            gViCilj[playerid] = gPcObjava[playerid][r];
+        }
+        else if (gViPogled[playerid] == VI_REKLAME) gViOdabran[playerid] = gViOdabran[playerid] == gPcObjava[playerid][r] ? 0 : gPcObjava[playerid][r];
+        PcEkran(playerid, PCE_VIJESTI);
+        return 1;
+    }
+    new i = -1;
+    for (new a = 0; a < 4; a++) if (td == gPc[playerid][PTD_AKCIJA + a]) i = a;
+    if (i == -1) return 1;
+    new bool:clan = VijestiClan(playerid), s[160];
+    switch (gViPogled[playerid])
+    {
+        case VI_LISTA:
+        {
+            if (!clan) return 1;
+            if (i == 1)
+            {
+                gViPogled[playerid] = VI_REKLAME;
+                gViOdabran[playerid] = 0;
+                PcEkran(playerid, PCE_VIJESTI);
+                return 1;
+            }
+            format(s, sizeof s, T(playerid, "Naslov clanka (najvise %d znakova):"), VIJEST_NASLOV);
+            PcUnos(playerid, PC_VIJEST_NASLOV, s);
+        }
+        case VI_CLANAK:
+        {
+            new bool:brisi = i == 1 && clan;
+            if (brisi)
+            {
+                if (!PcPotvrdi(playerid, 1, PP_VIJEST)) return 1;
+                DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM lsn_clanci WHERE id = %d", gViCilj[playerid]));
+                PcJavi(playerid, false, T(playerid, "Clanak je obrisan."));
+            }
+            gViPogled[playerid] = VI_LISTA;
+            if (brisi) VijestiOsvjeziSve();
+            else PcEkran(playerid, PCE_VIJESTI);
+        }
+        case VI_REKLAME:
+        {
+            if (!i || !clan)
+            {
+                gViPogled[playerid] = VI_LISTA;
+                PcEkran(playerid, PCE_VIJESTI);
+                return 1;
+            }
+            if (i == 1)
+            {
+                if (ReklameBroj() >= REKLAMA_MAX)
+                {
+                    format(s, sizeof s, T(playerid, "Sva mjesta za reklame su zauzeta (%d)."), REKLAMA_MAX);
+                    return PcJavi(playerid, true, s);
+                }
+                format(s, sizeof s, T(playerid, "Tekst reklame (najvise %d znakova, znak | za novi red). Traje %d dana:"), REKLAMA_LEN, REKLAMA_DANA);
+                PcUnos(playerid, PC_REKLAMA, s);
+                return 1;
+            }
+            if (!gViOdabran[playerid] || !PcPotvrdi(playerid, 2, PP_REKLAMA)) return 1;
+            ReklamaObrisi(gViOdabran[playerid]);
+            gViOdabran[playerid] = 0;
+            PcJavi(playerid, false, T(playerid, "Reklama je obrisana."));
+            VijestiOsvjeziSve();
+        }
+    }
+    return 1;
+}
+
+static VijestiTekstUnos(playerid)
+{
+    new s[220];
+    format(s, sizeof s, T(playerid, "Tekst clanka (%d/%d znakova). Upisite sljedeci dio ili ostavite prazno i potvrdite za objavu:"), strlen(gViTekst[playerid]), VIJEST_TEKST);
+    return PcUnos(playerid, PC_VIJEST_TEKST, s);
+}
+
+static VijestiObjavi(playerid)
+{
+    if (!PcBlizu(playerid) || !VijestiClan(playerid) || !gViNaslov[playerid][0] || !gViTekst[playerid][0]) return PcNatrag(playerid);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO lsn_clanci (account, naslov, tekst, created) VALUES (%d, '%q', '%q', %d)", gAccountId[playerid], gViNaslov[playerid], gViTekst[playerid], gettime()));
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i]) SendClientMessage(i, 0xC62828FF, T(i, "[LS News] Nova vijest: %s"), gViNaslov[playerid]);
+    gViNaslov[playerid][0] = EOS;
+    gViTekst[playerid][0] = EOS;
+    gViPogled[playerid] = VI_LISTA;
+    PcJavi(playerid, false, T(playerid, "Clanak je objavljen."));
+    VijestiOsvjeziSve();
+    return PcNatrag(playerid);
+}
+
 static PcUnos(playerid, akcija, const tekst[])
 {
     gPcAkcija[playerid] = akcija;
@@ -1767,9 +1971,9 @@ PcKlik(playerid, PlayerText:td)
         PcZatvori(playerid);
         return 1;
     }
-    for (new k = 0; k < 5; k++)
+    for (new k = 0; k < sizeof gPcAplikacije - 1; k++)
     {
-        if (td != gPc[playerid][PTD_START_PANEL + 11 + k]) continue;
+        if (td != gPc[playerid][PTD_START_PANEL + 12 + k]) continue;
         PcEkran(playerid, k + 1);
         return 1;
     }
@@ -1845,6 +2049,7 @@ PcKlik(playerid, PlayerText:td)
         return PcUnos(playerid, PC_KOLICINA, tekst);
     }
     if (gPcEkran[playerid] == PCE_LIFESTALKER && LsKlik(playerid, td)) return 1;
+    if (gPcEkran[playerid] == PCE_VIJESTI) return VijestiKlik(playerid, td);
     if (gPcEkran[playerid] == PCE_OGLASI && gPcMojiOglasi[playerid])
     {
         for (new r = 0; r < OBJAVA_REDOVA; r++)
@@ -2495,6 +2700,7 @@ static KladObracun()
 DLG:pc_unos(playerid, response, const inputtext[])
 {
     if (!gPcOtvoren[playerid]) return 1;
+    if (response && !inputtext[0] && gPcAkcija[playerid] == PC_VIJEST_TEKST) return VijestiObjavi(playerid);
     if (!response || !inputtext[0] || !PcBlizu(playerid)) return PcNatrag(playerid);
     switch (gPcAkcija[playerid])
     {
@@ -2508,6 +2714,34 @@ DLG:pc_unos(playerid, response, const inputtext[])
         {
             new n = ProvjeriBroj(inputtext) && strlen(inputtext) <= 5 ? strval(inputtext) : 0;
             if (n >= 1 && n <= DIONICA_MAX_KOM) gPcKolicina[playerid] = n;
+        }
+        case PC_VIJEST_NASLOV:
+        {
+            if (!VijestiClan(playerid)) return PcNatrag(playerid);
+            gViNaslov[playerid][0] = EOS;
+            gViTekst[playerid][0] = EOS;
+            strcat(gViNaslov[playerid], inputtext, VIJEST_NASLOV + 1);
+            RemoveBoje(gViNaslov[playerid]);
+            return VijestiTekstUnos(playerid);
+        }
+        case PC_VIJEST_TEKST:
+        {
+            if (gViTekst[playerid][0]) strcat(gViTekst[playerid], " ", VIJEST_TEKST + 1);
+            strcat(gViTekst[playerid], inputtext, VIJEST_TEKST + 1);
+            if (strlen(gViTekst[playerid]) >= VIJEST_TEKST) return VijestiObjavi(playerid);
+            return VijestiTekstUnos(playerid);
+        }
+        case PC_REKLAMA:
+        {
+            if (!VijestiClan(playerid)) return PcNatrag(playerid);
+            if (ReklamaDodaj(playerid, inputtext)) PcJavi(playerid, false, T(playerid, "Reklama je postavljena na jumbo plakate."));
+            else
+            {
+                new s[96];
+                format(s, sizeof s, T(playerid, "Sva mjesta za reklame su zauzeta (%d)."), REKLAMA_MAX);
+                PcJavi(playerid, true, s);
+            }
+            VijestiOsvjeziSve();
         }
         case PC_KOMENTAR, PC_PORUKA, PC_PRIJATELJ, PC_PORUKA_KOME, PC_TRAZI, PC_GRUPA_IME, PC_GRUPA_PORUKA: LsUnos(playerid, gPcAkcija[playerid], inputtext);
         case PC_OBJAVA:

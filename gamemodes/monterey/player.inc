@@ -23,6 +23,7 @@ public OnPlayerConnect(playerid)
     MapaMontereyPeakUkloni(playerid);
     MapaGlenParkUkloni(playerid);
     BrodUkloni(playerid);
+    PlakatiUkloni(playerid);
     if (IsPlayerNPC(playerid)) return 1;
     new ljudi = 0;
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) ljudi++;

@@ -2371,7 +2371,27 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Kamera u prvom licu je iskljucena.", "First person camera is off.", "Камера от первого лица выключена.", "Camara en primera persona desactivada.", "Birinci sahis kamera kapali." },
     { "  Kamera: /fps (prvo lice)", "  Camera: /fps (first person)", "  Камера: /fps (от первого лица)", "  Camara: /fps (primera persona)", "  Kamera: /fps (birinci sahis)" },
     { "Kutija robe", "Box of goods", "Коробка товара", "Caja de mercancia", "Mal kutusu" },
-    { "Gradska banka", "City bank", "Городской банк", "Banco de la ciudad", "Sehir bankasi" }
+    { "Gradska banka", "City bank", "Городской банк", "Banco de la ciudad", "Sehir bankasi" },
+    { "LS News", "LS News", "LS News", "LS News", "LS News" },
+    { "Napisi clanak", "Write article", "Napisat statyu", "Escribir articulo", "Makale yaz" },
+    { "Reklame", "Ads", "Reklama", "Anuncios", "Reklamlar" },
+    { "Nova reklama", "New ad", "Novaya reklama", "Nuevo anuncio", "Yeni reklam" },
+    { "Obrisi reklamu", "Delete ad", "Udalit reklamu", "Eliminar anuncio", "Reklami sil" },
+    { "Obrisi clanak", "Delete article", "Udalit statyu", "Eliminar articulo", "Makaleyi sil" },
+    { "~r~LS NEWS", "~r~LS NEWS", "~r~LS NEWS", "~r~LS NEWS", "~r~LS NEWS" },
+    { "Jos nema vijesti.", "No news yet.", "Novostey poka net.", "Aun no hay noticias.", "Henuz haber yok." },
+    { "Nema aktivnih reklama.", "No active ads.", "Net aktivnoy reklamy.", "No hay anuncios activos.", "Aktif reklam yok." },
+    { "~r~Reklame~n~~l~%d/%d", "~r~Ads~n~~l~%d/%d", "~r~Reklama~n~~l~%d/%d", "~r~Anuncios~n~~l~%d/%d", "~r~Reklamlar~n~~l~%d/%d" },
+    { "%s%s~n~~b~jos %d d.", "%s%s~n~~b~%d d. left", "%s%s~n~~b~eshche %d dn.", "%s%s~n~~b~quedan %d d.", "%s%s~n~~b~%d gun kaldi" },
+    { "Clanak je objavljen.", "Article published.", "Statya opublikovana.", "Articulo publicado.", "Makale yayinlandi." },
+    { "Clanak je obrisan.", "Article deleted.", "Statya udalena.", "Articulo eliminado.", "Makale silindi." },
+    { "Reklama je postavljena na jumbo plakate.", "The ad is now on the billboards.", "Reklama razmeshchena na bilbordakh.", "El anuncio esta en las vallas.", "Reklam bilbordlara yerlestirildi." },
+    { "Reklama je obrisana.", "Ad deleted.", "Reklama udalena.", "Anuncio eliminado.", "Reklam silindi." },
+    { "Sva mjesta za reklame su zauzeta (%d).", "All ad slots are taken (%d).", "Vse mesta dlya reklamy zanyaty (%d).", "Todos los espacios de anuncios estan ocupados (%d).", "Tum reklam yerleri dolu (%d)." },
+    { "Naslov clanka (najvise %d znakova):", "Article title (max %d characters):", "Заголовок статьи (не более %d символов):", "Titulo del articulo (max %d caracteres):", "Makale basligi (en fazla %d karakter):" },
+    { "Tekst clanka (%d/%d znakova). Upisite sljedeci dio ili ostavite prazno i potvrdite za objavu:", "Article text (%d/%d characters). Type the next part, or leave it empty and confirm to publish:", "Текст статьи (%d/%d символов). Введите следующую часть или оставьте пустым и подтвердите для публикации:", "Texto del articulo (%d/%d caracteres). Escribe la siguiente parte o dejalo vacio y confirma para publicar:", "Makale metni (%d/%d karakter). Sonraki kismi yazin veya yayinlamak icin bos birakip onaylayin:" },
+    { "Tekst reklame (najvise %d znakova, znak | za novi red). Traje %d dana:", "Ad text (max %d characters, | for a new line). Lasts %d days:", "Текст рекламы (не более %d символов, | для новой строки). Действует %d дней:", "Texto del anuncio (max %d caracteres, | para nueva linea). Dura %d dias:", "Reklam metni (en fazla %d karakter, yeni satir icin |). %d gun surer:" },
+    { "[LS News] Nova vijest: %s", "[LS News] Breaking: %s", "[LS News] Новая статья: %s", "[LS News] Nueva noticia: %s", "[LS News] Yeni haber: %s" }
 };
 static gTekstHash[TEKST_HASH] = { -1, ... };
 
