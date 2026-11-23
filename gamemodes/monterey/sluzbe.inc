@@ -172,7 +172,8 @@ static KamionNovi(playerid, tip)
     new Float:x, Float:y, Float:z, Float:a, Float:d, k = 0;
     GetPlayerPos(playerid, x, y, z);
     GetPlayerFacingAngle(playerid, a);
-    CestaNajbliza(x, y, z, d);
+    new Float:cx, Float:cy, Float:cz;
+    d = Lik_Cesta(x, y, z, cx, cy, cz);
     while (k < KAMION_MAX && gKamion[k][kIma]) k++;
     if (k == KAMION_MAX || KamionBroj(tip) >= KAMION_PO_TIPU || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE || !KamionStvori(k, tip, x, y, z + 0.5, a))
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo se ovdje ne moze stvoriti."));
@@ -471,7 +472,7 @@ SlucajNpcStigao(lik)
             return 1;
         }
         gSlucaj[s][slStanje] = SL_GASI;
-        Lik_NaciljaTocku(lik, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ] - CESTA_Z_VOZILA, true);
+        Lik_NaciljaTocku(lik, gSlucaj[s][slX], gSlucaj[s][slY], gSlucaj[s][slZ] - 0.8, true);
         return 1;
     }
     if (st == SL_ODLAZI)
@@ -737,7 +738,7 @@ static SlucajNovi(tip, Float:x, Float:y, Float:z, pacijent = INVALID_PLAYER_ID)
     gSlucaj[s][slPoziv] = SLUCAJ_POZIV_S;
     if (vatra)
     {
-        new Float:hx, Float:hy, Float:tlo = z - CESTA_Z_VOZILA;
+        new Float:hx, Float:hy, Float:tlo = z - 0.8;
         Kolizija_Zraka(x, y, z, x, y, z - 20.0, hx, hy, tlo);
         gSlucaj[s][slObjekt] = CreateDynamicObject(SLUCAJ_OBJEKT, x, y, tlo - SLUCAJ_VATRA_DUBINA, 0.0, 0.0, 0.0, 0);
     }
@@ -911,7 +912,8 @@ MehanicarPozovi(playerid)
         if (gSlucaj[s][slStanje] && gSlucaj[s][slStanje] < SL_ODLAZI && gSlucaj[s][slTip] == ORG_MEHANICAR && gSlucaj[s][slPacijent] == playerid)
             return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar je vec na putu."));
     GetVehiclePos(v, x, y, z);
-    CestaNajbliza(x, y, z, d);
+    new Float:cx, Float:cy, Float:cz;
+    d = Lik_Cesta(x, y, z, cx, cy, cz);
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mehanicar dolazi samo na ulice Los Santosa."));
     if ((!KamionBroj(ORG_MEHANICAR) && !SlucajImaIgraca(ORG_MEHANICAR, playerid)) || SlucajNovi(ORG_MEHANICAR, x, y, z, playerid) == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi mehanicari su zauzeti, pokusajte kasnije."));
     gMehanicarVozilo[playerid] = v;

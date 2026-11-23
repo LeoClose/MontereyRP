@@ -880,6 +880,15 @@ static HeliKradja(playerid)
     if (HeliVidi(playerid, vijest)) HeliPrijava(playerid);
 }
 
+VoziloSmjer(v, &Float:x, &Float:y, &Float:z, &Float:fx, &Float:fy)
+{
+    new Float:a;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    fx = -floatsin(a, degrees);
+    fy = floatcos(a, degrees);
+}
+
 HeliMrtav(v)
 {
     for (new i = 0; i < HELI_BROJ; i++)

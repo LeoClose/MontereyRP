@@ -1,4 +1,6 @@
 #define TAKSI_FLOTA         16
+#define TAKSI_MAX_TOCAKA    1536
+#define TAKSI_PROSJEK       11.0
 #define TAKSI_PREMIUM       4
 #define TAKSI_SLOTOVA       (TAKSI_FLOTA + TAKSI_PREMIUM)
 #define TAKSI_MODEL         420
@@ -52,9 +54,9 @@
 
 enum { TX_SLOBODAN, TX_DOLAZI, TX_CEKA, TX_KARTA, TX_POTVRDA, TX_VOZI, TX_TELEPORT, TX_IZLAZ, TX_ODLAZI, TX_KUCI, TX_KRAJ, TX_NESTAO, TX_NEMA }
 static Float:gTaksiPoziv[MAX_PLAYERS][2];
-enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, tRok, tKlik, tKuca, tSkok, tCeka, tProguraj, tSporo, tDb, tStaje, tRub, tMetar, bool:tZavrsi, bool:tBrzo, bool:tObilazi, Float:tCiljX, Float:tCiljY }
+enum E_TAKSI { tStanje, tMusterija, tNpc, tVozilo, tZnak, tBroj, tIdx, tCijena, tRok, tKlik, tSkok, tCeka, tProguraj, tSporo, tDb, tStaje, tRub, tMetar, bool:tZavrsi, bool:tBrzo, bool:tObilazi, Float:tCiljX, Float:tCiljY }
 static gTaksi[TAKSI_SLOTOVA][E_TAKSI];
-static Float:gTaksiTocke[TAKSI_SLOTOVA][CESTA_MAX_TOCAKA][4];
+static Float:gTaksiTocke[TAKSI_SLOTOVA][TAKSI_MAX_TOCAKA][3], Float:gTaksiBuf[TAKSI_MAX_TOCAKA * 3], Float:gTaksiKuca[TAKSI_SLOTOVA][3];
 static gTaksiOd[MAX_PLAYERS], gTaksiCeka[MAX_PLAYERS], gTaksiPonuda[MAX_PLAYERS], bool:gTaksiVozac[MAX_PLAYERS];
 static bool:gTaksiMetar[MAX_PLAYERS];
 static Text:gFade[FADE_SLOJEVA];
@@ -80,10 +82,49 @@ static TaksiMotor(s, motor)
     SetVehicleParamsEx(gTaksi[s][tVozilo], motor, motor, a, d, bn, bt, o);
 }
 
+static TaksiPrimiRutu(s, n, &sekundi)
+{
+    if (n < 2) return -1;
+    new Float:m = 0.0;
+    for (new i = 0; i < n; i++)
+    {
+        gTaksiTocke[s][i][0] = gTaksiBuf[i * 3];
+        gTaksiTocke[s][i][1] = gTaksiBuf[i * 3 + 1];
+        gTaksiTocke[s][i][2] = gTaksiBuf[i * 3 + 2];
+        if (i) m += VectorSize(gTaksiTocke[s][i][0] - gTaksiTocke[s][i - 1][0], gTaksiTocke[s][i][1] - gTaksiTocke[s][i - 1][1], 0.0);
+    }
+    gTaksi[s][tBroj] = n;
+    sekundi = floatround(m / TAKSI_PROSJEK, floatround_ceil);
+    return floatround(m * 10.0);
+}
+
+static TaksiNastavi(s)
+{
+    new Float:x, Float:y, Float:z, Float:fx, Float:fy;
+    VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
+    while (gTaksi[s][tIdx] < gTaksi[s][tBroj] - 1)
+    {
+        new i = gTaksi[s][tIdx], Float:dx = gTaksiTocke[s][i][0] - x, Float:dy = gTaksiTocke[s][i][1] - y;
+        if (dx * fx + dy * fy > 4.0 || VectorSize(dx, dy, 0.0) > 30.0) break;
+        gTaksi[s][tIdx]++;
+    }
+}
+
+static TaksiSlobodno(Float:x, Float:y, Float:z, Float:px, Float:py, Float:pz)
+{
+    new Float:dx = px - x, Float:dy = py - y, Float:d = VectorSize(dx, dy, 0.0);
+    if (d < 0.1) return 1;
+    new Float:bx = -dy / d * 0.9, Float:by = dx / d * 0.9;
+    return !Kolizija_Zraka(x, y, z, px, py, pz) && !Kolizija_Zraka(x + bx, y + by, z, px + bx, py + by, pz) && !Kolizija_Zraka(x - bx, y - by, z, px - bx, py - by, pz);
+}
+
 static TaksiUzRub(s, n)
 {
-    new Float:dx, Float:dy;
-    if (!CestaSmjer(dx, dy)) return;
+    if (n < 2) return;
+    new Float:dx = gTaksiTocke[s][n - 1][0] - gTaksiTocke[s][n - 2][0], Float:dy = gTaksiTocke[s][n - 1][1] - gTaksiTocke[s][n - 2][1], Float:dd = VectorSize(dx, dy, 0.0);
+    if (dd < 0.01) return;
+    dx /= dd;
+    dy /= dd;
     new Float:ex = gTaksiTocke[s][n - 1][0] + dy * TAKSI_RUB, Float:ey = gTaksiTocke[s][n - 1][1] - dx * TAKSI_RUB;
     for (new i = n - 1; i >= 1; i--)
     {
@@ -112,10 +153,13 @@ static TaksiVozilo(s, Float:x, Float:y, Float:z, Float:a)
 
 static bool:TaksiStanica(s, Float:x, Float:y, Float:z)
 {
-    new Float:d, n, sek, kuca = CestaNajbliza(x, y, z, d, z == 0.0);
-    if (d > TAKSI_MAX_OD_CESTE || CestaPut(CestaIza(kuca, 40.0), kuca, gTaksiTocke[s], CESTA_MAX_TOCAKA, n, sek) <= 0 || n < 2) return false;
+    new Float:kx, Float:ky, Float:kz, sek;
+    if (Lik_Cesta(x, y, z, kx, ky, kz) > TAKSI_MAX_OD_CESTE || TaksiPrimiRutu(s, Lik_RutaDo(kx, ky, kz, 40.0, gTaksiBuf), sek) <= 0) return false;
+    new n = gTaksi[s][tBroj];
     TaksiUzRub(s, n);
-    gTaksi[s][tKuca] = kuca;
+    gTaksiKuca[s][0] = kx;
+    gTaksiKuca[s][1] = ky;
+    gTaksiKuca[s][2] = kz;
     gTaksiPoza[s][0] = gTaksiTocke[s][n - 1][0];
     gTaksiPoza[s][1] = gTaksiTocke[s][n - 1][1];
     gTaksiPoza[s][2] = gTaksiTocke[s][n - 1][2];
@@ -232,7 +276,6 @@ DLG:apanel_taksi_brisi(playerid, response)
 
 InitTaksi()
 {
-    InitCesta();
     new va = CreateVehicle(TAKSI_MODEL, 0.0, 0.0, 3.0, 0.0, 0, 0, -1), vb = CreateVehicle(TAKSI_MODEL, 5.0, 0.0, 3.0, 0.0, 0, 0, -1), vn = gVozilaCount;
     DestroyVehicle(va);
     assert(gVozilaCount == vn - 1 && !gVoziloMjesto[va] && gVozila[gVoziloMjesto[vb] - 1] == vb);
@@ -320,12 +363,23 @@ static TaksiNajblizaBaza(Float:x, Float:y)
     return best;
 }
 
-static TaksiPutOdVozila(s, cilj, &sekundi = 0)
+static TaksiPutOdVozila(s, Float:tx, Float:ty, Float:tz, &sekundi = 0)
 {
     new Float:x, Float:y, Float:z, Float:a;
     GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
     GetVehicleZAngle(gTaksi[s][tVozilo], a);
-    return CestaPut(CestaPocetak(x, y, z, a), cilj, gTaksiTocke[s], CESTA_MAX_TOCAKA, gTaksi[s][tBroj], sekundi, true, x, y, z, a);
+    new n = Lik_Ruta(x, y, a, tx, ty, tz, gTaksiBuf);
+    if (n == 1)
+    {
+        gTaksiBuf[3] = gTaksiBuf[0];
+        gTaksiBuf[4] = gTaksiBuf[1];
+        gTaksiBuf[5] = gTaksiBuf[2];
+        gTaksiBuf[0] = x;
+        gTaksiBuf[1] = y;
+        gTaksiBuf[2] = z;
+        n = 2;
+    }
+    return TaksiPrimiRutu(s, n, sekundi);
 }
 
 static TaksiKorak(s)
@@ -406,7 +460,7 @@ TaksiPrekini(s)
 static TaksiOtidi(s)
 {
     TaksiIsprazni(s);
-    new p = gTaksi[s][tMusterija], Float:x, Float:y, Float:z, Float:d, cilj = gTaksi[s][tKuca];
+    new p = gTaksi[s][tMusterija], Float:x, Float:y, Float:z, Float:cx = gTaksiKuca[s][0], Float:cy = gTaksiKuca[s][1], Float:cz = gTaksiKuca[s][2];
     SetVehicleParamsForPlayer(gTaksi[s][tVozilo], p, 0, 0);
     gTaksiOd[p] = 0;
     gTaksi[s][tMusterija] = INVALID_PLAYER_ID;
@@ -422,9 +476,9 @@ static TaksiOtidi(s)
     if (s >= TAKSI_FLOTA)
     {
         new b = TaksiNajblizaBaza(x, y);
-        cilj = CestaNajbliza(gTaksiBaza[b][0], gTaksiBaza[b][1], gTaksiBaza[b][2], d);
+        Lik_Cesta(gTaksiBaza[b][0], gTaksiBaza[b][1], gTaksiBaza[b][2], cx, cy, cz);
     }
-    if (TaksiPutOdVozila(s, cilj) < 0)
+    if (TaksiPutOdVozila(s, cx, cy, cz) < 0)
     {
         gTaksi[s][tStanje] = TX_KRAJ;
         return;
@@ -455,12 +509,12 @@ static TaksiNajbliziSlobodan(Float:x, Float:y)
     return best;
 }
 
-static PremiumPrilaz(s, cilj, &sekundi)
+static PremiumPrilaz(s, Float:cx, Float:cy, Float:cz, &sekundi)
 {
     new duljina = -1;
     for (new Float:m = PREMIUM_METARA; m <= PREMIUM_METARA_MAX; m += 15.0)
     {
-        duljina = CestaPut(CestaIza(cilj, m), cilj, gTaksiTocke[s], CESTA_MAX_TOCAKA, gTaksi[s][tBroj], sekundi);
+        duljina = TaksiPrimiRutu(s, Lik_RutaDo(cx, cy, cz, m, gTaksiBuf), sekundi);
         if (duljina >= 0 && !TaksiNaVidiku(gTaksiTocke[s][0][0], gTaksiTocke[s][0][1], gTaksiTocke[s][0][2])) break;
     }
     return duljina;
@@ -474,7 +528,8 @@ TaksiPozovi(playerid)
     if (IsPlayerInAnyVehicle(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Izadite iz vozila da biste pozvali taksi."));
     new Float:x, Float:y, Float:z, Float:d;
     GetPlayerPos(playerid, x, y, z);
-    CestaNajbliza(x, y, z, d);
+    new Float:cx, Float:cy, Float:cz;
+    d = Lik_Cesta(x, y, z, cx, cy, cz);
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || d > TAKSI_MAX_OD_CESTE)
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Taksi sluzba radi samo na ulicama Los Santosa."));
     if (TaksiPonudiIgracima(playerid, x, y, z))
@@ -550,9 +605,9 @@ public OnPlayerEnterCheckpoint(playerid)
 
 static TaksiNpcPoziv(playerid, bool:telefon)
 {
-    new Float:x, Float:y, Float:z, Float:d;
+    new Float:x, Float:y, Float:z, Float:cx, Float:cy, Float:cz;
     GetPlayerPos(playerid, x, y, z);
-    new cilj = CestaNajbliza(x, y, z, d);
+    Lik_Cesta(x, y, z, cx, cy, cz);
     new s = -1, sekundi, duljina = -1;
     if (gPremium[playerid] && GetWanted(playerid)) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Premium taksi nije dostupan dok vas policija trazi."));
     else if (gPremium[playerid] && NaPoslu(playerid)) SendClientMessage(playerid, COLOR_POMOC, T(playerid, "Pomoc: Premium taksi nije dostupan dok radite."));
@@ -561,12 +616,12 @@ static TaksiNpcPoziv(playerid, bool:telefon)
         s = TAKSI_FLOTA;
         while (s < TAKSI_SLOTOVA && gTaksi[s][tStanje] != TX_SLOBODAN) s++;
         if (s == TAKSI_SLOTOVA) s = -1;
-        else duljina = PremiumPrilaz(s, cilj, sekundi);
+        else duljina = PremiumPrilaz(s, cx, cy, cz, sekundi);
     }
     else
     {
         s = TaksiNajbliziSlobodan(x, y);
-        if (s != -1) duljina = TaksiPutOdVozila(s, cilj, sekundi);
+        if (s != -1) duljina = TaksiPutOdVozila(s, cx, cy, cz, sekundi);
     }
     new bool:imaVozaca = s != -1 && gTaksi[s][tNpc] != INVALID_LIK;
     if (duljina < 0 || (!imaVozaca && !TaksiNoviVozac(s))) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi taksiji su zauzeti, pokusajte kasnije."));
@@ -665,7 +720,7 @@ TaksiNaRub(s, ms = TAKSI_POLICIJA_MS)
     gTaksi[s][tCeka] = 0;
     gTaksi[s][tObilazi] = false;
     new Float:bok = TAKSI_RUB * 0.6;
-    if (!CestaSlobodno(x, y, z, x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z)) bok = 0.0;
+    if (!TaksiSlobodno(x, y, z, x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z)) bok = 0.0;
     Lik_Vozi(gTaksi[s][tNpc], x + fx * TAKSI_RUB_PRVI + fy * bok, y + fy * TAKSI_RUB_PRVI - fx * bok, z, brzina, false);
 }
 
@@ -675,7 +730,7 @@ static TaksiRubKraj(s)
     VoziloSmjer(gTaksi[s][tVozilo], x, y, z, fx, fy);
     gTaksi[s][tRub] = 2;
     new Float:bok = TAKSI_RUB * 0.4;
-    if (!CestaSlobodno(x, y, z, x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z)) bok = 0.0;
+    if (!TaksiSlobodno(x, y, z, x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z)) bok = 0.0;
     Lik_Vozi(gTaksi[s][tNpc], x + fx * TAKSI_RUB_DRUGI + fy * bok, y + fy * TAKSI_RUB_DRUGI - fx * bok, z, TAKSI_RUB_SPORO, false);
 }
 
@@ -698,7 +753,7 @@ public TaksiPrepreke()
                     TaksiZavrsiRano(s);
                     continue;
                 }
-                CestaNastavi(gTaksi[s][tVozilo], gTaksiTocke[s], gTaksi[s][tBroj], gTaksi[s][tIdx]);
+                TaksiNastavi(s);
                 TaksiKorak(s);
             }
             continue;
@@ -842,8 +897,9 @@ TaksiPovratak(playerid)
     new Float:d, Float:cx = gTaksi[s][tCiljX], Float:cy = gTaksi[s][tCiljY];
     gTaksi[s][tKlik] = 0;
     gTaksi[s][tRok] = GetTickCount() + TAKSI_ODREDISTE_MS;
-    new cilj = CestaNajbliza(cx, cy, 0.0, d, true);
-    new duljina = d > TAKSI_MAX_OD_CESTE ? -1 : TaksiPutOdVozila(s, cilj);
+    new Float:kx, Float:ky, Float:kz;
+    d = Lik_Cesta(cx, cy, 0.0, kx, ky, kz);
+    new duljina = d > TAKSI_MAX_OD_CESTE ? -1 : TaksiPutOdVozila(s, kx, ky, kz);
     if (duljina < TAKSI_MIN_VOZNJA)
     {
         TaksiVozac(s, playerid, "Vozac kaze: Onamo ne mogu, zao mi je. Mozete li odabrati drugo mjesto?");
