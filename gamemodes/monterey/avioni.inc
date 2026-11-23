@@ -357,6 +357,7 @@ static AvionPauza(i)
 
 InitAvioni()
 {
+    ZoneAerodromi();
     for (new i = 0; i < AVION_SLOTOVA; i++) gAvionNpc[i] = INVALID_LIK;
     for (new i = 0; i < AVION_JAVNI; i++)
     {

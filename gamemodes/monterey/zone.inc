@@ -1,3 +1,5 @@
+#define ZONA_AERODROM       3000
+
 enum E_ZONA { Float:zMinX, Float:zMinY, Float:zMaxX, Float:zMaxY, zIme[28] }
 new const gZona[][E_ZONA] = {
 {-1632.8,-2263.4,-1601.3,-2231.8,"Shady Cabin"},
@@ -195,6 +197,16 @@ new const gZona[][E_ZONA] = {
 {-1213.9,-768.0,2997.1,596.3,"Red County"},
 {44.6,-2893.0,2997.1,-768.0,"Los Santos"}
 };
+
+ZoneAerodromi()
+{
+    for (new i = 0; i < sizeof gZona; i++)
+    {
+        Lik_UkloniZonu(ZONA_AERODROM + i);
+        if ((!strcmp(gZona[i][zIme], "Los Santos International") && gZona[i][zMaxY] <= -2394.0) || !strcmp(gZona[i][zIme], "Easter Bay Airport"))
+            Lik_Zona(ZONA_AERODROM + i, gZona[i][zMinX], gZona[i][zMinY], gZona[i][zMaxX], gZona[i][zMaxY], 0.0);
+    }
+}
 
 CestaZona(Float:x, Float:y)
 {
