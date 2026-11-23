@@ -1223,24 +1223,27 @@ TaksiTick()
         if (st == TX_SLOBODAN && s < TAKSI_FLOTA)
         {
             GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-            if (gTaksi[s][tNpc] == INVALID_LIK)
+            new bool:doma = VectorSize(x - gTaksiPoza[s][0], y - gTaksiPoza[s][1], 0.0) < 25.0, bool:skriven = !TaksiVidljivo(x, y, z, TAKSI_SKRIVENO + 50.0) && !TaksiVidljivo(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
+            if (!doma && skriven)
             {
-                if (parkirani < TAKSI_MAX_PARKIRANIH && TaksiVidljivo(x, y, z) && TaksiNoviVozac(s))
+                TaksiBezVozaca(s);
+                TaksiMotor(s, 0);
+                SetVehiclePos(gTaksi[s][tVozilo], gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
+                SetVehicleZAngle(gTaksi[s][tVozilo], gTaksiPoza[s][3]);
+            }
+            else if (gTaksi[s][tNpc] == INVALID_LIK)
+            {
+                if ((!doma || parkirani < TAKSI_MAX_PARKIRANIH) && TaksiVidljivo(x, y, z) && TaksiNoviVozac(s))
                 {
                     Lik_UVozilo(gTaksi[s][tNpc], gTaksi[s][tVozilo], 0);
                     SetTimerEx("TaksiKreniKruziti", 1500, false, "i", s);
                     parkirani++;
                 }
             }
-            else if (!TaksiVidljivo(x, y, z, TAKSI_SKRIVENO + 50.0))
+            else if (doma && skriven)
             {
                 TaksiBezVozaca(s);
                 TaksiMotor(s, 0);
-                if (!TaksiVidljivo(gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]))
-                {
-                    SetVehiclePos(gTaksi[s][tVozilo], gTaksiPoza[s][0], gTaksiPoza[s][1], gTaksiPoza[s][2]);
-                    SetVehicleZAngle(gTaksi[s][tVozilo], gTaksiPoza[s][3]);
-                }
                 parkirani--;
             }
             else if (!Lik_Krece(gTaksi[s][tNpc]) && Lik_Zaglavio(gTaksi[s][tNpc], 8000)) TaksiKruzi(s);
