@@ -307,64 +307,100 @@ public OnPlayerCommandText(playerid, cmdtext[])
     return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Komanda ne postoji, /help za spisak svih komandi"));
 }
 
+static PomocPisi(out[], &len, const dio[])
+{
+    for (new i = 0; dio[i] && len < 4094; i++) out[len++] = dio[i];
+    out[len] = EOS;
+}
+
+static PomocRed(out[], &len, const red[])
+{
+    new n = strlen(red), i = 0, dv = strfind(red, ":"), kom = strfind(red, "/"), bool:komanda = false;
+    while (i < n && red[i] == ' ') i++;
+    if (dv != -1 && (kom == -1 || dv < kom))
+    {
+        PomocPisi(out, len, "{8AB4F8}");
+        for (; i <= dv && len < 4094; i++) out[len++] = red[i];
+        PomocPisi(out, len, "{FFFFFF}");
+    }
+    for (; i < n && len < 4080; i++)
+    {
+        new c = red[i];
+        if (c == '/' && (i == 0 || red[i - 1] == ' ' || red[i - 1] == '(' || red[i - 1] == ','))
+        {
+            PomocPisi(out, len, "{FFD54F}");
+            komanda = true;
+        }
+        else if (komanda && (c == ' ' || c == ',' || c == ')'))
+        {
+            PomocPisi(out, len, "{FFFFFF}");
+            komanda = false;
+        }
+        out[len++] = c;
+    }
+    out[len] = EOS;
+    if (komanda) PomocPisi(out, len, "{FFFFFF}");
+    PomocPisi(out, len, "\n");
+}
+
 CMD:help(playerid, params[])
 {
-    new list[4096], len = 0;
-    DodajStupac(list, len, T(playerid, "  Chat: /me [radnja], /do [opis], /setme [opis lika], /showme [id/ime]"));
-    DodajStupac(list, len, T(playerid, "  Govor: /w (sapat), /s ili /shout (vika), /ooc (izvan uloge)"));
-    DodajStupac(list, len, T(playerid, "  Bez prijevoda: /t (govor), /wt (sapat), /st (vika)"));
-    DodajStupac(list, len, T(playerid, "  Pretres: /frisk [id/ime]. HQ: F ili /ulaz"));
-    DodajStupac(list, len, T(playerid, "  Animacije: /anim (popis), /anim [broj], /anim 0 ili Space za prekid"));
-    DodajStupac(list, len, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
-    DodajStupac(list, len, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
-    DodajStupac(list, len, T(playerid, "  Kurva: ALT ili /kurva kod nje, truba iz vozila"));
-    DodajStupac(list, len, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
-    DodajStupac(list, len, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
-    DodajStupac(list, len, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
-    DodajStupac(list, len, T(playerid, "  Vozilo: /motor (tipka 2), /svjetla, /prozor, /pojas, /zakljucaj, /prometna [id/ime]"));
-    DodajStupac(list, len, T(playerid, "  Vozilo: /tankaj (kod pumpe), /ukradi (bez kljuceva). LSPD: /provjeripojas [id/ime]"));
-    DodajStupac(list, len, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
-    DodajStupac(list, len, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
-    DodajStupac(list, len, T(playerid, "  Teritoriji: ALT ili /diler (kod dilera)"));
-    DodajStupac(list, len, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
-    DodajStupac(list, len, T(playerid, "  Trgovine: F za ulaz, ALT kod blagajne"));
-    DodajStupac(list, len, T(playerid, "  Salon automobila: ALT kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
-    DodajStupac(list, len, T(playerid, "  Opstina: ALT kod saltera (kazne, promjena imena, prodaja vozila)"));
-    DodajStupac(list, len, T(playerid, "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)"));
-    DodajStupac(list, len, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
-    DodajStupac(list, len, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
-    DodajStupac(list, len, T(playerid, "  Ostalo: /admini"));
-    DodajStupac(list, len, T(playerid, "  Kuce: /kuca (vlasnik, adresa, cijena i najam najblize kuce)"));
-    DodajStupac(list, len, T(playerid, "  Firme: /firma (unutar trgovine 24/7 ili frizera: kupnja, zarada, rad)"));
-    DodajStupac(list, len, T(playerid, "  Statistika: /stats"));
-    DodajStupac(list, len, T(playerid, "  Kamera: /fps (prvo lice)"));
-    if (gAdmin[playerid]) DodajStupac(list, len, T(playerid, "  Admin: /ahelp"));
-    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, T(playerid, "Komande:"), list, T(playerid, "Zatvori"));
+    new tekst[4096], len = 0;
+    PomocRed(tekst, len, T(playerid, "  Chat: /me [radnja], /do [opis], /setme [opis lika], /showme [id/ime]"));
+    PomocRed(tekst, len, T(playerid, "  Govor: /w (sapat), /s ili /shout (vika), /ooc (izvan uloge)"));
+    PomocRed(tekst, len, T(playerid, "  Bez prijevoda: /t (govor), /wt (sapat), /st (vika)"));
+    PomocRed(tekst, len, T(playerid, "  Pretres: /frisk [id/ime]. HQ: F ili /ulaz"));
+    PomocRed(tekst, len, T(playerid, "  Animacije: /anim (popis), /anim [broj], /anim 0 ili Space za prekid"));
+    PomocRed(tekst, len, T(playerid, "  Sluzbe: /duty, /heal i /aparat (vatrogasci i hitna pomoc)"));
+    PomocRed(tekst, len, T(playerid, "  Ozljede: /odustani (nakon 10 s, gubite inventar)"));
+    PomocRed(tekst, len, T(playerid, "  Kurva: ALT ili /kurva kod nje, truba iz vozila"));
+    PomocRed(tekst, len, T(playerid, "  LSPD: /wanted, /unwanted, /cuff, /uncuff, /drag, /detain, /dragout, /taser, /locker, /stop, /arrest"));
+    PomocRed(tekst, len, T(playerid, "  Vozilo: /trunk (prtljaznik), /hood (hauba), /zakaci (prikolica). Lider LSPD: /lockerlog"));
+    PomocRed(tekst, len, T(playerid, "  Prtljaznik: /frisktrunk, /trunkput (LSPD), /trunkout"));
+    PomocRed(tekst, len, T(playerid, "  Vozilo: /motor (tipka 2), /svjetla, /prozor, /pojas, /zakljucaj, /prometna [id/ime]"));
+    PomocRed(tekst, len, T(playerid, "  Vozilo: /tankaj (kod pumpe), /ukradi (bez kljuceva). LSPD: /provjeripojas [id/ime]"));
+    PomocRed(tekst, len, T(playerid, "  Novac i predmeti: /plati [id/ime] [iznos], /inv, /spremi (spremi izvadeno oruzje)"));
+    PomocRed(tekst, len, T(playerid, "  Organizacija: /org (clanovi, skin, pozivi, teritoriji)"));
+    PomocRed(tekst, len, T(playerid, "  Teritoriji: ALT ili /diler (kod dilera)"));
+    PomocRed(tekst, len, T(playerid, "  Jezici: /skola (gradska vijecnica), /prijevod, mobitel (Postavke, Jezik)"));
+    PomocRed(tekst, len, T(playerid, "  Trgovine: F za ulaz, ALT kod blagajne"));
+    PomocRed(tekst, len, T(playerid, "  Salon automobila: ALT kod salona. Vlastito vozilo: /parkiraj (novo mjesto parkiranja)"));
+    PomocRed(tekst, len, T(playerid, "  Opstina: ALT kod saltera (kazne, promjena imena, prodaja vozila)"));
+    PomocRed(tekst, len, T(playerid, "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)"));
+    PomocRed(tekst, len, T(playerid, "  LSPD: /kazna [id/ime] [iznos] [razlog]"));
+    PomocRed(tekst, len, T(playerid, "  LSPD: /mdt (osobe, vozila, potjernice, pracenje na karti)"));
+    PomocRed(tekst, len, T(playerid, "  Ostalo: /admini"));
+    PomocRed(tekst, len, T(playerid, "  Kuce: /kuca (vlasnik, adresa, cijena i najam najblize kuce)"));
+    PomocRed(tekst, len, T(playerid, "  Firme: /firma (unutar trgovine 24/7 ili frizera: kupnja, zarada, rad)"));
+    PomocRed(tekst, len, T(playerid, "  Statistika: /stats"));
+    PomocRed(tekst, len, T(playerid, "  Kamera: /fps (prvo lice)"));
+    if (gAdmin[playerid]) PomocRed(tekst, len, T(playerid, "  Admin: /ahelp"));
+    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX, T(playerid, "Komande:"), tekst, T(playerid, "Zatvori"));
 }
 
 CMD:ahelp(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, 1)) return 1;
-    new list[4096], len = 0, naslov[96];
+    new tekst[4096], len = 0, naslov[96];
     format(naslov, sizeof naslov, T(playerid, "Admin komande (razina %d - %s):"), gAdmin[playerid], gRankName[gAdmin[playerid]]);
-    DodajStupac(list, len, T(playerid, "  /a [poruka] - admin chat"));
-    DodajStupac(list, len, T(playerid, "  /goto [id/ime] - teleport do igraca"));
-    DodajStupac(list, len, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
-    DodajStupac(list, len, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
-    DodajStupac(list, len, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
-    DodajStupac(list, len, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
-    DodajStupac(list, len, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));
-    DodajStupac(list, len, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
-    DodajStupac(list, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
-    DodajStupac(list, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
+    PomocRed(tekst, len, T(playerid, "  /a [poruka] - admin chat"));
+    PomocRed(tekst, len, T(playerid, "  /goto [id/ime] - teleport do igraca"));
+    PomocRed(tekst, len, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
+    PomocRed(tekst, len, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
+    PomocRed(tekst, len, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
+    PomocRed(tekst, len, T(playerid, "  /wound [id/ime] - odmah rani igraca"));
+    PomocRed(tekst, len, T(playerid, "  /unjail [id/ime] - pusti iz zatvora, /unwanted [id/ime] - skini potjernicu"));
+    PomocRed(tekst, len, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
+    PomocRed(tekst, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
+    PomocRed(tekst, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
     {
-        DodajStupac(list, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
+        PomocRed(tekst, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
     }
-    DodajStupac(list, len, T(playerid, "  /kazni [id/ime] [1 plivanje / 2 metenje] [kolicina] [razlog], /oslobodi [id/ime]"));
-    DodajStupac(list, len, T(playerid, "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj"));
-    DodajStupac(list, len, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
-    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_LIST, naslov, list, T(playerid, "Zatvori"));
+    PomocRed(tekst, len, T(playerid, "  /kazni [id/ime] [1 plivanje / 2 metenje] [kolicina] [razlog], /oslobodi [id/ime]"));
+    PomocRed(tekst, len, T(playerid, "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /premium, /postavibroj"));
+    PomocRed(tekst, len, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
+    return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX, naslov, tekst, T(playerid, "Zatvori"));
 }
 
 CMD:pay(playerid, params[]) return cmd_plati(playerid, params);
