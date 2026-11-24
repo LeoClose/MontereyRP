@@ -576,7 +576,7 @@ bool:VijestiClan(playerid)
 
 static bool:PlakatPokriven(model)
 {
-    return model == 1260 || model == 1267 || model == 1309;
+    return model == 1260 || model == 1267;
 }
 
 PlakatiUkloni(playerid)
