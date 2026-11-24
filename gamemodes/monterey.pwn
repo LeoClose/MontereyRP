@@ -253,8 +253,8 @@ public OnGameModeInit()
     MapaGlenPark();
     MapaChinatownUkloni(INVALID_PLAYER_ID);
     MapaChinatown();
-	SurenosiUkloni(INVALID_PLAYER_ID);
-	Surenosi();
+    MapaSurenosiUkloni(INVALID_PLAYER_ID);
+    MapaSurenosi();
     Lik_OsvjeziMapu();
     InitMarica();
     InitPolicija();
