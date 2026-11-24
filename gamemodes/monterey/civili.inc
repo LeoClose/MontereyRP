@@ -4,8 +4,11 @@
 #define CIVIL_NOVAC_MAX     60
 #define CIVIL_RANJENIH      48
 #define CIVIL_USTANI_MS     45000
+#define CIVIL_VOZILA        64
+#define CIVIL_VOZILO_S      600
+#define CIVIL_VOZILO_DOMET  150.0
 
-static gCivilNapadac[LIK_PACIJENT], bool:gCivilUnutra[LIK_PACIJENT], gCivilRanjen[CIVIL_RANJENIH] = { INVALID_LIK, ... };
+static gCivilVozilo[CIVIL_VOZILA] = { INVALID_VEHICLE_ID, ... }, gCivilVoziloOd[CIVIL_VOZILA], gCivilNapadac[LIK_PACIJENT], bool:gCivilUnutra[LIK_PACIJENT], gCivilRanjen[CIVIL_RANJENIH] = { INVALID_LIK, ... };
 
 CivilPostavi(lik, bool:unutra = false)
 {
@@ -129,4 +132,50 @@ NpcNajbliziRanjen(playerid, Float:domet)
         }
     }
     return best;
+}
+
+public OnPrometVozilo(playerid, model, Float:x, Float:y, Float:z, Float:a, c1, c2, Float:zdravlje, paneli, vrata, svjetla, gume)
+{
+    new k = 0;
+    while (k < CIVIL_VOZILA && gCivilVozilo[k] != INVALID_VEHICLE_ID) k++;
+    if (k == CIVIL_VOZILA) return INVALID_VEHICLE_ID;
+    new v = CreateVozilo(model, x, y, z, a, c1, c2, -1);
+    if (v == INVALID_VEHICLE_ID) return INVALID_VEHICLE_ID;
+    gCivilVozilo[k] = v;
+    gCivilVoziloOd[k] = gettime();
+    SetVehicleHealth(v, zdravlje);
+    UpdateVehicleDamageStatus(v, VEHICLE_PANEL_STATUS:paneli, VEHICLE_DOOR_STATUS:vrata, VEHICLE_LIGHT_STATUS:svjetla, VEHICLE_TIRE_STATUS:gume);
+    VoziloSet(v, VP_MOTOR, playerid == INVALID_PLAYER_ID ? 0 : 1);
+    if (playerid != INVALID_PLAYER_ID && IsPlayerConnected(playerid))
+    {
+        PutPlayerInVehicle(playerid, v, 0);
+        DodajWanted(playerid);
+    }
+    return v;
+}
+
+static bool:CivilVoziloZauzeto(v)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerInVehicle(i, v)) return true;
+    return false;
+}
+
+CivilVozilaTick()
+{
+    new sad = gettime(), Float:x, Float:y, Float:z;
+    for (new k = 0; k < CIVIL_VOZILA; k++)
+    {
+        new v = gCivilVozilo[k];
+        if (v == INVALID_VEHICLE_ID) continue;
+        if (!GetVehicleModel(v))
+        {
+            gCivilVozilo[k] = INVALID_VEHICLE_ID;
+            continue;
+        }
+        if (sad - gCivilVoziloOd[k] < CIVIL_VOZILO_S || CivilVoziloZauzeto(v)) continue;
+        GetVehiclePos(v, x, y, z);
+        if (!Lik_Skriveno(x, y, z, CIVIL_VOZILO_DOMET, CIVIL_VOZILO_DOMET)) continue;
+        DestroyVozilo(v);
+        gCivilVozilo[k] = INVALID_VEHICLE_ID;
+    }
 }

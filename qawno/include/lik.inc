@@ -88,3 +88,5 @@ forward OnLikUsao(lik, vozilo);
 forward OnLikIzasao(lik, vozilo);
 forward OnLikIzbacen(lik, playerid);
 forward OnLikSnimkaKraj(lik);
+forward OnLikPutnik(lik, playerid);
+forward OnPrometVozilo(playerid, model, Float:x, Float:y, Float:z, Float:a, c1, c2, Float:zdravlje, paneli, vrata, svjetla, gume);

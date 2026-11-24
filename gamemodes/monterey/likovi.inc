@@ -44,6 +44,12 @@ public OnLikSnimkaKraj(lik)
     return 1;
 }
 
+public OnLikPutnik(lik, playerid)
+{
+    #pragma unused playerid
+    return TaksiJeLik(lik);
+}
+
 public OnLikIzbacen(lik, playerid)
 {
     return 0;

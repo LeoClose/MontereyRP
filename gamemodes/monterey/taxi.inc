@@ -335,6 +335,11 @@ static TaksiVozacUdji(s)
     SetTimerEx("TaksiKreni", 1000, false, "i", s);
 }
 
+TaksiJeLik(lik)
+{
+    return TaksiLika(lik) >= 0;
+}
+
 static TaksiLika(lik)
 {
     if (lik == INVALID_LIK) return -1;

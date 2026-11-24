@@ -203,6 +203,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     if (PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
+    if (KradjaKey(playerid, newkeys, oldkeys)) return 1;
     if (UtrkaKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);

@@ -88,6 +88,7 @@ DLG:kamp_kupi(playerid, response, listitem)
         return 1;
     }
     new Float:a = gKamp[s][kpA], Float:x = gKamp[s][kpX] - KAMP_ISPRED * floatsin(a, degrees), Float:y = gKamp[s][kpY] + KAMP_ISPRED * floatcos(a, degrees), Float:z = gKamp[s][kpZ] + 0.5;
+    if (!SlobodnoParkiranje(x, y, z, a, 4.5, 10.0)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo trenutno nije moguce isporuciti."));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO player_vehicles (owner, model, c1, c2, x, y, z, a, price) VALUES (%d, %d, %d, %d, %f, %f, %f, %f, %d)", gAccountId[playerid], model, c, c, x, y, z, a, cijena));
     new db = ZadnjiId();
     if (VlasnickoStvori(db, gAccountId[playerid], model, c, c, x, y, z, a, cijena) == INVALID_VEHICLE_ID)

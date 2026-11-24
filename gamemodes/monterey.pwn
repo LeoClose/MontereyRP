@@ -352,6 +352,7 @@ public Sekunda()
     TaksiTick();
     TeritorijTick();
     VoziloTick();
+    CivilVozilaTick();
     VlakTick();
     BankaTick();
     RacunaloTick();

@@ -239,13 +239,15 @@ static bool:NapadValidanProvjera(playerid, damagedid, WEAPON:weaponid)
     return IsPlayerInRangeOfPoint(playerid, gSteta[i][stDomet] + (gSteta[i][stDomet] <= 3.0 ? 2.0 : 10.0), x, y, z);
 }
 
-#define STETA_NPC_UDARAC    12.0
+#define STETA_NPC_UDARAC    5.0
+#define STETA_NPC_HLADNO    8.0
 
 StetaOdLika(playerid, WEAPON:oruzje, dio)
 {
     if (!IsPlayerConnected(playerid) || !gUlogiran[playerid] || IsRanjen(playerid)) return;
     new i = _:oruzje, Float:dmg = STETA_NPC_UDARAC;
     if (i >= 0 && i < STETA_ORUZJA && gSteta[i][stDmg] > 0.0 && gSteta[i][stDomet] > 3.0) dmg = gSteta[i][stDmg];
+    else if (i > 0) dmg = STETA_NPC_HLADNO;
     RanjenRana(playerid, dio, dmg);
     StetaPrimijeni(playerid, dmg, oruzje);
 }

@@ -889,6 +889,27 @@ VoziloSmjer(v, &Float:x, &Float:y, &Float:z, &Float:fx, &Float:fy)
     fy = floatcos(a, degrees);
 }
 
+SlobodnoParkiranje(&Float:x, &Float:y, Float:z, Float:a, Float:bok, Float:red)
+{
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:vx, Float:vy, Float:vz;
+    for (new k = 0; k < 25; k++)
+    {
+        new Float:s = float((k % 5 + 1) / 2) * ((k % 5) % 2 ? 1.0 : -1.0) * bok, Float:r = float(k / 5) * red;
+        new Float:cx = x + fy * s - fx * r, Float:cy = y - fx * s - fy * r, bool:slobodno = true;
+        for (new v = 1; v < MAX_VEHICLES && slobodno; v++)
+        {
+            if (!GetVehicleModel(v)) continue;
+            GetVehiclePos(v, vx, vy, vz);
+            if (floatabs(vz - z) < 5.0 && VectorSize(vx - cx, vy - cy, 0.0) < bok * 0.9) slobodno = false;
+        }
+        if (!slobodno) continue;
+        x = cx;
+        y = cy;
+        return 1;
+    }
+    return 0;
+}
+
 HeliMrtav(v)
 {
     for (new i = 0; i < HELI_BROJ; i++)
@@ -930,7 +951,13 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_SUDAR_MIN        15.0
 #define VOZILO_SUDAR_STETA      150.0
 #define VOZILO_SUDAR_POJAS      0.4
-#define VOZILO_KRADJA_MS        6000
+#define KRADJA_PINOVA           3
+#define KRADJA_PINOVA_ORG       5
+#define KRADJA_PROMASAJA        3
+#define KRADJA_KRIVIH_ZICA      2
+#define KRADJA_TRAKA_MS         50
+#define KRADJA_ZELENO           20.0
+#define KRADJA_BOJA             0xC62828FF
 #define VOZILO_ALARM_MS         15000
 #define VOZILO_BRZINA_PUTA      1.3
 #define VOZILO_BRZINA_VISE      20.0
@@ -943,7 +970,6 @@ static const gVoziloBrzina[212] = {
 #define PUMPA_DOMET             2.0
 #define VOZILO_KRIVO_LITARA     5.0
 #define VOZILO_KRIVO_S          180
-#define VOZILO_KRADJA_ORG_POSTO 10
 #define PUMPA_PICKUP            1650
 
 enum { VP_MOTOR, VP_SVJETLA, VP_ALARM, VP_VRATA }
@@ -955,7 +981,11 @@ static gApPumpaDb[MAX_PLAYERS];
 
 static Float:gKrivoGorivo[MAX_VEHICLES], gKrivoVoznja[MAX_VEHICLES];
 static Float:gGorivo[MAX_VEHICLES],Float:gVoziloZadnja[MAX_VEHICLES], gVoziloUkradeno[MAX_VEHICLES], gVoziloKradjac[MAX_VEHICLES], gVoziloMotorMs[MAX_VEHICLES];
-static gPojas[MAX_PLAYERS], gKradja[MAX_PLAYERS], gKradjaKraj[MAX_PLAYERS], Float:gVoziloKm[MAX_VEHICLES], gVoziloKmStanje[MAX_VEHICLES];
+enum { KI_NEMA, KI_BRAVA, KI_ZICE }
+static const KEY:gKradjaTipka[] = { KEY_YES, KEY_NO, KEY_CTRL_BACK };
+static const gKradjaTipkaIme[][] = { "Y", "N", "H" };
+static gKradjaIgra[MAX_PLAYERS], gKradjaKorak[MAX_PLAYERS], gKradjaGreske[MAX_PLAYERS], gKradjaTimer[MAX_PLAYERS], gKradjaTipke[MAX_PLAYERS][4], Float:gKradjaTraka[MAX_PLAYERS], Float:gKradjaSmjer[MAX_PLAYERS], Float:gKradjaZel[MAX_PLAYERS], PlayerText:gKradjaTd[MAX_PLAYERS][2];
+static gPojas[MAX_PLAYERS], gKradja[MAX_PLAYERS], Float:gVoziloKm[MAX_VEHICLES], gVoziloKmStanje[MAX_VEHICLES];
 enum { KM_NEUCITANO, KM_CISTO, KM_PROMIJENJENO }
 static const gVoziloMjenjaci[212] = {
     5, 5, 5, 5, 5, 5, 4, 5, 4, 5, 3, 5, 5, 5, 5, 5, 5, 1, 5, 5, 5, 5, 5, 5, 4, 1, 5, 5, 5, 5,
@@ -1341,9 +1371,91 @@ public VoziloAlarmStani(v)
     if (vozac != INVALID_PLAYER_ID) PutPlayerInVehicle(vozac, v, 0);
 }
 
+static Float:KradjaZeleno(playerid)
+{
+    return KRADJA_ZELENO - float(gKradjaKorak[playerid]) * 3.0;
+}
+
+static KradjaPinova(v)
+{
+    return gOrgVehOrg[v] ? KRADJA_PINOVA_ORG : KRADJA_PINOVA;
+}
+
+static KradjaPanel(playerid)
+{
+    new tekst[256], red[96];
+    if (gKradjaIgra[playerid] == KI_BRAVA)
+    {
+        format(tekst, sizeof tekst, T(playerid, "Obijanje brave: pin %d/%d"), gKradjaKorak[playerid] + 1, KradjaPinova(gKradja[playerid]));
+        strcat(tekst, "~n~");
+        strcat(tekst, T(playerid, "Pritisnite ~y~SPACE~w~ kad je traka zelena."));
+        format(red, sizeof red, T(playerid, "Promasaji: %d/%d"), gKradjaGreske[playerid], KRADJA_PROMASAJA);
+    }
+    else
+    {
+        strcat(tekst, T(playerid, "Spajanje zica"));
+        strcat(tekst, "~n~");
+        strcat(tekst, T(playerid, "Pritisnite redom:"));
+        for (new i = 0; i < 4; i++)
+        {
+            format(red, sizeof red, " %s%s", i < gKradjaKorak[playerid] ? ("~g~") : ("~y~"), gKradjaTipkaIme[gKradjaTipke[playerid][i]]);
+            strcat(tekst, red);
+        }
+        format(red, sizeof red, T(playerid, "Krive zice: %d/%d"), gKradjaGreske[playerid], KRADJA_KRIVIH_ZICA);
+    }
+    strcat(tekst, "~n~");
+    strcat(tekst, red);
+    IgraObavijestPanel(playerid, T(playerid, "Kradja vozila"), KRADJA_BOJA, tekst);
+}
+
+static KradjaZice(playerid)
+{
+    for (new i = 0; i < 4; i++) gKradjaTipke[playerid][i] = random(sizeof gKradjaTipka);
+}
+
+static KradjaIgraPocni(playerid, igra)
+{
+    gKradjaIgra[playerid] = igra;
+    gKradjaKorak[playerid] = 0;
+    gKradjaGreske[playerid] = 0;
+    if (igra == KI_BRAVA)
+    {
+        gKradjaTraka[playerid] = 0.0;
+        gKradjaSmjer[playerid] = 3.0;
+        gKradjaZel[playerid] = float(15 + random(60));
+        SnagaBarStvori(playerid, gKradjaTd[playerid][0], gKradjaTd[playerid][1]);
+        gKradjaTimer[playerid] = SetTimerEx("KradjaTrakaKorak", KRADJA_TRAKA_MS, true, "i", playerid);
+    }
+    else KradjaZice(playerid);
+    KradjaPanel(playerid);
+}
+
+forward KradjaTrakaKorak(playerid);
+public KradjaTrakaKorak(playerid)
+{
+    if (gKradjaIgra[playerid] != KI_BRAVA) return;
+    gKradjaTraka[playerid] += gKradjaSmjer[playerid];
+    if (gKradjaTraka[playerid] >= 100.0 || gKradjaTraka[playerid] <= 0.0) gKradjaSmjer[playerid] = -gKradjaSmjer[playerid];
+    SnagaBarPostavi(playerid, gKradjaTd[playerid][1], gKradjaTraka[playerid], gKradjaZel[playerid], gKradjaZel[playerid] + KradjaZeleno(playerid));
+}
+
+static KradjaIgraZatvori(playerid)
+{
+    if (gKradjaIgra[playerid] == KI_BRAVA)
+    {
+        if (gKradjaTimer[playerid]) KillTimer(gKradjaTimer[playerid]);
+        gKradjaTimer[playerid] = 0;
+        PlayerTextDrawDestroy(playerid, gKradjaTd[playerid][0]);
+        PlayerTextDrawDestroy(playerid, gKradjaTd[playerid][1]);
+    }
+    if (gKradjaIgra[playerid]) IgraObavijestUkloni(playerid);
+    gKradjaIgra[playerid] = KI_NEMA;
+}
+
 static KradjaKraj(playerid, uspjeh)
 {
-    new v = gKradja[playerid];
+    new v = gKradja[playerid], igra = gKradjaIgra[playerid];
+    KradjaIgraZatvori(playerid);
     gKradja[playerid] = 0;
     gVoziloKradjac[v] = 0;
     VoziloSet(v, VP_SVJETLA, 0);
@@ -1351,7 +1463,59 @@ static KradjaKraj(playerid, uspjeh)
     if (!uspjeh) return;
     gVoziloUkradeno[v] = 1;
     VoziloSet(v, VP_VRATA, 0);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Uspjesno ste obili vozilo."));
+    SendClientMessage(playerid, COLOR_INFO, igra == KI_ZICE ? T(playerid, "Spojili ste zice. Mozete upaliti motor.") : T(playerid, "Uspjesno ste obili vozilo."));
+}
+
+KradjaKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (!gKradja[playerid] || !gKradjaIgra[playerid]) return 0;
+    new v = gKradja[playerid];
+    if (gKradjaIgra[playerid] == KI_BRAVA)
+    {
+        if (!(newkeys & KEY_SPRINT) || (oldkeys & KEY_SPRINT)) return 0;
+        if (gKradjaTraka[playerid] >= gKradjaZel[playerid] && gKradjaTraka[playerid] <= gKradjaZel[playerid] + KradjaZeleno(playerid))
+        {
+            if (++gKradjaKorak[playerid] >= KradjaPinova(v))
+            {
+                KradjaKraj(playerid, 1);
+                return 1;
+            }
+            gKradjaSmjer[playerid] *= 1.25;
+            gKradjaZel[playerid] = float(10 + random(70));
+            KradjaPanel(playerid);
+            return 1;
+        }
+        VoziloSet(v, VP_ALARM, 1);
+        SetTimerEx("VoziloAlarmStani", VOZILO_ALARM_MS, false, "i", v);
+        if (++gKradjaGreske[playerid] >= KRADJA_PROMASAJA)
+        {
+            KradjaKraj(playerid, 0);
+            SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kalauz je pukao."));
+            return 1;
+        }
+        KradjaPanel(playerid);
+        return 1;
+    }
+    new pritisnuta = -1;
+    for (new i = 0; i < sizeof gKradjaTipka; i++) if ((newkeys & gKradjaTipka[i]) && !(oldkeys & gKradjaTipka[i])) pritisnuta = i;
+    if (pritisnuta == -1) return 0;
+    if (pritisnuta == gKradjaTipke[playerid][gKradjaKorak[playerid]])
+    {
+        if (++gKradjaKorak[playerid] >= 4) KradjaKraj(playerid, 1);
+        else KradjaPanel(playerid);
+        return 1;
+    }
+    if (++gKradjaGreske[playerid] >= KRADJA_KRIVIH_ZICA)
+    {
+        KradjaKraj(playerid, 0);
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Spojili ste krive zice."));
+        return 1;
+    }
+    SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Kriva zica! Udarila vas je struja."));
+    gKradjaKorak[playerid] = 0;
+    KradjaZice(playerid);
+    KradjaPanel(playerid);
+    return 1;
 }
 
 static KradjaKorak(playerid)
@@ -1366,13 +1530,6 @@ static KradjaKorak(playerid)
     }
     VoziloSet(v, VP_SVJETLA, VoziloGet(v, VP_SVJETLA) == 1 ? 0 : 1);
     HeliKradja(playerid);
-    if (GetTickCount() - gKradjaKraj[playerid] < 0) return;
-    if (!gOrgVehOrg[v] || random(100) < VOZILO_KRADJA_ORG_POSTO) KradjaKraj(playerid, 1);
-    else
-    {
-        KradjaKraj(playerid, 0);
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste uspjeli obiti vozilo."));
-    }
 }
 
 #define DASH_TX             272.0
@@ -1899,10 +2056,8 @@ CMD:ukradi(playerid, params[])
     if (vozac != INVALID_PLAYER_ID && vozac != playerid) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U vozilu netko sjedi."));
     if (gVoziloKradjac[v]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo vec netko obija."));
     gKradja[playerid] = v;
-    gKradjaKraj[playerid] = GetTickCount() + VOZILO_KRADJA_MS;
     gVoziloKradjac[v] = playerid + 1;
-    VoziloSet(v, VP_ALARM, 1);
-    SetTimerEx("VoziloAlarmStani", VOZILO_ALARM_MS, false, "i", v);
+    KradjaIgraPocni(playerid, stanje == PLAYER_STATE_ONFOOT ? KI_BRAVA : KI_ZICE);
     if (stanje == PLAYER_STATE_ONFOOT) ApplyAnimation(playerid, "BOMBER", "BOM_Plant_Loop", 4.1, true, false, false, false, 0);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, stanje == PLAYER_STATE_ONFOOT ? ("* %s pokusava obiti vozilo.") : ("* %s spaja zice ispod volana."), GetRPIme(playerid), "", 1);
     return 1;

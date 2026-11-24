@@ -423,11 +423,12 @@ static SalonKupi(playerid)
     new i = gSalonIdx[playerid], model = gSalon[s][slModel][i], cijena = gSalon[s][slCijena][i];
     if (BrojVlasnistava(gAccountId[playerid]) >= VLASNISTVO_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Mozete imati najvise %d vozila."), VLASNISTVO_MAX);
     if (gNovac[playerid] < cijena) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate dovoljno novca."));
-    new c1 = random(128), c2 = random(128);
+    new c1 = random(128), c2 = random(128), Float:x = gSalon[s][slSx], Float:y = gSalon[s][slSy], Float:z = gSalon[s][slSz], Float:a = gSalon[s][slSa];
+    if (!SlobodnoParkiranje(x, y, z, a, 3.5, 6.5)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo trenutno nije moguce isporuciti."));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO player_vehicles (owner, model, c1, c2, x, y, z, a, price) VALUES (%d, %d, %d, %d, %f, %f, %f, %f, %d)",
-        gAccountId[playerid], model, c1, c2, gSalon[s][slSx], gSalon[s][slSy], gSalon[s][slSz], gSalon[s][slSa], cijena));
+        gAccountId[playerid], model, c1, c2, x, y, z, a, cijena));
     new db = ZadnjiId();
-    if (VlasnickoStvori(db, gAccountId[playerid], model, c1, c2, gSalon[s][slSx], gSalon[s][slSy], gSalon[s][slSz], gSalon[s][slSa], cijena) == INVALID_VEHICLE_ID)
+    if (VlasnickoStvori(db, gAccountId[playerid], model, c1, c2, x, y, z, a, cijena) == INVALID_VEHICLE_ID)
     {
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_vehicles WHERE id = %d", db));
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vozilo trenutno nije moguce isporuciti."));
