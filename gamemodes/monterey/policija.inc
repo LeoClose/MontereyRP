@@ -25,7 +25,9 @@
 #define ZATVOR_ULAZ_DOMET   5.0
 #define ZATVOR_MAX_MIN      60
 #define WANTED_PAD_S        900
-#define BIJEG_MIN_PO_ZVJEZDICI 5
+#define ZATVOR_MIN_PO_ZVJEZDICI 6
+#define ZATVOR_GLOBA_PO_ZVJEZDICI 150
+#define BIJEG_DODATNO_MIN   10
 #define LOCATE_LS_MS        5000
 #define LOCATE_VAN_MS       10000
 #define LOCATE_IKONA        99
@@ -192,14 +194,6 @@ static TragPrati(i)
     gTragVrijeme[i] = gettime();
 }
 
-bool:PolicijaZadnjeVani(playerid, &Float:x, &Float:y, &Float:z)
-{
-    if (!gImaVani[playerid]) return false;
-    x = gVani[playerid][0];
-    y = gVani[playerid][1];
-    z = gVani[playerid][2];
-    return true;
-}
 
 PolicijaTick()
 {
@@ -316,11 +310,17 @@ static LockerVrati(playerid)
 
 PolicijaDisconnect(playerid, bool:izlaz)
 {
-    if (izlaz && gCuffed[playerid] && gWanted[playerid] && !gJailTime[playerid])
+    if (izlaz && (gCuffed[playerid] || gTased[playerid] || gDragBy[playerid]) && !gJailTime[playerid])
     {
-        gJailTime[playerid] = gWanted[playerid] * BIJEG_MIN_PO_ZVJEZDICI * 60;
+        new zvjezdice = gWanted[playerid] > 0 ? gWanted[playerid] : 1, globa = zvjezdice * ZATVOR_GLOBA_PO_ZVJEZDICI;
+        gJailTime[playerid] = (zvjezdice * ZATVOR_MIN_PO_ZVJEZDICI + BIJEG_DODATNO_MIN) * 60;
         SaveJail(playerid);
         SetWanted(playerid, 0);
+        if (globa > gNovac[playerid]) globa = gNovac[playerid];
+        if (globa > 0) DajNovac(playerid, -globa);
+        new zapis[24];
+        format(zapis, sizeof zapis, "%d min (bijeg)", gJailTime[playerid] / 60);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO police_records (account, type, reason, officer, created) VALUES (%d, %d, '%q', 'LSPD', %d)", gAccountId[playerid], ZAPIS_UHICENJE, zapis, gettime()));
     }
     if (gTased[playerid]) TogglePlayerControllable(playerid, true);
     gTased[playerid] = false;
@@ -805,9 +805,8 @@ CMD:arrest(playerid, params[])
 {
     if (!DutyProvjera(playerid, ORG_LSPD)) return 1;
     if (GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, ZATVOR_ULAZ_DOMET, ZATVOR_POS)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod ulaza u zatvor."));
-    new idx = 0, p1[32], p2[8];
-    if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2) || !ProvjeriBroj(p2) || strval(p2) < 1 || strval(p2) > ZATVOR_MAX_MIN)
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /arrest [id/ime] [minute 1-60]"));
+    new idx = 0, p1[32];
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /arrest [id/ime]"));
     new target = SluzbaTarget(playerid, p1);
     if (target == INVALID_PLAYER_ID) return 1;
     if (!gCuffed[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "%s nema lisice."), GetRPIme(target));
@@ -816,15 +815,20 @@ CMD:arrest(playerid, params[])
     SpremiSvoOruzje(target);
     ResetPlayerWeapons(target);
     gOnDuty[target] = false;
+    new zvjezdice = gWanted[target] > 0 ? gWanted[target] : 1, minuta = zvjezdice * ZATVOR_MIN_PO_ZVJEZDICI, globa = zvjezdice * ZATVOR_GLOBA_PO_ZVJEZDICI;
+    if (minuta > ZATVOR_MAX_MIN) minuta = ZATVOR_MAX_MIN;
+    if (globa > gNovac[target]) globa = gNovac[target];
+    if (globa > 0) DajNovac(target, -globa);
     SetWanted(target, 0);
-    gJailTime[target] = strval(p2) * 60;
+    gJailTime[target] = minuta * 60;
     SaveJail(target);
     new zapis[16];
-    format(zapis, sizeof zapis, "%d min", strval(p2));
+    format(zapis, sizeof zapis, "%d min", minuta);
     MdtZapis(gAccountId[target], ZAPIS_UHICENJE, zapis, playerid);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s odvodi %s u celiju.", GetRPIme(playerid), GetRPIme(target), 1);
     IgracUCeliju(target);
-    SendClientMessage(target, COLOR_ERROR, T(target, "Uhiceni ste na %d min."), strval(p2));
+    SendClientMessage(target, COLOR_ERROR, T(target, "Uhiceni ste na %d min."), minuta);
+    if (globa > 0) SendClientMessage(target, COLOR_ERROR, T(target, "Platili ste globu od $%d."), globa);
     return 1;
 }
 

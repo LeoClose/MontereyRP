@@ -3,7 +3,12 @@
 #define OBAVIJEST_GRESKA    0xC0392BE6
 #define OBAVIJEST_ZVUK      1085
 
-static PlayerText:gObTd[MAX_PLAYERS][2], bool:gObVidi[MAX_PLAYERS], gObZadnji[MAX_PLAYERS][256], bool:gObIma[MAX_PLAYERS], gObToken[MAX_PLAYERS], gObOd[MAX_PLAYERS], gObTekst[MAX_PLAYERS][256];
+forward bool:DrogaKuha(playerid);
+forward bool:KazinoAktivan(playerid);
+forward bool:PokerAktivan(playerid);
+forward bool:PcOtvoren(playerid);
+
+static bool:gObDesno[MAX_PLAYERS], PlayerText:gObTd[MAX_PLAYERS][2], bool:gObVidi[MAX_PLAYERS], gObZadnji[MAX_PLAYERS][256], bool:gObIma[MAX_PLAYERS], gObToken[MAX_PLAYERS], gObOd[MAX_PLAYERS], gObTekst[MAX_PLAYERS][256];
 
 bool:ObavijestStane(playerid, const tekst[])
 {
@@ -12,6 +17,7 @@ bool:ObavijestStane(playerid, const tekst[])
 
 IgraObavijestConnect(playerid)
 {
+    gObDesno[playerid] = false;
     gObIma[playerid] = false;
     gObVidi[playerid] = false;
     gObZadnji[playerid][0] = EOS;
@@ -115,6 +121,16 @@ static ObPrikazi(playerid, const naslov[], boja, const tekst[])
         PlayerTextDrawColour(playerid, gObTd[playerid][1], 0xF0F0F0FF);
         PlayerTextDrawSetShadow(playerid, gObTd[playerid][1], 0);
         PlayerTextDrawSetOutline(playerid, gObTd[playerid][1], 1);
+    }
+    new bool:desno = TuningAktivan(playerid) || MdtOtvoren(playerid) || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || DrogaKuha(playerid);
+    if (desno != gObDesno[playerid])
+    {
+        gObDesno[playerid] = desno;
+        new Float:od = desno ? 464.0 : 24.0;
+        PlayerTextDrawSetPos(playerid, gObTd[playerid][0], od, 150.0);
+        PlayerTextDrawSetPos(playerid, gObTd[playerid][1], od, 165.0);
+        PlayerTextDrawTextSize(playerid, gObTd[playerid][0], od + 152.0, 0.0);
+        PlayerTextDrawTextSize(playerid, gObTd[playerid][1], od + 152.0, 0.0);
     }
     PlayerTextDrawBoxColour(playerid, gObTd[playerid][0], boja);
     PlayerTextDrawSetString(playerid, gObTd[playerid][0], n);

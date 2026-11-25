@@ -58,6 +58,7 @@ native bool:Lik_Zona(id, Float:minx, Float:miny, Float:maxx, Float:maxy, Float:f
 native bool:Lik_ZonaPut(id, Float:ax, Float:ay, Float:bx, Float:by, Float:sirina, Float:faktor);
 native bool:Lik_UkloniZonu(id);
 native Lik_OsvjeziMapu();
+native bool:Lik_ZonaSkinovi(id, Float:minx, Float:miny, Float:maxx, Float:maxy, const skinovi[], broj, Float:udio);
 native bool:Lik_Skriveno(Float:x, Float:y, Float:z, Float:blizu = 30.0, Float:domet = 160.0, osimVozila = -1);
 native bool:Lik_ZaustaviPromet(playerid, Float:kut, Float:domet, Float:sirina);
 native Float:Lik_Cesta(Float:x, Float:y, Float:z, &Float:ox, &Float:oy, &Float:oz);

@@ -227,14 +227,7 @@ PovratakSpremi(playerid)
     if (!gUlogiran[playerid] || gKazna[playerid] || GetPlayerState(playerid) == PLAYER_STATE_SPECTATING || GetPlayerState(playerid) == PLAYER_STATE_NONE) return;
     new svijet = GetPlayerVirtualWorld(playerid), interijer = GetPlayerInterior(playerid);
     new Float:x, Float:y, Float:z, Float:a, v = GetPlayerVehicleID(playerid);
-    if (svijet && svijet < KUCA_SVIJET)
-    {
-        if (!PolicijaZadnjeVani(playerid, x, y, z)) return;
-        svijet = 0;
-        interijer = 0;
-        a = 0.0;
-    }
-    else if (v)
+    if (v)
     {
         GetVehiclePos(v, x, y, z);
         GetVehicleZAngle(v, a);

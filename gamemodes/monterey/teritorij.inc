@@ -2,6 +2,7 @@
 #define MAX_TER_NPC         4
 #define TER_NPC_RANGE       3.0
 #define TER_LIK_ZONA        1000
+#define TER_SKIN_UDIO       0.4
 #define TER_OBRANA_RANGE    60.0
 #define TER_NAPAD_MS        60000
 #define TER_MIN_NAPADACA    3
@@ -142,6 +143,19 @@ static ShowZonu(t)
 {
     GangZoneStopFlashForAll(gTer[t][terZona]);
     GangZoneShowForAll(gTer[t][terZona], GetOrgBoja(gTer[t][terOrg]));
+    TerSkinovi(t);
+}
+
+static TerSkinovi(t)
+{
+    new skinovi[64], n = 0;
+    if (gTer[t][terOrg])
+    {
+        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT skin FROM org_skins WHERE org = %d LIMIT 64", gTer[t][terOrg]);
+        if (DB_GetRowCount(res)) do skinovi[n++] = DB_GetFieldInt(res, 0); while (n < sizeof skinovi && DB_SelectNextRow(res));
+        DB_FreeResultSet(res);
+    }
+    Lik_ZonaSkinovi(t, gTer[t][terMinX], gTer[t][terMinY], gTer[t][terMaxX], gTer[t][terMaxY], skinovi, n, TER_SKIN_UDIO);
 }
 
 static TerPoDb(dbid)
