@@ -3,7 +3,27 @@
 #define KAPIJA_OTVORENA_MS  8000
 #define KAPIJA_SEKUNDI      2.5
 
-enum { KT_KLIZI = 1, KT_RAMPA, KT_RAMPA_X, KT_OKRET, KT_DIZI }
+enum { KT_KLIZI = 1, KT_RAMPA, KT_RAMPA_X, KT_OKRET, KT_DIZI, KT_KLIZI_Y }
+static const Float:gKapijaZadano[][7] = {
+    { 19870.0, 651.850463, -1435.208618, 14.981561, 4.0, 90.0, 383.0 },
+    { 19870.0, 690.340209, -1424.059326, 15.601571, 4.0, 90.0, 383.0 },
+    { 2909.0, 652.443664, -1498.992797, 15.074559, 6.0, 8.0, 383.0 },
+    { 2909.0, 652.443664, -1451.868286, 15.074559, 6.0, 8.0, 383.0 },
+    { 2909.0, 649.381713, -1547.155639, 15.074559, 6.0, 8.0, 383.0 },
+    { 2957.0, 651.901794, -1479.993408, 15.382402, 5.0, 3.0, 383.0 },
+    { 2957.0, 651.901794, -1527.144653, 15.382402, 5.0, 3.0, 383.0 },
+    { 19870.0, 771.219787, -1374.905761, 14.263403, 4.0, 90.0, 7.0 },
+    { 19870.0, 780.529235, -1329.864868, 14.263403, 4.0, 90.0, 7.0 },
+    { 2957.0, 941.489074, -943.515502, 40.671039, 5.0, 3.0, 0.0 },
+    { 1508.0, 1502.098388, -1796.114379, 14.056897, 5.0, 3.2, 0.0 },
+    { 1508.0, 1508.368530, -1796.114379, 14.056897, 5.0, 3.2, 0.0 },
+    { 1508.0, 1472.338867, -1796.114379, 14.056897, 5.0, 3.2, 0.0 },
+    { 1508.0, 1478.609008, -1796.114379, 14.056897, 5.0, 3.2, 0.0 },
+    { 968.0, 1836.565673, -1393.025390, 13.312517, 2.0, 80.0, 0.0 },
+    { 968.0, 2052.606689, -1329.985595, 23.844387, 2.0, -85.0, 7.0 },
+    { 968.0, 2012.625488, -1329.985595, 23.614383, 2.0, -85.0, 7.0 },
+    { 2909.0, 263.928192, -1333.341064, 53.517715, 6.0, 8.0, 0.0 }
+};
 enum E_KAPIJA { kpDb, kpOrg, kpModel, kpTip, Float:kpVrijednost, STREAMER_TAG_OBJECT:kpObjekt, Float:kpX, Float:kpY, Float:kpZ, Float:kpRx, Float:kpRy, Float:kpRz, bool:kpOtvorena, kpToken }
 static gKapija[KAPIJA_MAX][E_KAPIJA], gKapijaBroj;
 
@@ -35,9 +55,28 @@ ObjektPomakni(STREAMER_TAG_OBJECT:o, Float:x, Float:y, Float:z, Float:rx, Float:
     MoveDynamicObject(o, x, y, z, d / sekundi, rx, ry, rz);
 }
 
+static KapijeZadane()
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gate_defaults (version INTEGER NOT NULL)"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT MAX(version) FROM gate_defaults"), verzija = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    DB_FreeResultSet(res);
+    if (verzija >= 2) return;
+    for (new k = 0; k < sizeof gKapijaZadano; k++)
+    {
+        new model = floatround(gKapijaZadano[k][0]), org = floatround(gKapijaZadano[k][6]), Float:x = gKapijaZadano[k][1], Float:y = gKapijaZadano[k][2], Float:z = gKapijaZadano[k][3];
+        res = DB_ExecuteQuery(gDB, "SELECT org FROM gates WHERE model = %d AND abs(x - %f) < 0.5 AND abs(y - %f) < 0.5 AND abs(z - %f) < 0.5 AND org > 0 ORDER BY id DESC LIMIT 1", model, x, y, z);
+        if (DB_GetRowCount(res)) org = DB_GetFieldInt(res, 0);
+        DB_FreeResultSet(res);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM gates WHERE model = %d AND abs(x - %f) < 0.5 AND abs(y - %f) < 0.5 AND abs(z - %f) < 0.5", model, x, y, z));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO gates (org, model, x, y, z, tip, vrijednost) VALUES (%d, %d, %f, %f, %f, %d, %f)", org, model, x, y, z, floatround(gKapijaZadano[k][4]), gKapijaZadano[k][5]));
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO gate_defaults (version) VALUES (2)"));
+}
+
 InitKapije()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gates (id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, model INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, tip INTEGER NOT NULL, vrijednost REAL NOT NULL)"));
+    KapijeZadane();
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, org, model, x, y, z, tip, vrijednost FROM gates ORDER BY id LIMIT %d", KAPIJA_MAX);
     if (DB_GetRowCount(res)) do
     {
@@ -78,6 +117,11 @@ static KapijaPomakni(k, bool:otvori)
         case KT_RAMPA_X: rx += v;
         case KT_OKRET: rz += v;
         case KT_DIZI: z += v;
+        case KT_KLIZI_Y:
+        {
+            x -= floatsin(rz, degrees) * v;
+            y += floatcos(rz, degrees) * v;
+        }
     }
     ObjektPomakni(gKapija[k][kpObjekt], x, y, z, rx, ry, rz, KAPIJA_SEKUNDI);
 }
@@ -124,8 +168,8 @@ CMD:kapija(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
     new idx = 0, p1[12], p2[12], p3[16];
-    if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2) || !SljedeciParam(params, idx, p3) || !ProvjeriBroj(p1) || !ProvjeriBroj(p2) || strval(p2) < KT_KLIZI || strval(p2) > KT_DIZI)
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /kapija [id organizacije] [1 klizi, 2 rampa, 3 rampa X, 4 okretna, 5 dize se] [metara ili stupnjeva]"));
+    if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2) || !SljedeciParam(params, idx, p3) || !ProvjeriBroj(p1) || !ProvjeriBroj(p2) || strval(p2) < KT_KLIZI || strval(p2) > KT_KLIZI_Y)
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /kapija [id organizacije] [1 klizi, 2 rampa, 3 rampa X, 4 okretna, 5 dize se, 6 klizi uzduz] [metara ili stupnjeva]"));
     if (gKapijaBroj >= KAPIJA_MAX) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj kapija."));
     new Float:x, Float:y, Float:z, Float:a;
     GetPlayerPos(playerid, x, y, z);
@@ -141,6 +185,21 @@ CMD:kapija(playerid, params[])
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO gates (org, model, x, y, z, tip, vrijednost) VALUES (%d, %d, %f, %f, %f, %d, %f)", gKapija[k][kpOrg], gKapija[k][kpModel], gKapija[k][kpX], gKapija[k][kpY], gKapija[k][kpZ], gKapija[k][kpTip], gKapija[k][kpVrijednost]));
     gKapija[k][kpDb] = ZadnjiId();
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kapija postavljena: objekt %d, organizacija %d."), gKapija[k][kpModel], gKapija[k][kpOrg]);
+}
+
+CMD:kapijaorg(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    new idx = 0, p1[12];
+    if (!SljedeciParam(params, idx, p1) || !ProvjeriBroj(p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /kapijaorg [id organizacije]"));
+    for (new k = 0; k < gKapijaBroj; k++)
+    {
+        if (!IsPlayerInRangeOfPoint(playerid, KAPIJA_DOMET, gKapija[k][kpX], gKapija[k][kpY], gKapija[k][kpZ])) continue;
+        gKapija[k][kpOrg] = strval(p1);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE gates SET org = %d WHERE id = %d", gKapija[k][kpOrg], gKapija[k][kpDb]));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Kapija postavljena: objekt %d, organizacija %d."), gKapija[k][kpModel], gKapija[k][kpOrg]);
+    }
+    return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nema kapije u blizini."));
 }
 
 CMD:kapijabrisi(playerid, params[])

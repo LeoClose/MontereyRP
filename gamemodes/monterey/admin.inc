@@ -921,9 +921,9 @@ enum
 
 static const gApItem[][] = {
     "Izbaci igraca", "Banaj igraca", "Odbanaj igraca", "Stvori vozilo", "Obrisi stvoreno vozilo",
-    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade", "Pikado", "Kuglane", "Anticheat", "Droga", "Kamp prikolice", "Standovi s hranom"
+    "Admini online", "Organizacije", "Daj novac", "Daj predmet", "Postavi admina", "Nazivi admin rankova", "Teritoriji", "Premium status", "Taksi stanice", "Kurve", "Vatrogasni kamioni", "Ambulante", "Pumpe goriva", "Trgovine", "Saloni automobila", "Opstina", "Auto pijaca", "Broj mobitela", "Mehanicarska vozila", "Oruzarnice", "Odjeca i frizeri", "Kuce", "Tuning garaze", "Garaze", "Trgovine namjestaja", "Kazino", "Banke", "Zlatare", "Internet kafici", "Bilijarski stolovi", "Kosarkaski kosevi", "Arkade", "Pikado", "Kuglane", "Anticheat", "Droga", "Kamp prikolice", "Standovi s hranom", "NPC gustoca"
 };
-static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MANAGE, ALVL_ORG, ALVL_ORG, ALVL_ORG };
+static const gApLevel[sizeof gApItem] = { ALVL_KICK, ALVL_BAN, ALVL_BAN, ALVL_VEH, ALVL_VEH, 1, ALVL_ORG, ALVL_MONEY, ALVL_MONEY, ALVL_MANAGE, ALVL_MANAGE, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MONEY, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MANAGE, ALVL_ORG, ALVL_ORG, ALVL_ORG, ALVL_MANAGE };
 
 static gApAction[MAX_PLAYERS];
 static gApOrg[MAX_PLAYERS];
@@ -985,7 +985,7 @@ CMD:apanel(playerid, params[])
 
 static const gApKat[][] = { "Igraci", "Administracija", "Vozila", "Auto i garaze", "Organizacije", "Nekretnine", "Trgovine i usluge", "Igre i zabava" };
 static const gApKatStavke[sizeof gApKat][20] = {
-    { 0, 1, 2, 7, 8, 12, 22, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 17, 19, 21, 27, 28, 41, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 6, 11, 14, 40, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 26, 20, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 18, 24, 25, 29, 31, 32, 33, 42, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 30, 34, 35, 36, 37, 38, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
+    { 0, 1, 2, 7, 8, 12, 22, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 5, 9, 10, 39, 43, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 3, 4, 13, 15, 16, 23, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 17, 19, 21, 27, 28, 41, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 6, 11, 14, 40, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 26, 20, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 18, 24, 25, 29, 31, 32, 33, 42, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }, { 30, 34, 35, 36, 37, 38, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 }
 };
 static gApKatOdabrana[MAX_PLAYERS];
 
@@ -1136,6 +1136,7 @@ static OtvoriStavku(playerid, stavka)
         case 40: return ShowDrogaAdmin(playerid);
         case 41: return ShowKampove(playerid);
         case 42: return ShowStandoveAdmin(playerid);
+        case 43: return ShowNpcGustoca(playerid);
         case 22: return ShowUnos(playerid, AP_BROJ, T(playerid, "Unesite: [id/ime] [novi broj, 7 znamenki]"));
         case 12: return ShowUnos(playerid, AP_PREMIUM, T(playerid, "Unesite: [id/ime] [1 = daj, 0 = makni]"));
         case 7: return ShowUnos(playerid, AP_MONEY, T(playerid, "Unesite: [id/ime] [iznos, negativan oduzima]"));
@@ -1145,6 +1146,7 @@ static OtvoriStavku(playerid, stavka)
             new len = strlen(body);
             for (new i = 0; i < BROJ_ITEMA; i++)
             {
+                if (!PredmetZaAdmina(i)) continue;
                 format(row, sizeof row, T(playerid, "  %d - %s (najvise %d %s)"), i, T(playerid, gItems[i][ITEM_NAME]), gItems[i][ITEM_MAX], T(playerid, gItems[i][ITEM_UNIT]));
                 DodajStupac(body, len, row);
             }
@@ -1270,4 +1272,69 @@ CMD:unfreeze(playerid, params[])
     TogglePlayerControllable(target, true);
     ObavijestInfo(target, T(target, "Admin"), T(target, "Admin vas je odmrznuo."));
     return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Odmrznuli ste igraca %s."), GetRPIme(target));
+}
+
+#define NPC_ZADANO 100
+
+static gNpcPromet = NPC_ZADANO, gNpcPjesaci = NPC_ZADANO, gNpcUredi[MAX_PLAYERS];
+
+InitNpcGustoca()
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS npc_settings (k TEXT PRIMARY KEY, v INTEGER NOT NULL)"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT k, v FROM npc_settings");
+    for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
+    {
+        new k[16];
+        DB_GetFieldString(res, 0, k, sizeof k);
+        if (!strcmp(k, "promet")) gNpcPromet = DB_GetFieldInt(res, 1);
+        else if (!strcmp(k, "pjesaci")) gNpcPjesaci = DB_GetFieldInt(res, 1);
+    }
+    DB_FreeResultSet(res);
+    Lik_Gustoca(gNpcPromet, gNpcPjesaci);
+}
+
+static NpcGustocaSpremi()
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO npc_settings (k, v) VALUES ('promet', %d), ('pjesaci', %d)", gNpcPromet, gNpcPjesaci));
+    Lik_Gustoca(gNpcPromet, gNpcPjesaci);
+}
+
+ShowNpcGustoca(playerid)
+{
+    new list[256];
+    format(list, sizeof list, T(playerid, "Vozila (promet): %d%%\nPjesaci: %d%%\n{8AB4F8}Vrati zadano (100%%)"), gNpcPromet, gNpcPjesaci);
+    return PrikaziDialog(playerid, DLG_NPC_GUSTOCA, DIALOG_STYLE_LIST, T(playerid, "NPC gustoca"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
+}
+
+DLG:npc_gustoca(playerid, response, listitem)
+{
+    if (!response) return ShowKategoriju(playerid);
+    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
+    if (listitem == 2)
+    {
+        gNpcPromet = gNpcPjesaci = NPC_ZADANO;
+        NpcGustocaSpremi();
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "NPC gustoca vracena na zadano."));
+        return ShowNpcGustoca(playerid);
+    }
+    if (listitem < 0 || listitem > 1) return 1;
+    gNpcUredi[playerid] = listitem;
+    return PrikaziDialog(playerid, DLG_NPC_GUSTOCA_UNOS, DIALOG_STYLE_INPUT, T(playerid, "NPC gustoca"), T(playerid, "Unesite postotak (10 - 300, zadano je 100):"), T(playerid, "Spremi"), T(playerid, "Natrag"));
+}
+
+DLG:npc_gustoca_unos(playerid, response, const inputtext[])
+{
+    if (!response) return ShowNpcGustoca(playerid);
+    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
+    new v = strval(inputtext);
+    if (!ProvjeriBroj(inputtext) || v < 10 || v > 300)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Vrijednost mora biti izmedu %d i %d."), 10, 300);
+        return ShowNpcGustoca(playerid);
+    }
+    if (gNpcUredi[playerid] == 0) gNpcPromet = v;
+    else gNpcPjesaci = v;
+    NpcGustocaSpremi();
+    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Postavka spremljena."));
+    return ShowNpcGustoca(playerid);
 }

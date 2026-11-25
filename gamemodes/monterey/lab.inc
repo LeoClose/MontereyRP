@@ -1,7 +1,8 @@
 #define LAB_MJESTA_MAX      64
 #define LAB_DOMET           1.8
 #define LAB_SANDUK_SLOT     2
-#define LAB_SANDUK_MODEL    1220
+#define LAB_SANDUK_MODEL    1271
+#define LAB_POD_MAX         48
 #define LAB_SANDUK_PASTA    50
 #define LAB_SANDUK_KEM      10
 #define LAB_CIJENA_PASTA    2000
@@ -36,6 +37,8 @@ static gLabMjesto[LAB_MJESTA_MAX][E_LAB_MJESTO], gLabSavjet[MAX_PLAYERS];
 static gLabIgra[MAX_PLAYERS], gLabToken[MAX_PLAYERS], gLabOd[MAX_PLAYERS], PlayerText:gLabTd[MAX_PLAYERS][5];
 static Float:gMethTemp[MAX_PLAYERS], Float:gMethBrzina[MAX_PLAYERS], gMethDobro[MAX_PLAYERS], gMethUkupno[MAX_PLAYERS], gMethVruce[MAX_PLAYERS];
 static Float:gKokaPoz[MAX_PLAYERS], Float:gKokaSmjer[MAX_PLAYERS], Float:gKokaZona[MAX_PLAYERS], gKokaRunda[MAX_PLAYERS], gKokaPogodak[MAX_PLAYERS];
+enum E_LAB_POD { bool:lpIma, lpItem, STREAMER_TAG_OBJECT:lpObjekt, Float:lpX, Float:lpY, Float:lpZ, lpSvijet, lpInt }
+static gLabPod[LAB_POD_MAX][E_LAB_POD];
 static Float:gLuka[3], bool:gLukaIma, STREAMER_TAG_3D_TEXT_LABEL:gLukaTekst, STREAMER_TAG_OBJECT:gLukaSanduci[LUKA_NARUDZBI];
 
 InitLab()
@@ -142,6 +145,51 @@ static LabSandukPrikazi(playerid, bool:nosi)
     if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY) SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 }
 
+static LabSandukBaci(playerid)
+{
+    new item = LabNosi(playerid);
+    if (item == -1) return 0;
+    new k = 0;
+    while (k < LAB_POD_MAX && gLabPod[k][lpIma]) k++;
+    if (k == LAB_POD_MAX)
+    {
+        k = 0;
+        DestroyDynamicObject(gLabPod[k][lpObjekt]);
+    }
+    new Float:a;
+    GetPlayerPos(playerid, gLabPod[k][lpX], gLabPod[k][lpY], gLabPod[k][lpZ]);
+    GetPlayerFacingAngle(playerid, a);
+    gLabPod[k][lpX] -= 0.7 * floatsin(a, degrees);
+    gLabPod[k][lpY] += 0.7 * floatcos(a, degrees);
+    gLabPod[k][lpSvijet] = GetPlayerVirtualWorld(playerid);
+    gLabPod[k][lpInt] = GetPlayerInterior(playerid);
+    gLabPod[k][lpItem] = item;
+    gLabPod[k][lpObjekt] = CreateDynamicObject(LAB_SANDUK_MODEL, gLabPod[k][lpX], gLabPod[k][lpY], gLabPod[k][lpZ] - 0.65, 0.0, 0.0, a, gLabPod[k][lpSvijet], gLabPod[k][lpInt]);
+    gLabPod[k][lpIma] = true;
+    GiveItem(playerid, item, -1);
+    LabSandukPrikazi(playerid, false);
+    return 1;
+}
+
+static LabPodBlizu(playerid)
+{
+    new svijet = GetPlayerVirtualWorld(playerid);
+    for (new k = 0; k < LAB_POD_MAX; k++)
+        if (gLabPod[k][lpIma] && gLabPod[k][lpSvijet] == svijet && IsPlayerInRangeOfPoint(playerid, 1.6, gLabPod[k][lpX], gLabPod[k][lpY], gLabPod[k][lpZ])) return k;
+    return -1;
+}
+
+static LabPodUzmi(playerid, k)
+{
+    if (!GiveItem(playerid, gLabPod[k][lpItem], 1)) return 0;
+    DestroyDynamicObject(gLabPod[k][lpObjekt]);
+    gLabPod[k][lpIma] = false;
+    ApplyAnimation(playerid, "CARRY", "liftup", 4.1, false, false, false, false, 0);
+    LabSandukPrikazi(playerid, true);
+    if (LabMafija(playerid)) LabHqCilj(playerid);
+    return 1;
+}
+
 LabSandukGepek(playerid, bool:stavi)
 {
     LabSandukPrikazi(playerid, !stavi);
@@ -182,7 +230,7 @@ static LukaSanduci()
     if (!gLukaIma) return;
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT remaining FROM drug_orders WHERE state = 1 AND remaining > 0 LIMIT %d", LUKA_NARUDZBI);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++, DB_SelectNextRow(res))
-        gLukaSanduci[k] = CreateDynamicObject(LAB_SANDUK_MODEL, gLuka[0] + float(k % 4) * 0.9 - 1.35, gLuka[1] + float(k / 4) * 0.9, gLuka[2] - 0.7, 0.0, 0.0, 0.0, 0, 0);
+        gLukaSanduci[k] = CreateDynamicObject(LAB_SANDUK_MODEL, gLuka[0] + float(k % 4) * 0.9 - 1.35, gLuka[1] + float(k / 4) * 0.9, gLuka[2] - 0.65, 0.0, 0.0, 0.0, 0, 0);
     DB_FreeResultSet(res);
 }
 
@@ -458,6 +506,7 @@ LabConnect(playerid)
 
 LabOdlazi(playerid)
 {
+    LabSandukBaci(playerid);
     if (gLabIgra[playerid] != LIGRA_NEMA) LabIgraKraj(playerid);
 }
 
@@ -466,7 +515,18 @@ LabAlt(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || gLabIgra[playerid] != LIGRA_NEMA) return 0;
     if (LukaAlt(playerid)) return 1;
     new k = LabMjestoBlizu(playerid);
-    if (k == -1) return 0;
+    if (k == -1 || (gLabMjesto[k][lmTip] == LM_SANDUCI && LabNosi(playerid) == -1))
+    {
+        if (LabNosi(playerid) != -1)
+        {
+            LabSandukBaci(playerid);
+            ApplyAnimation(playerid, "CARRY", "putdwn", 4.1, false, false, false, false, 0);
+            return 1;
+        }
+        new p = LabPodBlizu(playerid);
+        if (p != -1 && !gInv[playerid][ITEM_KUTIJA]) return LabPodUzmi(playerid, p);
+        if (k == -1) return 0;
+    }
     switch (gLabMjesto[k][lmTip])
     {
         case LM_SANDUCI:
@@ -494,9 +554,16 @@ LabTick()
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
-        if (LabNosi(i) != -1 && GetPlayerState(i) == PLAYER_STATE_ONFOOT && GetPlayerSpecialAction(i) != SPECIAL_ACTION_CARRY && !IsRanjen(i)) LabSandukPrikazi(i, true);
+        if (LabNosi(i) != -1 && IsRanjen(i))
+        {
+            LabSandukBaci(i);
+            ObavijestGreska(i, T(i, "Ispustili ste sanduk."));
+        }
+        else if (LabNosi(i) != -1 && GetPlayerState(i) == PLAYER_STATE_ONFOOT && GetPlayerSpecialAction(i) != SPECIAL_ACTION_CARRY) LabSandukPrikazi(i, true);
         new k = gLabIgra[i] == LIGRA_NEMA ? LabMjestoBlizu(i) : -1;
-        if (k != -1 && k != gLabSavjet[i])
+        if (k == -1 && gLabIgra[i] == LIGRA_NEMA && LabNosi(i) == -1 && LabPodBlizu(i) != -1) k = 1000;
+        if (k == 1000 && gLabSavjet[i] != 1000) Savjet(i, T(i, "~y~ALT~w~ - podigni sanduk"), 4000);
+        if (k != -1 && k != 1000 && k != gLabSavjet[i])
         {
             switch (gLabMjesto[k][lmTip])
             {

@@ -44,6 +44,7 @@ forward bool:LabAktivan(playerid);
 forward bool:LabTipke(playerid, KEY:newkeys, KEY:oldkeys);
 forward bool:LabMjestoIma(k);
 forward bool:ImaIzvadenoOruzje(playerid);
+forward bool:PredmetZaAdmina(item);
 
 new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS], bool:gAdminZamrznut[MAX_PLAYERS], gZastitaDo[MAX_PLAYERS];
 stock PrenosConnect(playerid)
@@ -306,7 +307,10 @@ public OnGameModeInit()
     MapaItalijani();
     MapaSurenosiUkloni(INVALID_PLAYER_ID);
     MapaSurenosi();
+    MapaRuskaMafijaUkloni(INVALID_PLAYER_ID);
+    MapaRuskaMafija();
     Lik_OsvjeziMapu();
+    InitNpcGustoca();
     InitKapije();
     InitMarica();
     InitPolicija();
@@ -546,6 +550,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_monterey_peak.inc"
 #include "monterey/mape/mapa_glen_park.inc"
 #include "monterey/mape/mapa_surenosi.inc"
+#include "monterey/mape/mapa_ruska_mafija.inc"
 #include "monterey/brod.inc"
 #include "monterey/lab.inc"
 #include "monterey/teritorij.inc"

@@ -81,6 +81,7 @@ native bool:Lik_Vozi(lik, Float:x, Float:y, Float:z, Float:brzina = 0.0, bool:si
 native bool:Lik_Kruzi(lik, Float:brzina = 11.0);
 native bool:Lik_Sirena(lik, bool:upaljena);
 native Lik_SvjetlaAuta(bool:upaljena);
+native Lik_Gustoca(promet, pjesaci);
 native bool:Lik_Trubi(lik, ms = 500);
 native bool:Lik_Zaglavio(lik, ms);
 native bool:Lik_TockaStaze(Float:x, Float:y, Float:min, Float:max, &Float:ox, &Float:oy, &Float:oz);

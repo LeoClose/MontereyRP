@@ -22,6 +22,7 @@ public OnPlayerConnect(playerid)
     MapaChinatownUkloni(playerid);
     MapaItalijaniUkloni(playerid);
     MapaSurenosiUkloni(playerid);
+    MapaRuskaMafijaUkloni(playerid);
     MapaJeffersonFlatsUkloni(playerid);
     MapaSpawnUkloni(playerid);
     MapaMontereyPeakUkloni(playerid);
@@ -399,7 +400,7 @@ CMD:ahelp(playerid, params[])
     PomocRed(tekst, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
     PomocRed(tekst, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
     PomocRed(tekst, len, T(playerid, "  /freeze [id/ime], /unfreeze [id/ime] - zamrzni ili odmrzni igraca"));
-    PomocRed(tekst, len, T(playerid, "  Banke: /pljacka (postavke pljacke). Kapije: /kapija, /kapijabrisi"));
+    PomocRed(tekst, len, T(playerid, "  Banke: /pljacka (postavke pljacke). Kapije: /kapija, /kapijaorg, /kapijabrisi"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
     {
         PomocRed(tekst, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));

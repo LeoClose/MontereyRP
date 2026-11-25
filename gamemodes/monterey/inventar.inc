@@ -193,8 +193,8 @@ new const gItems[][E_ITEM] = {
     { "Srecka",                 "kom", 10,  0,  -1, 1581  },
     { "Kutija robe",            "kom", 1,   0,  -1, 1220  },
     { "Eksploziv",              "kom", 6,   0,  -1, 1654  },
-    { "Sanduk koka paste",      "kom", 1,   0,  -1, 1220  },
-    { "Sanduk kemikalija",      "kom", 1,   0,  -1, 1220  }
+    { "Sanduk koka paste",      "kom", 1,   0,  -1, 1271  },
+    { "Sanduk kemikalija",      "kom", 1,   0,  -1, 1271  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -667,7 +667,7 @@ CMD:inv(playerid, params[])
     return cmd_inventar(playerid, params);
 }
 
-static bool:PredmetZaAdmina(item)
+bool:PredmetZaAdmina(item)
 {
     if (gItems[item][ITEM_WEAPON] || (item >= ITEM_MUN_PISTOLJ && item <= ITEM_MUN_PUSKA)) return false;
     if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) return false;

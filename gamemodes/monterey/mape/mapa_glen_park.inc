@@ -46,6 +46,7 @@ RemoveBuildingForPlayer(playerid, 1308, 2081.919, -1196.310, 23.140, 0.250);
 
 MapaGlenPark()
 {
+new STREAMER_TAG_OBJECT:rampa;
 gMapaInt = 0;
 new tmpobjid;
 tmpobjid = CreateObject(5458, 1995.020019, -1198.349975, 21.109399, 0.000000, 0.000000, 0.000000, 3000.0);
@@ -162,14 +163,14 @@ tmpobjid = CreateObject(8674, 2053.250000, -1325.632080, 22.924373, 0.000000, 0.
 SetObjectMaterial(tmpobjid, 0, 3306, "cunte_house1", "pinkfence_law", 0x00000000);
 tmpobjid = CreateObject(966, 2052.670898, -1330.000366, 22.984375, 0.000000, 0.000000, 0.000000, 3000.0);
 SetObjectMaterial(tmpobjid, 0, 16640, "a51", "ws_carparkwall2", 0xFFFFFFFF);
-tmpobjid = CreateObject(968, 2052.606689, -1329.985595, 23.844387, 360.000000, 90.000000, 180.000000, 3000.0);
-SetObjectMaterial(tmpobjid, 0, 16640, "a51", "ws_carparkwall2", 0x00000000);
-SetObjectMaterial(tmpobjid, 1, 16640, "a51", "ws_carparkwall2", 0x00000000);
+rampa = CreateDynamicObjectEx(968, 2052.606689, -1329.985595, 23.844387, 360.000000, 90.000000, 180.000000, 300.0, 300.0);
+SetDynamicObjectMaterial(rampa, 0, 16640, "a51", "ws_carparkwall2", 0x00000000);
+SetDynamicObjectMaterial(rampa, 1, 16640, "a51", "ws_carparkwall2", 0x00000000);
 tmpobjid = CreateObject(966, 2012.689697, -1330.000366, 22.754369, 0.000000, 0.000007, 0.000000, 3000.0);
 SetObjectMaterial(tmpobjid, 0, 16640, "a51", "ws_carparkwall2", 0xFFFFFFFF);
-tmpobjid = CreateObject(968, 2012.625488, -1329.985595, 23.614383, 0.000000, 89.999992, 179.999954, 3000.0);
-SetObjectMaterial(tmpobjid, 0, 16640, "a51", "ws_carparkwall2", 0x00000000);
-SetObjectMaterial(tmpobjid, 1, 16640, "a51", "ws_carparkwall2", 0x00000000);
+rampa = CreateDynamicObjectEx(968, 2012.625488, -1329.985595, 23.614383, 0.000000, 89.999992, 179.999954, 300.0, 300.0);
+SetDynamicObjectMaterial(rampa, 0, 16640, "a51", "ws_carparkwall2", 0x00000000);
+SetDynamicObjectMaterial(rampa, 1, 16640, "a51", "ws_carparkwall2", 0x00000000);
 tmpobjid = CreateObject(8674, 2003.698486, -1323.062011, 22.924373, 0.000000, 0.000000, 90.000000, 3000.0);
 SetObjectMaterial(tmpobjid, 0, 3306, "cunte_house1", "pinkfence_law", 0x00000000);
 tmpobjid = CreateObject(19482, 2056.884277, -1278.136718, 24.400314, 0.000000, 0.000000, 0.000000, 3000.0);
