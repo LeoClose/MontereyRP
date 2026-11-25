@@ -43,6 +43,7 @@ static const gBankaAkcija[][] = { "Otvori racun ($%d)", "Informacije", "Uplati n
 
 enum { SK_RACUN, SK_GOTOVINA, SK_STEDNJA, SK_KREDIT, SK_SVE }
 static const gSalterIme[][] = { "Salter: racun i kartice", "Salter: gotovina", "Salter: stednja i transferi", "Salter: krediti", "Salter: sve usluge" };
+static const gSalterOpis[][] = { "Otvaranje racuna, informacije, kartice", "Uplata i isplata novca", "Stednja i slanje novca", "Podizanje i otplata kredita", "Sve bankovne usluge" };
 static const gBankaAkcijaKat[] = { SK_RACUN, SK_RACUN, SK_GOTOVINA, SK_GOTOVINA, SK_STEDNJA, SK_STEDNJA, SK_STEDNJA, SK_KREDIT, SK_KREDIT, SK_RACUN };
 static const gSalterSkin[BANKA_SALTERI] = { 150, 141, 17, 76 };
 
@@ -136,7 +137,9 @@ static SalterStvori(s, k)
     gSalterAktor[s][k] = CreateActor(gSalterSkin[k], gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2], gSalterPoz[s][k][3]);
     SetActorVirtualWorld(gSalterAktor[s][k], svijet);
     SetActorInvulnerable(gSalterAktor[s][k], true);
-    gSalterTekst[s][k] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
+    new tekst[96];
+    format(tekst, sizeof tekst, "%s\n%s", gSalterIme[gSalterKat[s][k]], gSalterOpis[gSalterKat[s][k]]);
+    gSalterTekst[s][k] = CreateDynamic3DTextLabel(tekst, COLOR_ORG, gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
     InterakcijaOznaka(gSalterTekst[s][k], BANKA_KASA_DOMET);
     if (gBanka[s][bkPljacka]) ApplyActorAnimation(gSalterAktor[s][k], "PED", "cower", 4.1, true, false, false, true, 0);
 }
@@ -684,9 +687,38 @@ PljVrecaOdlazak(playerid)
     gPljVreca[playerid] = 0;
 }
 
+static PljPomoc(playerid)
+{
+    new tekst[1536];
+    strcat(tekst, T(playerid, "/pljacka postavke - brojke pljacke (clanovi, cekanje, novac...)"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka menadzer - mjesto menadzera"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka tocka - tocka puta menadzera (npr. stepenice)"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka tockebrisi - obrisi put menadzera"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka podizna [metara] - podizna vrata ispred vas"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka vrata [kut] - okretna vrata ispred vas, menadzer staje ovdje"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka eksploziv - mjesto za eksploziv"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka sef [kut] - pretinac ispred vas"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka otvori / zatvori - vrata trezora i pretinci"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka reset [sve] - zavrsi pljacku i ponisti cekanje"));
+    strcat(tekst, "\n");
+    strcat(tekst, T(playerid, "/pljacka brisi - obrisi postavke pljacke ove banke"));
+    strcat(tekst, "\n");
+    return PrikaziDialog(playerid, DLG_PLJACKA_POMOC, DIALOG_STYLE_MSGBOX, T(playerid, "Postavke pljacke"), tekst, T(playerid, "Zatvori"));
+}
+
 CMD:pljacka(playerid, params[])
 {
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    if (!params[0]) return PljPomoc(playerid);
     new s = BankaIgraca(playerid), idx = 0, opcija[16], p2[16];
     if (!strcmp(params, "postavke", true)) return PljPostavkePrikazi(playerid);
     if (s == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u banci."));
@@ -823,7 +855,7 @@ CMD:pljacka(playerid, params[])
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d", gBanka[s][bkDb]));
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Postavke pljacke su obrisane."));
     }
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pljacka [postavke | menadzer | tocka | tockebrisi | podizna [metara] | vrata [kut] | eksploziv | sef [kut] | otvori | zatvori | reset [sve] | brisi]"));
+    return PljPomoc(playerid);
 }
 
 BankaUlaz(playerid)
