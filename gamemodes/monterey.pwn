@@ -50,7 +50,6 @@ public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak)
     gPrenosZamrz[playerid] = 0;
     SetPlayerPos(playerid, x, y, z);
     TogglePlayerControllable(playerid, true);
-    GameTextForPlayer(playerid, " ", 100, 3);
 }
 
 stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
@@ -65,7 +64,6 @@ stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
         static token;
         gPrenosZamrz[playerid] = ++token ? token : ++token;
         TogglePlayerControllable(playerid, false);
-        GameTextForPlayer(playerid, T(playerid, "~w~Ucitavanje..."), 5000, 3);
         SetTimerEx("PrenosOdmrzni", PRENOS_MS, false, "ddfffdd", playerid, gPrenosZamrz[playerid], x, y, z, -1, 0);
     }
     return SetPlayerPos(playerid, x, y, z);
@@ -166,6 +164,7 @@ public OnGameModeInit()
     DisableInteriorEnterExits();
     Streamer_SetVisibleItems(STREAMER_TYPE_OBJECT, 960);
     Streamer_ToggleChunkStream(true);
+    Streamer_SetChunkSize(STREAMER_TYPE_OBJECT, 25);
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));
