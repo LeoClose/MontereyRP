@@ -41,6 +41,42 @@ static BrodPomakni(Float:odmak, Float:brzina)
     for (new d = 0; d < sizeof gBrodDio; d++) MoveDynamicObject(gBrod[d], gBrodDio[d][1], gBrodDio[d][2] - odmak, gBrodDio[d][3], brzina);
 }
 
+#define BROD_CIKLUS_S       900
+#define BROD_PRISTAN_S      300
+
+static gBrodSlot, gBrodOdlazak, bool:gBrodPristao;
+
+BrodSljedeciDolazak()
+{
+    new sad = gettime(), slot = (sad / BROD_CIKLUS_S + 1) * BROD_CIKLUS_S;
+    if (gBrodFaza >= 0 && gBrodSlot == slot - BROD_CIKLUS_S && !gBrodPristao) return slot - BROD_CIKLUS_S;
+    return slot;
+}
+
+static BrodDolazi(slot)
+{
+    gBrodSlot = slot;
+    gBrodOdlazi = false;
+    gBrodPristao = false;
+    gBrodFaza = 0;
+    for (new d = 0; d < sizeof gBrodDio; d++)
+        gBrod[d] = CreateDynamicObject(floatround(gBrodDio[d][0]), gBrodDio[d][1], gBrodDio[d][2] - BROD_ODMAK, gBrodDio[d][3], 0.0, 0.0, gBrodDio[d][4], 0, 0, -1, BROD_DALEKO, BROD_DALEKO, STREAMER_TAG_AREA:-1, 1);
+    BrodPomakni(gBrodFaze[0][0], gBrodFaze[0][1]);
+}
+
+BrodTick()
+{
+    new sad = gettime(), slot = sad / BROD_CIKLUS_S * BROD_CIKLUS_S;
+    if (gBrodFaza < 0 && slot != gBrodSlot && sad - slot < BROD_PRISTAN_S) BrodDolazi(slot);
+    else if (gBrodPristao && !gBrodOdlazi && sad >= gBrodOdlazak)
+    {
+        gBrodOdlazi = true;
+        gBrodPristao = false;
+        gBrodFaza = 0;
+        BrodPomakni(BROD_ODMAK, 4.0);
+    }
+}
+
 public OnDynamicObjectMoved(STREAMER_TAG_OBJECT:objectid)
 {
     if (gBrodFaza < 0 || objectid != gBrod[0]) return 0;
@@ -51,24 +87,11 @@ public OnDynamicObjectMoved(STREAMER_TAG_OBJECT:objectid)
         return 1;
     }
     if (++gBrodFaza < sizeof gBrodFaze) BrodPomakni(gBrodFaze[gBrodFaza][0], gBrodFaze[gBrodFaza][1]);
-    return 1;
-}
-
-CMD:brod(playerid, params[])
-{
-    if (!ProvjeriOvlasti(playerid, ALVL_MANAGE)) return 1;
-    if (gBrodFaza >= 0 && gBrodFaza < sizeof gBrodFaze) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Brod je vec u plovidbi."));
-    if (gBrodFaza >= 0)
+    else
     {
-        gBrodOdlazi = true;
-        gBrodFaza = 0;
-        BrodPomakni(BROD_ODMAK, 4.0);
-        return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Brod isplovljava iz luke."));
+        gBrodPristao = true;
+        gBrodOdlazak = gettime() + BROD_PRISTAN_S;
+        LukaPristao(gBrodSlot);
     }
-    gBrodOdlazi = false;
-    gBrodFaza = 0;
-    for (new d = 0; d < sizeof gBrodDio; d++)
-        gBrod[d] = CreateDynamicObject(floatround(gBrodDio[d][0]), gBrodDio[d][1], gBrodDio[d][2] - BROD_ODMAK, gBrodDio[d][3], 0.0, 0.0, gBrodDio[d][4], 0, 0, -1, BROD_DALEKO, BROD_DALEKO, STREAMER_TAG_AREA:-1, 1);
-    BrodPomakni(gBrodFaze[0][0], gBrodFaze[0][1]);
-    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Brod uplovljava u luku."));
+    return 1;
 }

@@ -22,19 +22,6 @@
 #define UVOZ_DOMET          6.0
 #define ORUZJE_CIJENA       25000
 #define ORUZJE_PAUZA_S      10800
-#define LAB_PASTA_PO_KEM    10
-#define LAB_RAST_S          900
-#define LAB_MAX_SERIJA      200
-#define METH_KEM            3
-#define METH_PRINOS         30
-#define METH_MS             100
-#define METH_TRAJANJE_MS    30000
-#define METH_EKSPLOZIJA_MS  1500
-#define METH_ZONA_OD        55.0
-#define METH_ZONA_DO        75.0
-#define METH_BAR_X          240.0
-#define METH_BAR_Y          330.0
-#define METH_BAR_W          160.0
 #define DROGA_BOJA          0x8E44ADE6
 
 enum E_BILJKA { bool:biIma, biDb, biKuca, biVlasnik, Float:biX, Float:biY, Float:biZ, biPosadjeno, biZalito, STREAMER_TAG_OBJECT:biObj, biFaza }
@@ -43,9 +30,7 @@ enum E_UVOZ { bool:uvIma, uvDb, Float:uvX, Float:uvY, Float:uvZ }
 
 static gBiljka[BILJKA_MAX][E_BILJKA], gDob[DOB_MAX][E_DOB], gUvoz[UVOZ_MAX][E_UVOZ];
 static gDrogaBiljka[MAX_PLAYERS], gDrogaDob[MAX_PLAYERS], gDrogaUvoz[MAX_PLAYERS] = { -1, ... }, gDrogaUvozToken[MAX_PLAYERS];
-static gDrogaUvozOrg[MAX_PLAYERS], gDrogaUvozVrsta[MAX_PLAYERS], gDrogaUvozZadnji[MAX_HQ][3], gApDroga[MAX_PLAYERS][DOB_MAX + UVOZ_MAX];
-static bool:gMeth[MAX_PLAYERS], Float:gMethTemp[MAX_PLAYERS], Float:gMethBrzina[MAX_PLAYERS], gMethOd[MAX_PLAYERS], gMethDobro[MAX_PLAYERS], gMethUkupno[MAX_PLAYERS], gMethVruce[MAX_PLAYERS], gMethToken[MAX_PLAYERS];
-static PlayerText:gMethTd[MAX_PLAYERS][5];
+static gDrogaUvozOrg[MAX_PLAYERS], gDrogaUvozVrsta[MAX_PLAYERS], gDrogaUvozZadnji[MAX_HQ][3], gApDroga[MAX_PLAYERS][DOB_MAX + UVOZ_MAX + 64];
 static const gOruzjeSanduk[][2] = { { ITEM_AK47, 2 }, { ITEM_M4, 1 }, { ITEM_DEAGLE, 2 }, { ITEM_UZI, 2 }, { ITEM_MUN_PUSKA, 300 }, { ITEM_MUN_PISTOLJ, 150 }, { ITEM_MUN_SMG, 200 } };
 
 InitDroga()
@@ -96,22 +81,21 @@ InitDroga()
 
 bool:DrogaKuha(playerid)
 {
-    return gMeth[playerid];
+    return LabAktivan(playerid);
 }
 
 DrogaConnect(playerid)
 {
     gDrogaUvoz[playerid] = -1;
     gDrogaUvozToken[playerid]++;
-    gMeth[playerid] = false;
-    gMethToken[playerid]++;
+    LabConnect(playerid);
 }
 
 DrogaOdlazi(playerid)
 {
     gDrogaUvoz[playerid] = -1;
     gDrogaUvozToken[playerid]++;
-    if (gMeth[playerid]) MethKraj(playerid, false);
+    LabOdlazi(playerid);
 }
 
 static bool:DrogaMafija(playerid)
@@ -269,8 +253,8 @@ static DobMeni(playerid, p)
     new tekst[512], bool:mafija = DrogaMafija(playerid);
     DobZaliha(p);
     gDrogaDob[playerid] = p;
-    format(tekst, sizeof tekst, T(playerid, "Sjemenke marihuane ($%d/kom, zaliha %d)\n%sKemikalije ($%d/l, zaliha %d)\n%sUvoz koka paste ($%d, %d g)\n%sSanduk oruzja ($%d)"),
-        DOB_SJEME_CIJENA, gDob[p][dbSjeme], mafija ? ("{FFFFFF}") : ("{777777}"), DOB_KEM_CIJENA, gDob[p][dbKem], mafija ? ("{FFFFFF}") : ("{777777}"), UVOZ_CIJENA, UVOZ_KOLICINA, mafija ? ("{FFFFFF}") : ("{777777}"), ORUZJE_CIJENA);
+    format(tekst, sizeof tekst, T(playerid, "Sjemenke marihuane ($%d/kom, zaliha %d)\n%sKemikalije ($%d/l, zaliha %d)\n%sSanduk oruzja ($%d)"),
+        DOB_SJEME_CIJENA, gDob[p][dbSjeme], mafija ? ("{FFFFFF}") : ("{777777}"), DOB_KEM_CIJENA, gDob[p][dbKem], mafija ? ("{FFFFFF}") : ("{777777}"), ORUZJE_CIJENA);
     return PrikaziDialog(playerid, DLG_DOBAVLJAC, DIALOG_STYLE_LIST, T(playerid, "Dobavljac"), tekst, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -299,7 +283,7 @@ DLG:dobavljac(playerid, response, listitem)
         AktorKaze(playerid, gDob[p][dbAktor], "Dobavljac", "To prodajem samo ljudima od povjerenja.");
         return DobMeni(playerid, p);
     }
-    if (listitem >= 2) return DrogaUvozKreni(playerid, listitem == 3);
+    if (listitem == 2) return DrogaUvozKreni(playerid, true);
     new info[96], bool:kem = listitem == 1;
     format(info, sizeof info, T(playerid, "%s: $%d/%s, zaliha %d."), T(playerid, gItems[kem ? ITEM_KEMIKALIJE : ITEM_SJEME][ITEM_NAME]), kem ? DOB_KEM_CIJENA : DOB_SJEME_CIJENA, T(playerid, gItems[kem ? ITEM_KEMIKALIJE : ITEM_SJEME][ITEM_UNIT]), kem ? gDob[p][dbKem] : gDob[p][dbSjeme]);
     return UpitKolicina(playerid, UPIT_DOB, p, listitem, T(playerid, "Dobavljac"), info);
@@ -440,178 +424,9 @@ DrogaCheckpoint(playerid)
     return 1;
 }
 
-static bool:DrogaULabu(playerid)
-{
-    return gOrg[playerid] && GetPlayerVirtualWorld(playerid) == HQ_SVIJET + gOrg[playerid] && DrogaMafija(playerid);
-}
-
-static LabMeni(playerid)
-{
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT cocaine, ready FROM drug_labs WHERE org = %d", gOrg[playerid]), kokain = 0, gotovo = 0, tekst[512], stanje[96];
-    if (DB_GetRowCount(res))
-    {
-        kokain = DB_GetFieldInt(res, 0);
-        gotovo = DB_GetFieldInt(res, 1);
-    }
-    DB_FreeResultSet(res);
-    if (!kokain) format(stanje, sizeof stanje, T(playerid, "{777777}Nema serije u obradi"));
-    else if (gettime() < gotovo) format(stanje, sizeof stanje, T(playerid, "{F1C40F}Kokain u obradi: %d g (jos %d min)"), kokain, (gotovo - gettime()) / 60 + 1);
-    else format(stanje, sizeof stanje, T(playerid, "{2ECC71}Pokupi gotov kokain: %d g"), kokain);
-    format(tekst, sizeof tekst, T(playerid, "%s\n{FFFFFF}Preradi koka pastu u kokain (%d g paste + 1 l kemikalija = %d g)\nKuhaj metamfetamin (%d l kemikalija)"), stanje, LAB_PASTA_PO_KEM, LAB_PASTA_PO_KEM, METH_KEM);
-    return PrikaziDialog(playerid, DLG_LAB, DIALOG_STYLE_LIST, T(playerid, "Laboratorij"), tekst, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
-}
-
-CMD:lab(playerid, params[])
-{
-    if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;
-    if (!DrogaULabu(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Laboratorij se nalazi u HQ-u mafije."));
-    if (gMeth[playerid]) return 1;
-    return LabMeni(playerid);
-}
-
-CMD:laboratorij(playerid, params[]) return cmd_lab(playerid, params);
-
-DLG:lab(playerid, response, listitem)
-{
-    if (!response || !DrogaULabu(playerid)) return 1;
-    new org = gOrg[playerid];
-    if (listitem == 0)
-    {
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT cocaine, ready FROM drug_labs WHERE org = %d", org), kokain = 0, gotovo = 0;
-        if (DB_GetRowCount(res))
-        {
-            kokain = DB_GetFieldInt(res, 0);
-            gotovo = DB_GetFieldInt(res, 1);
-        }
-        DB_FreeResultSet(res);
-        if (!kokain || gettime() < gotovo) return LabMeni(playerid);
-        new n = gItems[ITEM_KOKAIN][ITEM_MAX] - gInv[playerid][ITEM_KOKAIN];
-        if (n > kokain) n = kokain;
-        if (n <= 0) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ne mozete nositi vise kokaina.")), 1;
-        GiveItem(playerid, ITEM_KOKAIN, n);
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE drug_labs SET cocaine = cocaine - %d WHERE org = %d", n, org));
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pokupili ste %d g kokaina."), n);
-        return LabMeni(playerid);
-    }
-    if (listitem == 1) return PrikaziDialog(playerid, DLG_LAB_KOL, DIALOG_STYLE_INPUT, T(playerid, "Laboratorij"), T(playerid, "Koliko grama koka paste preradujete? (visekratnik od 10)"), T(playerid, "Preradi"), T(playerid, "Natrag"));
-    if (listitem == 2) return MethPocni(playerid);
-    return 1;
-}
-
-DLG:lab_kol(playerid, response, const inputtext[])
-{
-    if (!DrogaULabu(playerid)) return 1;
-    if (!response) return LabMeni(playerid);
-    new org = gOrg[playerid], n = strval(inputtext) / LAB_PASTA_PO_KEM * LAB_PASTA_PO_KEM, kem = n / LAB_PASTA_PO_KEM;
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT cocaine FROM drug_labs WHERE org = %d", org), kokain = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
-    DB_FreeResultSet(res);
-    if (kokain) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prvo pokupite prethodnu seriju.")), LabMeni(playerid);
-    if (n <= 0 || n > LAB_MAX_SERIJA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Serija moze imati 10 - %d g."), LAB_MAX_SERIJA), LabMeni(playerid);
-    if (gInv[playerid][ITEM_KOKA] < n || gInv[playerid][ITEM_KEMIKALIJE] < kem) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Trebate %d g koka paste i %d l kemikalija."), n, kem), LabMeni(playerid);
-    GiveItem(playerid, ITEM_KOKA, -n);
-    GiveItem(playerid, ITEM_KEMIKALIJE, -kem);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO drug_labs (org, cocaine, ready) VALUES (%d, %d, %d)", org, n, gettime() + LAB_RAST_S));
-    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s mijesa kemikalije s koka pastom.", GetRPIme(playerid), "", 1);
-    SendClientMessage(playerid, COLOR_INFO, T(playerid, "Serija od %d g kokaina bit ce gotova za %d min."), n, LAB_RAST_S / 60);
-    return 1;
-}
-
-static PlayerText:MethKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
-{
-    new PlayerText:td = TdSlika(playerid, x, y, w, h, boja);
-    PlayerTextDrawShow(playerid, td);
-    return td;
-}
-
-static MethPocni(playerid)
-{
-    if (gInv[playerid][ITEM_KEMIKALIJE] < METH_KEM) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Trebate %d l kemikalija."), METH_KEM), 1;
-    GiveItem(playerid, ITEM_KEMIKALIJE, -METH_KEM);
-    gMeth[playerid] = true;
-    gMethTemp[playerid] = 40.0;
-    gMethBrzina[playerid] = 0.0;
-    gMethOd[playerid] = GetTickCount();
-    gMethDobro[playerid] = 0;
-    gMethUkupno[playerid] = 0;
-    gMethVruce[playerid] = 0;
-    TogglePlayerControllable(playerid, false);
-    ApplyAnimation(playerid, "BD_FIRE", "wash_up", 4.1, true, false, false, false, 0);
-    gMethTd[playerid][0] = MethKutija(playerid, METH_BAR_X - 3.0, METH_BAR_Y - 3.0, METH_BAR_W + 6.0, 16.0, 0x000000C0);
-    gMethTd[playerid][1] = MethKutija(playerid, METH_BAR_X, METH_BAR_Y, METH_BAR_W, 10.0, 0x3A3A3AFF);
-    gMethTd[playerid][2] = MethKutija(playerid, METH_BAR_X + METH_ZONA_OD / 100.0 * METH_BAR_W, METH_BAR_Y, (METH_ZONA_DO - METH_ZONA_OD) / 100.0 * METH_BAR_W, 10.0, 0x2ECC71AA);
-    gMethTd[playerid][3] = MethKutija(playerid, METH_BAR_X + 85.0 / 100.0 * METH_BAR_W, METH_BAR_Y, 15.0 / 100.0 * METH_BAR_W, 10.0, 0xC0392BAA);
-    gMethTd[playerid][4] = MethKutija(playerid, METH_BAR_X, METH_BAR_Y - 2.0, 2.0, 14.0, 0xFFFFFFFF);
-    IgraObavijest(playerid, T(playerid, "Laboratorij"), DROGA_BOJA, T(playerid, "Drzite temperaturu u zelenom.~n~W - grijanje, S - hladjenje, ENTER - odustani.~n~Crveno predugo = eksplozija!"), 0);
-    SetTimerEx("MethTick", METH_MS, false, "ii", playerid, ++gMethToken[playerid]);
-    return 1;
-}
-
-static MethKraj(playerid, bool:gotovo)
-{
-    gMeth[playerid] = false;
-    gMethToken[playerid]++;
-    for (new i = 0; i < sizeof gMethTd[]; i++) PlayerTextDrawDestroy(playerid, gMethTd[playerid][i]);
-    if (!IsPlayerConnected(playerid)) return;
-    TogglePlayerControllable(playerid, true);
-    ClearAnimations(playerid);
-    if (!gotovo) return;
-    new kvaliteta = gMethUkupno[playerid] ? gMethDobro[playerid] * 100 / gMethUkupno[playerid] : 0, grama = kvaliteta < 30 ? 0 : METH_PRINOS * kvaliteta / 100, poruka[128];
-    if (grama > gItems[ITEM_METH][ITEM_MAX] - gInv[playerid][ITEM_METH]) grama = gItems[ITEM_METH][ITEM_MAX] - gInv[playerid][ITEM_METH];
-    if (grama > 0) GiveItem(playerid, ITEM_METH, grama);
-    format(poruka, sizeof poruka, T(playerid, "Kvaliteta: %d%%~n~Dobili ste %d g metamfetamina."), kvaliteta, grama);
-    IgraObavijest(playerid, T(playerid, "Laboratorij"), DROGA_BOJA, poruka);
-}
-
-forward MethTick(playerid, token);
-public MethTick(playerid, token)
-{
-    if (token != gMethToken[playerid] || !gMeth[playerid]) return;
-    if (!IsPlayerConnected(playerid) || !DrogaULabu(playerid))
-    {
-        MethKraj(playerid, false);
-        return;
-    }
-    new KEY:tipke, gore, strana, sad = GetTickCount();
-    GetPlayerKeys(playerid, tipke, gore, strana);
-    gMethBrzina[playerid] = gMethBrzina[playerid] * 0.85 + float(random(21) - 10) / 100.0 + (gore < 0 ? 0.15 : gore > 0 ? -0.15 : 0.03);
-    if (gMethBrzina[playerid] > 1.5) gMethBrzina[playerid] = 1.5;
-    if (gMethBrzina[playerid] < -1.5) gMethBrzina[playerid] = -1.5;
-    gMethTemp[playerid] += gMethBrzina[playerid];
-    if (gMethTemp[playerid] < 0.0) gMethTemp[playerid] = 0.0, gMethBrzina[playerid] = 0.0;
-    if (gMethTemp[playerid] > 100.0) gMethTemp[playerid] = 100.0, gMethBrzina[playerid] = 0.0;
-    gMethUkupno[playerid]++;
-    if (gMethTemp[playerid] >= METH_ZONA_OD && gMethTemp[playerid] <= METH_ZONA_DO) gMethDobro[playerid]++;
-    if (gMethTemp[playerid] >= 85.0) gMethVruce[playerid] += METH_MS;
-    else gMethVruce[playerid] = 0;
-    PlayerTextDrawHide(playerid, gMethTd[playerid][4]);
-    PlayerTextDrawSetPos(playerid, gMethTd[playerid][4], METH_BAR_X + gMethTemp[playerid] / 100.0 * METH_BAR_W - 1.0, METH_BAR_Y - 2.0);
-    PlayerTextDrawShow(playerid, gMethTd[playerid][4]);
-    if (gMethVruce[playerid] >= METH_EKSPLOZIJA_MS)
-    {
-        new Float:x, Float:y, Float:z;
-        GetPlayerPos(playerid, x, y, z);
-        MethKraj(playerid, false);
-        CreateExplosion(x, y, z, 12, 3.0);
-        IgraObavijest(playerid, T(playerid, "Laboratorij"), OBAVIJEST_GRESKA, T(playerid, "Smjesa je eksplodirala! Kemikalije su izgubljene."));
-        return;
-    }
-    if (sad - gMethOd[playerid] >= METH_TRAJANJE_MS)
-    {
-        MethKraj(playerid, true);
-        return;
-    }
-    SetTimerEx("MethTick", METH_MS, false, "ii", playerid, token);
-}
-
 bool:DrogaTipke(playerid, KEY:newkeys, KEY:oldkeys)
 {
-    if (!gMeth[playerid]) return false;
-    if ((newkeys & KEY_SECONDARY_ATTACK) && !(oldkeys & KEY_SECONDARY_ATTACK))
-    {
-        MethKraj(playerid, false);
-        IgraObavijest(playerid, T(playerid, "Laboratorij"), OBAVIJEST_GRESKA, T(playerid, "Odustali ste. Kemikalije su izgubljene."));
-    }
-    return true;
+    return LabTipke(playerid, newkeys, oldkeys);
 }
 
 ShowDrogaAdmin(playerid)
@@ -619,6 +434,11 @@ ShowDrogaAdmin(playerid)
     new list[2048], row[96], len = 0, n = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Novi dobavljac na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Nova tocka uvoza na mojoj poziciji"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Luka: mjesto preuzimanja posiljki na mojoj poziciji"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Laboratorij: mjesto za sanduke"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Laboratorij: stol za kokain"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Laboratorij: stol za metamfetamin"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Laboratorij: skladiste"));
     for (new p = 0; p < DOB_MAX; p++)
     {
         if (!gDob[p][dbIma]) continue;
@@ -632,6 +452,13 @@ ShowDrogaAdmin(playerid)
         format(row, sizeof row, T(playerid, "Uvoz [%d] %s - obrisi"), gUvoz[u][uvDb], CestaZona(gUvoz[u][uvX], gUvoz[u][uvY]));
         DodajStupac(list, len, row);
         gApDroga[playerid][n++] = DOB_MAX + u;
+    }
+    for (new k = 0; k < 64; k++)
+    {
+        if (!LabMjestoIma(k)) continue;
+        LabMjestoOpis(playerid, k, row);
+        DodajStupac(list, len, row);
+        gApDroga[playerid][n++] = DOB_MAX + UVOZ_MAX + k;
     }
     return PrikaziDialog(playerid, DLG_APANEL_DROGA, DIALOG_STYLE_LIST, T(playerid, "Droga"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
@@ -668,9 +495,25 @@ DLG:apanel_droga(playerid, response, listitem)
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Tocka uvoza postavljena."));
         return ShowDrogaAdmin(playerid);
     }
-    new i = listitem - 2;
+    if (listitem == 2)
+    {
+        if (LukaPostavi(playerid)) SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Mjesto preuzimanja u luci postavljeno."));
+        return ShowDrogaAdmin(playerid);
+    }
+    if (listitem >= 3 && listitem <= 6)
+    {
+        if (LabMjestoDodaj(playerid, listitem - 3)) SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Mjesto u laboratoriju postavljeno."));
+        return ShowDrogaAdmin(playerid);
+    }
+    new i = listitem - 7;
     if (i < 0 || i >= sizeof gApDroga[]) return 1;
     new k = gApDroga[playerid][i];
+    if (k >= DOB_MAX + UVOZ_MAX)
+    {
+        LabMjestoObrisi(k - DOB_MAX - UVOZ_MAX);
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Mjesto u laboratoriju obrisano."));
+        return ShowDrogaAdmin(playerid);
+    }
     if (k < DOB_MAX)
     {
         if (!gDob[k][dbIma]) return ShowDrogaAdmin(playerid);

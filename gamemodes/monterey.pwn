@@ -39,6 +39,11 @@ forward bool:AcUkljuceno(code);
 #define PRENOS_FADE_MS 450
 
 forward bool:FadeCrno(playerid);
+forward bool:LabSanduk(item);
+forward bool:LabAktivan(playerid);
+forward bool:LabTipke(playerid, KEY:newkeys, KEY:oldkeys);
+forward bool:LabMjestoIma(k);
+forward bool:ImaIzvadenoOruzje(playerid);
 
 new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS], bool:gAdminZamrznut[MAX_PLAYERS], gZastitaDo[MAX_PLAYERS];
 stock PrenosConnect(playerid)
@@ -347,6 +352,7 @@ public OnGameModeInit()
     InitPlaca();
     InitSef();
     InitDroga();
+    InitLab();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_snd ON social_messages (sender)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_comments_post ON social_comments (post)"));
@@ -400,6 +406,8 @@ public Sekunda()
     TeritorijTick();
     VoziloTick();
     KapijeTick();
+    BrodTick();
+    LabTick();
     CivilVozilaTick();
     VlakTick();
     BankaTick();
@@ -539,6 +547,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_glen_park.inc"
 #include "monterey/mape/mapa_surenosi.inc"
 #include "monterey/brod.inc"
+#include "monterey/lab.inc"
 #include "monterey/teritorij.inc"
 #include "monterey/mobitel.inc"
 #include "monterey/utrke.inc"

@@ -74,6 +74,7 @@ GepekPrebaci(playerid, v, item, n, bool:stavi)
 {
     new rez = stavi ? PutInGepek(playerid, v, item, n) : TakeFromGepek(playerid, v, item, n);
     if (rez == GEPEK_OK && item == ITEM_KUTIJA) StandKutijaGepek(playerid, v, stavi);
+    else if (rez == GEPEK_OK && LabSanduk(item)) LabSandukGepek(playerid, stavi);
     return rez;
 }
 
@@ -145,6 +146,7 @@ GepekAlt(playerid)
     new v = GepekVozilo(playerid, -1.0);
     if (!v || !HasGepek(v)) return 0;
     if (StandGepekAlt(playerid, v)) return 1;
+    if (LabGepekAlt(playerid, v)) return 1;
     new prazno[1];
     cmd_trunk(playerid, prazno);
     return 1;

@@ -138,7 +138,7 @@ enum
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
     ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE,
-    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA, ITEM_EKSPLOZIV
+    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA, ITEM_EKSPLOZIV, ITEM_SANDUK_KOKA, ITEM_SANDUK_KEM
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -192,7 +192,9 @@ new const gItems[][E_ITEM] = {
     { "Cigarete",               "kom", 40,  0,  -1, 19896 },
     { "Srecka",                 "kom", 10,  0,  -1, 1581  },
     { "Kutija robe",            "kom", 1,   0,  -1, 1220  },
-    { "Eksploziv",              "kom", 6,   0,  -1, 1654  }
+    { "Eksploziv",              "kom", 6,   0,  -1, 1654  },
+    { "Sanduk koka paste",      "kom", 1,   0,  -1, 1220  },
+    { "Sanduk kemikalija",      "kom", 1,   0,  -1, 1220  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -204,7 +206,7 @@ static gInvCount[MAX_PLAYERS];
 static gInvItem[MAX_PLAYERS];
 static gItemUsedAt[MAX_PLAYERS];
 forward bool:PolicajacNaDuznosti(playerid);
-static gFriskOd[MAX_PLAYERS], gFriskMeta[MAX_PLAYERS], gFriskRacun[MAX_PLAYERS], gFriskAkcija[MAX_PLAYERS][4];
+static bool:gInvSpremi[MAX_PLAYERS], gFriskOd[MAX_PLAYERS], gFriskMeta[MAX_PLAYERS], gFriskRacun[MAX_PLAYERS], gFriskAkcija[MAX_PLAYERS][4];
 #define FRISK_MS            5000
 
 InitInventar()
@@ -324,7 +326,9 @@ static KoristiItem(playerid, item)
 
 PrikaziInventar(playerid)
 {
-    new list[512] = "Predmet\tKolicina\n{8AB4F8}Spremi izvadeno oruzje\t\n", row[64], count = 0;
+    new list[512] = "Predmet\tKolicina\n", row[64], count = 0;
+    gInvSpremi[playerid] = ImaIzvadenoOruzje(playerid);
+    if (gInvSpremi[playerid]) strcat(list, "{8AB4F8}Spremi izvadeno oruzje\t\n");
     new len = strlen(list);
     for (new i = 0; i < BROJ_ITEMA; i++)
     {
@@ -333,7 +337,7 @@ PrikaziInventar(playerid)
         if (DodajStupac(list, len, row)) gInvList[playerid][count++] = i;
     }
     gInvCount[playerid] = count;
-    if (!count) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Inventar je prazan. Novac: $%d."), gNovac[playerid]);
+    if (!count && !gInvSpremi[playerid]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Inventar je prazan. Novac: $%d."), gNovac[playerid]);
     new title[48];
     format(title, sizeof title, T(playerid, "Inventar - novac: $%d"), gNovac[playerid]);
     return PrikaziDialog(playerid, DLG_INVENTAR, DIALOG_STYLE_TABLIST_HEADERS, title, list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
@@ -351,12 +355,13 @@ DLG:inventar(playerid, response, listitem)
 {
     new empty[1];
     if (!response) return 1;
-    if (listitem == 0)
+    if (gInvSpremi[playerid] && listitem == 0)
     {
         cmd_spremi(playerid, empty);
         return PrikaziInventar(playerid);
     }
-    if (--listitem < 0 || listitem >= gInvCount[playerid]) return 1;
+    if (gInvSpremi[playerid]) listitem--;
+    if (listitem < 0 || listitem >= gInvCount[playerid]) return 1;
     gInvItem[playerid] = gInvList[playerid][listitem];
     return PredmetOpcije(playerid);
 }
@@ -679,6 +684,40 @@ CMD:inv(playerid, params[])
     return cmd_inventar(playerid, params);
 }
 
+static bool:PredmetZaAdmina(item)
+{
+    if (gItems[item][ITEM_WEAPON] || (item >= ITEM_MUN_PISTOLJ && item <= ITEM_MUN_PUSKA)) return false;
+    if (item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) return false;
+    if ((item >= ITEM_SAT1 && item <= ITEM_OGRLICA) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) return false;
+    return true;
+}
+
+CMD:dajoruzje(playerid, params[])
+{
+    new idx = 0, p1[32], p2[8], p3[8];
+    if (!ProvjeriOvlasti(playerid, ALVL_MONEY)) return 1;
+    if (!SljedeciParam(params, idx, p1) || !SljedeciParam(params, idx, p2) || !ProvjeriBroj(p2))
+    {
+        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /dajoruzje [id/ime] [oruzje] [municija]"));
+        for (new i = 0; i < BROJ_ITEMA; i++) if (gItems[i][ITEM_WEAPON]) SendClientMessage(playerid, COLOR_INFO, "  %d - %s", i, T(playerid, gItems[i][ITEM_NAME]));
+        return 1;
+    }
+    new item = strval(p2), target = FindPlayer(p1), municija = SljedeciParam(params, idx, p3) && ProvjeriBroj(p3) ? strval(p3) : 0;
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    if (item < 0 || item >= BROJ_ITEMA || !gItems[item][ITEM_WEAPON]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "To nije oruzje."));
+    if (!GiveItem(target, item, 1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac ne moze nositi vise tog oruzja."));
+    new ammo = gItems[item][ITEM_AMMO];
+    if (ammo != -1 && municija > 0)
+    {
+        if (municija > gItems[ammo][ITEM_MAX] - gInv[target][ammo]) municija = gItems[ammo][ITEM_MAX] - gInv[target][ammo];
+        if (municija > 0) GiveItem(target, ammo, municija);
+    }
+    else municija = 0;
+    printf("[MRP] oruzje: %d -> %d %s +%d municije", playerid, target, gItems[item][ITEM_NAME], municija);
+    SendClientMessage(target, COLOR_INFO, T(target, "Admin vam je dao: %s (%d municije)."), T(target, gItems[item][ITEM_NAME]), municija);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Dali ste %s igracu %s (%d municije)."), T(playerid, gItems[item][ITEM_NAME]), GetRPIme(target), municija);
+}
+
 AdminGiveItem(playerid, const params[])
 {
     new idx = 0, p1[32], p2[8], p3[16];
@@ -687,12 +726,13 @@ AdminGiveItem(playerid, const params[])
         || strlen(p3) > 9 + _:(p3[0] == '-') || !(ProvjeriBroj(p3) || (p3[0] == '-' && ProvjeriBroj(p3[1]))))
     {
         SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite: [id/ime] [predmet] [kolicina, negativna oduzima]"));
-        for (new i = 0; i < BROJ_ITEMA; i++) SendClientMessage(playerid, COLOR_INFO, T(playerid, "  %d - %s (najvise %d %s)"), i, T(playerid, gItems[i][ITEM_NAME]), gItems[i][ITEM_MAX], T(playerid, gItems[i][ITEM_UNIT]));
+        for (new i = 0; i < BROJ_ITEMA; i++) if (PredmetZaAdmina(i)) SendClientMessage(playerid, COLOR_INFO, T(playerid, "  %d - %s (najvise %d %s)"), i, T(playerid, gItems[i][ITEM_NAME]), gItems[i][ITEM_MAX], T(playerid, gItems[i][ITEM_UNIT]));
         return 1;
     }
     new item = strval(p2), amount = strval(p3), target = FindPlayer(p1);
     if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
     if (item >= BROJ_ITEMA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Predmet ne postoji (0-%d)."), BROJ_ITEMA - 1);
+    if (!PredmetZaAdmina(item)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Taj predmet se ne daje ovdje. Oruzje: /dajoruzje."));
     if (!amount || !GiveItem(target, item, amount))
         return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravna kolicina (igrac ima %d, najvise %d)."), gInv[target][item], gItems[item][ITEM_MAX]);
     new an[MAX_PLAYER_NAME + 1], tn[MAX_PLAYER_NAME + 1];
@@ -736,7 +776,15 @@ StoreSlot(playerid, slot)
     gEquipPredmet[playerid][slot] = -1;
     if (ammoItem != -1 && _:weapon == gItems[item][ITEM_WEAPON])
         GiveItem(playerid, ammoItem, max(0, min(min(ammo, gEquipAmmo[playerid][slot]), gItems[ammoItem][ITEM_MAX] - gInv[playerid][ammoItem])));
+    else if (ammoItem != -1)
+        GiveItem(playerid, ammoItem, max(0, min(gEquipAmmo[playerid][slot], gItems[ammoItem][ITEM_MAX] - gInv[playerid][ammoItem])));
     RemovePlayerWeapon(playerid, WEAPON:gItems[item][ITEM_WEAPON]);
+}
+
+bool:ImaIzvadenoOruzje(playerid)
+{
+    for (new s = 0; s < ORUZJE_SLOTOVI; s++) if (gEquipPredmet[playerid][s] != -1) return true;
+    return false;
 }
 
 OruzjeSpremiVatreno(playerid)

@@ -117,6 +117,7 @@ static VrijemeOsvjezi()
         gVrijemeMinuta = igra % 60;
     }
     SetWorldTime(gVrijemeSat);
+    Lik_SvjetlaAuta(gVrijemeSat >= 20 || gVrijemeSat < 7);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && !IsPlayerNPC(i)) VrijemeIgrac(i);
 }
 
