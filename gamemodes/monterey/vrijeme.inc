@@ -96,7 +96,8 @@ static VrijemeIgra(t, izlazak, zalazak)
 VrijemeIgrac(playerid)
 {
     if (UMarici(playerid)) return;
-    SetPlayerTime(playerid, gVrijemeSat, gVrijemeMinuta);
+    if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) SetPlayerTime(playerid, 12, 0);
+    else SetPlayerTime(playerid, gVrijemeSat, gVrijemeMinuta);
 }
 
 static VrijemeOsvjezi()

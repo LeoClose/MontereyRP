@@ -38,6 +38,7 @@ SavjetPromjena(playerid)
 public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 {
     SavjetPromjena(playerid);
+    VrijemeIgrac(playerid);
     return 1;
 }
 

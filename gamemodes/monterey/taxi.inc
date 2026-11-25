@@ -433,6 +433,11 @@ public Fade(playerid, korak)
     if (korak < 2 * FADE_SLOJEVA) SetTimerEx("Fade", FADE_KORAK_MS, false, "ii", playerid, korak + 1);
 }
 
+PrenosFade(playerid, bool:tamno)
+{
+    if (!IsPlayerNPC(playerid)) Fade(playerid, tamno ? 0 : FADE_SLOJEVA + 1);
+}
+
 static TaksiIsprazni(s)
 {
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && IsPlayerInVehicle(i, gTaksi[s][tVozilo])) RemovePlayerFromVehicle(i);

@@ -21,7 +21,7 @@
 #define PLJ_PODIZNA         4
 #define PLJ_MENADZER_SKIN   147
 #define PLJ_VRATA_S         4.0
-#define PLJ_SEF_S           1.5
+#define PLJ_VRATA_KORACI    12
 #define PLJ_DOMET           1.6
 #define PLJ_VRECA_SLOT      0
 #define PLJ_MAFIJA          1
@@ -64,11 +64,11 @@ static gPljCfg[sizeof gPljPostavke], gPljUredi[MAX_PLAYERS];
 static gBanka[BANKA_MAX][E_BANKA];
 static gSalterKat[BANKA_MAX][BANKA_SALTERI] = { { -1, ... }, ... }, gSalterAktor[BANKA_MAX][BANKA_SALTERI], Float:gSalterPoz[BANKA_MAX][BANKA_SALTERI][4], STREAMER_TAG_3D_TEXT_LABEL:gSalterTekst[BANKA_MAX][BANKA_SALTERI];
 static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_LIK, ... }, ... }, gBankaCuvarDb[BANKA_MAX][BANKA_CUVARI], Float:gBankaCuvarPoz[BANKA_MAX][BANKA_CUVARI][4];
-enum { PS_MIRNO, PS_TRCI, PS_OTKLJUCAVA, PS_OTVORENO, PS_RAZNESENO }
-enum E_PLJ { bool:pjIma, Float:pjMx, Float:pjMy, Float:pjMz, Float:pjMa, Float:pjVx, Float:pjVy, Float:pjVz, pjDModel, Float:pjDx, Float:pjDy, Float:pjDz, Float:pjDrx, Float:pjDry, Float:pjDrz, Float:pjDkut, STREAMER_TAG_OBJECT:pjVrata, pjMenadzer, pjStanje, pjKraj }
+enum { PS_MIRNO, PS_TRCI, PS_CEKA, PS_TRCI2, PS_OTKLJUCAVA, PS_OTVORENO, PS_RAZNESENO }
+enum E_PLJ { bool:pjIma, Float:pjMx, Float:pjMy, Float:pjMz, Float:pjMa, Float:pjVx, Float:pjVy, Float:pjVz, pjDModel, Float:pjDx, Float:pjDy, Float:pjDz, Float:pjDrx, Float:pjDry, Float:pjDrz, Float:pjDkut, STREAMER_TAG_OBJECT:pjVrata, pjMenadzer, pjStanje, pjKraj, pjFaza, bool:pjSarka, Float:pjSx, Float:pjSy, Float:pjVrataF, Float:pjVrataCilj, pjVrataToken, pjOtvoreniModel }
 enum E_PLJ_POD { STREAMER_TAG_OBJECT:ppObjekt, Float:ppX, Float:ppY, Float:ppZ, Float:ppRx, Float:ppRy, Float:ppRz, Float:ppVis }
 enum E_PLJ_EKS { Float:peX, Float:peY, Float:peZ, STREAMER_TAG_OBJECT:peObjekt }
-enum E_PLJ_SEF { psModel, Float:psX, Float:psY, Float:psZ, Float:psRz, Float:psKut, STREAMER_TAG_OBJECT:psObjekt, bool:psUzet }
+enum E_PLJ_SEF { psModel, Float:psX, Float:psY, Float:psZ, STREAMER_TAG_OBJECT:psObjekt, bool:psUzet }
 static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], Float:gPljPut[BANKA_MAX][PLJ_PUT * 3 + 3], gPljPutBroj[BANKA_MAX], gPljPod[BANKA_MAX][PLJ_PODIZNA][E_PLJ_POD], gPljPodBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS];
 static Float:gApBankaPoz[MAX_PLAYERS][4], gApBanka[MAX_PLAYERS], gBankaMeni[MAX_PLAYERS][sizeof gBankaAkcija], gBankaOdabir[MAX_PLAYERS], gBankaSat;
 
@@ -292,10 +292,61 @@ static PljMenadzer(s)
     if (gPlj[s][pjMenadzer] != INVALID_LIK) Lik_Neranjiv(gPlj[s][pjMenadzer], true);
 }
 
+static PljPodizna(s, bool:otvori)
+{
+    for (new k = 0; k < gPljPodBroj[s]; k++) ObjektPomakni(gPljPod[s][k][ppObjekt], gPljPod[s][k][ppX], gPljPod[s][k][ppY], gPljPod[s][k][ppZ] + (otvori ? gPljPod[s][k][ppVis] : 0.0), gPljPod[s][k][ppRx], gPljPod[s][k][ppRy], gPljPod[s][k][ppRz], PLJ_VRATA_S);
+}
+
+forward PljVrataKorak(s, token);
+public PljVrataKorak(s, token)
+{
+    if (token != gPlj[s][pjVrataToken] || !gPlj[s][pjVrata]) return;
+    new Float:f = gPlj[s][pjVrataF], Float:cilj = gPlj[s][pjVrataCilj], Float:korak = 1.0 / PLJ_VRATA_KORACI;
+    f = f < cilj ? (f + korak > cilj ? cilj : f + korak) : (f - korak < cilj ? cilj : f - korak);
+    gPlj[s][pjVrataF] = f;
+    new Float:kut = gPlj[s][pjDkut] * (1.0 - floatcos(f * 180.0, degrees)) / 2.0, Float:x = gPlj[s][pjDx], Float:y = gPlj[s][pjDy];
+    if (gPlj[s][pjSarka])
+    {
+        new Float:dx = x - gPlj[s][pjSx], Float:dy = y - gPlj[s][pjSy], Float:c = floatcos(kut, degrees), Float:sn = floatsin(kut, degrees);
+        x = gPlj[s][pjSx] + dx * c - dy * sn;
+        y = gPlj[s][pjSy] + dx * sn + dy * c;
+    }
+    ObjektPomakni(gPlj[s][pjVrata], x, y, gPlj[s][pjDz], gPlj[s][pjDrx], gPlj[s][pjDry], gPlj[s][pjDrz] + kut, PLJ_VRATA_S / PLJ_VRATA_KORACI);
+    if (f != cilj) SetTimerEx("PljVrataKorak", floatround(PLJ_VRATA_S * 1000.0 / PLJ_VRATA_KORACI), false, "ii", s, token);
+}
+
+static PljVrata(s, bool:otvori)
+{
+    if (!gPlj[s][pjVrata]) return;
+    gPlj[s][pjVrataCilj] = otvori ? 1.0 : 0.0;
+    PljVrataKorak(s, ++gPlj[s][pjVrataToken]);
+}
+
+static PljSefovi(s, bool:otvori)
+{
+    for (new k = 0; k < gPljSefBroj[s]; k++)
+    {
+        if (!otvori) gPljSef[s][k][psUzet] = false;
+        if (gPljSef[s][k][psObjekt] && (!otvori || gPlj[s][pjOtvoreniModel])) Streamer_SetIntData(STREAMER_TYPE_OBJECT, gPljSef[s][k][psObjekt], E_STREAMER_MODEL_ID, otvori ? gPlj[s][pjOtvoreniModel] : gPljSef[s][k][psModel]);
+    }
+}
+
 static PljTrezor(s, bool:otvori)
 {
-    if (gPlj[s][pjVrata]) ObjektPomakni(gPlj[s][pjVrata], gPlj[s][pjDx], gPlj[s][pjDy], gPlj[s][pjDz], gPlj[s][pjDrx], gPlj[s][pjDry], gPlj[s][pjDrz] + (otvori ? gPlj[s][pjDkut] : 0.0), PLJ_VRATA_S);
-    for (new k = 0; k < gPljPodBroj[s]; k++) ObjektPomakni(gPljPod[s][k][ppObjekt], gPljPod[s][k][ppX], gPljPod[s][k][ppY], gPljPod[s][k][ppZ] + (otvori ? gPljPod[s][k][ppVis] : 0.0), gPljPod[s][k][ppRx], gPljPod[s][k][ppRy], gPljPod[s][k][ppRz], PLJ_VRATA_S);
+    PljPodizna(s, otvori);
+    PljVrata(s, otvori);
+}
+
+static PljSefDodaj(s, STREAMER_TAG_OBJECT:o, model)
+{
+    if (gPljSefBroj[s] >= PLJ_SEFOVA) return -1;
+    new k = gPljSefBroj[s]++;
+    gPljSef[s][k][psModel] = model;
+    gPljSef[s][k][psObjekt] = o;
+    gPljSef[s][k][psUzet] = false;
+    GetDynamicObjectPos(o, gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ]);
+    Streamer_SetIntData(STREAMER_TYPE_OBJECT, o, E_STREAMER_MODEL_ID, model);
+    return k;
 }
 
 static PljPodiznaDodaj(s, STREAMER_TAG_OBJECT:o, Float:vis)
@@ -318,11 +369,7 @@ static PljResetiraj(s)
         if (gPljEks[s][k][peObjekt]) DestroyDynamicObject(gPljEks[s][k][peObjekt]);
         gPljEks[s][k][peObjekt] = STREAMER_TAG_OBJECT:0;
     }
-    for (new k = 0; k < gPljSefBroj[s]; k++)
-    {
-        gPljSef[s][k][psUzet] = false;
-        if (gPljSef[s][k][psObjekt]) ObjektPomakni(gPljSef[s][k][psObjekt], gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ], -1000.0, -1000.0, gPljSef[s][k][psRz], PLJ_SEF_S);
-    }
+    PljSefovi(s, false);
     if (gPlj[s][pjIma]) PljMenadzer(s);
     for (new c = 0; c < BANKA_CUVARI; c++)
     {
@@ -440,17 +487,18 @@ static PljUcitaj()
                 new STREAMER_TAG_OBJECT:o = ObjektBlizu(DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), 0.5, DB_GetFieldInt(res, 1));
                 if (o) PljPodiznaDodaj(s, o, DB_GetFieldFloat(res, 5));
             }
-            else if (DB_GetFieldInt(res, 0) == 1 && gPljSefBroj[s] < PLJ_SEFOVA)
+            else if (DB_GetFieldInt(res, 0) == 1)
             {
-                new STREAMER_TAG_OBJECT:o = ObjektBlizu(DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), 0.5, DB_GetFieldInt(res, 1));
-                if (!o) continue;
-                new k = gPljSefBroj[s]++, Float:rx, Float:ry;
-                gPljSef[s][k][psModel] = DB_GetFieldInt(res, 1);
-                gPljSef[s][k][psKut] = DB_GetFieldFloat(res, 5);
-                gPljSef[s][k][psObjekt] = o;
-                GetDynamicObjectPos(o, gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ]);
-                GetDynamicObjectRot(o, rx, ry, gPljSef[s][k][psRz]);
+                new STREAMER_TAG_OBJECT:o = ObjektBlizu(DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), 0.3);
+                if (o) PljSefDodaj(s, o, DB_GetFieldInt(res, 1));
             }
+            else if (DB_GetFieldInt(res, 0) == 4)
+            {
+                gPlj[s][pjSarka] = true;
+                gPlj[s][pjSx] = DB_GetFieldFloat(res, 2);
+                gPlj[s][pjSy] = DB_GetFieldFloat(res, 3);
+            }
+            else if (DB_GetFieldInt(res, 0) == 5) gPlj[s][pjOtvoreniModel] = DB_GetFieldInt(res, 1);
         }
         while (DB_SelectNextRow(res));
         DB_FreeResultSet(res);
@@ -486,10 +534,15 @@ BankaUpdate(playerid)
     gPlj[s][pjKraj] = sad + gPljCfg[PP_TRAJANJE] * 60;
     SalteriSkloni(s, true);
     new lik = gPlj[s][pjMenadzer], n = gPljPutBroj[s];
-    gPljPut[s][n * 3] = gPlj[s][pjVx];
-    gPljPut[s][n * 3 + 1] = gPlj[s][pjVy];
-    gPljPut[s][n * 3 + 2] = gPlj[s][pjVz];
-    Lik_IdiPutem(lik, gPljPut[s], n + 1, LIK_SPRINT);
+    if (gPljPodBroj[s] && n) Lik_IdiPutem(lik, gPljPut[s], n, LIK_SPRINT);
+    else
+    {
+        gPlj[s][pjStanje] = PS_TRCI2;
+        gPljPut[s][n * 3] = gPlj[s][pjVx];
+        gPljPut[s][n * 3 + 1] = gPlj[s][pjVy];
+        gPljPut[s][n * 3 + 2] = gPlj[s][pjVz];
+        Lik_IdiPutem(lik, gPljPut[s], n + 1, LIK_SPRINT);
+    }
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
@@ -513,8 +566,15 @@ BankaLikStigao(lik)
         if (!gPlj[s][pjIma] || gPlj[s][pjMenadzer] != lik) continue;
         if (gPlj[s][pjStanje] == PS_TRCI)
         {
+            gPlj[s][pjStanje] = PS_CEKA;
+            gPlj[s][pjFaza] = gettime() + floatround(PLJ_VRATA_S, floatround_ceil) + 1;
+            PljPodizna(s, true);
+            BankaPljObavijest(s, "Menadzer otvara prva vrata trezora...");
+        }
+        else if (gPlj[s][pjStanje] == PS_TRCI2)
+        {
             gPlj[s][pjStanje] = PS_OTKLJUCAVA;
-            gPlj[s][pjKraj] = gettime() + gPljCfg[PP_SIFRA];
+            gPlj[s][pjFaza] = gettime() + gPljCfg[PP_SIFRA];
             Lik_Animacija(lik, "PED", "ATM", 4.1, 1, 0, 0, 0, 0);
             BankaPljObavijest(s, "Menadzer upisuje sifru trezora...");
         }
@@ -527,7 +587,7 @@ static PljTrezorOtvori(s)
 {
     gPlj[s][pjStanje] = PS_OTVORENO;
     gPlj[s][pjKraj] = gettime() + gPljCfg[PP_TRAJANJE] * 60;
-    PljTrezor(s, true);
+    PljVrata(s, true);
     Lik_Animacija(gPlj[s][pjMenadzer], "ROB_BANK", "SHP_HandsUp_Scr", 4.1, 0, 0, 0, 1, 0);
     BankaPljObavijest(s, "Trezor je otvoren! Postavite eksploziv na oznacena mjesta.");
 }
@@ -535,7 +595,7 @@ static PljTrezorOtvori(s)
 static PljVrataPomakni(s, bool:otvori)
 {
     PljTrezor(s, otvori);
-    for (new k = 0; k < gPljSefBroj[s]; k++) ObjektPomakni(gPljSef[s][k][psObjekt], gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ], -1000.0, -1000.0, gPljSef[s][k][psRz] + (otvori ? gPljSef[s][k][psKut] : 0.0), PLJ_SEF_S);
+    PljSefovi(s, otvori);
 }
 
 static bool:PljEksPostavljen(s)
@@ -584,7 +644,7 @@ BankaPljackaAlt(playerid)
             DestroyDynamicObject(gPljEks[s][k][peObjekt]);
             gPljEks[s][k][peObjekt] = STREAMER_TAG_OBJECT:0;
         }
-        for (new k = 0; k < gPljSefBroj[s]; k++) ObjektPomakni(gPljSef[s][k][psObjekt], gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ], -1000.0, -1000.0, gPljSef[s][k][psRz] + gPljSef[s][k][psKut], PLJ_SEF_S);
+        PljSefovi(s, true);
         gPlj[s][pjStanje] = PS_RAZNESENO;
         BankaPljObavijest(s, "Pretinci su otvoreni! Pokupite novac.");
         return 1;
@@ -665,7 +725,12 @@ static BankaPljackaTick()
             PljResetiraj(s);
             continue;
         }
-        if (gPlj[s][pjStanje] == PS_OTKLJUCAVA && sad >= gPlj[s][pjKraj]) PljTrezorOtvori(s);
+        if (gPlj[s][pjStanje] == PS_CEKA && sad >= gPlj[s][pjFaza])
+        {
+            gPlj[s][pjStanje] = PS_TRCI2;
+            Lik_IdiDo(gPlj[s][pjMenadzer], gPlj[s][pjVx], gPlj[s][pjVy], gPlj[s][pjVz], LIK_SPRINT);
+        }
+        if (gPlj[s][pjStanje] == PS_OTKLJUCAVA && sad >= gPlj[s][pjFaza]) PljTrezorOtvori(s);
         PljSavjeti(s);
         for (new c = 0; c < BANKA_CUVARI; c++)
         {
@@ -702,9 +767,12 @@ static PljPomoc(playerid)
     strcat(tekst, "\n");
     strcat(tekst, T(playerid, "/pljacka vrata [kut] - okretna vrata ispred vas, menadzer staje ovdje"));
     strcat(tekst, "\n");
-    strcat(tekst, T(playerid, "/pljacka eksploziv - mjesto za eksploziv"));
+    strcat(tekst, T(playerid, "/pljacka eksploziv - mjesto za eksploziv i zatvoreni sef ispred vas"));
     strcat(tekst, "\n");
-    strcat(tekst, T(playerid, "/pljacka sef [kut] - pretinac ispred vas"));
+    strcat(tekst, T(playerid, "/pljacka otvoreni - otvoreni sef ispred vas (model nakon eksplozije)"));
+    strcat(tekst, "
+");
+    strcat(tekst, T(playerid, "/pljacka sarka - stanite na sarku okretnih vrata trezora"));
     strcat(tekst, "\n");
     strcat(tekst, T(playerid, "/pljacka otvori / zatvori - vrata trezora i pretinci"));
     strcat(tekst, "\n");
@@ -738,7 +806,18 @@ CMD:pljacka(playerid, params[])
         if (gPlj[s][pjIma]) PljMenadzer(s);
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Mjesto menadzera postavljeno."));
     }
-    if (!strcmp(opcija, "vrata", true) || !strcmp(opcija, "sef", true) || !strcmp(opcija, "podizna", true))
+    if (!strcmp(opcija, "sarka", true))
+    {
+        if (!gPlj[s][pjVrata]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ova banka nema postavljena vrata trezora."));
+        PljVrata(s, false);
+        gPlj[s][pjSarka] = true;
+        gPlj[s][pjSx] = x;
+        gPlj[s][pjSy] = y;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d AND tip = 4", gBanka[s][bkDb]));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, x, y, z) VALUES (%d, 4, %f, %f, %f)", gBanka[s][bkDb], x, y, z));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Sarka vrata trezora postavljena. Probajte s /pljacka otvori."));
+    }
+    if (!strcmp(opcija, "vrata", true) || !strcmp(opcija, "otvoreni", true) || !strcmp(opcija, "podizna", true))
     {
         new STREAMER_TAG_OBJECT:o = ObjektBlizu(x - floatsin(a, degrees) * 1.2, y + floatcos(a, degrees) * 1.2, z, 2.5);
         if (!o) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ispred vas nema objekta."));
@@ -776,18 +855,14 @@ CMD:pljacka(playerid, params[])
             DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z, kut) VALUES (%d, 3, %d, %f, %f, %f, %f)", gBanka[s][bkDb], model, ox, oy, oz, vis));
             return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Podizna vrata trezora: objekt %d (%d)."), model, gPljPodBroj[s]);
         }
-        if (gPljSefBroj[s] >= PLJ_SEFOVA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj."));
-        new k = gPljSefBroj[s]++;
-        gPljSef[s][k][psModel] = model;
-        gPljSef[s][k][psObjekt] = o;
-        gPljSef[s][k][psX] = ox;
-        gPljSef[s][k][psY] = oy;
-        gPljSef[s][k][psZ] = oz;
-        gPljSef[s][k][psRz] = rz;
-        gPljSef[s][k][psKut] = kut;
-        gPljSef[s][k][psUzet] = false;
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z, kut) VALUES (%d, 1, %d, %f, %f, %f, %f)", gBanka[s][bkDb], model, ox, oy, oz, kut));
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pretinac dodan: objekt %d (%d)."), model, gPljSefBroj[s]);
+        if (!gPljSefBroj[s]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Najprije s /pljacka eksploziv oznacite zatvorene sefove."));
+        new k = PljSefDodaj(s, o, gPljSef[s][0][psModel]);
+        if (k == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj."));
+        gPlj[s][pjOtvoreniModel] = model;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d AND tip = 5", gBanka[s][bkDb]));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z) VALUES (%d, 5, %d, %f, %f, %f)", gBanka[s][bkDb], model, ox, oy, oz));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z) VALUES (%d, 1, %d, %f, %f, %f)", gBanka[s][bkDb], gPljSef[s][k][psModel], ox, oy, oz));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Otvoreni sef: objekt %d. Sada je zatvoren, otvorit ce se eksplozijom."), model);
     }
     if (!strcmp(opcija, "postavke", true)) return PljPostavkePrikazi(playerid);
     if (!strcmp(opcija, "tocka", true))
@@ -837,7 +912,12 @@ CMD:pljacka(playerid, params[])
         gPljEks[s][k][peZ] = z;
         gPljEks[s][k][peObjekt] = STREAMER_TAG_OBJECT:0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, x, y, z) VALUES (%d, 0, %f, %f, %f)", gBanka[s][bkDb], x, y, z));
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Mjesto za eksploziv dodano (%d)."), gPljEksBroj[s]);
+        new STREAMER_TAG_OBJECT:o = ObjektBlizu(x - floatsin(a, degrees) * 1.2, y + floatcos(a, degrees) * 1.2, z, 2.0);
+        if (!o) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Mjesto za eksploziv dodano (%d)."), gPljEksBroj[s]);
+        new model = Streamer_GetIntData(STREAMER_TYPE_OBJECT, o, E_STREAMER_MODEL_ID), j = PljSefDodaj(s, o, model);
+        if (j == -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj."));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z) VALUES (%d, 1, %d, %f, %f, %f)", gBanka[s][bkDb], model, gPljSef[s][j][psX], gPljSef[s][j][psY], gPljSef[s][j][psZ]));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Eksploziv (%d) i sef ispred vas (objekt %d) dodani."), gPljEksBroj[s], model);
     }
     if (!strcmp(opcija, "brisi", true))
     {
@@ -851,6 +931,8 @@ CMD:pljacka(playerid, params[])
         gPljSefBroj[s] = 0;
         gPljPodBroj[s] = 0;
         gPljPutBroj[s] = 0;
+        gPlj[s][pjSarka] = false;
+        gPlj[s][pjOtvoreniModel] = 0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist WHERE bank = %d", gBanka[s][bkDb]));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d", gBanka[s][bkDb]));
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Postavke pljacke su obrisane."));

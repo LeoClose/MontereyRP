@@ -1245,3 +1245,29 @@ DLG:apanel_unos(playerid, response, const inputtext[])
     if (response && action == AP_VEH) return 1;
     return ShowKategoriju(playerid);
 }
+
+CMD:freeze(playerid, params[])
+{
+    new idx = 0, p1[32];
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /freeze [id/ime]"));
+    new target = FindPlayer(p1);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    gAdminZamrznut[target] = true;
+    TogglePlayerControllable(target, false);
+    ObavijestInfo(target, T(target, "Admin"), T(target, "Admin vas je zamrznuo."));
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Zamrznuli ste igraca %s."), GetRPIme(target));
+}
+
+CMD:unfreeze(playerid, params[])
+{
+    new idx = 0, p1[32];
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!SljedeciParam(params, idx, p1)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /unfreeze [id/ime]"));
+    new target = FindPlayer(p1);
+    if (target == INVALID_PLAYER_ID || !gUlogiran[target]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Igrac nije pronaden."));
+    gAdminZamrznut[target] = false;
+    TogglePlayerControllable(target, true);
+    ObavijestInfo(target, T(target, "Admin"), T(target, "Admin vas je odmrznuo."));
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Odmrznuli ste igraca %s."), GetRPIme(target));
+}

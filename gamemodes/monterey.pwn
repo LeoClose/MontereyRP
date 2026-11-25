@@ -35,7 +35,20 @@ forward bool:AcUkljuceno(code);
 #define PRENOS_MIN  8
 #define PRENOS_MAX  50
 
-new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS];
+#define ZASTITA_MS     2000
+
+new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS], bool:gAdminZamrznut[MAX_PLAYERS], gZastitaDo[MAX_PLAYERS];
+stock PrenosConnect(playerid)
+{
+    gAdminZamrznut[playerid] = false;
+    gPrenosZamrz[playerid] = 0;
+    gZastitaDo[playerid] = 0;
+}
+
+stock bool:Zasticen(playerid)
+{
+    return gPrenosZamrz[playerid] != 0 || GetTickCount() - gZastitaDo[playerid] < 0;
+}
 
 forward PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak);
 public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak)
@@ -48,8 +61,10 @@ public PrenosOdmrzni(playerid, token, Float:x, Float:y, Float:z, zadnji, korak)
         return;
     }
     gPrenosZamrz[playerid] = 0;
+    gZastitaDo[playerid] = GetTickCount() + ZASTITA_MS;
     SetPlayerPos(playerid, x, y, z);
-    TogglePlayerControllable(playerid, true);
+    TogglePlayerControllable(playerid, !gAdminZamrznut[playerid]);
+    PrenosFade(playerid, false);
 }
 
 stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
@@ -64,14 +79,20 @@ stock PrenesiIgraca(playerid, Float:x, Float:y, Float:z)
         static token;
         gPrenosZamrz[playerid] = ++token ? token : ++token;
         TogglePlayerControllable(playerid, false);
+        PrenosFade(playerid, true);
         SetTimerEx("PrenosOdmrzni", PRENOS_MS, false, "ddfffdd", playerid, gPrenosZamrz[playerid], x, y, z, -1, 0);
     }
     return SetPlayerPos(playerid, x, y, z);
 }
 stock ZamrzniIgraca(playerid, bool:moze)
 {
-    gPrenosZamrz[playerid] = 0;
-    return TogglePlayerControllable(playerid, moze);
+    if (gPrenosZamrz[playerid])
+    {
+        gPrenosZamrz[playerid] = 0;
+        gZastitaDo[playerid] = GetTickCount() + ZASTITA_MS;
+        PrenosFade(playerid, false);
+    }
+    return TogglePlayerControllable(playerid, moze && !gAdminZamrznut[playerid]);
 }
 #undef SetPlayerPos
 #define SetPlayerPos PrenesiIgraca
@@ -85,6 +106,7 @@ stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Floa
     SetPlayerPos(playerid, x, y, z);
     if (kut > -1000.0) SetPlayerFacingAngle(playerid, kut);
     SetCameraBehindPlayer(playerid);
+    VrijemeIgrac(playerid);
 }
 #undef TogglePlayerControllable
 #define TogglePlayerControllable ZamrzniIgraca

@@ -184,7 +184,7 @@ static bool:StetaUNozu(playerid)
 
 static StetaPrimijeni(playerid, Float:dmg, WEAPON:w)
 {
-    if (!gUlogiran[playerid] || IsRanjen(playerid) || ZatvorProvjera(playerid) || StetaUNozu(playerid) || dmg <= 0.0) return;
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || ZatvorProvjera(playerid) || StetaUNozu(playerid) || Zasticen(playerid) || dmg <= 0.0) return;
     StetaRacun(gZivot[playerid], gOklop[playerid], dmg, w != WEAPON_COLLISION && w != WEAPON_DROWN);
     SetArmor(playerid, gOklop[playerid]);
     if (RanjenProvjeri(playerid, gZivot[playerid])) return;
@@ -194,7 +194,7 @@ static StetaPrimijeni(playerid, Float:dmg, WEAPON:w)
 // stealth kill
 static StetaNoz(zrtva, napadac)
 {
-    if (!gUlogiran[zrtva] || IsRanjen(zrtva) || ZatvorProvjera(zrtva) || StetaUNozu(zrtva)) return;
+    if (!gUlogiran[zrtva] || IsRanjen(zrtva) || ZatvorProvjera(zrtva) || StetaUNozu(zrtva) || Zasticen(zrtva)) return;
     gStetaNoz[zrtva] = GetTickCount();
     SetPlayerHealth(zrtva, Float:0x7F7FFFFF);
     new Float:a;

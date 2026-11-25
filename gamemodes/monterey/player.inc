@@ -6,6 +6,7 @@ static gOruzjeProvjera[MAX_PLAYERS], bool:gOruzjeBlok[MAX_PLAYERS];
 public OnPlayerConnect(playerid)
 {
     if (playerid > gIgracZadnji) gIgracZadnji = playerid;
+    PrenosConnect(playerid);
     KosConnect(playerid);
     IkoneIgracu(playerid);
     MapaOpstinaUkloni(playerid);
@@ -396,6 +397,7 @@ CMD:ahelp(playerid, params[])
     PomocRed(tekst, len, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
     PomocRed(tekst, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
     PomocRed(tekst, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
+    PomocRed(tekst, len, T(playerid, "  /freeze [id/ime], /unfreeze [id/ime] - zamrzni ili odmrzni igraca"));
     PomocRed(tekst, len, T(playerid, "  Banke: /pljacka (postavke pljacke). Kapije: /kapija, /kapijabrisi"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
     {
