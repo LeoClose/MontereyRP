@@ -253,6 +253,8 @@ public OnGameModeInit()
     MapaGlenPark();
     MapaChinatownUkloni(INVALID_PLAYER_ID);
     MapaChinatown();
+    MapaItalijaniUkloni(INVALID_PLAYER_ID);
+    MapaItalijani();
     MapaSurenosiUkloni(INVALID_PLAYER_ID);
     MapaSurenosi();
     Lik_OsvjeziMapu();
@@ -466,6 +468,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_chinatown.inc"
+#include "monterey/mape/mapa_italijani.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
 #include "monterey/mape/wilshire_pd.inc"

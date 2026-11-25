@@ -19,6 +19,7 @@ public OnPlayerConnect(playerid)
     MapaCasinoExtUkloni(playerid);
     MapaMainStreetUkloni(playerid);
     MapaChinatownUkloni(playerid);
+    MapaItalijaniUkloni(playerid);
     MapaSurenosiUkloni(playerid);
     MapaJeffersonFlatsUkloni(playerid);
     MapaSpawnUkloni(playerid);
