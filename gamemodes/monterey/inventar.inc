@@ -268,7 +268,6 @@ static InventarCheck()
 
 static KoristiItem(playerid, item)
 {
-    new Float:v;
     if (gItems[item][ITEM_WEAPON]) return IzvadiOruzje(playerid, item);
     if (item == ITEM_MOBITEL) return MobitelPrebaci(playerid);
     if ((item >= ITEM_NAOCALE1 && item <= ITEM_KAPA3) || item == ITEM_ZLATNE_NAOCALE || item == ITEM_SREBRNE_NAOCALE) return OdjecaKapaPredmet(playerid, item);
@@ -300,27 +299,11 @@ static KoristiItem(playerid, item)
     gItemUsedAt[playerid] = GetTickCount();
     switch (item)
     {
-        case ITEM_MARIHUANA:
-        {
-            GetPlayerHealth(playerid, v);
-            SetPlayerHealth(playerid, v + 10.0 > 100.0 ? 100.0 : v + 10.0);
-            PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali dzoint.", GetRPIme(playerid), "", 1);
-        }
-        case ITEM_KOKAIN:
-        {
-            GetPlayerArmour(playerid, v);
-            SetPlayerArmour(playerid, v + 20.0 > 100.0 ? 100.0 : v + 20.0);
-            PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s smrka liniju kokaina.", GetRPIme(playerid), "", 1);
-        }
-        case ITEM_METH:
-        {
-            GetPlayerArmour(playerid, v);
-            SetPlayerArmour(playerid, v + 30.0 > 100.0 ? 100.0 : v + 30.0);
-            GetPlayerHealth(playerid, v);
-            SetPlayerHealth(playerid, v - 5.0 < 1.0 ? 1.0 : v - 5.0);
-            PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pusi metamfetamin iz lule.", GetRPIme(playerid), "", 1);
-        }
+        case ITEM_MARIHUANA: PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pali dzoint.", GetRPIme(playerid), "", 1);
+        case ITEM_KOKAIN: PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s smrka liniju kokaina.", GetRPIme(playerid), "", 1);
+        case ITEM_METH: PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pusi metamfetamin iz lule.", GetRPIme(playerid), "", 1);
     }
+    DrogaUcinak(playerid, item);
     return 1;
 }
 
@@ -907,4 +890,246 @@ CMD:spremi(playerid, params[])
     if (!SpremiSvoOruzje(playerid)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Nemate izvadeno oruzje iz inventara."));
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s sprema oruzje.", GetRPIme(playerid), "", 1);
     return 1;
+}
+
+#define DROGA_TRAJE_MS      300000
+#define DROGA_MARIHUANA     20.0
+#define DROGA_KOKAIN_STETA  0.7
+#define DROGA_METH_VJESTINA 200
+
+#define OVISNOST_S          3600
+#define OVISNOST_EPIZODA    6
+#define OVISNOST_STETA      10.0
+#define VIZUAL_MS           90000
+#define HALUC_MAX           2
+#define HALUC_TRAJE_MS      8000
+
+static gKokainDo[MAX_PLAYERS], gMethDo[MAX_PLAYERS], gMethVjestina[MAX_PLAYERS][11];
+static gOvisnostSljedeci[MAX_PLAYERS], gOvisnostEpizoda[MAX_PLAYERS], bool:gOvisnostUcitana[MAX_PLAYERS];
+static gVizualDo[MAX_PLAYERS], gVizualVrsta[MAX_PLAYERS], PlayerText:gVizualTd[MAX_PLAYERS] = { PlayerText:INVALID_TEXT_DRAW, ... }, gVizualKorak[MAX_PLAYERS];
+static gHaluc[MAX_PLAYERS][HALUC_MAX], gHalucOd[MAX_PLAYERS][HALUC_MAX], gHalucSljedeca[MAX_PLAYERS];
+static const gHalucSkin[] = { 7, 14, 23, 29, 47, 78, 134, 162, 200, 230 };
+
+static bool:DrogaTraje(kraj)
+{
+    return kraj && GetTickCount() - kraj < 0;
+}
+
+static MethVjestineVrati(playerid)
+{
+    if (!gMethDo[playerid]) return;
+    gMethDo[playerid] = 0;
+    for (new s = 0; s < 11; s++) SetPlayerSkillLevel(playerid, WEAPONSKILL:s, gMethVjestina[playerid][s]);
+}
+
+static OvisnostSpremi(playerid)
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO drug_addiction (account, next, episodes) VALUES (%d, %d, %d)", gAccountId[playerid], gOvisnostSljedeci[playerid], gOvisnostEpizoda[playerid]));
+}
+
+static OvisnostUcitaj(playerid)
+{
+    gOvisnostUcitana[playerid] = true;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS drug_addiction (account INTEGER PRIMARY KEY, next INTEGER NOT NULL, episodes INTEGER NOT NULL)"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT next, episodes FROM drug_addiction WHERE account = %d", gAccountId[playerid]);
+    gOvisnostSljedeci[playerid] = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : 0;
+    gOvisnostEpizoda[playerid] = DB_GetRowCount(res) ? DB_GetFieldInt(res, 1) : 0;
+    DB_FreeResultSet(res);
+}
+
+static OvisnostTick(playerid)
+{
+    if (!gOvisnostUcitana[playerid]) OvisnostUcitaj(playerid);
+    if (!gOvisnostSljedeci[playerid] || gettime() < gOvisnostSljedeci[playerid] || IsRanjen(playerid)) return;
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    new Float:h;
+    GetHP(playerid, h);
+    SetHP(playerid, h - OVISNOST_STETA < 5.0 ? 5.0 : h - OVISNOST_STETA);
+    ApplyAnimation(playerid, "FOOD", "EAT_Vomit_P", 4.1, false, false, false, false, 0);
+    SetPlayerDrunkLevel(playerid, 3000);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s povraca.", GetRPIme(playerid), "", 1);
+    if (++gOvisnostEpizoda[playerid] >= OVISNOST_EPIZODA)
+    {
+        gOvisnostSljedeci[playerid] = 0;
+        gOvisnostEpizoda[playerid] = 0;
+        ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Prebrodili ste krizu. Vise niste ovisni."));
+    }
+    else
+    {
+        gOvisnostSljedeci[playerid] = gettime() + OVISNOST_S;
+        ObavijestGreska(playerid, T(playerid, "Apstinencijska kriza! Bez nove doze bit ce vam lose svakih sat vremena."));
+    }
+    OvisnostSpremi(playerid);
+}
+
+static VizualMakni(playerid)
+{
+    gVizualDo[playerid] = 0;
+    if (gVizualTd[playerid] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawDestroy(playerid, gVizualTd[playerid]);
+    gVizualTd[playerid] = PlayerText:INVALID_TEXT_DRAW;
+    SetPlayerDrunkLevel(playerid, 0);
+}
+
+static VizualBoja(playerid)
+{
+    if (gVizualTd[playerid] == PlayerText:INVALID_TEXT_DRAW) return;
+    new k = ++gVizualKorak[playerid] % 4, boja;
+    switch (gVizualVrsta[playerid])
+    {
+        case ITEM_MARIHUANA: boja = 0x3CB04418 + k * 4;
+        case ITEM_KOKAIN: boja = k == 0 ? 0xFFFFFF40 : 0xB0D8FF14;
+        default: boja = k < 2 ? 0xFF603020 : 0x9040FF20;
+    }
+    PlayerTextDrawBoxColour(playerid, gVizualTd[playerid], boja);
+    PlayerTextDrawShow(playerid, gVizualTd[playerid]);
+}
+
+static VizualPocni(playerid, item)
+{
+    if (gVizualTd[playerid] == PlayerText:INVALID_TEXT_DRAW)
+    {
+        gVizualTd[playerid] = CreatePlayerTextDraw(playerid, 0.0, 0.0, "_");
+        PlayerTextDrawLetterSize(playerid, gVizualTd[playerid], 0.0, 50.0);
+        PlayerTextDrawTextSize(playerid, gVizualTd[playerid], 640.0, 0.0);
+        PlayerTextDrawUseBox(playerid, gVizualTd[playerid], true);
+    }
+    gVizualVrsta[playerid] = item;
+    gVizualDo[playerid] = GetTickCount() + (item == ITEM_METH ? DROGA_TRAJE_MS : VIZUAL_MS);
+    gHalucSljedeca[playerid] = GetTickCount() + 15000;
+    VizualBoja(playerid);
+}
+
+static HalucMakni(playerid, k)
+{
+    if (gHaluc[playerid][k] == INVALID_LIK) return;
+    Lik_Ukloni(gHaluc[playerid][k]);
+    gHaluc[playerid][k] = INVALID_LIK;
+}
+
+static HalucTick(playerid)
+{
+    new Float:x, Float:y, Float:z, Float:hx, Float:hy, Float:hz, sad = GetTickCount();
+    GetPlayerPos(playerid, x, y, z);
+    for (new k = 0; k < HALUC_MAX; k++)
+    {
+        if (gHaluc[playerid][k] == INVALID_LIK) continue;
+        if (sad - gHalucOd[playerid][k] > HALUC_TRAJE_MS || !Lik_Pozicija(gHaluc[playerid][k], hx, hy, hz) || VectorSize(hx - x, hy - y, 0.0) < 1.6)
+        {
+            HalucMakni(playerid, k);
+            PlayerPlaySound(playerid, 1136, 0.0, 0.0, 0.0);
+            continue;
+        }
+        Lik_IdiDo(gHaluc[playerid][k], x, y, z, LIK_SPRINT);
+    }
+    if (gVizualVrsta[playerid] != ITEM_METH || sad - gHalucSljedeca[playerid] < 0 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    gHalucSljedeca[playerid] = sad + 25000 + random(20000);
+    new Float:a;
+    GetPlayerFacingAngle(playerid, a);
+    for (new k = 0; k < HALUC_MAX; k++)
+    {
+        if (gHaluc[playerid][k] != INVALID_LIK || (k && random(2))) continue;
+        new Float:kut = a + 180.0 + float(random(120) - 60), Float:d = 14.0 + float(random(6));
+        new lik = Lik_Stvori(gHalucSkin[random(sizeof gHalucSkin)], x - d * floatsin(kut, degrees), y + d * floatcos(kut, degrees), z, kut + 180.0, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid));
+        if (lik == INVALID_LIK) continue;
+        Lik_SamoZa(lik, playerid);
+        Lik_Neranjiv(lik, true);
+        Lik_IdiDo(lik, x, y, z, LIK_SPRINT);
+        gHaluc[playerid][k] = lik;
+        gHalucOd[playerid][k] = sad;
+    }
+}
+
+DrogaUcinakOdlazi(playerid)
+{
+    for (new k = 0; k < HALUC_MAX; k++) HalucMakni(playerid, k);
+    gVizualDo[playerid] = 0;
+    gVizualTd[playerid] = PlayerText:INVALID_TEXT_DRAW;
+    gOvisnostUcitana[playerid] = false;
+}
+
+DrogaUcinak(playerid, item)
+{
+    if (!gOvisnostUcitana[playerid]) OvisnostUcitaj(playerid);
+    if (!gOvisnostSljedeci[playerid]) ObavijestGreska(playerid, T(playerid, "Postali ste ovisni. Ako ne uzmete novu dozu unutar sat vremena, bit ce vam lose."));
+    gOvisnostSljedeci[playerid] = gettime() + OVISNOST_S;
+    gOvisnostEpizoda[playerid] = 0;
+    OvisnostSpremi(playerid);
+    VizualPocni(playerid, item);
+    SetPlayerDrunkLevel(playerid, item == ITEM_METH ? 4500 : item == ITEM_KOKAIN ? 2300 : 2600);
+    switch (item)
+    {
+        case ITEM_MARIHUANA:
+        {
+            new Float:o;
+            GetArmor(playerid, o);
+            SetArmor(playerid, o + DROGA_MARIHUANA > 100.0 ? 100.0 : o + DROGA_MARIHUANA);
+            ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Marihuana vas je opustila: +20 oklopa."));
+        }
+        case ITEM_KOKAIN:
+        {
+            gKokainDo[playerid] = GetTickCount() + DROGA_TRAJE_MS;
+            ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Kokain: 5 minuta primate 30% manje stete."));
+        }
+        case ITEM_METH:
+        {
+            if (!gMethDo[playerid]) for (new s = 0; s < 11; s++)
+            {
+                new tren = GetPlayerSkillLevel(playerid, WEAPONSKILL:s), gornja = s == 0 || s == 4 || s == 6 ? 998 : 999, nova = tren + DROGA_METH_VJESTINA;
+                gMethVjestina[playerid][s] = tren;
+                if (nova > gornja) nova = gornja;
+                if (nova > tren) SetPlayerSkillLevel(playerid, WEAPONSKILL:s, nova);
+            }
+            gMethDo[playerid] = GetTickCount() + DROGA_TRAJE_MS;
+            ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Metamfetamin: 5 minuta bolje rukujete oruzjem."));
+        }
+    }
+}
+
+DrogaUcinakReset(playerid)
+{
+    gKokainDo[playerid] = 0;
+    for (new k = 0; k < HALUC_MAX; k++) HalucMakni(playerid, k);
+    VizualMakni(playerid);
+    MethVjestineVrati(playerid);
+}
+
+DrogaUcinakTick(playerid)
+{
+    OvisnostTick(playerid);
+    if (gVizualDo[playerid])
+    {
+        if (GetTickCount() - gVizualDo[playerid] >= 0) VizualMakni(playerid);
+        else
+        {
+            VizualBoja(playerid);
+            if (GetPlayerDrunkLevel(playerid) < 2100) SetPlayerDrunkLevel(playerid, gVizualVrsta[playerid] == ITEM_METH ? 4000 : 2200);
+        }
+    }
+    HalucTick(playerid);
+    if (gKokainDo[playerid] && !DrogaTraje(gKokainDo[playerid]))
+    {
+        gKokainDo[playerid] = 0;
+        ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Ucinak kokaina je prosao."));
+    }
+    if (gMethDo[playerid] && !DrogaTraje(gMethDo[playerid]))
+    {
+        MethVjestineVrati(playerid);
+        ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Ucinak metamfetamina je prosao."));
+    }
+}
+
+DrogaUcinakConnect(playerid)
+{
+    gKokainDo[playerid] = 0;
+    gMethDo[playerid] = 0;
+    gVizualDo[playerid] = 0;
+    gVizualTd[playerid] = PlayerText:INVALID_TEXT_DRAW;
+    gOvisnostUcitana[playerid] = false;
+    gOvisnostSljedeci[playerid] = 0;
+    for (new k = 0; k < HALUC_MAX; k++) gHaluc[playerid][k] = INVALID_LIK;
+}
+
+Float:DrogaStetaFaktor(playerid)
+{
+    return DrogaTraje(gKokainDo[playerid]) ? DROGA_KOKAIN_STETA : 1.0;
 }

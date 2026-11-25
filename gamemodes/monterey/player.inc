@@ -86,6 +86,7 @@ public OnPlayerDisconnect(playerid, reason)
     MaricaReset(playerid);
     PolicijaDisconnect(playerid, true);
     PljVrecaOdlazak(playerid);
+    DrogaUcinakOdlazi(playerid);
     GepekDisconnect(playerid);
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);

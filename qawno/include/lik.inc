@@ -31,6 +31,7 @@ native bool:Lik_Krece(lik);
 native bool:Lik_Zdravlje(lik, Float:zdravlje);
 native bool:Lik_DajZdravlje(lik, &Float:zdravlje);
 native bool:Lik_Neranjiv(lik, bool:neranjiv);
+native bool:Lik_SamoZa(lik, playerid);
 native bool:Lik_Mrtav(lik);
 native bool:Lik_Ozivi(lik, Float:x, Float:y, Float:z, Float:kut);
 native bool:Lik_Oruzje(lik, oruzje, municija = 0);

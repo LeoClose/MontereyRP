@@ -1,3 +1,4 @@
+forward Float:DrogaStetaFaktor(playerid);
 // HP i armor, serverside, koristi syncfix plugin
 #define STETA_BAZA          8000000.0
 #define STETA_SYNC_MS       2000
@@ -146,6 +147,7 @@ bool:GetArmor(playerid, &Float:o)
 
 StetaConnect(playerid)
 {
+    DrogaUcinakConnect(playerid);
     for (new i = 0; i < 3; i++) gStetaTd[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
     gStetaTdVidljiv[playerid] = false;
     gStetaPrikaz[playerid] = 0;
@@ -154,6 +156,7 @@ StetaConnect(playerid)
 
 StetaSpawn(playerid)
 {
+    DrogaUcinakReset(playerid);
     SetHP(playerid, 100.0);
     SetArmor(playerid, 0.0);
     StetaTrakaVidljiva(playerid, true);
@@ -185,6 +188,7 @@ static bool:StetaUNozu(playerid)
 static StetaPrimijeni(playerid, Float:dmg, WEAPON:w)
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid) || ZatvorProvjera(playerid) || StetaUNozu(playerid) || Zasticen(playerid) || dmg <= 0.0) return;
+    dmg *= DrogaStetaFaktor(playerid);
     StetaRacun(gZivot[playerid], gOklop[playerid], dmg, w != WEAPON_COLLISION && w != WEAPON_DROWN);
     SetArmor(playerid, gOklop[playerid]);
     if (RanjenProvjeri(playerid, gZivot[playerid])) return;
@@ -388,6 +392,7 @@ StetaTick()
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
+        DrogaUcinakTick(i);
         new PLAYER_STATE:st = GetPlayerState(i);
         new bool:ziv = st == PLAYER_STATE_ONFOOT || st == PLAYER_STATE_DRIVER || st == PLAYER_STATE_PASSENGER;
         StetaTrakaVidljiva(i, ziv);
