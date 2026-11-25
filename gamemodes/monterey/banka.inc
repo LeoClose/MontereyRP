@@ -67,9 +67,9 @@ static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_LIK, ... }, ... }, gBa
 enum { PS_MIRNO, PS_TRCI, PS_CEKA, PS_TRCI2, PS_OTKLJUCAVA, PS_OTVORENO, PS_RAZNESENO }
 enum E_PLJ { bool:pjIma, Float:pjMx, Float:pjMy, Float:pjMz, Float:pjMa, Float:pjVx, Float:pjVy, Float:pjVz, pjDModel, Float:pjDx, Float:pjDy, Float:pjDz, Float:pjDrx, Float:pjDry, Float:pjDrz, Float:pjDkut, STREAMER_TAG_OBJECT:pjVrata, pjMenadzer, pjStanje, pjKraj, pjFaza, bool:pjSarka, Float:pjSx, Float:pjSy, Float:pjVrataF, Float:pjVrataCilj, pjVrataToken, pjOtvoreniModel }
 enum E_PLJ_POD { STREAMER_TAG_OBJECT:ppObjekt, Float:ppX, Float:ppY, Float:ppZ, Float:ppRx, Float:ppRy, Float:ppRz, Float:ppVis }
-enum E_PLJ_EKS { Float:peX, Float:peY, Float:peZ, STREAMER_TAG_OBJECT:peObjekt }
+enum E_PLJ_EKS { Float:peX, Float:peY, Float:peZ, STREAMER_TAG_OBJECT:peObjekt, STREAMER_TAG_OBJECT:peVreca }
 enum E_PLJ_SEF { psModel, Float:psX, Float:psY, Float:psZ, STREAMER_TAG_OBJECT:psObjekt, bool:psUzet }
-static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], Float:gPljPut[BANKA_MAX][PLJ_PUT * 3 + 3], gPljPutBroj[BANKA_MAX], gPljPod[BANKA_MAX][PLJ_PODIZNA][E_PLJ_POD], gPljPodBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS];
+static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], Float:gPljPut[BANKA_MAX][PLJ_PUT * 3 + 3], gPljPutBroj[BANKA_MAX], gPljPod[BANKA_MAX][PLJ_PODIZNA][E_PLJ_POD], gPljPodBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS], bool:gPljUpozoren[MAX_PLAYERS];
 static Float:gApBankaPoz[MAX_PLAYERS][4], gApBanka[MAX_PLAYERS], gBankaMeni[MAX_PLAYERS][sizeof gBankaAkcija], gBankaOdabir[MAX_PLAYERS], gBankaSat;
 
 static BankaDug(iznos)
@@ -367,7 +367,9 @@ static PljResetiraj(s)
     for (new k = 0; k < gPljEksBroj[s]; k++)
     {
         if (gPljEks[s][k][peObjekt]) DestroyDynamicObject(gPljEks[s][k][peObjekt]);
+        if (gPljEks[s][k][peVreca]) DestroyDynamicObject(gPljEks[s][k][peVreca]);
         gPljEks[s][k][peObjekt] = STREAMER_TAG_OBJECT:0;
+        gPljEks[s][k][peVreca] = STREAMER_TAG_OBJECT:0;
     }
     PljSefovi(s, false);
     if (gPlj[s][pjIma]) PljMenadzer(s);
@@ -572,6 +574,7 @@ BankaLikStigao(lik)
             PljPodizna(s, true);
             BankaPljObavijest(s, "Menadzer otvara prva vrata trezora...");
         }
+        else if (gPlj[s][pjStanje] >= PS_OTVORENO) Lik_Animacija(lik, "ROB_BANK", "SHP_HandsUp_Scr", 4.1, 0, 0, 0, 1, 0);
         else if (gPlj[s][pjStanje] == PS_TRCI2)
         {
             gPlj[s][pjStanje] = PS_OTKLJUCAVA;
@@ -589,7 +592,9 @@ static PljTrezorOtvori(s)
     gPlj[s][pjStanje] = PS_OTVORENO;
     gPlj[s][pjKraj] = gettime() + gPljCfg[PP_TRAJANJE] * 60;
     PljVrata(s, true);
-    Lik_Animacija(gPlj[s][pjMenadzer], "ROB_BANK", "SHP_HandsUp_Scr", 4.1, 0, 0, 0, 1, 0);
+    new Float:dx = gPlj[s][pjVx] - gPlj[s][pjDx], Float:dy = gPlj[s][pjVy] - gPlj[s][pjDy], Float:d = floatsqroot(dx * dx + dy * dy);
+    if (d < 0.1) Lik_Animacija(gPlj[s][pjMenadzer], "ROB_BANK", "SHP_HandsUp_Scr", 4.1, 0, 0, 0, 1, 0);
+    else Lik_IdiDo(gPlj[s][pjMenadzer], gPlj[s][pjVx] + dx / d * 1.0 - dy / d * 2.5, gPlj[s][pjVy] + dy / d * 1.0 + dx / d * 2.5, gPlj[s][pjVz], LIK_HOD);
     BankaPljObavijest(s, "Trezor je otvoren! Postavite eksploziv na oznacena mjesta.");
 }
 
@@ -644,20 +649,22 @@ BankaPljackaAlt(playerid)
             for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && BankaIgraca(i) == s) CreateExplosionForPlayer(i, gPljEks[s][k][peX], gPljEks[s][k][peY], gPljEks[s][k][peZ], 12, 3.0);
             DestroyDynamicObject(gPljEks[s][k][peObjekt]);
             gPljEks[s][k][peObjekt] = STREAMER_TAG_OBJECT:0;
+            gPljEks[s][k][peVreca] = CreateDynamicObject(1550, gPljEks[s][k][peX], gPljEks[s][k][peY], gPljEks[s][k][peZ] - 0.65, 0.0, 0.0, float(random(360)), BANKA_SVIJET + s, gBanka[s][bkInt]);
         }
         PljSefovi(s, true);
         gPlj[s][pjStanje] = PS_RAZNESENO;
-        BankaPljObavijest(s, "Pretinci su otvoreni! Pokupite novac.");
+        BankaPljObavijest(s, "Eksplozija je otvorila trezor! Pokupite vrece novca.");
         return 1;
     }
     if (gPlj[s][pjStanje] != PS_RAZNESENO) return 0;
-    for (new k = 0; k < gPljSefBroj[s]; k++)
+    for (new k = 0; k < gPljEksBroj[s]; k++)
     {
-        if (gPljSef[s][k][psUzet] || !IsPlayerInRangeOfPoint(playerid, PLJ_DOMET + 0.4, gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ])) continue;
-        gPljSef[s][k][psUzet] = true;
+        if (!gPljEks[s][k][peVreca] || !IsPlayerInRangeOfPoint(playerid, PLJ_DOMET, gPljEks[s][k][peX], gPljEks[s][k][peY], gPljEks[s][k][peZ])) continue;
+        DestroyDynamicObject(gPljEks[s][k][peVreca]);
+        gPljEks[s][k][peVreca] = STREAMER_TAG_OBJECT:0;
         new od = gPljCfg[PP_VRECA_MIN], do_ = gPljCfg[PP_VRECA_MAX] > od ? gPljCfg[PP_VRECA_MAX] : od, iznos = od + random(do_ - od + 1), tekst[96];
         gPljVreca[playerid] += iznos;
-        ApplyAnimation(playerid, "ROB_BANK", "CAT_Safe_Rob", 4.1, false, false, false, false, 0);
+        ApplyAnimation(playerid, "CARRY", "liftup", 4.1, false, false, false, false, 0);
         SetPlayerAttachedObject(playerid, PLJ_VRECA_SLOT, 1550, 1, 0.1, -0.25, 0.0, 0.0, 90.0, 0.0);
         format(tekst, sizeof tekst, T(playerid, "Uzeli ste vrecu novca ($%d). Pobjegnite iz banke."), iznos);
         ObavijestInfo(playerid, T(playerid, "Pljacka banke"), tekst);
@@ -681,14 +688,23 @@ static PljSavjeti(s)
             {
                 new bool:sigurno = true;
                 for (new k = 0; k < gPljEksBroj[s]; k++) if (IsPlayerInRangeOfPoint(i, float(gPljCfg[PP_SIGURNO]), gPljEks[s][k][peX], gPljEks[s][k][peY], gPljEks[s][k][peZ])) sigurno = false;
-                Savjet(i, sigurno ? T(i, "~y~ALT~w~ - detoniraj") : T(i, "~r~Udaljite se od eksploziva"), 1200);
+                if (sigurno)
+                {
+                    gPljUpozoren[i] = false;
+                    Savjet(i, T(i, "~y~ALT~w~ - detoniraj"), 1200);
+                }
+                else if (!gPljUpozoren[i])
+                {
+                    gPljUpozoren[i] = true;
+                    ObavijestInfo(i, T(i, "Pljacka banke"), T(i, "Eksploziv je postavljen. Udaljite se i pritisnite ALT za detonaciju."));
+                }
             }
         }
         else if (gPlj[s][pjStanje] == PS_RAZNESENO)
         {
-            for (new k = 0; k < gPljSefBroj[s] && !blizu; k++)
-                if (!gPljSef[s][k][psUzet] && IsPlayerInRangeOfPoint(i, PLJ_DOMET + 0.4, gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ])) blizu = true;
-            if (blizu) Savjet(i, T(i, "~y~ALT~w~ - uzmi novac"), 1200);
+            for (new k = 0; k < gPljEksBroj[s] && !blizu; k++)
+                if (gPljEks[s][k][peVreca] && IsPlayerInRangeOfPoint(i, PLJ_DOMET, gPljEks[s][k][peX], gPljEks[s][k][peY], gPljEks[s][k][peZ])) blizu = true;
+            if (blizu) Savjet(i, T(i, "~y~ALT~w~ - uzmi vrecu novca"), 1200);
         }
     }
 }

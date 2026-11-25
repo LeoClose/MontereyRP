@@ -6,10 +6,10 @@
 #define ZLATARA_SKIN            186
 #define ZLATARA_OTKUP_POSTO     50
 #define ZLATARA_PLJACKASA       2
-#define ZLATARA_PLJACKA_S       20
+#define ZLATARA_PLJACKA_S       240
+#define VITRINA_MODEL           19325
+#define VITRINA_DOMET           1.8
 #define ZLATARA_PLJACKA_PAUZA   3600
-#define ZLATARA_PLIJEN_MIN      4
-#define ZLATARA_PLIJEN_RASPON   6
 #define ZLATARA_WANTED          2
 #define PREPRODAVAC_MAX         8
 #define PREPRODAVAC_SKIN        28
@@ -31,6 +31,14 @@ static const Float:gZlataraUlaz[3] = { 1411.3, -37.25, 1000.95 };
 static const gZlataraRoba[][2] = { { ITEM_SAT1, 1500 }, { ITEM_SAT2, 3000 }, { ITEM_SAT3, 8000 }, { ITEM_PRSTEN, 2500 }, { ITEM_LANAC, 4000 }, { ITEM_OGRLICA, 12000 }, { ITEM_SREBRNE_NAOCALE, 400 }, { ITEM_ZLATNE_NAOCALE, 1200 } };
 
 static gZl[ZLATARA_MAX][E_ZLATARA], gPp[PREPRODAVAC_MAX][E_PREPRODAVAC], STREAMER_TAG_AREA:gPpZona[PREPRODAVAC_MAX];
+enum { VT_CIJELA, VT_RAZBIJENA, VT_PRAZNA }
+static const Float:gVitrinaPoz[][3] = {
+    { 1412.370117, -46.308868, 1000.323303 }, { 1410.506103, -48.020141, 1000.323303 }, { 1407.304321, -48.020141, 1000.323303 },
+    { 1405.376953, -46.308868, 1000.323303 }, { 1403.643066, -48.020141, 1000.323303 }, { 1400.441284, -48.020141, 1000.323303 },
+    { 1398.466430, -46.308868, 1000.323303 }, { 1396.722534, -48.020141, 1000.323303 }, { 1393.520751, -48.020141, 1000.323303 },
+    { 1391.995483, -46.308868, 1000.323303 }, { 1390.131469, -48.020141, 1000.323303 }, { 1386.929687, -48.020141, 1000.323303 }
+};
+static STREAMER_TAG_OBJECT:gVitrina[sizeof gVitrinaPoz], gVitrinaBroj = -1, gZlVitrina[ZLATARA_MAX][sizeof gVitrinaPoz], gZlPlijen[MAX_PLAYERS];
 static gZlato, gZlatoSat, gApZlatara[MAX_PLAYERS], gZlataraOdabir[MAX_PLAYERS][sizeof gZlataraRoba], gSatNosi[MAX_PLAYERS], gOgrNosi[MAX_PLAYERS], gZlataraPoruka[MAX_PLAYERS];
 
 static ZlatoNovo(cijena, pomak)
@@ -177,7 +185,7 @@ ZlataraKasa(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
     new s = ZlataraIgraca(playerid);
     if (s == -1 || !gZl[s][zlImaAktor] || !IsPlayerInRangeOfPoint(playerid, ZLATARA_KASA_DOMET, gZl[s][zlAx], gZl[s][zlAy], gZl[s][zlAz])) return 0;
-    if (gZl[s][zlPljacka]) return 1;
+    if (gZl[s][zlPljacka]) return 0;
     new list[256], row[96], len = 0;
     DodajStupac(list, len, T(playerid, "Kupi nakit"));
     DodajStupac(list, len, T(playerid, "Prodaj nakit"));
@@ -469,6 +477,80 @@ static ZlataraEkipa(playerid, s)
     return n;
 }
 
+static VitrineNadji()
+{
+    if (gVitrinaBroj != -1) return;
+    gVitrinaBroj = sizeof gVitrinaPoz;
+    for (new k = 0; k < sizeof gVitrinaPoz; k++) gVitrina[k] = ObjektBlizu(gVitrinaPoz[k][0], gVitrinaPoz[k][1], gVitrinaPoz[k][2], 0.1, VITRINA_MODEL);
+}
+
+static VitrinaStakla(k)
+{
+    new bool:razbijena = false;
+    for (new s = 0; s < ZLATARA_MAX && !razbijena; s++) if (gZl[s][zlIma] && gZl[s][zlPljacka] && gZlVitrina[s][k] != VT_CIJELA) razbijena = true;
+    if (gVitrina[k]) SetDynamicObjectPos(gVitrina[k], gVitrinaPoz[k][0], gVitrinaPoz[k][1], gVitrinaPoz[k][2] - (razbijena ? 30.0 : 0.0));
+}
+
+static ZlataraVitrineReset(s)
+{
+    for (new k = 0; k < gVitrinaBroj; k++)
+    {
+        new bila = gZlVitrina[s][k];
+        gZlVitrina[s][k] = VT_CIJELA;
+        if (bila != VT_CIJELA) VitrinaStakla(k);
+    }
+}
+
+static ZlataraVitrina(playerid, s)
+{
+    new naj = -1, Float:nd = VITRINA_DOMET;
+    for (new k = 0; k < gVitrinaBroj; k++)
+    {
+        if (gZlVitrina[s][k] == VT_PRAZNA) continue;
+        new Float:d = GetPlayerDistanceFromPoint(playerid, gVitrinaPoz[k][0], gVitrinaPoz[k][1], gVitrinaPoz[k][2]);
+        if (d < nd) { nd = d; naj = k; }
+    }
+    return naj;
+}
+
+ZlataraAlt(playerid)
+{
+    if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;
+    new s = ZlataraIgraca(playerid);
+    if (s == -1 || !gZl[s][zlPljacka] || gOrg[playerid] != gZl[s][zlPljacka]) return 0;
+    new k = ZlataraVitrina(playerid, s);
+    if (k == -1) return 0;
+    if (gZlVitrina[s][k] == VT_CIJELA)
+    {
+        gZlVitrina[s][k] = VT_RAZBIJENA;
+        ApplyAnimation(playerid, "FIGHT_D", "FightD_1", 4.1, false, false, false, false, 0);
+        PlayerPlaySound(playerid, 1135, gVitrinaPoz[k][0], gVitrinaPoz[k][1], gVitrinaPoz[k][2]);
+        VitrinaStakla(k);
+        ObavijestInfo(playerid, T(playerid, "Pljacka zlatare"), T(playerid, "Razbili ste vitrinu. Pritisnite ALT da uzmete nakit."));
+        return 1;
+    }
+    if (gInv[playerid][ITEM_UKRADENI_NAKIT] >= gItems[ITEM_UKRADENI_NAKIT][ITEM_MAX]) return ObavijestGreska(playerid, T(playerid, "Ne mozete nositi vise nakita.")), 1;
+    gZlVitrina[s][k] = VT_PRAZNA;
+    ApplyAnimation(playerid, "ROB_BANK", "CAT_Safe_Rob", 4.1, false, false, false, false, 0);
+    GiveItem(playerid, ITEM_UKRADENI_NAKIT, 1);
+    gZlPlijen[playerid]++;
+    new tekst[96];
+    format(tekst, sizeof tekst, T(playerid, "Uzeli ste nakit iz vitrine (ukupno %d)."), gZlPlijen[playerid]);
+    ObavijestInfo(playerid, T(playerid, "Pljacka zlatare"), tekst);
+    return 1;
+}
+
+static ZlataraSavjeti(s)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (!gUlogiran[i] || gOrg[i] != gZl[s][zlPljacka] || ZlataraIgraca(i) != s || IsRanjen(i)) continue;
+        new k = ZlataraVitrina(i, s);
+        if (k == -1) continue;
+        Savjet(i, gZlVitrina[s][k] == VT_CIJELA ? T(i, "~y~ALT~w~ - razbij vitrinu") : T(i, "~y~ALT~w~ - uzmi nakit"), 1200);
+    }
+}
+
 ZlataraUpdate(playerid)
 {
     if (!gUlogiran[playerid] || !gOrg[playerid]) return;
@@ -479,16 +561,20 @@ ZlataraUpdate(playerid)
     {
         if (sad - gZlataraPoruka[playerid] < 10) return;
         gZlataraPoruka[playerid] = sad;
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Za pljacku zlatare treba vas najmanje %d iz organizacije."), ZLATARA_PLJACKASA);
+        new tekst[96];
+        format(tekst, sizeof tekst, T(playerid, "Za pljacku zlatare treba vas najmanje %d iz organizacije."), ZLATARA_PLJACKASA);
+        ObavijestGreska(playerid, tekst);
         return;
     }
     if (gZl[s][zlPljackano] && sad - gZl[s][zlPljackano] < ZLATARA_PLJACKA_PAUZA)
     {
         if (sad - gZlataraPoruka[playerid] < 10) return;
         gZlataraPoruka[playerid] = sad;
-        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ova zlatara je nedavno opljackana."));
+        ObavijestGreska(playerid, T(playerid, "Ova zlatara je nedavno opljackana."));
         return;
     }
+    VitrineNadji();
+    ZlataraVitrineReset(s);
     gZl[s][zlPljacka] = gOrg[playerid];
     gZl[s][zlPljackaKraj] = sad + ZLATARA_PLJACKA_S;
     gZl[s][zlPljackano] = sad;
@@ -499,7 +585,8 @@ ZlataraUpdate(playerid)
         if (gOrg[i] == gOrg[playerid] && ZlataraIgraca(i) == s)
         {
             for (new k = 0; k < ZLATARA_WANTED; k++) DodajWanted(i);
-            SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka zlatare je pocela! Razbijate vitrine, izdrzite %d s unutra."), ZLATARA_PLJACKA_S);
+            gZlPlijen[i] = 0;
+            ObavijestInfo(i, T(i, "Pljacka zlatare"), T(i, "Pljacka je pocela! Razbijajte vitrine s ALT i uzmite nakit."));
         }
         else if (PolicajacNaDuznosti(i)) SendClientMessage(i, COLOR_ERROR, T(i, "Dojava: pljacka zlatare u tijeku, %s."), CestaZona(gZl[s][zlX], gZl[s][zlY]));
     }
@@ -519,22 +606,29 @@ ZlataraTick()
         if (!gZl[s][zlIma] || !gZl[s][zlPljacka]) continue;
         new org = gZl[s][zlPljacka], prisutni[MAX_PLAYERS], n = 0;
         for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org && ZlataraIgraca(i) == s && !IsRanjen(i)) prisutni[n++] = i;
-        if (n && sad < gZl[s][zlPljackaKraj]) continue;
-        gZl[s][zlPljacka] = 0;
-        if (gZl[s][zlImaAktor]) ClearActorAnimations(gZl[s][zlAktor]);
-        if (!n)
+        if (n && sad < gZl[s][zlPljackaKraj])
         {
-            for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gOrg[i] == org) SendClientMessage(i, COLOR_ERROR, T(i, "Pljacka zlatare je propala."));
+            ZlataraSavjeti(s);
             continue;
         }
-        for (new k = 0; k < n; k++)
+        new ukupno = 0;
+        for (new k = 0; k < gVitrinaBroj; k++) if (gZlVitrina[s][k] == VT_PRAZNA) ukupno++;
+        gZl[s][zlPljacka] = 0;
+        ZlataraVitrineReset(s);
+        if (gZl[s][zlImaAktor]) ClearActorAnimations(gZl[s][zlAktor]);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
         {
-            new i = prisutni[k], plijen = ZLATARA_PLIJEN_MIN + random(ZLATARA_PLIJEN_RASPON);
-            if (gInv[i][ITEM_UKRADENI_NAKIT] + plijen > gItems[ITEM_UKRADENI_NAKIT][ITEM_MAX]) plijen = gItems[ITEM_UKRADENI_NAKIT][ITEM_MAX] - gInv[i][ITEM_UKRADENI_NAKIT];
-            if (plijen > 0) GiveItem(i, ITEM_UKRADENI_NAKIT, plijen);
-            SendClientMessage(i, COLOR_INFO, T(i, "Pljacka uspjela! Uzeli ste %d komada nakita. Prodajte ih preprodavacu."), plijen);
+            if (!gUlogiran[i] || gOrg[i] != org) continue;
+            if (!ukupno) ObavijestGreska(i, T(i, "Pljacka zlatare je propala."));
+            else if (gZlPlijen[i])
+            {
+                new tekst[128];
+                format(tekst, sizeof tekst, T(i, "Pljacka je gotova. Uzeli ste %d komada nakita. Prodajte ih preprodavacu."), gZlPlijen[i]);
+                ObavijestInfo(i, T(i, "Pljacka zlatare"), tekst);
+            }
+            gZlPlijen[i] = 0;
         }
-        OrgDnevnik(org, INVALID_PLAYER_ID, DNEVNIK_ZLATARA, n);
+        if (ukupno) OrgDnevnik(org, INVALID_PLAYER_ID, DNEVNIK_ZLATARA, ukupno);
     }
 }
 
