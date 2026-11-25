@@ -15,6 +15,7 @@ forward Float:DrogaStetaFaktor(playerid);
 #define STETA_TD_Y          66.7
 #define STETA_TD_W          61.7
 #define STETA_TD_H          8.4
+#define STETA_TD_RAZMAK     9.6
 
 enum E_STETA { Float:stDmg, Float:stDomet, stRazmak, bool:stKlijent }
 static const gSteta[STETA_ORUZJA][E_STETA] = {
@@ -49,7 +50,7 @@ static const gSteta[STETA_ORUZJA][E_STETA] = {
 
 static Float:gZivot[MAX_PLAYERS], Float:gOklop[MAX_PLAYERS], gStetaPrikaz[MAX_PLAYERS], gStetaPostavljeno[MAX_PLAYERS], gStetaBlok[MAX_PLAYERS];
 static gStetaZadnjaZrtva[MAX_PLAYERS] = { INVALID_PLAYER_ID, ... }, gStetaZadnjiMs[MAX_PLAYERS];
-static PlayerText:gStetaTd[MAX_PLAYERS][3], bool:gStetaTdVidljiv[MAX_PLAYERS];
+static PlayerText:gStetaTd[MAX_PLAYERS][7], bool:gStetaTdVidljiv[MAX_PLAYERS], bool:gStetaOklopVidljiv[MAX_PLAYERS], bool:gStetaDrogaVidljiva[MAX_PLAYERS];
 static gStetaNoz[MAX_PLAYERS], gStetaVozilo[MAX_PLAYERS];
 
 InitSteta()
@@ -87,10 +88,41 @@ static StetaTraka(playerid)
         gStetaTd[playerid][0] = TdSlika(playerid, STETA_TD_X, STETA_TD_Y, STETA_TD_W, STETA_TD_H, 0x000000FF);
         gStetaTd[playerid][1] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0x5A0C0EFF);
         gStetaTd[playerid][2] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0xB4191DFF);
+        gStetaTd[playerid][3] = TdSlika(playerid, STETA_TD_X, STETA_TD_Y - STETA_TD_RAZMAK, STETA_TD_W, STETA_TD_H, 0x000000FF);
+        gStetaTd[playerid][4] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y - STETA_TD_RAZMAK + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0xE1E1E1FF);
+        gStetaTd[playerid][5] = TdSlika(playerid, STETA_TD_X, STETA_TD_Y - STETA_TD_RAZMAK * 2.0, STETA_TD_W, STETA_TD_H, 0x000000FF);
+        gStetaTd[playerid][6] = TdSlika(playerid, STETA_TD_X + 2.0, STETA_TD_Y - STETA_TD_RAZMAK * 2.0 + 1.9, STETA_TD_W - 3.7, STETA_TD_H - 3.5, 0x2ECC71FF);
         gStetaTdVidljiv[playerid] = false;
+        gStetaOklopVidljiv[playerid] = false;
+        gStetaDrogaVidljiva[playerid] = false;
     }
     PlayerTextDrawTextSize(playerid, gStetaTd[playerid][2], (STETA_TD_W - 3.7) * float(gStetaPrikaz[playerid]) / 100.0, STETA_TD_H - 3.5);
     if (gStetaTdVidljiv[playerid]) PlayerTextDrawShow(playerid, gStetaTd[playerid][2]);
+    StetaOsvjeziTrake(playerid);
+}
+
+static StetaDodatna(playerid, prvi, bool:vidljiva, &bool:stanje, Float:postotak)
+{
+    if (vidljiva)
+    {
+        PlayerTextDrawTextSize(playerid, gStetaTd[playerid][prvi + 1], (STETA_TD_W - 3.7) * postotak / 100.0, STETA_TD_H - 3.5);
+        if (!stanje) PlayerTextDrawShow(playerid, gStetaTd[playerid][prvi]);
+        PlayerTextDrawShow(playerid, gStetaTd[playerid][prvi + 1]);
+    }
+    else if (stanje)
+    {
+        PlayerTextDrawHide(playerid, gStetaTd[playerid][prvi]);
+        PlayerTextDrawHide(playerid, gStetaTd[playerid][prvi + 1]);
+    }
+    stanje = vidljiva;
+}
+
+StetaOsvjeziTrake(playerid)
+{
+    if (gStetaTd[playerid][0] == PlayerText:INVALID_TEXT_DRAW) return;
+    new droga = DrogaPostotak(playerid), Float:oklop = gOklop[playerid] > 100.0 ? 100.0 : gOklop[playerid];
+    StetaDodatna(playerid, 3, gStetaTdVidljiv[playerid] && oklop > 0.0, gStetaOklopVidljiv[playerid], oklop);
+    StetaDodatna(playerid, 5, gStetaTdVidljiv[playerid] && droga > 0, gStetaDrogaVidljiva[playerid], float(droga));
 }
 
 static StetaTrakaVidljiva(playerid, bool:vidljiva)
@@ -102,6 +134,7 @@ static StetaTrakaVidljiva(playerid, bool:vidljiva)
         if (vidljiva) PlayerTextDrawShow(playerid, gStetaTd[playerid][i]);
         else PlayerTextDrawHide(playerid, gStetaTd[playerid][i]);
     }
+    StetaOsvjeziTrake(playerid);
 }
 
 // HP i armor
@@ -127,6 +160,8 @@ bool:SetArmor(playerid, Float:o)
     {
         gOklop[playerid] = o;
         gStetaPostavljeno[playerid] = GetTickCount();
+        StetaOsvjeziTrake(playerid);
+        return !!SetPlayerArmour(playerid, 0.0);
     }
     return !!SetPlayerArmour(playerid, o);
 }
@@ -148,7 +183,7 @@ bool:GetArmor(playerid, &Float:o)
 StetaConnect(playerid)
 {
     DrogaUcinakConnect(playerid);
-    for (new i = 0; i < 3; i++) gStetaTd[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
+    for (new i = 0; i < 7; i++) gStetaTd[playerid][i] = PlayerText:INVALID_TEXT_DRAW;
     gStetaTdVidljiv[playerid] = false;
     gStetaPrikaz[playerid] = 0;
     gStetaNoz[playerid] = 0;
@@ -396,10 +431,11 @@ StetaTick()
         new PLAYER_STATE:st = GetPlayerState(i);
         new bool:ziv = st == PLAYER_STATE_ONFOOT || st == PLAYER_STATE_DRIVER || st == PLAYER_STATE_PASSENGER;
         StetaTrakaVidljiva(i, ziv);
+        if (ziv && gStetaDrogaVidljiva[i] != (DrogaPostotak(i) > 0) || gStetaDrogaVidljiva[i]) StetaOsvjeziTrake(i);
         if (!ziv || sad - gStetaPostavljeno[i] < STETA_SYNC_MS) continue;
         GetPlayerArmour(i, o);
-        if (o <= gOklop[i] + 1.0) continue;
-        SetPlayerArmour(i, gOklop[i]);
+        if (o <= 1.0) continue;
+        SetPlayerArmour(i, 0.0);
         OnCheatDetected(i, "", 0, 13);
     }
 }

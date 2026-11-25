@@ -218,6 +218,17 @@ public OnGameModeInit()
     Streamer_SetChunkSize(STREAMER_TYPE_OBJECT, 25);
     EnableStuntBonusForAll(false);
     gDB = DB_Open("monterey.db");
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS one_shot (k TEXT PRIMARY KEY)"));
+    new DBResult:jednom = DB_ExecuteQuery(gDB, "SELECT 1 FROM one_shot WHERE k = 'brisanje_vozila_2026_11'");
+    if (!DB_GetRowCount(jednom))
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM vehicle_tuning WHERE vehicle IN (SELECT id FROM player_vehicles)"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_vehicles"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM casino_dealers WHERE igra = 9"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO one_shot (k) VALUES ('brisanje_vozila_2026_11')"));
+        print("[MRP] jednokratno: obrisana privatna vozila, prikolice i Texas Hold'em djelitelji");
+    }
+    DB_FreeResultSet(jednom);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA journal_mode = WAL"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "PRAGMA synchronous = NORMAL"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB,

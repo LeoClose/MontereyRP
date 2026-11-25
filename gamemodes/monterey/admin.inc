@@ -1338,3 +1338,37 @@ DLG:npc_gustoca_unos(playerid, response, const inputtext[])
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Postavka spremljena."));
     return ShowNpcGustoca(playerid);
 }
+
+CMD:obrisivozilo(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_VEH)) return 1;
+    new idx = 0, p1[12], v = 0;
+    if (SljedeciParam(params, idx, p1) && ProvjeriBroj(p1)) v = strval(p1);
+    else if (IsPlayerInAnyVehicle(playerid)) v = GetPlayerVehicleID(playerid);
+    else
+    {
+        new Float:x, Float:y, Float:z, Float:naj = 6.0;
+        GetPlayerPos(playerid, x, y, z);
+        for (new n = 0; n < gVozilaCount; n++)
+        {
+            new Float:d = GetVehicleDistanceFromPoint(gVozila[n], x, y, z);
+            if (d < naj) { naj = d; v = gVozila[n]; }
+        }
+    }
+    if (v <= 0 || v >= MAX_VEHICLES || !IsValidVehicle(v)) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /obrisivozilo [id vozila] (ili sjedite u vozilu / stanite do njega)"));
+    if (VlasnikVozila(v))
+    {
+        VlasnikOtpad(v);
+        return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Privatno vozilo %d obrisano."), v);
+    }
+    if (gOrgVehOrg[v])
+    {
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM vehicle_trunks WHERE veh = %d", gOrgVehDb[v]));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM org_vehicles WHERE id = %d", gOrgVehDb[v]));
+        gOrgVehOrg[v] = 0;
+        DestroyVehicle(v);
+        return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo organizacije %d obrisano."), v);
+    }
+    DestroyVehicle(v);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vozilo %d obrisano."), v);
+}

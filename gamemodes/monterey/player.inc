@@ -406,7 +406,7 @@ CMD:ahelp(playerid, params[])
         PomocRed(tekst, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));
     }
     PomocRed(tekst, len, T(playerid, "  /kazni [id/ime] [1 plivanje / 2 metenje] [kolicina] [razlog], /oslobodi [id/ime]"));
-    PomocRed(tekst, len, T(playerid, "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /dajoruzje, /premium, /postavibroj"));
+    PomocRed(tekst, len, T(playerid, "  /kick, /ban, /unban, /dajnovac, /dajpredmet, /dajoruzje, /obrisivozilo, /premium, /postavibroj"));
     PomocRed(tekst, len, T(playerid, "  RCON konzola: setadmin [ime] [razina], nazivranka [razina] [naziv], rankovi, unban [ime]"));
     return PrikaziDialog(playerid, DLG_NONE, DIALOG_STYLE_MSGBOX, naslov, tekst, T(playerid, "Zatvori"));
 }

@@ -323,6 +323,7 @@ CMD:parkiraj(playerid, params[])
     GetVehiclePos(v, x, y, z);
     GetVehicleZAngle(v, a);
     if (PijacaZona(x, y, z)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Na auto pijaci se ne moze parkirati."));
+    if (Lik_NaCesti(x, y, z)) return ObavijestGreska(playerid, T(playerid, "Ne mozete parkirati na cesti. Parkirajte uz rubnik, na plocnik ili parkiraliste."));
     VlasnikParkiraj(v, x, y, z, a);
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Vozilo je parkirano ovdje."));
 }

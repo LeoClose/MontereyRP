@@ -63,6 +63,7 @@ native bool:Lik_ZonaSkinovi(id, Float:minx, Float:miny, Float:maxx, Float:maxy, 
 native bool:Lik_Skriveno(Float:x, Float:y, Float:z, Float:blizu = 30.0, Float:domet = 160.0, osimVozila = -1);
 native bool:Lik_ZaustaviPromet(playerid, Float:kut, Float:domet, Float:sirina);
 native Float:Lik_Cesta(Float:x, Float:y, Float:z, &Float:ox, &Float:oy, &Float:oz);
+native bool:Lik_NaCesti(Float:x, Float:y, Float:z);
 native Lik_Ruta(Float:sx, Float:sy, Float:kut, Float:tx, Float:ty, Float:tz, Float:tocke[], max = sizeof tocke);
 native Lik_RutaDo(Float:tx, Float:ty, Float:tz, Float:metara, Float:tocke[], max = sizeof tocke);
 
@@ -81,6 +82,7 @@ native bool:Lik_Vozi(lik, Float:x, Float:y, Float:z, Float:brzina = 0.0, bool:si
 native bool:Lik_Kruzi(lik, Float:brzina = 11.0);
 native bool:Lik_Sirena(lik, bool:upaljena);
 native Lik_SvjetlaAuta(bool:upaljena);
+native bool:Lik_PrikaceniSebi(playerid, bool:vidljivi);
 native Lik_Gustoca(promet, pjesaci);
 native bool:Lik_Trubi(lik, ms = 500);
 native bool:Lik_Zaglavio(lik, ms);

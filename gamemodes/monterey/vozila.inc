@@ -9,6 +9,38 @@ static gGepek[MAX_VEHICLES][BROJ_ITEMA];
 static gGepekV[MAX_PLAYERS], gGepekItem[MAX_PLAYERS], gGepekRed[MAX_PLAYERS][BROJ_ITEMA], gGepekBroj[MAX_PLAYERS], bool:gGepekPut[MAX_PLAYERS];
 
 static gGepekPlayer[MAX_VEHICLES], gInGepek[MAX_PLAYERS], gGepekGleda[MAX_VEHICLES];
+static STREAMER_TAG_OBJECT:gGepekKamObj[MAX_PLAYERS][2];
+
+static GepekKameraMakni(playerid)
+{
+    for (new k = 0; k < 2; k++)
+    {
+        if (gGepekKamObj[playerid][k]) DestroyDynamicObject(gGepekKamObj[playerid][k]);
+        gGepekKamObj[playerid][k] = STREAMER_TAG_OBJECT:0;
+    }
+}
+
+static GepekKameraStvori(playerid, v)
+{
+    GepekKameraMakni(playerid);
+    new Float:sx, Float:sy, Float:sz, Float:x, Float:y, Float:z, Float:straga;
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    GetVehiclePos(v, x, y, z);
+    straga = -sy * 0.5;
+    gGepekKamObj[playerid][0] = CreateDynamicObject(1098, x, y, z, 0.0, 0.0, 0.0, GetVehicleVirtualWorld(v), -1, playerid, 300.0, 300.0);
+    AttachDynamicObjectToVehicle(gGepekKamObj[playerid][0], v, 0.15, straga + 0.55, -sz * 0.12, 90.0, 0.0, 0.0);
+    gGepekKamObj[playerid][1] = CreateDynamicObject(19300, x, y, z, 0.0, 0.0, 0.0, GetVehicleVirtualWorld(v), -1, playerid, 300.0, 300.0);
+    AttachDynamicObjectToVehicle(gGepekKamObj[playerid][1], v, -0.1, straga + 1.25, sz * 0.12, -25.0, 0.0, 180.0);
+    Streamer_UpdateEx(playerid, x, y, z, GetVehicleVirtualWorld(v), -1, STREAMER_TYPE_OBJECT);
+    SetTimerEx("GepekKameraPrikaci", 400, false, "ii", playerid, v);
+}
+
+forward GepekKameraPrikaci(playerid, v);
+public GepekKameraPrikaci(playerid, v)
+{
+    if (gInGepek[playerid] != v || !gGepekKamObj[playerid][1]) return;
+    AttachCameraToDynamicObject(playerid, gGepekKamObj[playerid][1]);
+}
 static bool:gGepekLeaving[MAX_PLAYERS], Float:gGepekIzlaz[MAX_PLAYERS][3], Float:gGepekZdravlje[MAX_PLAYERS][2];
 
 InitGepek()
@@ -332,6 +364,7 @@ KickFromGepek(v)
     new t = gGepekPlayer[v] - 1;
     if (t < 0) return;
     SplitGepek(t);
+    GepekKameraMakni(t);
     GepekIza(v, gGepekIzlaz[t][0], gGepekIzlaz[t][1], gGepekIzlaz[t][2]);
     gGepekLeaving[t] = true;
     TogglePlayerSpectating(t, false);
@@ -346,10 +379,12 @@ GepekSpawn(playerid)
     SetPlayerArmour(playerid, gGepekZdravlje[playerid][1]);
     VratiLisice(playerid);
     BlackScreen(playerid, false);
+    SetCameraBehindPlayer(playerid);
 }
 
 GepekDisconnect(playerid)
 {
+    GepekKameraMakni(playerid);
     if (gInGepek[playerid]) SplitGepek(playerid);
     gGepekLeaving[playerid] = false;
     GepekPusti(playerid);
@@ -420,7 +455,7 @@ CMD:trunkput(playerid, params[])
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s stavlja %s u prtljaznik.", GetRPIme(playerid), GetRPIme(t), 1);
     BlackScreen(t, !GepekOtvoren(v));
     TogglePlayerSpectating(t, true);
-    PlayerSpectateVehicle(t, v, SPECTATE_MODE_NORMAL);
+    GepekKameraStvori(t, v);
     return 1;
 }
 
