@@ -1,7 +1,8 @@
 #define BANKA_MAX           16
 #define BANKA_SVIJET        9600
 #define BANKA_DOMET         2.0
-#define BANKA_KASA_DOMET    2.5
+#define BANKA_KASA_DOMET    4.0
+#define BANKA_SALTERI       4
 #define BANKA_SKIN          150
 #define BANKA_OTVARANJE     100
 #define BANKA_KARTICA       50
@@ -17,6 +18,7 @@
 #define BANKA_PLJACKASA     1
 #define PLJ_EKSPLOZIVA      6
 #define PLJ_SEFOVA          12
+#define PLJ_PUT             16
 #define PLJ_MENADZER_SKIN   147
 #define PLJ_OTKLJUCAVANJE_S 10
 #define PLJ_VRATA_S         4.0
@@ -31,8 +33,8 @@
 #define BANKA_PLJACKA_PAUZA 3600
 #define BANKA_WANTED        3
 
-enum E_BANKA { bool:bkIma, bkDb, bkInt, Float:bkX, Float:bkY, Float:bkZ, Float:bkA, Float:bkIx, Float:bkIy, Float:bkIz, bkPljacka, bkPljackaKraj, bkPljackano, bool:bkImaAktor, Float:bkAx, Float:bkAy, Float:bkAz, Float:bkAa, bkAktor,
-    STREAMER_TAG_PICKUP:bkPickup, STREAMER_TAG_PICKUP:bkPickupU, STREAMER_TAG_3D_TEXT_LABEL:bkTekst, STREAMER_TAG_3D_TEXT_LABEL:bkTekstU, STREAMER_TAG_3D_TEXT_LABEL:bkTekstA, bkIkona }
+enum E_BANKA { bool:bkIma, bkDb, bkInt, Float:bkX, Float:bkY, Float:bkZ, Float:bkA, Float:bkIx, Float:bkIy, Float:bkIz, bkPljacka, bkPljackaKraj, bkPljackano,
+    STREAMER_TAG_PICKUP:bkPickup, STREAMER_TAG_PICKUP:bkPickupU, STREAMER_TAG_3D_TEXT_LABEL:bkTekst, STREAMER_TAG_3D_TEXT_LABEL:bkTekstU, bkIkona }
 
 enum E_BANKA_INT { biIme[24], biInt, Float:biX, Float:biY, Float:biZ }
 static const gBankaInt[][E_BANKA_INT] = {
@@ -40,19 +42,25 @@ static const gBankaInt[][E_BANKA_INT] = {
     { "Gradski ured", 3, 384.808, 173.804, 1008.382 },
     { "Atrium", 18, 1727.285, -1642.945, 20.225 },
     { "Fleeca banka", 0, 2050.0, 2042.5, 1000.05 },
-    { "Gradska banka", 0, 1397.398, -454.343, -76.242 }
+    { "Gradska banka", 0, 1397.334, -454.192, -76.242 }
 };
 
 enum { BA_OTVORI, BA_INFO, BA_UPLATI, BA_ISPLATI, BA_NA_STEDNJU, BA_SA_STEDNJE, BA_POSALJI, BA_KREDIT, BA_OTPLATI, BA_KARTICA }
 static const gBankaAkcija[][] = { "Otvori racun ($%d)", "Informacije", "Uplati novac", "Podigni novac", "Prebaci na stednju", "Podigni sa stednje", "Posalji novac", "Podigni kredit", "Otplati kredit", "Nova kartica ($%d)" };
 
+enum { SK_RACUN, SK_GOTOVINA, SK_STEDNJA, SK_KREDIT, SK_SVE }
+static const gSalterIme[][] = { "Salter: racun i kartice", "Salter: gotovina", "Salter: stednja i transferi", "Salter: krediti", "Salter: sve usluge" };
+static const gBankaAkcijaKat[] = { SK_RACUN, SK_RACUN, SK_GOTOVINA, SK_GOTOVINA, SK_STEDNJA, SK_STEDNJA, SK_STEDNJA, SK_KREDIT, SK_KREDIT, SK_RACUN };
+static const gSalterSkin[BANKA_SALTERI] = { 150, 141, 17, 76 };
+
 static gBanka[BANKA_MAX][E_BANKA];
+static gSalterKat[BANKA_MAX][BANKA_SALTERI] = { { -1, ... }, ... }, gSalterAktor[BANKA_MAX][BANKA_SALTERI], Float:gSalterPoz[BANKA_MAX][BANKA_SALTERI][4], STREAMER_TAG_3D_TEXT_LABEL:gSalterTekst[BANKA_MAX][BANKA_SALTERI];
 static gBankaCuvar[BANKA_MAX][BANKA_CUVARI] = { { INVALID_LIK, ... }, ... }, gBankaCuvarDb[BANKA_MAX][BANKA_CUVARI], Float:gBankaCuvarPoz[BANKA_MAX][BANKA_CUVARI][4];
 enum { PS_MIRNO, PS_TRCI, PS_OTKLJUCAVA, PS_OTVORENO, PS_RAZNESENO }
 enum E_PLJ { bool:pjIma, Float:pjMx, Float:pjMy, Float:pjMz, Float:pjMa, Float:pjVx, Float:pjVy, Float:pjVz, pjDModel, Float:pjDx, Float:pjDy, Float:pjDz, Float:pjDrx, Float:pjDry, Float:pjDrz, Float:pjDkut, STREAMER_TAG_OBJECT:pjVrata, pjMenadzer, pjStanje, pjKraj }
 enum E_PLJ_EKS { Float:peX, Float:peY, Float:peZ, STREAMER_TAG_OBJECT:peObjekt }
 enum E_PLJ_SEF { psModel, Float:psX, Float:psY, Float:psZ, Float:psRz, Float:psKut, STREAMER_TAG_OBJECT:psObjekt, bool:psUzet }
-static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS];
+static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], Float:gPljPut[BANKA_MAX][PLJ_PUT * 3 + 3], gPljPutBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS];
 static Float:gApBankaPoz[MAX_PLAYERS][4], gApBanka[MAX_PLAYERS], gBankaMeni[MAX_PLAYERS][sizeof gBankaAkcija], gBankaOdabir[MAX_PLAYERS], gBankaSat;
 
 static BankaDug(iznos)
@@ -79,6 +87,7 @@ InitBanka()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_log (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, amount INTEGER NOT NULL, kind TEXT NOT NULL, other INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS bank_log_account ON bank_log (account, id)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_accounts (account INTEGER PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 0, savings INTEGER NOT NULL DEFAULT 0, savings_tick INTEGER NOT NULL DEFAULT 0, loan INTEGER NOT NULL DEFAULT 0, loan_rate INTEGER NOT NULL DEFAULT 0, loan_due INTEGER NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE banks SET ix = 1397.3341, iy = -454.1920, iz = -76.2418 WHERE interior = 0 AND abs(ix - 1411.9) < 1.0 AND abs(iy + 453.0) < 1.0"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a, interior, ix, iy, iz, Aktor, ax, ay, az, aa FROM banks ORDER BY id LIMIT %d", BANKA_MAX);
     for (new s = 0, n = DB_GetRowCount(res); s < n; s++)
     {
@@ -92,18 +101,11 @@ InitBanka()
         gBanka[s][bkIy] = DB_GetFieldFloat(res, 7);
         gBanka[s][bkIz] = DB_GetFieldFloat(res, 8);
         BankaStvori(s);
-        if (DB_GetFieldInt(res, 9))
-        {
-            gBanka[s][bkAx] = DB_GetFieldFloat(res, 10);
-            gBanka[s][bkAy] = DB_GetFieldFloat(res, 11);
-            gBanka[s][bkAz] = DB_GetFieldFloat(res, 12);
-            gBanka[s][bkAa] = DB_GetFieldFloat(res, 13);
-            BankaAktor(s);
-        }
         BankaUcitajCuvare(s);
         DB_SelectNextRow(res);
     }
     DB_FreeResultSet(res);
+    SalteriUcitaj();
     PljUcitaj();
 }
 
@@ -120,23 +122,77 @@ static BankaStvori(s)
     InterakcijaOznaka(gBanka[s][bkTekstU], BANKA_DOMET, SAVJET_IZLAZ);
 }
 
-static BankaAktor(s)
+static SalterStvori(s, k)
 {
     new svijet = BANKA_SVIJET + s;
-    gBanka[s][bkImaAktor] = true;
-    gBanka[s][bkAktor] = CreateActor(BANKA_SKIN, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz], gBanka[s][bkAa]);
-    SetActorVirtualWorld(gBanka[s][bkAktor], svijet);
-    SetActorInvulnerable(gBanka[s][bkAktor], true);
-    gBanka[s][bkTekstA] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
-    InterakcijaOznaka(gBanka[s][bkTekstA]);
+    gSalterAktor[s][k] = CreateActor(gSalterSkin[k], gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2], gSalterPoz[s][k][3]);
+    SetActorVirtualWorld(gSalterAktor[s][k], svijet);
+    SetActorInvulnerable(gSalterAktor[s][k], true);
+    gSalterTekst[s][k] = CreateDynamic3DTextLabel(" ", COLOR_ORG, gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2] + 1.2, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, gBanka[s][bkInt]);
+    InterakcijaOznaka(gSalterTekst[s][k], BANKA_KASA_DOMET);
+    if (gBanka[s][bkPljacka]) ApplyActorAnimation(gSalterAktor[s][k], "PED", "cower", 4.1, true, false, false, true, 0);
 }
 
-static BankaMakniAktor(s)
+static SalterMakni(s, k)
 {
-    if (!gBanka[s][bkImaAktor]) return;
-    DestroyActor(gBanka[s][bkAktor]);
-    DestroyDynamic3DTextLabel(gBanka[s][bkTekstA]);
-    gBanka[s][bkImaAktor] = false;
+    if (gSalterKat[s][k] == -1) return;
+    DestroyActor(gSalterAktor[s][k]);
+    DestroyDynamic3DTextLabel(gSalterTekst[s][k]);
+    gSalterKat[s][k] = -1;
+}
+
+static SalteriMakni(s)
+{
+    for (new k = 0; k < BANKA_SALTERI; k++) SalterMakni(s, k);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_tellers WHERE bank = %d", gBanka[s][bkDb]));
+}
+
+static BankaPrviSalter(s)
+{
+    for (new k = 0; k < BANKA_SALTERI; k++) if (gSalterKat[s][k] != -1) return k;
+    return -1;
+}
+
+static SalteriSkloni(s, bool:skloni)
+{
+    for (new k = 0; k < BANKA_SALTERI; k++)
+    {
+        if (gSalterKat[s][k] == -1) continue;
+        if (skloni) ApplyActorAnimation(gSalterAktor[s][k], "PED", "cower", 4.1, true, false, false, true, 0);
+        else ClearActorAnimations(gSalterAktor[s][k]);
+    }
+}
+
+static bool:SalterCilj(playerid, s)
+{
+    new a = GetPlayerTargetActor(playerid);
+    if (a == INVALID_ACTOR_ID) return false;
+    for (new k = 0; k < BANKA_SALTERI; k++) if (gSalterKat[s][k] != -1 && gSalterAktor[s][k] == a) return true;
+    return false;
+}
+
+static SalteriUcitaj()
+{
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_tellers (bank INTEGER NOT NULL, slot INTEGER NOT NULL, kat INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, PRIMARY KEY (bank, slot))"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO bank_tellers (bank, slot, kat, x, y, z, a) SELECT id, 0, %d, ax, ay, az, aa FROM banks WHERE Aktor = 1", SK_SVE));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE banks SET Aktor = 0 WHERE Aktor = 1"));
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT bank, slot, kat, x, y, z, a FROM bank_tellers");
+    if (DB_GetRowCount(res)) do
+    {
+        new db = DB_GetFieldInt(res, 0), k = DB_GetFieldInt(res, 1), kat = DB_GetFieldInt(res, 2);
+        if (k < 0 || k >= BANKA_SALTERI || kat < SK_RACUN || kat > SK_SVE) continue;
+        for (new b = 0; b < BANKA_MAX; b++)
+        {
+            if (!gBanka[b][bkIma] || gBanka[b][bkDb] != db) continue;
+            SalterMakni(b, k);
+            gSalterKat[b][k] = kat;
+            for (new i = 0; i < 4; i++) gSalterPoz[b][k][i] = DB_GetFieldFloat(res, 3 + i);
+            SalterStvori(b, k);
+            break;
+        }
+    }
+    while (DB_SelectNextRow(res));
+    DB_FreeResultSet(res);
 }
 
 static BankaIgraca(playerid)
@@ -229,6 +285,7 @@ static PljResetiraj(s)
 {
     gBanka[s][bkPljacka] = 0;
     gPlj[s][pjStanje] = PS_MIRNO;
+    SalteriSkloni(s, false);
     if (gPlj[s][pjVrata]) ObjektPomakni(gPlj[s][pjVrata], gPlj[s][pjDx], gPlj[s][pjDy], gPlj[s][pjDz], gPlj[s][pjDrx], gPlj[s][pjDry], gPlj[s][pjDrz], PLJ_VRATA_S);
     for (new k = 0; k < gPljEksBroj[s]; k++)
     {
@@ -291,6 +348,13 @@ static PljUcitaj()
                 gPljEks[s][k][peY] = DB_GetFieldFloat(res, 3);
                 gPljEks[s][k][peZ] = DB_GetFieldFloat(res, 4);
             }
+            else if (DB_GetFieldInt(res, 0) == 2 && gPljPutBroj[s] < PLJ_PUT)
+            {
+                new k = gPljPutBroj[s]++;
+                gPljPut[s][k * 3] = DB_GetFieldFloat(res, 2);
+                gPljPut[s][k * 3 + 1] = DB_GetFieldFloat(res, 3);
+                gPljPut[s][k * 3 + 2] = DB_GetFieldFloat(res, 4);
+            }
             else if (DB_GetFieldInt(res, 0) == 1 && gPljSefBroj[s] < PLJ_SEFOVA)
             {
                 new STREAMER_TAG_OBJECT:o = ObjektBlizu(DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldFloat(res, 4), 0.5, DB_GetFieldInt(res, 1));
@@ -313,7 +377,7 @@ BankaUpdate(playerid)
     if (!gUlogiran[playerid] || !gOrg[playerid]) return;
     new s = BankaIgraca(playerid), WEAPON:w = GetPlayerWeapon(playerid);
     if (s == -1 || !gPlj[s][pjIma] || gBanka[s][bkPljacka] || w < WEAPON_COLT45 || w > WEAPON_MINIGUN || !OruzjeLegit(playerid, w)) return;
-    if (gPlj[s][pjMenadzer] == INVALID_LIK || Lik_CiljIgraca(playerid) != gPlj[s][pjMenadzer]) return;
+    if ((gPlj[s][pjMenadzer] == INVALID_LIK || Lik_CiljIgraca(playerid) != gPlj[s][pjMenadzer]) && !SalterCilj(playerid, s)) return;
     new sad = gettime();
     if (!BankaMafija(playerid) || BankaEkipa(playerid, s) < BANKA_PLJACKASA)
     {
@@ -333,8 +397,12 @@ BankaUpdate(playerid)
     gBanka[s][bkPljackano] = sad;
     gPlj[s][pjStanje] = PS_TRCI;
     gPlj[s][pjKraj] = sad + PLJ_TRAJE_S;
-    new lik = gPlj[s][pjMenadzer];
-    Lik_IdiDo(lik, gPlj[s][pjVx], gPlj[s][pjVy], gPlj[s][pjVz], LIK_SPRINT);
+    SalteriSkloni(s, true);
+    new lik = gPlj[s][pjMenadzer], n = gPljPutBroj[s];
+    gPljPut[s][n * 3] = gPlj[s][pjVx];
+    gPljPut[s][n * 3 + 1] = gPlj[s][pjVy];
+    gPljPut[s][n * 3 + 2] = gPlj[s][pjVz];
+    Lik_IdiPutem(lik, gPljPut[s], n + 1, LIK_SPRINT);
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
@@ -375,6 +443,12 @@ static PljTrezorOtvori(s)
     ObjektPomakni(gPlj[s][pjVrata], gPlj[s][pjDx], gPlj[s][pjDy], gPlj[s][pjDz], gPlj[s][pjDrx], gPlj[s][pjDry], gPlj[s][pjDrz] + gPlj[s][pjDkut], PLJ_VRATA_S);
     Lik_Animacija(gPlj[s][pjMenadzer], "ROB_BANK", "SHP_HandsUp_Scr", 4.1, 0, 0, 0, 1, 0);
     BankaPljObavijest(s, "Trezor je otvoren! Postavite eksploziv na oznacena mjesta.");
+}
+
+static PljVrataPomakni(s, bool:otvori)
+{
+    if (gPlj[s][pjVrata]) ObjektPomakni(gPlj[s][pjVrata], gPlj[s][pjDx], gPlj[s][pjDy], gPlj[s][pjDz], gPlj[s][pjDrx], gPlj[s][pjDry], gPlj[s][pjDrz] + (otvori ? gPlj[s][pjDkut] : 0.0), PLJ_VRATA_S);
+    for (new k = 0; k < gPljSefBroj[s]; k++) ObjektPomakni(gPljSef[s][k][psObjekt], gPljSef[s][k][psX], gPljSef[s][k][psY], gPljSef[s][k][psZ], -1000.0, -1000.0, gPljSef[s][k][psRz] + (otvori ? gPljSef[s][k][psKut] : 0.0), PLJ_SEF_S);
 }
 
 static bool:PljEksPostavljen(s)
@@ -590,6 +664,44 @@ CMD:pljacka(playerid, params[])
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, model, x, y, z, kut) VALUES (%d, 1, %d, %f, %f, %f, %f)", gBanka[s][bkDb], model, ox, oy, oz, kut));
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pretinac dodan: objekt %d (%d)."), model, gPljSefBroj[s]);
     }
+    if (!strcmp(opcija, "tocka", true))
+    {
+        if (gPljPutBroj[s] >= PLJ_PUT) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj."));
+        new k = gPljPutBroj[s]++;
+        gPljPut[s][k * 3] = x;
+        gPljPut[s][k * 3 + 1] = y;
+        gPljPut[s][k * 3 + 2] = z;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_heist_spots (bank, tip, x, y, z) VALUES (%d, 2, %f, %f, %f)", gBanka[s][bkDb], x, y, z));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Tocka puta menadzera dodana (%d)."), gPljPutBroj[s]);
+    }
+    if (!strcmp(opcija, "tockebrisi", true))
+    {
+        gPljPutBroj[s] = 0;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d AND tip = 2", gBanka[s][bkDb]));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Put menadzera je obrisan."));
+    }
+    if (!strcmp(opcija, "otvori", true) || !strcmp(opcija, "zatvori", true))
+    {
+        if (!gPlj[s][pjVrata] && !gPljSefBroj[s]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ova banka nema postavljena vrata trezora."));
+        PljVrataPomakni(s, opcija[0] == 'o' || opcija[0] == 'O');
+        return SendClientMessage(playerid, COLOR_INFO, opcija[0] == 'o' || opcija[0] == 'O' ? T(playerid, "Vrata trezora i pretinci se otvaraju.") : T(playerid, "Vrata trezora i pretinci se zatvaraju."));
+    }
+    if (!strcmp(opcija, "reset", true))
+    {
+        if (!strcmp(p2, "sve", true))
+        {
+            for (new b = 0; b < BANKA_MAX; b++)
+            {
+                if (!gBanka[b][bkIma]) continue;
+                if (gBanka[b][bkPljacka]) PljResetiraj(b);
+                gBanka[b][bkPljackano] = 0;
+            }
+            return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pljacke i cekanje resetirani u svim bankama."));
+        }
+        if (gBanka[s][bkPljacka]) PljResetiraj(s);
+        gBanka[s][bkPljackano] = 0;
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Pljacka i cekanje u ovoj banci su resetirani."));
+    }
     if (!strcmp(opcija, "eksploziv", true))
     {
         if (gPljEksBroj[s] >= PLJ_EKSPLOZIVA) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dosegnut je maksimalan broj."));
@@ -611,11 +723,12 @@ CMD:pljacka(playerid, params[])
         gPlj[s][pjMx] = 0.0;
         gPljEksBroj[s] = 0;
         gPljSefBroj[s] = 0;
+        gPljPutBroj[s] = 0;
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist WHERE bank = %d", gBanka[s][bkDb]));
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_heist_spots WHERE bank = %d", gBanka[s][bkDb]));
         return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Postavke pljacke su obrisane."));
     }
-    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pljacka [menadzer | vrata [kut] | eksploziv | sef [kut] | brisi]"));
+    return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Koristenje: /pljacka [menadzer | tocka | tockebrisi | vrata [kut] | eksploziv | sef [kut] | otvori | zatvori | reset [sve] | brisi]"));
 }
 
 BankaUlaz(playerid)
@@ -632,7 +745,8 @@ BankaUlaz(playerid)
     {
         if (!gBanka[s][bkIma] || !IsPlayerInRangeOfPoint(playerid, BANKA_DOMET, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ])) continue;
         PrebaciIgraca(playerid, gBanka[s][bkInt], BANKA_SVIJET + s, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz]);
-        if (gBanka[s][bkImaAktor]) AktorKaze(playerid, gBanka[s][bkAktor], "Sluzbenik", "Dobar dan, izvolite na salter.");
+        new k = BankaPrviSalter(s);
+        if (k != -1 && !gBanka[s][bkPljacka]) AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Dobar dan, izvolite na salter.");
         return 1;
     }
     return 0;
@@ -798,15 +912,36 @@ BankaTick()
 BankaKasa(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid) || ImaLisice(playerid)) return 0;
-    new s = BankaIgraca(playerid);
-    if (s == -1 || !gBanka[s][bkImaAktor] || !IsPlayerInRangeOfPoint(playerid, BANKA_KASA_DOMET, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz])) return 0;
-    new stanje, stednja, kredit, rata, rok, list[512], row[64], len = 0, n = 0;
-    if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok)) gBankaMeni[playerid][n++] = BA_OTVORI;
-    else
+    new s = BankaIgraca(playerid), k = -1, Float:naj = BANKA_KASA_DOMET;
+    if (s == -1) return 0;
+    for (new i = 0; i < BANKA_SALTERI; i++)
     {
-        for (new a = BA_INFO; a <= BA_KREDIT; a++) if (a != BA_KREDIT || !kredit) gBankaMeni[playerid][n++] = a;
-        if (kredit) gBankaMeni[playerid][n++] = BA_OTPLATI;
-        if (!gInv[playerid][ITEM_KARTICA]) gBankaMeni[playerid][n++] = BA_KARTICA;
+        if (gSalterKat[s][i] == -1) continue;
+        new Float:d = GetPlayerDistanceFromPoint(playerid, gSalterPoz[s][i][0], gSalterPoz[s][i][1], gSalterPoz[s][i][2]);
+        if (d < naj) { naj = d; k = i; }
+    }
+    if (k == -1) return 0;
+    if (gBanka[s][bkPljacka])
+    {
+        if (gOrg[playerid] == gBanka[s][bkPljacka]) return 0;
+        ObavijestGreska(playerid, T(playerid, "Sluzbenici se skrivaju, banka se pljacka."));
+        return 1;
+    }
+    new kat = gSalterKat[s][k], stanje, stednja, kredit, rata, rok, list[512], row[64], len = 0, n = 0;
+    if (!BankaUcitaj(gAccountId[playerid], stanje, stednja, kredit, rata, rok))
+    {
+        if (kat != SK_RACUN && kat != SK_SVE)
+        {
+            AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Najprije otvorite racun na salteru za racune.");
+            return 1;
+        }
+        gBankaMeni[playerid][n++] = BA_OTVORI;
+    }
+    else for (new a = BA_INFO; a <= BA_KARTICA; a++)
+    {
+        if (kat != SK_SVE && gBankaAkcijaKat[a] != kat) continue;
+        if ((a == BA_KREDIT && kredit) || (a == BA_OTPLATI && !kredit) || (a == BA_KARTICA && gInv[playerid][ITEM_KARTICA])) continue;
+        gBankaMeni[playerid][n++] = a;
     }
     for (new i = 0; i < n; i++)
     {
@@ -814,7 +949,7 @@ BankaKasa(playerid)
         DodajStupac(list, len, row);
     }
     for (new i = n; i < sizeof gBankaAkcija; i++) gBankaMeni[playerid][i] = -1;
-    AktorKaze(playerid, gBanka[s][bkAktor], "Sluzbenik", "Izvolite, kako vam mogu pomoci?");
+    AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Izvolite, kako vam mogu pomoci?");
     PrikaziDialog(playerid, DLG_BANKA, DIALOG_STYLE_LIST, T(playerid, "Banka"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
     return 1;
 }
@@ -986,7 +1121,7 @@ ShowBanke(playerid)
     for (new s = 0; s < BANKA_MAX; s++)
     {
         if (!gBanka[s][bkIma]) continue;
-        format(row, sizeof row, "[%d] %s%s", gBanka[s][bkDb], CestaZona(gBanka[s][bkX], gBanka[s][bkY]), T(playerid, gBanka[s][bkImaAktor] ? ("") : (" - bez sluzbenika")));
+        format(row, sizeof row, "[%d] %s%s", gBanka[s][bkDb], CestaZona(gBanka[s][bkX], gBanka[s][bkY]), T(playerid, BankaPrviSalter(s) != -1 ? ("") : (" - bez sluzbenika")));
         DodajStupac(list, len, row);
     }
     return PrikaziDialog(playerid, DLG_APANEL_BANKA, DIALOG_STYLE_LIST, T(playerid, "Banke"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
@@ -1035,7 +1170,6 @@ DLG:apanel_banka_int(playerid, response, listitem)
     gBanka[s][bkIx] = gBankaInt[i][biX];
     gBanka[s][bkIy] = gBankaInt[i][biY];
     gBanka[s][bkIz] = gBankaInt[i][biZ];
-    gBanka[s][bkImaAktor] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO banks (x, y, z, a, interior, ix, iy, iz) VALUES (%f, %f, %f, %f, %d, %f, %f, %f)", gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ], gBanka[s][bkA], gBanka[s][bkInt], gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz]));
     gBanka[s][bkDb] = ZadnjiId();
     BankaStvori(s);
@@ -1049,7 +1183,7 @@ static BankaObrisi(s)
     gBanka[s][bkPljacka] = 0;
     for (new c = 0; c < BANKA_CUVARI; c++) BankaCuvarMakni(s, c);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_guards WHERE bank = %d", gBanka[s][bkDb]));
-    BankaMakniAktor(s);
+    SalteriMakni(s);
     DestroyDynamicPickup(gBanka[s][bkPickup]);
     MapaIkonaMakni(gBanka[s][bkIkona]);
     DestroyDynamicPickup(gBanka[s][bkPickupU]);
@@ -1057,6 +1191,40 @@ static BankaObrisi(s)
     DestroyDynamic3DTextLabel(gBanka[s][bkTekstU]);
     gBanka[s][bkIma] = false;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM banks WHERE id = %d", gBanka[s][bkDb]));
+}
+
+DLG:apanel_banka_salter(playerid, response, listitem)
+{
+    new s = gApBanka[playerid];
+    if (!response || !gBanka[s][bkIma] || listitem < 0 || listitem > SK_SVE + 1) return ShowBanke(playerid);
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
+    if (BankaIgraca(playerid) != s)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti unutar te banke."));
+        return ShowBanke(playerid);
+    }
+    if (listitem == SK_SVE + 1)
+    {
+        SalteriMakni(s);
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Svi sluzbenici su uklonjeni."));
+        return ShowBanke(playerid);
+    }
+    new k = -1;
+    for (new i = 0; i < BANKA_SALTERI && k == -1; i++) if (gSalterKat[s][i] == listitem) k = i;
+    for (new i = 0; i < BANKA_SALTERI && k == -1; i++) if (gSalterKat[s][i] == -1) k = i;
+    if (k == -1)
+    {
+        SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Banka vec ima 4 sluzbenika."));
+        return ShowBanke(playerid);
+    }
+    SalterMakni(s, k);
+    gSalterKat[s][k] = listitem;
+    GetPlayerPos(playerid, gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2]);
+    GetPlayerFacingAngle(playerid, gSalterPoz[s][k][3]);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO bank_tellers (bank, slot, kat, x, y, z, a) VALUES (%d, %d, %d, %f, %f, %f, %f)", gBanka[s][bkDb], k, listitem, gSalterPoz[s][k][0], gSalterPoz[s][k][1], gSalterPoz[s][k][2], gSalterPoz[s][k][3]));
+    SalterStvori(s, k);
+    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Sluzbenik je postavljen."));
+    return ShowBanke(playerid);
 }
 
 DLG:apanel_banka_meni(playerid, response, listitem)
@@ -1071,12 +1239,10 @@ DLG:apanel_banka_meni(playerid, response, listitem)
             SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti unutar te banke."));
             return ShowBanke(playerid);
         }
-        BankaMakniAktor(s);
-        GetPlayerPos(playerid, gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz]);
-        GetPlayerFacingAngle(playerid, gBanka[s][bkAa]);
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE banks SET Aktor = 1, ax = %f, ay = %f, az = %f, aa = %f WHERE id = %d", gBanka[s][bkAx], gBanka[s][bkAy], gBanka[s][bkAz], gBanka[s][bkAa], gBanka[s][bkDb]));
-        BankaAktor(s);
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Sluzbenik je postavljen."));
+        new list[256], len = 0;
+        for (new i = 0; i < sizeof gSalterIme; i++) DodajStupac(list, len, T(playerid, gSalterIme[i]));
+        DodajStupac(list, len, T(playerid, "Obrisi sve sluzbenike"));
+        return PrikaziDialog(playerid, DLG_APANEL_BANKA_SALTER, DIALOG_STYLE_LIST, T(playerid, "Odaberite vrstu saltera"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
     }
     else if (listitem == 1)
     {
@@ -1086,7 +1252,7 @@ DLG:apanel_banka_meni(playerid, response, listitem)
             return ShowBanke(playerid);
         }
         for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && BankaIgraca(i) == s) BankaVani(i, s);
-        BankaMakniAktor(s);
+        SalteriMakni(s);
         DestroyDynamicPickup(gBanka[s][bkPickup]);
         MapaIkonaMakni(gBanka[s][bkIkona]);
         DestroyDynamicPickup(gBanka[s][bkPickupU]);
