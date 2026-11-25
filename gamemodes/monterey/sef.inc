@@ -35,6 +35,11 @@ bool:SefDodaj(org, item, n)
     return true;
 }
 
+bool:SefNovacDodaj(org, n)
+{
+    return SefDodaj(org, SEF_NOVAC, n);
+}
+
 static bool:SefPristup(playerid)
 {
     if (!gOrg[playerid] || GetPlayerVirtualWorld(playerid) != HQ_SVIJET + gOrg[playerid]) return false;

@@ -25,6 +25,12 @@
 #define PLJ_DOMET           1.6
 #define PLJ_VRECA_SLOT      0
 #define PLJ_MAFIJA          1
+#define VRECA_POD_MAX       32
+
+forward bool:SefNovacDodaj(org, n);
+#define VRECA_DOMET         1.6
+#define PRANJE_S            900
+#define PLJ_ULAZ_MODEL      1491
 
 enum E_BANKA { bool:bkIma, bkDb, bkInt, Float:bkX, Float:bkY, Float:bkZ, Float:bkA, Float:bkIx, Float:bkIy, Float:bkIz, bkPljacka, bkPljackaKraj, bkPljackano,
     STREAMER_TAG_PICKUP:bkPickup, STREAMER_TAG_PICKUP:bkPickupU, STREAMER_TAG_3D_TEXT_LABEL:bkTekst, STREAMER_TAG_3D_TEXT_LABEL:bkTekstU, bkIkona }
@@ -69,6 +75,10 @@ enum E_PLJ { bool:pjIma, Float:pjMx, Float:pjMy, Float:pjMz, Float:pjMa, Float:p
 enum E_PLJ_POD { STREAMER_TAG_OBJECT:ppObjekt, Float:ppX, Float:ppY, Float:ppZ, Float:ppRx, Float:ppRy, Float:ppRz, Float:ppVis }
 enum E_PLJ_EKS { Float:peX, Float:peY, Float:peZ, STREAMER_TAG_OBJECT:peObjekt, STREAMER_TAG_OBJECT:peVreca }
 enum E_PLJ_SEF { psModel, Float:psX, Float:psY, Float:psZ, STREAMER_TAG_OBJECT:psObjekt, bool:psUzet }
+enum E_VRECA_POD { bool:vpIma, STREAMER_TAG_OBJECT:vpObjekt, Float:vpX, Float:vpY, Float:vpZ, vpSvijet, vpInt, vpIznos, vpIkona }
+static gVrecaPod[VRECA_POD_MAX][E_VRECA_POD], bool:gVrecaCp[MAX_PLAYERS], gVrecaSavjet[MAX_PLAYERS], gPranjeTick;
+static const Float:gPljUlaz[] = { 1411.252319, -454.669006, -77.241844, 0.0, 90.0 };
+static STREAMER_TAG_OBJECT:gPljUlazObjekt;
 static gPlj[BANKA_MAX][E_PLJ], gPljEks[BANKA_MAX][PLJ_EKSPLOZIVA][E_PLJ_EKS], gPljEksBroj[BANKA_MAX], gPljSef[BANKA_MAX][PLJ_SEFOVA][E_PLJ_SEF], gPljSefBroj[BANKA_MAX], Float:gPljPut[BANKA_MAX][PLJ_PUT * 3 + 3], gPljPutBroj[BANKA_MAX], gPljPod[BANKA_MAX][PLJ_PODIZNA][E_PLJ_POD], gPljPodBroj[BANKA_MAX], gPljVreca[MAX_PLAYERS], gPljPoruka[MAX_PLAYERS], bool:gPljUpozoren[MAX_PLAYERS];
 static Float:gApBankaPoz[MAX_PLAYERS][4], gApBanka[MAX_PLAYERS], gBankaMeni[MAX_PLAYERS][sizeof gBankaAkcija], gBankaOdabir[MAX_PLAYERS], gBankaSat;
 
@@ -358,11 +368,217 @@ static PljPodiznaDodaj(s, STREAMER_TAG_OBJECT:o, Float:vis)
     GetDynamicObjectRot(o, gPljPod[s][k][ppRx], gPljPod[s][k][ppRy], gPljPod[s][k][ppRz]);
 }
 
+static PljUlaz(bool:otvori)
+{
+    if (!gPljUlazObjekt) gPljUlazObjekt = ObjektBlizu(gPljUlaz[0], gPljUlaz[1], gPljUlaz[2], 0.2, PLJ_ULAZ_MODEL);
+    if (!gPljUlazObjekt) return;
+    if (!otvori) for (new b = 0; b < BANKA_MAX; b++) if (gBanka[b][bkIma] && gBanka[b][bkPljacka]) return;
+    ObjektPomakni(gPljUlazObjekt, gPljUlaz[0], gPljUlaz[1], gPljUlaz[2], 0.0, 0.0, otvori ? gPljUlaz[4] : gPljUlaz[3], 1.5);
+}
+
+static VrecaPrikaci(playerid)
+{
+    SetPlayerAttachedObject(playerid, PLJ_VRECA_SLOT, 1550, 1, 0.1, -0.25, 0.0, 0.0, 90.0, 0.0);
+}
+
+static bool:VrecaHq(org, &Float:x, &Float:y, &Float:z)
+{
+    new Float:a;
+    for (new i = 0; i < 32; i++)
+    {
+        new o = OrgLokacija(i, x, y, z, a);
+        if (o == -1) break;
+        if (o == org) return true;
+    }
+    return false;
+}
+
+static VrecaCilj(playerid)
+{
+    if (gVrecaCp[playerid]) DisablePlayerCheckpoint(playerid);
+    gVrecaCp[playerid] = false;
+    if (!gPljVreca[playerid]) return;
+    new Float:x, Float:y, Float:z;
+    if (gOrg[playerid] && GetOrgTip(gOrg[playerid]) == PLJ_MAFIJA)
+    {
+        if (!VrecaHq(gOrg[playerid], x, y, z)) return;
+        ObavijestInfo(playerid, T(playerid, "Vreca novca"), T(playerid, "Odnesite vrecu u sef HQ-a. Novac ce biti opran za 15 minuta."));
+    }
+    else if (PolicajacNaDuznosti(playerid))
+    {
+        new naj = -1, Float:nd = 1000000000.0, Float:px, Float:py, Float:pz;
+        GetPlayerPos(playerid, px, py, pz);
+        for (new b = 0; b < BANKA_MAX; b++)
+        {
+            if (!gBanka[b][bkIma] || !gPlj[b][pjIma]) continue;
+            new Float:d = VectorSize(gBanka[b][bkX] - px, gBanka[b][bkY] - py, 0.0);
+            if (d < nd) { nd = d; naj = b; }
+        }
+        if (naj == -1) return;
+        x = gBanka[naj][bkX];
+        y = gBanka[naj][bkY];
+        z = gBanka[naj][bkZ];
+        ObavijestInfo(playerid, T(playerid, "Vreca novca"), T(playerid, "Vratite vrecu menadzeru banke."));
+    }
+    else return;
+    SetPlayerCheckpoint(playerid, x, y, z, 3.0);
+    gVrecaCp[playerid] = true;
+}
+
+static VrecaDaj(playerid, iznos)
+{
+    gPljVreca[playerid] += iznos;
+    VrecaPrikaci(playerid);
+    VrecaCilj(playerid);
+}
+
+static VrecaSkini(playerid)
+{
+    gPljVreca[playerid] = 0;
+    RemovePlayerAttachedObject(playerid, PLJ_VRECA_SLOT);
+    if (gVrecaCp[playerid]) DisablePlayerCheckpoint(playerid);
+    gVrecaCp[playerid] = false;
+}
+
+static VrecaBaci(playerid)
+{
+    if (!gPljVreca[playerid]) return;
+    new k = 0;
+    while (k < VRECA_POD_MAX && gVrecaPod[k][vpIma]) k++;
+    if (k == VRECA_POD_MAX) k = 0;
+    if (gVrecaPod[k][vpIma])
+    {
+        DestroyDynamicObject(gVrecaPod[k][vpObjekt]);
+        if (gVrecaPod[k][vpIkona]) MapaIkonaMakni(gVrecaPod[k][vpIkona]);
+    }
+    GetPlayerPos(playerid, gVrecaPod[k][vpX], gVrecaPod[k][vpY], gVrecaPod[k][vpZ]);
+    gVrecaPod[k][vpSvijet] = GetPlayerVirtualWorld(playerid);
+    gVrecaPod[k][vpInt] = GetPlayerInterior(playerid);
+    gVrecaPod[k][vpIznos] = gPljVreca[playerid];
+    gVrecaPod[k][vpObjekt] = CreateDynamicObject(1550, gVrecaPod[k][vpX], gVrecaPod[k][vpY], gVrecaPod[k][vpZ] - 0.65, 0.0, 0.0, float(random(360)), gVrecaPod[k][vpSvijet], gVrecaPod[k][vpInt]);
+    gVrecaPod[k][vpIkona] = !gVrecaPod[k][vpSvijet] && !gVrecaPod[k][vpInt] ? MapaIkona(gVrecaPod[k][vpX], gVrecaPod[k][vpY], gVrecaPod[k][vpZ], 52) : 0;
+    gVrecaPod[k][vpIma] = true;
+    VrecaSkini(playerid);
+    ObavijestGreska(playerid, T(playerid, "Ispustili ste vrecu novca."));
+}
+
+BankaVrecaIznos(playerid)
+{
+    return gPljVreca[playerid];
+}
+
+BankaVrecaOduzmi(od, kome)
+{
+    new iznos = gPljVreca[od];
+    if (!iznos) return 0;
+    VrecaSkini(od);
+    VrecaDaj(kome, iznos);
+    return iznos;
+}
+
+static PranjeProvjeri()
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, org, amount FROM bank_laundering WHERE done <= %d", gettime());
+    for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
+    {
+        new org = DB_GetFieldInt(res, 1), iznos = DB_GetFieldInt(res, 2), tekst[128];
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_laundering WHERE id = %d", DB_GetFieldInt(res, 0)));
+        if (!SefNovacDodaj(org, iznos)) continue;
+        OrgDnevnik(org, INVALID_PLAYER_ID, DNEVNIK_BANKA, iznos);
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        {
+            if (!gUlogiran[i] || gOrg[i] != org) continue;
+            format(tekst, sizeof tekst, T(i, "Novac je opran: $%d je u sefu organizacije."), iznos);
+            ObavijestInfo(i, T(i, "Vreca novca"), tekst);
+        }
+    }
+    DB_FreeResultSet(res);
+}
+
+static bool:VrecaUHq(playerid)
+{
+    return gOrg[playerid] && GetOrgTip(gOrg[playerid]) == PLJ_MAFIJA && GetPlayerVirtualWorld(playerid) == HQ_SVIJET + gOrg[playerid];
+}
+
+static VrecaMenadzer(playerid)
+{
+    if (!PolicajacNaDuznosti(playerid)) return -1;
+    new s = BankaIgraca(playerid), Float:x, Float:y, Float:z;
+    if (s == -1 || gPlj[s][pjMenadzer] == INVALID_LIK || !Lik_Pozicija(gPlj[s][pjMenadzer], x, y, z)) return -1;
+    return IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z) ? s : -1;
+}
+
+static VrecaPodBlizu(playerid)
+{
+    new svijet = GetPlayerVirtualWorld(playerid);
+    for (new k = 0; k < VRECA_POD_MAX; k++)
+        if (gVrecaPod[k][vpIma] && gVrecaPod[k][vpSvijet] == svijet && IsPlayerInRangeOfPoint(playerid, VRECA_DOMET, gVrecaPod[k][vpX], gVrecaPod[k][vpY], gVrecaPod[k][vpZ])) return k;
+    return -1;
+}
+
+VrecaAlt(playerid)
+{
+    if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;
+    new tekst[128], k = VrecaPodBlizu(playerid);
+    if (k != -1)
+    {
+        new iznos = gVrecaPod[k][vpIznos];
+        DestroyDynamicObject(gVrecaPod[k][vpObjekt]);
+        if (gVrecaPod[k][vpIkona]) MapaIkonaMakni(gVrecaPod[k][vpIkona]);
+        gVrecaPod[k][vpIma] = false;
+        ApplyAnimation(playerid, "CARRY", "liftup", 4.1, false, false, false, false, 0);
+        VrecaDaj(playerid, iznos);
+        format(tekst, sizeof tekst, T(playerid, "Podigli ste vrecu novca ($%d)."), iznos);
+        ObavijestInfo(playerid, T(playerid, "Vreca novca"), tekst);
+        return 1;
+    }
+    if (!gPljVreca[playerid]) return 0;
+    if (VrecaUHq(playerid))
+    {
+        new iznos = gPljVreca[playerid];
+        VrecaSkini(playerid);
+        ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO bank_laundering (org, amount, done) VALUES (%d, %d, %d)", gOrg[playerid], iznos, gettime() + PRANJE_S));
+        format(tekst, sizeof tekst, T(playerid, "Ostavili ste $%d u sef. Novac ce biti opran za 15 minuta."), iznos);
+        ObavijestInfo(playerid, T(playerid, "Vreca novca"), tekst);
+        return 1;
+    }
+    if (VrecaMenadzer(playerid) != -1)
+    {
+        new iznos = gPljVreca[playerid];
+        VrecaSkini(playerid);
+        format(tekst, sizeof tekst, T(playerid, "Vratili ste vrecu novca ($%d) banci."), iznos);
+        ObavijestInfo(playerid, T(playerid, "Vreca novca"), tekst);
+        return 1;
+    }
+    return 0;
+}
+
+static VrecaSavjeti()
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (!gUlogiran[i] || IsRanjen(i) || GetPlayerState(i) != PLAYER_STATE_ONFOOT) continue;
+        new tip = 0;
+        if (VrecaPodBlizu(i) != -1) tip = 1;
+        else if (gPljVreca[i] && VrecaUHq(i)) tip = 2;
+        else if (gPljVreca[i] && VrecaMenadzer(i) != -1) tip = 3;
+        if (tip && tip != gVrecaSavjet[i])
+        {
+            if (tip == 1) Savjet(i, T(i, "~y~ALT~w~ - podigni vrecu novca"), 4000);
+            else if (tip == 2) Savjet(i, T(i, "~y~ALT~w~ - ostavi vrecu u sef"), 4000);
+            else Savjet(i, T(i, "~y~ALT~w~ - vrati vrecu novca"), 4000);
+        }
+        gVrecaSavjet[i] = tip;
+    }
+}
+
 static PljResetiraj(s)
 {
     gBanka[s][bkPljacka] = 0;
     gPlj[s][pjStanje] = PS_MIRNO;
     SalteriSkloni(s, false);
+    PljUlaz(false);
     PljTrezor(s, false);
     for (new k = 0; k < gPljEksBroj[s]; k++)
     {
@@ -438,6 +654,8 @@ DLG:pljacka_postavka(playerid, response, const inputtext[])
 static PljUcitaj()
 {
     PljPostavkeUcitaj();
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_laundering (id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, amount INTEGER NOT NULL, done INTEGER NOT NULL)"));
+    PljUlaz(false);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_heist (bank INTEGER PRIMARY KEY, mx REAL NOT NULL DEFAULT 0, my REAL NOT NULL DEFAULT 0, mz REAL NOT NULL DEFAULT 0, ma REAL NOT NULL DEFAULT 0, vx REAL NOT NULL DEFAULT 0, vy REAL NOT NULL DEFAULT 0, vz REAL NOT NULL DEFAULT 0, dmodel INTEGER NOT NULL DEFAULT 0, dx REAL NOT NULL DEFAULT 0, dy REAL NOT NULL DEFAULT 0, dz REAL NOT NULL DEFAULT 0, dkut REAL NOT NULL DEFAULT 90)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_heist_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, bank INTEGER NOT NULL, tip INTEGER NOT NULL, model INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, kut REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_heist SET dmodel = 19799, dy = dy - 1.0, dkut = 90.0 WHERE dmodel = 2634 AND abs(dx - 1411.879) < 0.1 AND abs(dy + 453.306) < 0.1"));
@@ -536,6 +754,7 @@ BankaUpdate(playerid)
     gPlj[s][pjStanje] = PS_TRCI;
     gPlj[s][pjKraj] = sad + gPljCfg[PP_TRAJANJE] * 60;
     SalteriSkloni(s, true);
+    PljUlaz(true);
     new lik = gPlj[s][pjMenadzer], n = gPljPutBroj[s];
     if (gPljPodBroj[s] && n) Lik_IdiPutem(lik, gPljPut[s], n, LIK_SPRINT);
     else
@@ -663,9 +882,8 @@ BankaPljackaAlt(playerid)
         DestroyDynamicObject(gPljEks[s][k][peVreca]);
         gPljEks[s][k][peVreca] = STREAMER_TAG_OBJECT:0;
         new od = gPljCfg[PP_VRECA_MIN], do_ = gPljCfg[PP_VRECA_MAX] > od ? gPljCfg[PP_VRECA_MAX] : od, iznos = od + random(do_ - od + 1), tekst[96];
-        gPljVreca[playerid] += iznos;
         ApplyAnimation(playerid, "CARRY", "liftup", 4.1, false, false, false, false, 0);
-        SetPlayerAttachedObject(playerid, PLJ_VRECA_SLOT, 1550, 1, 0.1, -0.25, 0.0, 0.0, 90.0, 0.0);
+        VrecaDaj(playerid, iznos);
         format(tekst, sizeof tekst, T(playerid, "Uzeli ste vrecu novca ($%d). Pobjegnite iz banke."), iznos);
         ObavijestInfo(playerid, T(playerid, "Pljacka banke"), tekst);
         return 1;
@@ -714,23 +932,13 @@ static BankaPljackaTick()
     new sad = gettime();
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
-        if (!gPljVreca[i] || !gUlogiran[i]) continue;
-        if (IsRanjen(i))
-        {
-            gPljVreca[i] = 0;
-            RemovePlayerAttachedObject(i, PLJ_VRECA_SLOT);
-            ObavijestGreska(i, T(i, "Izgubili ste vrecu novca."));
-        }
-        else if (GetPlayerVirtualWorld(i) == 0 && GetPlayerInterior(i) == 0)
-        {
-            new tekst[96];
-            DajNovac(i, gPljVreca[i]);
-            format(tekst, sizeof tekst, T(i, "Pobjegli ste s plijenom: $%d."), gPljVreca[i]);
-            ObavijestInfo(i, T(i, "Pljacka banke"), tekst);
-            if (gOrg[i]) OrgDnevnik(gOrg[i], i, DNEVNIK_BANKA, gPljVreca[i]);
-            gPljVreca[i] = 0;
-            RemovePlayerAttachedObject(i, PLJ_VRECA_SLOT);
-        }
+        if (gPljVreca[i] && gUlogiran[i] && IsRanjen(i)) VrecaBaci(i);
+    }
+    VrecaSavjeti();
+    if (++gPranjeTick >= 30)
+    {
+        gPranjeTick = 0;
+        PranjeProvjeri();
     }
     for (new s = 0; s < BANKA_MAX; s++)
     {
@@ -766,7 +974,8 @@ static BankaPljackaTick()
 
 PljVrecaOdlazak(playerid)
 {
-    gPljVreca[playerid] = 0;
+    VrecaBaci(playerid);
+    gVrecaSavjet[playerid] = 0;
 }
 
 static PljPomoc(playerid)
@@ -971,8 +1180,6 @@ BankaUlaz(playerid)
     {
         if (!gBanka[s][bkIma] || !IsPlayerInRangeOfPoint(playerid, BANKA_DOMET, gBanka[s][bkX], gBanka[s][bkY], gBanka[s][bkZ])) continue;
         PrebaciIgraca(playerid, gBanka[s][bkInt], BANKA_SVIJET + s, gBanka[s][bkIx], gBanka[s][bkIy], gBanka[s][bkIz]);
-        new k = BankaPrviSalter(s);
-        if (k != -1 && !gBanka[s][bkPljacka]) AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Dobar dan, izvolite na salter.");
         return 1;
     }
     return 0;
@@ -1158,7 +1365,7 @@ BankaKasa(playerid)
     {
         if (kat != SK_RACUN && kat != SK_SVE)
         {
-            AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Najprije otvorite racun na salteru za racune.");
+            ObavijestGreska(playerid, T(playerid, "Najprije otvorite racun na salteru za racune."));
             return 1;
         }
         gBankaMeni[playerid][n++] = BA_OTVORI;
@@ -1175,7 +1382,7 @@ BankaKasa(playerid)
         DodajStupac(list, len, row);
     }
     for (new i = n; i < sizeof gBankaAkcija; i++) gBankaMeni[playerid][i] = -1;
-    AktorKaze(playerid, gSalterAktor[s][k], "Sluzbenik", "Izvolite, kako vam mogu pomoci?");
+    ApplyActorAnimation(gSalterAktor[s][k], "PED", "IDLE_chat", 4.1, false, false, false, false, 2500);
     PrikaziDialog(playerid, DLG_BANKA, DIALOG_STYLE_LIST, T(playerid, "Banka"), list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
     return 1;
 }

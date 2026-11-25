@@ -203,7 +203,8 @@ static gInvList[MAX_PLAYERS][BROJ_ITEMA];
 static gInvCount[MAX_PLAYERS];
 static gInvItem[MAX_PLAYERS];
 static gItemUsedAt[MAX_PLAYERS];
-static gFriskOd[MAX_PLAYERS];
+forward bool:PolicajacNaDuznosti(playerid);
+static gFriskOd[MAX_PLAYERS], gFriskMeta[MAX_PLAYERS], gFriskRacun[MAX_PLAYERS], gFriskAkcija[MAX_PLAYERS][4];
 #define FRISK_MS            5000
 
 InitInventar()
@@ -554,15 +555,116 @@ public FriskEnd(p, playerid, racunP, racun)
     ClearAnimations(p);
     ClearAnimations(playerid);
     VratiLisice(playerid);
-    new list[640], row[64], title[64], len = 0;
+    gFriskMeta[p] = playerid;
+    gFriskRacun[p] = racun;
+    return FriskPrikazi(p, playerid);
+}
+
+static const gDroge[] = { ITEM_MARIHUANA, ITEM_KOKAIN, ITEM_SJEME, ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE };
+enum { FA_VRECA = 1, FA_DROGA, FA_ORUZJE }
+
+static bool:FriskDroga(t)
+{
+    for (new i = 0; i < sizeof gDroge; i++) if (gInv[t][gDroge[i]]) return true;
+    return false;
+}
+
+static bool:FriskVatreno(item)
+{
+    return gItems[item][ITEM_AMMO] != -1 || (item >= ITEM_MUN_PISTOLJ && item <= ITEM_MUN_PUSKA);
+}
+
+static bool:FriskOruzje(t)
+{
+    for (new i = 0; i < BROJ_ITEMA; i++) if (gInv[t][i] && FriskVatreno(i)) return true;
+    return false;
+}
+
+static bool:FriskDozvola(t)
+{
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT oruzje_dozvola FROM accounts WHERE id = %d", gAccountId[t]), bool:dozvola = DB_GetRowCount(res) && DB_GetFieldInt(res, 0);
+    DB_FreeResultSet(res);
+    return dozvola;
+}
+
+static FriskPrikazi(p, playerid)
+{
+    new list[1024], row[96], title[64], len = 0, n = 0, bool:policija = PolicajacNaDuznosti(p);
+    if (policija)
+    {
+        if (BankaVrecaIznos(playerid))
+        {
+            format(row, sizeof row, T(p, "{FF6347}Oduzmi vrecu novca ($%d)"), BankaVrecaIznos(playerid));
+            DodajStupac(list, len, row);
+            gFriskAkcija[p][n++] = FA_VRECA;
+        }
+        if (FriskDroga(playerid))
+        {
+            DodajStupac(list, len, T(p, "{FF6347}Oduzmi drogu"));
+            gFriskAkcija[p][n++] = FA_DROGA;
+        }
+        if (FriskOruzje(playerid) && !FriskDozvola(playerid))
+        {
+            DodajStupac(list, len, T(p, "{FF6347}Oduzmi oruzje (nema dozvolu)"));
+            gFriskAkcija[p][n++] = FA_ORUZJE;
+        }
+    }
+    gFriskAkcija[p][n] = 0;
+    if (!policija && BankaVrecaIznos(playerid))
+    {
+        format(row, sizeof row, T(p, "Vreca novca ($%d)"), BankaVrecaIznos(playerid));
+        DodajStupac(list, len, row);
+    }
+    new predmeta = 0;
     for (new i = 0; i < BROJ_ITEMA; i++)
     {
         if (!gInv[playerid][i]) continue;
         format(row, sizeof row, "%s - %d %s", T(p, gItems[i][ITEM_NAME]), gInv[playerid][i], T(p, gItems[i][ITEM_UNIT]));
         DodajStupac(list, len, row);
+        predmeta++;
     }
     format(title, sizeof title, T(p, "Pretres: %s"), GetRPIme(playerid));
-    return PrikaziDialog(p, DLG_NONE, DIALOG_STYLE_MSGBOX, title, len ? list : T(p, "Nista nije pronadeno."), T(p, "Zatvori"));
+    if (!policija) return PrikaziDialog(p, DLG_NONE, DIALOG_STYLE_MSGBOX, title, len ? list : T(p, "Nista nije pronadeno."), T(p, "Zatvori"));
+    if (!n && !predmeta && !BankaVrecaIznos(playerid)) return PrikaziDialog(p, DLG_NONE, DIALOG_STYLE_MSGBOX, title, T(p, "Nista nije pronadeno."), T(p, "Zatvori"));
+    return PrikaziDialog(p, DLG_FRISK_LISTA, DIALOG_STYLE_LIST, title, list, T(p, "Odaberi"), T(p, "Zatvori"));
+}
+
+DLG:frisk_lista(playerid, response, listitem)
+{
+    new t = gFriskMeta[playerid], Float:x, Float:y, Float:z;
+    if (!response || t < 0 || t >= MAX_PLAYERS || !gUlogiran[t] || gAccountId[t] != gFriskRacun[playerid] || !PolicajacNaDuznosti(playerid)) return 1;
+    GetPlayerPos(t, x, y, z);
+    if (!IsPlayerInRangeOfPoint(playerid, 3.0, x, y, z)) return ObavijestGreska(playerid, T(playerid, "Igrac nije u vasoj blizini.")), 1;
+    if (listitem < 0 || listitem >= sizeof gFriskAkcija[]) return FriskPrikazi(playerid, t);
+    for (new k = 0; k <= listitem; k++) if (!gFriskAkcija[playerid][k]) return FriskPrikazi(playerid, t);
+    switch (gFriskAkcija[playerid][listitem])
+    {
+        case FA_VRECA:
+        {
+            new iznos = BankaVrecaOduzmi(t, playerid), tekst[96];
+            if (iznos)
+            {
+                format(tekst, sizeof tekst, T(playerid, "Oduzeli ste vrecu novca ($%d)."), iznos);
+                ObavijestInfo(playerid, T(playerid, "Pretres"), tekst);
+                ObavijestGreska(t, T(t, "Policija vam je oduzela vrecu novca."));
+            }
+        }
+        case FA_DROGA:
+        {
+            for (new i = 0; i < sizeof gDroge; i++) if (gInv[t][gDroge[i]]) GiveItem(t, gDroge[i], -gInv[t][gDroge[i]]);
+            ObavijestInfo(playerid, T(playerid, "Pretres"), T(playerid, "Oduzeli ste drogu."));
+            ObavijestGreska(t, T(t, "Policija vam je oduzela drogu."));
+        }
+        case FA_ORUZJE:
+        {
+            if (FriskDozvola(t)) return FriskPrikazi(playerid, t);
+            OruzjeSpremiVatreno(t);
+            for (new i = 0; i < BROJ_ITEMA; i++) if (gInv[t][i] && FriskVatreno(i)) GiveItem(t, i, -gInv[t][i]);
+            ObavijestInfo(playerid, T(playerid, "Pretres"), T(playerid, "Oduzeli ste oruzje i municiju."));
+            ObavijestGreska(t, T(t, "Policija vam je oduzela oruzje i municiju."));
+        }
+    }
+    return FriskPrikazi(playerid, t);
 }
 
 CMD:inventar(playerid, params[])
@@ -635,6 +737,15 @@ StoreSlot(playerid, slot)
     if (ammoItem != -1 && _:weapon == gItems[item][ITEM_WEAPON])
         GiveItem(playerid, ammoItem, max(0, min(min(ammo, gEquipAmmo[playerid][slot]), gItems[ammoItem][ITEM_MAX] - gInv[playerid][ammoItem])));
     RemovePlayerWeapon(playerid, WEAPON:gItems[item][ITEM_WEAPON]);
+}
+
+OruzjeSpremiVatreno(playerid)
+{
+    for (new slot = 0; slot < ORUZJE_SLOTOVI; slot++)
+    {
+        new item = gEquipPredmet[playerid][slot];
+        if (item != -1 && gItems[item][ITEM_AMMO] != -1) StoreSlot(playerid, slot);
+    }
 }
 
 StoreUtor(playerid, slot)

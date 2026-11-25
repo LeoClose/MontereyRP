@@ -19,7 +19,7 @@ enum
     DLG_APANEL_PIKADO, DLG_APANEL_KUGLANJE, DLG_APANEL_AC, DLG_APANEL_AC_LOG,
     DLG_BILJKA, DLG_DOBAVLJAC, DLG_LAB, DLG_LAB_KOL, DLG_APANEL_DROGA, DLG_SEF, DLG_SEF_STAVI, DLG_SEF_KOL, DLG_ORG_DNEVNIK, DLG_OKLADA,
     DLG_STAND, DLG_STAND_KUPI, DLG_STAND_IME, DLG_STAND_ROBA, DLG_STAND_HRANA, DLG_APANEL_STAND, DLG_APANEL_STAND_MODEL, DLG_APANEL_STAND_MENI,
-    DLG_FIRMA, DLG_FIRMA_KUPI, DLG_APANEL_BANKA_SALTER, DLG_PLJACKA_POSTAVKE, DLG_PLJACKA_POSTAVKA, DLG_PLJACKA_POMOC
+    DLG_FIRMA, DLG_FIRMA_KUPI, DLG_APANEL_BANKA_SALTER, DLG_PLJACKA_POSTAVKE, DLG_PLJACKA_POSTAVKA, DLG_PLJACKA_POMOC, DLG_FRISK_LISTA
 }
 
 static gDlg[MAX_PLAYERS];
@@ -122,6 +122,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_APANEL_KAMION:     return Dlg_apanel_kamion(playerid, response, listitem);
         case DLG_APANEL_KAMION_BRISI: return Dlg_apanel_kamion_brisi(playerid, response);
         case DLG_FRISK:             return Dlg_frisk(playerid, response);
+        case DLG_FRISK_LISTA:       return Dlg_frisk_lista(playerid, response, listitem);
         case DLG_ORMAR:             return Dlg_ormar(playerid, response, listitem);
         case DLG_GEPEK:             return Dlg_gepek(playerid, response, listitem);
         case DLG_GEPEK_STAVI:       return Dlg_gepek_stavi(playerid, response, listitem);
