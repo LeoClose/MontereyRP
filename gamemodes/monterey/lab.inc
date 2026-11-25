@@ -554,7 +554,12 @@ LabTick()
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gUlogiran[i]) continue;
-        if (LabNosi(i) != -1 && IsRanjen(i))
+        if (LabNosi(i) != -1 && IsPlayerInAnyVehicle(i))
+        {
+            RemovePlayerFromVehicle(i);
+            ObavijestGreska(i, T(i, "S sandukom ne mozete u vozilo. Stavite ga u prtljaznik (ALT kod prtljaznika)."));
+        }
+        else if (LabNosi(i) != -1 && IsRanjen(i))
         {
             LabSandukBaci(i);
             ObavijestGreska(i, T(i, "Ispustili ste sanduk."));

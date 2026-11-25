@@ -352,6 +352,7 @@ DLG:inventar(playerid, response, listitem)
 DLG:inventar_predmet(playerid, response, listitem)
 {
     if (!response) return PrikaziInventar(playerid);
+    if (listitem >= 1 && LabSanduk(gInvItem[playerid])) return ObavijestGreska(playerid, T(playerid, "Sanduk spustite s ALT ili ga stavite u prtljaznik.")), PredmetOpcije(playerid);
     switch (listitem)
     {
         case 0:

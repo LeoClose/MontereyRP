@@ -30,7 +30,7 @@ static GepekKameraStvori(playerid, v)
     gGepekKamObj[playerid][0] = CreateDynamicObject(1098, x, y, z, 0.0, 0.0, 0.0, GetVehicleVirtualWorld(v), -1, playerid, 300.0, 300.0);
     AttachDynamicObjectToVehicle(gGepekKamObj[playerid][0], v, 0.15, straga + 0.55, -sz * 0.12, 90.0, 0.0, 0.0);
     gGepekKamObj[playerid][1] = CreateDynamicObject(19300, x, y, z, 0.0, 0.0, 0.0, GetVehicleVirtualWorld(v), -1, playerid, 300.0, 300.0);
-    AttachDynamicObjectToVehicle(gGepekKamObj[playerid][1], v, -0.1, straga + 1.25, sz * 0.12, -25.0, 0.0, 180.0);
+    AttachDynamicObjectToVehicle(gGepekKamObj[playerid][1], v, 0.0, straga + 1.05, sz * 0.18, -6.0, 0.0, 180.0);
     Streamer_UpdateEx(playerid, x, y, z, GetVehicleVirtualWorld(v), -1, STREAMER_TYPE_OBJECT);
     SetTimerEx("GepekKameraPrikaci", 400, false, "ii", playerid, v);
 }
