@@ -855,7 +855,7 @@ MapaBankaInterijer()
     SetDynamicObjectMaterial(tmpobjid, 0, -1, "none", "none", 0xFFFFFFFF);
     tmpobjid = CreateDynamicObjectEx(2007, 1434.775390, -453.465270, -85.692176, 0.000007, 0.000000, 89.999916, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, -1, "none", "none", 0xFFFFFFFF);
-    tmpobjid = CreateDynamicObjectEx(2634, 1411.879150, -453.305999, -88.141471, 0.000000, 0.000000, 270.000000, 300.00, 300.00);
+    tmpobjid = CreateDynamicObjectEx(19799, 1411.879150, -454.305999, -88.141471, 0.000000, 0.000000, 270.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, -1, "none", "none", 0xFFFFFFFF);
     tmpobjid = CreateDynamicObjectEx(10150, 1432.188232, -453.237609, -89.061233, 0.000000, 0.000000, 0.000000, 300.00, 300.00);
     SetDynamicObjectMaterial(tmpobjid, 0, -1, "none", "none", 0xFFFFFFFF);

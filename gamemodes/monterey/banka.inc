@@ -438,6 +438,7 @@ static PljUcitaj()
     PljPostavkeUcitaj();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_heist (bank INTEGER PRIMARY KEY, mx REAL NOT NULL DEFAULT 0, my REAL NOT NULL DEFAULT 0, mz REAL NOT NULL DEFAULT 0, ma REAL NOT NULL DEFAULT 0, vx REAL NOT NULL DEFAULT 0, vy REAL NOT NULL DEFAULT 0, vz REAL NOT NULL DEFAULT 0, dmodel INTEGER NOT NULL DEFAULT 0, dx REAL NOT NULL DEFAULT 0, dy REAL NOT NULL DEFAULT 0, dz REAL NOT NULL DEFAULT 0, dkut REAL NOT NULL DEFAULT 90)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_heist_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, bank INTEGER NOT NULL, tip INTEGER NOT NULL, model INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, kut REAL NOT NULL DEFAULT 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE bank_heist SET dmodel = 19799, dy = dy - 1.0, dkut = 90.0 WHERE dmodel = 2634 AND abs(dx - 1411.879) < 0.1 AND abs(dy + 453.306) < 0.1"));
     for (new s = 0; s < BANKA_MAX; s++)
     {
         gPlj[s][pjMenadzer] = INVALID_LIK;

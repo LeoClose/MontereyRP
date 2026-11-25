@@ -425,9 +425,24 @@ BlackScreen(playerid, bool:crn)
 }
 
 forward Fade(playerid, korak);
+static bool:gFadeCrno[MAX_PLAYERS];
+
+bool:FadeCrno(playerid)
+{
+    return gFadeCrno[playerid];
+}
+
+FadeReset(playerid)
+{
+    gFadeCrno[playerid] = false;
+}
+
 public Fade(playerid, korak)
 {
-    if (!IsPlayerConnected(playerid) || korak == FADE_SLOJEVA) return;
+    if (!IsPlayerConnected(playerid)) return;
+    if (korak == FADE_SLOJEVA - 1) gFadeCrno[playerid] = true;
+    else if (korak == FADE_SLOJEVA + 1) gFadeCrno[playerid] = false;
+    if (korak == FADE_SLOJEVA) return;
     if (korak < FADE_SLOJEVA) TextDrawShowForPlayer(playerid, gFade[korak]);
     else TextDrawHideForPlayer(playerid, gFade[2 * FADE_SLOJEVA - korak]);
     if (korak < 2 * FADE_SLOJEVA) SetTimerEx("Fade", FADE_KORAK_MS, false, "ii", playerid, korak + 1);

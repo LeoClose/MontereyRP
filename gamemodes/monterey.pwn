@@ -36,10 +36,14 @@ forward bool:AcUkljuceno(code);
 #define PRENOS_MAX  50
 
 #define ZASTITA_MS     2000
+#define PRENOS_FADE_MS 450
+
+forward bool:FadeCrno(playerid);
 
 new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS], bool:gAdminZamrznut[MAX_PLAYERS], gZastitaDo[MAX_PLAYERS];
 stock PrenosConnect(playerid)
 {
+    FadeReset(playerid);
     gAdminZamrznut[playerid] = false;
     gPrenosZamrz[playerid] = 0;
     gZastitaDo[playerid] = 0;
@@ -97,9 +101,9 @@ stock ZamrzniIgraca(playerid, bool:moze)
 #undef SetPlayerPos
 #define SetPlayerPos PrenesiIgraca
 
-stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
+static PrebaciOdmah(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut, bool:cekaj)
 {
-    gPrenosCekaj[playerid] = interijer != GetPlayerInterior(playerid) || svijet != GetPlayerVirtualWorld(playerid);
+    gPrenosCekaj[playerid] = cekaj || interijer != GetPlayerInterior(playerid) || svijet != GetPlayerVirtualWorld(playerid);
     if (gPrenosCekaj[playerid]) SavjetPromjena(playerid);
     SetPlayerInterior(playerid, interijer);
     SetPlayerVirtualWorld(playerid, svijet);
@@ -107,6 +111,25 @@ stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Floa
     if (kut > -1000.0) SetPlayerFacingAngle(playerid, kut);
     SetCameraBehindPlayer(playerid);
     VrijemeIgrac(playerid);
+    return 1;
+}
+
+forward PrebaciKraj(playerid, token, interijer, svijet, Float:x, Float:y, Float:z, Float:kut);
+public PrebaciKraj(playerid, token, interijer, svijet, Float:x, Float:y, Float:z, Float:kut)
+{
+    if (gPrenosZamrz[playerid] == token) PrebaciOdmah(playerid, interijer, svijet, x, y, z, kut, true);
+}
+
+stock PrebaciIgraca(playerid, interijer, svijet, Float:x, Float:y, Float:z, Float:kut = -1000.0)
+{
+    if (IsPlayerNPC(playerid) || FadeCrno(playerid) || (interijer == GetPlayerInterior(playerid) && svijet == GetPlayerVirtualWorld(playerid)) || GetPlayerState(playerid) == PLAYER_STATE_WASTED)
+        return PrebaciOdmah(playerid, interijer, svijet, x, y, z, kut, false);
+    static token;
+    gPrenosZamrz[playerid] = ++token ? token : ++token;
+    TogglePlayerControllable(playerid, false);
+    PrenosFade(playerid, true);
+    SetTimerEx("PrebaciKraj", PRENOS_FADE_MS, false, "ddddffff", playerid, gPrenosZamrz[playerid], interijer, svijet, x, y, z, kut);
+    return 1;
 }
 #undef TogglePlayerControllable
 #define TogglePlayerControllable ZamrzniIgraca
