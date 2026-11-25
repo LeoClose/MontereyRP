@@ -76,6 +76,7 @@ native bool:Lik_Izadji(lik, bool:odmah = false);
 native bool:Lik_TipkeVozila(lik, tipke);
 native Lik_DajVozilo(lik);
 native bool:Lik_Vozi(lik, Float:x, Float:y, Float:z, Float:brzina = 0.0, bool:sirena = false);
+native bool:Lik_Kruzi(lik, Float:brzina = 11.0);
 native bool:Lik_Sirena(lik, bool:upaljena);
 native bool:Lik_Trubi(lik, ms = 500);
 native bool:Lik_Zaglavio(lik, ms);

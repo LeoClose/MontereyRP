@@ -826,11 +826,8 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 static TaksiKruzi(s)
 {
     if (gTaksi[s][tNpc] == INVALID_LIK || gTaksi[s][tStanje] != TX_SLOBODAN || gTaksi[s][tStaje]) return;
-    new Float:x, Float:y, Float:z, Float:cx, Float:cy, Float:cz, Float:a = float(random(360)), Float:d = 300.0 + float(random(400));
-    GetVehiclePos(gTaksi[s][tVozilo], x, y, z);
-    if (Lik_Cesta(x + floatsin(a, degrees) * d, y + floatcos(a, degrees) * d, 0.0, cx, cy, cz) > TAKSI_MAX_OD_CESTE) return;
     TaksiMotor(s, 1);
-    Lik_Vozi(gTaksi[s][tNpc], cx, cy, cz, 11.0, false);
+    Lik_Kruzi(gTaksi[s][tNpc], 11.0);
 }
 
 static TaksiNaKartu(s, playerid)
