@@ -412,6 +412,7 @@ new gAdminVeh[MAX_PLAYERS] = {INVALID_VEHICLE_ID, ...};
 new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #define AP_ORG_LIST_FIXED   2
 
+#include "monterey/poruke.inc"
 #include "monterey/dialog.inc"
 #include "monterey/upit.inc"
 #include "monterey/chat.inc"

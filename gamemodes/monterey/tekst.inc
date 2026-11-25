@@ -2137,6 +2137,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Pomoc", "Help", "Помощь", "Ayuda", "Yardim" },
+    { "Obavijest", "Notice", "Уведомление", "Aviso", "Bildirim" },
     { "%s: $%d/%s, zaliha %d.", "%s: $%d/%s, %d in stock.", "%s: $%d/%s, в наличии %d.", "%s: $%d/%s, %d en stock.", "%s: $%d/%s, stokta %d." },
     { "Imate samo %d komada.", "You only have %d pieces.", "У вас только %d шт.", "Solo tienes %d piezas.", "Sadece %d parcaniz var." },
     { "Ukradeni nakit: %d kom. Preprodavac nudi $%d po komadu.", "Stolen jewelry: %d pcs. The fence offers $%d per piece.", "Краденые украшения: %d шт. Скупщик предлагает $%d за штуку.", "Joyas robadas: %d piezas. El perista ofrece $%d por pieza.", "Calinti mucevher: %d adet. Satici adet basi $%d teklif ediyor." },

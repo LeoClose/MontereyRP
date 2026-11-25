@@ -5,6 +5,11 @@
 
 static PlayerText:gObTd[MAX_PLAYERS][2], bool:gObVidi[MAX_PLAYERS], gObZadnji[MAX_PLAYERS][256], bool:gObIma[MAX_PLAYERS], gObToken[MAX_PLAYERS], gObOd[MAX_PLAYERS], gObTekst[MAX_PLAYERS][256];
 
+bool:ObavijestStane(playerid, const tekst[])
+{
+    return !(gObOd[playerid] && GetTickCount() - gObOd[playerid] < OBAVIJEST_SPOJI_MS && strlen(gObTekst[playerid]) + strlen(tekst) >= sizeof gObTekst[] - 4);
+}
+
 IgraObavijestConnect(playerid)
 {
     gObIma[playerid] = false;
@@ -54,8 +59,42 @@ IgraObavijestUkloni(playerid)
     IgraObavijestSkrij(playerid, ++gObToken[playerid]);
 }
 
+static const gObLat[64][] = {
+    "A", "B", "V", "G", "D", "E", "Zh", "Z", "I", "Y", "K", "L", "M", "N", "O", "P",
+    "R", "S", "T", "U", "F", "Kh", "Ts", "Ch", "Sh", "Sch", "", "Y", "", "E", "Yu", "Ya",
+    "a", "b", "v", "g", "d", "e", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p",
+    "r", "s", "t", "u", "f", "kh", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya"
+};
+
+static ObTd(const ulaz[], izlaz[], size)
+{
+    new n = 0;
+    for (new i = 0; ulaz[i] && n < size - 4; i++)
+    {
+        new c = ulaz[i] & 0xFF;
+        if (c == '{' && ulaz[i + 7] == '}')
+        {
+            i += 7;
+            continue;
+        }
+        if (c >= 0xC0)
+        {
+            for (new k = 0; gObLat[c - 0xC0][k] && n < size - 4; k++) izlaz[n++] = gObLat[c - 0xC0][k];
+            continue;
+        }
+        if (c == 0xA8) c = 'E';
+        else if (c == 0xB8) c = 'e';
+        else if (c > 0x7E) continue;
+        izlaz[n++] = c;
+    }
+    izlaz[n] = EOS;
+}
+
 static ObPrikazi(playerid, const naslov[], boja, const tekst[])
 {
+    new n[64], t[512];
+    ObTd(naslov, n, sizeof n);
+    ObTd(tekst, t, sizeof t);
     if (!gObIma[playerid])
     {
         gObIma[playerid] = true;
@@ -78,8 +117,8 @@ static ObPrikazi(playerid, const naslov[], boja, const tekst[])
         PlayerTextDrawSetOutline(playerid, gObTd[playerid][1], 1);
     }
     PlayerTextDrawBoxColour(playerid, gObTd[playerid][0], boja);
-    PlayerTextDrawSetString(playerid, gObTd[playerid][0], naslov);
-    PlayerTextDrawSetString(playerid, gObTd[playerid][1], tekst);
+    PlayerTextDrawSetString(playerid, gObTd[playerid][0], n);
+    PlayerTextDrawSetString(playerid, gObTd[playerid][1], t);
     PlayerTextDrawShow(playerid, gObTd[playerid][0]);
     PlayerTextDrawShow(playerid, gObTd[playerid][1]);
     gObVidi[playerid] = true;

@@ -498,7 +498,6 @@ bool:BacenoPodigni(playerid)
         BacenoMakni(b);
         SavjetMakni(playerid);
         ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
-        SendClientMessage(playerid, COLOR_INFO, T(playerid, "Podigli ste $%d."), amount);
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s nesto podize s poda.", GetRPIme(playerid), "", 1);
         return true;
     }
