@@ -84,6 +84,7 @@ public OnPlayerDisconnect(playerid, reason)
     KurvaDisconnect(playerid);
     MaricaReset(playerid);
     PolicijaDisconnect(playerid, true);
+    PljVrecaOdlazak(playerid);
     GepekDisconnect(playerid);
     VoziloDisconnect(playerid);
     SalonDisconnect(playerid);
@@ -205,6 +206,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     if (PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
     if (KradjaKey(playerid, newkeys, oldkeys)) return 1;
+    if (KapijaKey(playerid, newkeys, oldkeys)) return 1;
     if (UtrkaKey(playerid, newkeys, oldkeys)) return 1;
     TaksiKey(playerid, newkeys, oldkeys);
     MaricaKey(playerid, newkeys, oldkeys);
@@ -235,7 +237,7 @@ static InterakcijaF(playerid)
 static InterakcijaAlt(playerid)
 {
     if (PikadoCilja(playerid) || KuglanjeCilja(playerid) || BilijarCilja(playerid)) return 1;
-    return RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || GepekAlt(playerid);
+    return RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid);
 }
 
 static Interakcija(playerid)
@@ -394,6 +396,7 @@ CMD:ahelp(playerid, params[])
     PomocRed(tekst, len, T(playerid, "  /dozvola [id/ime] - daj ili oduzmi vozacku dozvolu"));
     PomocRed(tekst, len, T(playerid, "  /pm [id/ime] [poruka] - privatna poruka igracu"));
     PomocRed(tekst, len, T(playerid, "  /apanel - igraci, vozila, organizacije, teritoriji, administracija"));
+    PomocRed(tekst, len, T(playerid, "  Banke: /pljacka (postavke pljacke). Kapije: /kapija, /kapijabrisi"));
     if (gAdmin[playerid] >= ALVL_MANAGE)
     {
         PomocRed(tekst, len, T(playerid, "  /time [0-23] - sat, /weather [0-22] - vrijeme na serveru"));

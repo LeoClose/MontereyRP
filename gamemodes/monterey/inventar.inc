@@ -138,7 +138,7 @@ enum
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
     ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE,
-    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA
+    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA, ITEM_EKSPLOZIV
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -191,7 +191,8 @@ new const gItems[][E_ITEM] = {
     { "Kemikalije",             "l",   20,  0,  -1, 1576  },
     { "Cigarete",               "kom", 40,  0,  -1, 19896 },
     { "Srecka",                 "kom", 10,  0,  -1, 1581  },
-    { "Kutija robe",            "kom", 1,   0,  -1, 1220  }
+    { "Kutija robe",            "kom", 1,   0,  -1, 1220  },
+    { "Eksploziv",              "kom", 6,   0,  -1, 1654  }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7

@@ -6,6 +6,7 @@ public OnLikStigao(lik)
     if (SlucajNpcStigao(lik)) return 1;
     if (KurvaPomak(lik)) return 1;
     if (TaksiLikStigao(lik)) return 1;
+    if (BankaLikStigao(lik)) return 1;
     return 1;
 }
 

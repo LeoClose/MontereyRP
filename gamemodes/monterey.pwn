@@ -258,6 +258,7 @@ public OnGameModeInit()
     MapaSurenosiUkloni(INVALID_PLAYER_ID);
     MapaSurenosi();
     Lik_OsvjeziMapu();
+    InitKapije();
     InitMarica();
     InitPolicija();
     InitMdt();
@@ -354,6 +355,7 @@ public Sekunda()
     TaksiTick();
     TeritorijTick();
     VoziloTick();
+    KapijeTick();
     CivilVozilaTick();
     VlakTick();
     BankaTick();
@@ -469,6 +471,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_opstina.inc"
 #include "monterey/mape/mapa_idlewood.inc"
 #include "monterey/mape/mapa_chinatown.inc"
+#include "monterey/kapije.inc"
 #include "monterey/mape/mapa_italijani.inc"
 #include "monterey/mape/mapa_idlewood_flats.inc"
 #include "monterey/mape/mapa_dacoradiona.inc"
