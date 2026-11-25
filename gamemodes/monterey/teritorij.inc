@@ -345,7 +345,9 @@ bool:IsShootingBlocked(playerid)
 {
     if (BankaBlokira(playerid))
     {
-        Obavijesti(playerid, "Oruzje u banci mozete izvaditi samo kao clan mafije s najmanje 3 clana u banci.");
+        new poruka[144];
+        format(poruka, sizeof poruka, T(playerid, "Oruzje u banci mozete izvaditi samo kao clan mafije s najmanje %d clana u banci."), BankaClanovi());
+        Obavijesti(playerid, poruka);
         return true;
     }
     new u = gTerUmro[playerid];
