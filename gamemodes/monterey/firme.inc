@@ -1,7 +1,7 @@
 #define FIRMA_MAX               32
 #define FIRMA_TRGOVINA_CIJENA   25000
 #define FIRMA_FRIZER_CIJENA     15000
-#define FIRMA_PIZZA_CIJENA      30000
+#define FIRMA_RESTORAN_CIJENA   30000
 #define FIRMA_ZALIHA_MAX        50
 #define FIRMA_NABAVA            400
 #define FIRMA_RADNI_DOMET       3.0
@@ -19,7 +19,7 @@
 #define POSAO_SKARE_REZOVA      3
 #define POSAO_BOJA              0xE67E22FF
 
-enum { FIRMA_TRGOVINA, FIRMA_FRIZER, FIRMA_PIZZA, FIRMA_VRSTA }
+enum { FIRMA_TRGOVINA, FIRMA_FRIZER, FIRMA_PIZZA, FIRMA_BURGER, FIRMA_CLUCKIN, FIRMA_VRSTA }
 enum { IZVOR_STAND, IZVOR_FIRMA }
 enum { SI_NEMA, SI_TRAKA, SI_TIPKE, SI_KUSUR, SI_SKARE }
 enum { FG_NEMA, FG_DOLAZI, FG_CEKA, FG_ODLAZI }
@@ -36,8 +36,8 @@ static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:g
 enum E_FIRMA { bool:fIma, fDb, fVlasnik, fVlasnikIme[MAX_PLAYER_NAME + 1], fKasa, fZaliha, fRadnik, fGost, fGostFaza, fGostOd, fSljedeci, fCijena, fRoba[32] }
 static gFirma[FIRMA_VRSTA][FIRMA_MAX][E_FIRMA];
 static gFirmaMeni[MAX_PLAYERS][2], gFirmaOpcija[MAX_PLAYERS][3], gFirmaOpcijaN[MAX_PLAYERS];
-static const gFirmaIme[FIRMA_VRSTA][] = { "Trgovina 24/7", "Frizerski salon", "Pizzeria" };
-static const gFirmaCijena[FIRMA_VRSTA] = { FIRMA_TRGOVINA_CIJENA, FIRMA_FRIZER_CIJENA, FIRMA_PIZZA_CIJENA };
+static const gFirmaIme[FIRMA_VRSTA][] = { "Trgovina 24/7", "Frizerski salon", "Well Stacked Pizza", "Burger Shot", "Cluckin' Bell" };
+static const gFirmaCijena[FIRMA_VRSTA] = { FIRMA_TRGOVINA_CIJENA, FIRMA_FRIZER_CIJENA, FIRMA_RESTORAN_CIJENA, FIRMA_RESTORAN_CIJENA, FIRMA_RESTORAN_CIJENA };
 
 InitFirme()
 {
@@ -117,13 +117,13 @@ FirmaStolicaZauzeta(s)
 
 static FirmaTocke(k, s, &interijer, &svijet, Float:ulaz[3], Float:cilj[4], Float:radnik[3])
 {
-    if (k == FIRMA_PIZZA) return 0;
+    if (k >= FIRMA_PIZZA) return 0;
     return k == FIRMA_TRGOVINA ? TrgovinaTocke(s, interijer, svijet, ulaz, cilj, radnik) : OdjecaTocke(s, interijer, svijet, ulaz, cilj, radnik);
 }
 
 static FirmaUnutra(playerid, k, s)
 {
-    return (k == FIRMA_TRGOVINA ? TrgovinaIgraca(playerid) : k == FIRMA_PIZZA ? PizzaIgraca(playerid) : OdjecaFrizerIgraca(playerid)) == s;
+    return (k == FIRMA_TRGOVINA ? TrgovinaIgraca(playerid) : k >= FIRMA_PIZZA ? RestoranIgraca(playerid) : OdjecaFrizerIgraca(playerid)) == s;
 }
 
 static FirmaGdje(playerid, &k, &s)
@@ -137,8 +137,8 @@ static FirmaGdje(playerid, &k, &s)
     }
     if (s == -1)
     {
-        s = PizzaIgraca(playerid);
-        k = FIRMA_PIZZA;
+        s = RestoranIgraca(playerid);
+        k = FIRMA_PIZZA + RestoranVrsta(s);
     }
     return s != -1 && gFirma[k][s][fIma];
 }
@@ -153,7 +153,7 @@ CMD:firma(playerid, params[])
 {
     new k, s;
     if (!gUlogiran[playerid] || IsRanjen(playerid)) return 1;
-    if (!FirmaGdje(playerid, k, s)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u trgovini 24/7, frizerskom salonu ili pizzeriji."));
+    if (!FirmaGdje(playerid, k, s)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Morate biti u trgovini 24/7, frizerskom salonu ili restoranu."));
     gFirmaMeni[playerid][0] = k;
     gFirmaMeni[playerid][1] = s;
     if (!gFirma[k][s][fVlasnik])
@@ -175,7 +175,7 @@ static FirmaMeni(playerid, k, s)
     if (gFirma[k][s][fKasa] < 0) format(red, sizeof red, T(playerid, "Dug za nabavu robe: $%d"), -gFirma[k][s][fKasa]);
     else format(red, sizeof red, T(playerid, "Uzmi zaradu ($%d)"), gFirma[k][s][fKasa]);
     DodajStupac(list, len, red);
-    if (k != FIRMA_PIZZA)
+    if (k < FIRMA_PIZZA)
     {
         gFirmaOpcija[playerid][n++] = FO_RADI;
         DodajStupac(list, len, gFirma[k][s][fRadnik] == playerid ? T(playerid, "Prestani raditi") : T(playerid, "Pocni raditi"));

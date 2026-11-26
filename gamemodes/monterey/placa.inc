@@ -8,7 +8,7 @@
 #define POSAO_DOSTAVLJAC    1
 #define POSAO_KONTROLOR     2
 #define POSAO_RIBAR         3
-#define POSAO_PIZZA         4
+#define POSAO_RESTORAN         4
 #define ATC_ODOBRENJE       40
 #define ATC_DOMET           80.0
 #define DOSTAVA_VOZILO      499
@@ -120,7 +120,7 @@ Placa(playerid)
     zarada = DB_GetFieldInt(res, 0);
     DB_FreeResultSet(res);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = 0 WHERE id = %d", racun));
-    bruto += zarada + PizzaPlaca(playerid);
+    bruto += zarada + RestoranPlaca(playerid);
     if (!bruto && GetPlayerScore(playerid) <= PLACA_POMOC_LEVEL) bruto = PLACA_POMOC;
     bruto = BlagajnaIsplati(bruto);
     new porez = bruto * PLACA_POREZ / 100, neto = bruto - porez, imovina = PlacaImovina(racun), poruka[144];
@@ -301,7 +301,7 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid] || PizzaPosao(playerid) || RibarPosao(playerid)) return 1;
+    if (!gUlogiran[playerid] || RestoranPosao(playerid) || RibarPosao(playerid)) return 1;
     if (gPosao[playerid] == POSAO_KONTROLOR)
     {
         if (AtcNaSmjeni(playerid))

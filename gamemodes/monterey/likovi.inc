@@ -2,7 +2,7 @@ public OnLikStigao(lik)
 {
     if (PlaninaStigao(lik)) return 1;
     if (FirmaStigao(lik)) return 1;
-    if (PizzaStigao(lik)) return 1;
+    if (RestoranStigao(lik)) return 1;
     if (KupacStigao(lik)) return 1;
     if (SlucajNpcStigao(lik)) return 1;
     if (KurvaPomak(lik)) return 1;
