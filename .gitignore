@@ -29,6 +29,7 @@ scriptfiles/*
 
 # Editor / OS
 .vscode/
+.serena/
 .idea/
 Thumbs.db
 desktop.ini
