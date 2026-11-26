@@ -3,7 +3,7 @@
 #define LOK_SLJEDECA        -3
 
 static const gLokKat[][] = { "Organizacije", "Kazino", "Banke", "Zlatare", "Oruzarnice", "Trgovine", "Odjeca", "Namjestaj", "Saloni", "Tuning garaze", "Opstina", "Kuce", "Garaze", "Poslovi" };
-static const gLokPosao[][] = { "Dostavljac", "Kontrolor leta", "Ribar", "Skladistar" };
+static const gLokPosao[][] = { "Dostavljac", "Kontrolor leta", "Ribar", "Skladistar", "Autopraonica" };
 static gLokOdabrana[MAX_PLAYERS], gLokStrana[MAX_PLAYERS], gLokRed[MAX_PLAYERS][LOK_STRANA + 2], gLokBroj[MAX_PLAYERS];
 
 LokacijaUzmi(kat, i, &Float:x, &Float:y, &Float:z, &Float:a)
@@ -36,6 +36,7 @@ static PosaoLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
         case 0, 1: return PlacaLokacija(i, x, y, z, a);
         case 2: return RibarLokacija(x, y, z);
         case 3: return SkladisteLokacija(x, y, z);
+        case 4: return PraonicaLokacija(x, y, z);
     }
     return RestoranLokacija(i - sizeof gLokPosao, x, y, z, a);
 }
