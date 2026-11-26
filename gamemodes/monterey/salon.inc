@@ -242,6 +242,29 @@ static SalonCijenaModela(model)
     return najniza;
 }
 
+SalonNasumicnoVozilo(&cijena, const bool:dozvoljen[])
+{
+    new n = 0;
+    for (new s = 0; s < SALON_MAX; s++)
+    {
+        if (!gSalon[s][slIma]) continue;
+        for (new i = 0; i < gSalon[s][slBroj]; i++) if (dozvoljen[gSalon[s][slModel][i] - 400]) n++;
+    }
+    if (!n) return 0;
+    new r = random(n);
+    for (new s = 0; s < SALON_MAX; s++)
+    {
+        if (!gSalon[s][slIma]) continue;
+        for (new i = 0; i < gSalon[s][slBroj]; i++)
+        {
+            if (!dozvoljen[gSalon[s][slModel][i] - 400] || r--) continue;
+            cijena = gSalon[s][slCijena][i];
+            return gSalon[s][slModel][i];
+        }
+    }
+    return 0;
+}
+
 VlasnikCijena(v)
 {
     if (!VlasnikVozila(v)) return 0;
