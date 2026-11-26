@@ -1000,7 +1000,8 @@ public RestoranPresvuciKraj(playerid, racun, s, radno)
 
 RestoranUpit(playerid, s, opcija, bool:da)
 {
-    if (!da || RestoranIgraca(playerid) != s || !RestoranKodPosla(playerid, s, REST_DOMET + 2.0)) return 1;
+    if (!da || RestoranIgraca(playerid) != s) return 1;
+    if (!(opcija == 2 && gRsSmjena[playerid] == s + 1) && !RestoranKodPosla(playerid, s, REST_DOMET + 2.0)) return 1;
     if (opcija == 0 && PosaoIgraca(playerid) != POSAO_RESTORAN)
     {
         RibarKraj(playerid);
@@ -1028,7 +1029,9 @@ RestoranUpit(playerid, s, opcija, bool:da)
 RestoranPosao(playerid)
 {
     new s = RestoranIgraca(playerid);
-    if (s == -1 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !RestoranKodPosla(playerid, s)) return 0;
+    if (s == -1 && PosaoIgraca(playerid) == POSAO_RESTORAN) return ObavijestGreska(playerid, T(playerid, "Smjenu zapocinjete u restoranu (ALT kod mjesta za posao).")), 1;
+    if (s == -1 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
+    if (gRsSmjena[playerid] != s + 1 && !RestoranKodPosla(playerid, s)) return 0;
     RestoranIzbornik(playerid, s);
     return 1;
 }

@@ -9,6 +9,7 @@
 #define POSAO_KONTROLOR     2
 #define POSAO_RIBAR         3
 #define POSAO_RESTORAN         4
+#define POSAO_SKLADISTAR    5
 #define ATC_ODOBRENJE       40
 #define ATC_DOMET           80.0
 #define DOSTAVA_VOZILO      499
@@ -301,7 +302,7 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid] || RestoranPosao(playerid) || RibarPosao(playerid)) return 1;
+    if (!gUlogiran[playerid] || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid)) return 1;
     if (gPosao[playerid] == POSAO_KONTROLOR)
     {
         if (AtcNaSmjeni(playerid))
