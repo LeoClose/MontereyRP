@@ -188,6 +188,14 @@ static RibarBrodOslobodi(b)
     SetVehicleToRespawn(gRibarBrod[b][rbVozilo]);
 }
 
+RibarLokacija(&Float:x, &Float:y, &Float:z)
+{
+    x = gRibarMjesto[0];
+    y = gRibarMjesto[1];
+    z = gRibarMjesto[2];
+    return 1;
+}
+
 RibarKraj(playerid)
 {
     new b = RibarBrodIgraca(playerid);

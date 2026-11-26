@@ -2,7 +2,8 @@
 #define LOK_PRETHODNA       -2
 #define LOK_SLJEDECA        -3
 
-static const gLokKat[][] = { "Organizacije", "Kazino", "Banke", "Zlatare", "Oruzarnice", "Trgovine", "Odjeca", "Namjestaj", "Saloni", "Tuning garaze", "Opstina", "Kuce", "Garaze" };
+static const gLokKat[][] = { "Organizacije", "Kazino", "Banke", "Zlatare", "Oruzarnice", "Trgovine", "Odjeca", "Namjestaj", "Saloni", "Tuning garaze", "Opstina", "Kuce", "Garaze", "Poslovi" };
+static const gLokPosao[][] = { "Dostavljac", "Kontrolor leta", "Ribar", "Skladistar" };
 static gLokOdabrana[MAX_PLAYERS], gLokStrana[MAX_PLAYERS], gLokRed[MAX_PLAYERS][LOK_STRANA + 2], gLokBroj[MAX_PLAYERS];
 
 LokacijaUzmi(kat, i, &Float:x, &Float:y, &Float:z, &Float:a)
@@ -22,13 +23,36 @@ LokacijaUzmi(kat, i, &Float:x, &Float:y, &Float:z, &Float:a)
         case 10: return OpstinaLokacija(i, x, y, z, a);
         case 11: return KucaLokacija(i, x, y, z, a);
         case 12: return GarazaLokacija(i, x, y, z, a);
+        case 13: return PosaoLokacija(i, x, y, z, a);
     }
     return -1;
+}
+
+static PosaoLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    a = 0.0;
+    switch (i)
+    {
+        case 0, 1: return PlacaLokacija(i, x, y, z, a);
+        case 2: return RibarLokacija(x, y, z);
+        case 3: return SkladisteLokacija(x, y, z);
+    }
+    return RestoranLokacija(i - sizeof gLokPosao, x, y, z, a);
 }
 
 static LokacijaIme(playerid, kat, i, r, ime[], size = sizeof (ime))
 {
     if (kat == 0 && GetOrgIme(r, ime, size)) return;
+    if (kat == 13)
+    {
+        if (i < sizeof gLokPosao) format(ime, size, "%s", T(playerid, gLokPosao[i]));
+        else
+        {
+            RestoranLokacijaIme(playerid, i - sizeof gLokPosao, ime, size);
+            format(ime, size, "%s #%d", ime, i - sizeof gLokPosao + 1);
+        }
+        return;
+    }
     format(ime, size, "%s #%d", T(playerid, gLokKat[kat]), i + 1);
 }
 

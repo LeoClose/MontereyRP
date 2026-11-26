@@ -1008,7 +1008,7 @@ static const gVoziloBrzina[212] = {
 #define VOZILO_KRIVO_S          180
 #define PUMPA_PICKUP            1650
 
-enum { VP_MOTOR, VP_SVJETLA, VP_ALARM, VP_VRATA }
+enum { VP_MOTOR, VP_SVJETLA, VP_ALARM, VP_VRATA, VP_HAUBA, VP_PRTLJAZNIK }
 enum { PUMPA_NEMA, PUMPA_KRIVA, PUMPA_OK }
 enum E_PUMPA { bool:pmIma, pmDb, pmDizel, pmTrgovina, Float:pmX, Float:pmY, Float:pmZ, STREAMER_TAG_PICKUP:pmPickup, STREAMER_TAG_3D_TEXT_LABEL:pmTekst }
 

@@ -314,6 +314,26 @@ CMD:goto(playerid, params[])
     return 1;
 }
 
+static Float:gAdminOznaka[MAX_PLAYERS][3], bool:gAdminImaOznaku[MAX_PLAYERS];
+
+AdminOznakaKarte(playerid, Float:x, Float:y, Float:z)
+{
+    gAdminOznaka[playerid][0] = x;
+    gAdminOznaka[playerid][1] = y;
+    gAdminOznaka[playerid][2] = z;
+    gAdminImaOznaku[playerid] = true;
+}
+
+CMD:gotomark(playerid, params[])
+{
+    if (!ProvjeriOvlasti(playerid, ALVL_KICK)) return 1;
+    if (!gAdminImaOznaku[playerid]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Prvo postavite oznaku na karti (ESC > Karta, desni klik)."));
+    new Float:x = gAdminOznaka[playerid][0], Float:y = gAdminOznaka[playerid][1], Float:z = gAdminOznaka[playerid][2], Float:hx, Float:hy, Float:hz;
+    if (Kolizija_Zraka(x, y, 1000.0, x, y, -100.0, hx, hy, hz)) z = hz;
+    AdminPrebaci(playerid, 0, 0, x, y, z + 1.0);
+    return SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Teleportirani ste do oznake na karti."));
+}
+
 #define KAZINO_MAPA_INT     2
 
 static bool:AdminBrojParam(const params[], max, &vrijednost)

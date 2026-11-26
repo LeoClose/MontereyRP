@@ -82,6 +82,23 @@ PlacaUcitaj(playerid)
     gPlacaDuty[playerid] = 0;
 }
 
+PlacaLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i == 1)
+    {
+        x = gToranj[0];
+        y = gToranj[1];
+        z = gToranj[2];
+        return 1;
+    }
+    if (!gImaDepo) return 0;
+    x = gDepo[0];
+    y = gDepo[1];
+    z = gDepo[2];
+    a = gDepo[3];
+    return 1;
+}
+
 PosaoIgraca(playerid)
 {
     return gPosao[playerid];

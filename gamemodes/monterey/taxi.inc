@@ -903,6 +903,7 @@ TaksiStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 
 public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
 {
+    AdminOznakaKarte(playerid, fX, fY, fZ);
     new s = gTaksiOd[playerid] - 1;
     if (s < 0 || gTaksi[s][tStanje] != TX_KARTA) return 1;
     gTaksi[s][tCiljX] = fX;

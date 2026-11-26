@@ -170,6 +170,22 @@ static RestoranFirma(s)
     return FIRMA_PIZZA + gRs[s][rsVrsta];
 }
 
+RestoranLokacija(i, &Float:x, &Float:y, &Float:z, &Float:a)
+{
+    if (i >= REST_MAX) return -1;
+    if (!gRs[i][rsIma]) return 0;
+    x = gRs[i][rsX];
+    y = gRs[i][rsY];
+    z = gRs[i][rsZ];
+    a = gRs[i][rsA];
+    return 1;
+}
+
+RestoranLokacijaIme(playerid, i, ime[], size = sizeof ime)
+{
+    format(ime, size, "%s", T(playerid, gRsVrstaIme[gRs[i][rsVrsta]]));
+}
+
 static RestoranNaziv(playerid, s)
 {
     new ime[32];

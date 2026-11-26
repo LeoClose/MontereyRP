@@ -400,6 +400,7 @@ CMD:ahelp(playerid, params[])
     format(naslov, sizeof naslov, T(playerid, "Admin komande (razina %d - %s):"), gAdmin[playerid], gRankName[gAdmin[playerid]]);
     PomocRed(tekst, len, T(playerid, "  /a [poruka] - admin chat"));
     PomocRed(tekst, len, T(playerid, "  /goto [id/ime] - teleport do igraca"));
+    PomocRed(tekst, len, T(playerid, "  /gotomark - teleport do oznake na karti"));
     PomocRed(tekst, len, T(playerid, "  /jetpack - ukljuci ili iskljuci jetpack"));
     PomocRed(tekst, len, T(playerid, "  /afix - popravi vozilo u kojem se nalazis"));
     PomocRed(tekst, len, T(playerid, "  /veh [ime vozila] - stvori vozilo"));
