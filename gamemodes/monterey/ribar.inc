@@ -10,6 +10,7 @@
 #define RIBAR_TRAKA_ZELENO  24.0
 #define RIBAR_SKIN          34
 #define RIBAR_BOJA          0x2980B9FF
+#define RIBAR_SKIN_RADNI    35
 
 static const Float:gRibarZadano[3] = { 715.4897, -1625.8121, 2.4297 };
 static const gRibe[] = { ITEM_SKUSA, ITEM_ORADA, ITEM_BRANCIN, ITEM_ZUBATAC, ITEM_TUNA };
@@ -23,7 +24,7 @@ static gRibarOtkup[RIBAR_OTKUPA][E_RIBAR_OTKUP];
 static Float:gRibarMjesto[3], gRibarIkona, STREAMER_TAG_3D_TEXT_LABEL:gRibarTekst, bool:gRibarImaMjesto;
 static gRibarCilj[MAX_PLAYERS], Float:gRibarCiljPoz[MAX_PLAYERS][3];
 static bool:gRibarIgra[MAX_PLAYERS], gRibarTimer[MAX_PLAYERS], gRibarRunda[MAX_PLAYERS], gRibarPogodak[MAX_PLAYERS];
-static Float:gRibarTraka[MAX_PLAYERS], Float:gRibarSmjer[MAX_PLAYERS], Float:gRibarZel[MAX_PLAYERS], PlayerText:gRibarTd[MAX_PLAYERS][2];
+static Float:gRibarTraka[MAX_PLAYERS], Float:gRibarSmjer[MAX_PLAYERS], Float:gRibarZel[MAX_PLAYERS];
 static gRibarApPopis[MAX_PLAYERS][RIBAR_BRODOVA + RIBAR_OTKUPA];
 
 InitRibar()
@@ -120,9 +121,7 @@ static RibarIgraKraj(playerid, bool:gotovo)
     gRibarIgra[playerid] = false;
     if (gRibarTimer[playerid]) KillTimer(gRibarTimer[playerid]);
     gRibarTimer[playerid] = 0;
-    PlayerTextDrawDestroy(playerid, gRibarTd[playerid][0]);
-    PlayerTextDrawDestroy(playerid, gRibarTd[playerid][1]);
-    IgraObavijestUkloni(playerid);
+    IgraTdMakni(playerid);
     if (!gotovo) return;
     if (gRibarPogodak[playerid] < 2)
     {
@@ -184,6 +183,7 @@ static RibarBrodOslobodi(b)
     {
         RibarIgraKraj(i, false);
         if (gRibarCilj[i] == 1) RibarCiljMakni(i);
+        if (GetPlayerSkin(i) == RIBAR_SKIN_RADNI) SetPlayerSkin(i, OdjecaSkinIgraca(i));
     }
     SetVehicleToRespawn(gRibarBrod[b][rbVozilo]);
 }
@@ -203,16 +203,40 @@ static RibarUzmiBrod(playerid)
         if (!gRibarBrod[b][rbIma] || gRibarBrod[b][rbIgrac] != INVALID_PLAYER_ID) continue;
         gRibarBrod[b][rbIgrac] = playerid;
         gRibarBrod[b][rbZadnje] = gettime();
-        PutPlayerInVehicle(playerid, gRibarBrod[b][rbVozilo], 0);
-        RibarCiljMakni(playerid);
-        RibarNoviCilj(playerid);
-        return ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Dobili ste brod. Plovite do oznake na pucini i ulovite ribu. Brod vracate ovdje (/posao)."));
+        Fade(playerid, 0);
+        SetTimerEx("RibarBrodDan", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "iii", playerid, gAccountId[playerid], b);
+        return 1;
     }
     return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih brodova."));
 }
 
+forward RibarBrodDan(playerid, racun, b);
+public RibarBrodDan(playerid, racun, b)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    Fade(playerid, FADE_SLOJEVA + 1);
+    if (gRibarBrod[b][rbIgrac] != playerid) return;
+    gRibarBrod[b][rbZadnje] = gettime();
+    SetPlayerSkin(playerid, RIBAR_SKIN_RADNI);
+    PutPlayerInVehicle(playerid, gRibarBrod[b][rbVozilo], 0);
+    RibarCiljMakni(playerid);
+    RibarNoviCilj(playerid);
+    ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Dobili ste brod. Plovite do oznake na pucini i ulovite ribu. Brod vracate ovdje (/posao)."));
+}
+
 static RibarVrati(playerid)
 {
+    if (RibarBrodIgraca(playerid) == -1) return 0;
+    Fade(playerid, 0);
+    SetTimerEx("RibarVratiKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
+    return 1;
+}
+
+forward RibarVratiKraj(playerid, racun);
+public RibarVratiKraj(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return 0;
+    Fade(playerid, FADE_SLOJEVA + 1);
     new b = RibarBrodIgraca(playerid);
     if (b == -1) return 0;
     new bool:uBrodu = GetPlayerVehicleID(playerid) == gRibarBrod[b][rbVozilo];
@@ -309,17 +333,18 @@ RibarCheckpoint(playerid)
     gRibarTraka[playerid] = 0.0;
     gRibarSmjer[playerid] = 1.4;
     gRibarZel[playerid] = float(20 + random(60));
-    SnagaBarStvori(playerid, gRibarTd[playerid][0], gRibarTd[playerid][1]);
-    gRibarTimer[playerid] = SetTimerEx("RibarTrakaKorak", RIBAR_TRAKA_MS, true, "i", playerid);
     RibarPanel(playerid);
+    gRibarTimer[playerid] = SetTimerEx("RibarTrakaKorak", RIBAR_TRAKA_MS, true, "i", playerid);
     return 1;
 }
 
 static RibarPanel(playerid)
 {
     new tekst[144];
-    format(tekst, sizeof tekst, T(playerid, "Izvlacite mrezu: ~y~SPACE~w~ kad je traka zelena (%d/%d)."), gRibarRunda[playerid] + 1, RIBAR_RUNDI);
-    IgraObavijestPanel(playerid, T(playerid, "Ribolov"), RIBAR_BOJA, tekst);
+    format(tekst, sizeof tekst, T(playerid, "Izvlacite mrezu: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d)."), gRibarRunda[playerid] + 1, RIBAR_RUNDI);
+    IgraPanel(playerid, T(playerid, "Ribolov"), 60.0);
+    IgraTraka(playerid, gRibarZel[playerid], gRibarZel[playerid] + RIBAR_TRAKA_ZELENO, 0x1F3A5FFF, 0x27AE60FF, 0x1F3A5FFF, tekst);
+    IgraOznakaPomakni(playerid, gRibarTraka[playerid]);
 }
 
 forward RibarTrakaKorak(playerid);
@@ -328,7 +353,7 @@ public RibarTrakaKorak(playerid)
     if (!gRibarIgra[playerid]) return;
     gRibarTraka[playerid] += gRibarSmjer[playerid];
     if (gRibarTraka[playerid] >= 100.0 || gRibarTraka[playerid] <= 0.0) gRibarSmjer[playerid] = -gRibarSmjer[playerid];
-    SnagaBarPostavi(playerid, gRibarTd[playerid][1], gRibarTraka[playerid], gRibarZel[playerid], gRibarZel[playerid] + RIBAR_TRAKA_ZELENO);
+    IgraOznakaPomakni(playerid, gRibarTraka[playerid]);
 }
 
 bool:RibarKey(playerid, KEY:newkeys, KEY:oldkeys)

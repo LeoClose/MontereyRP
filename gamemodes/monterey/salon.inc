@@ -448,7 +448,7 @@ DLG:salon_kupi(playerid, response)
 public OnPlayerClickPlayerTextDraw(playerid, PlayerText:playertextid)
 {
     AfkAktivan(playerid);
-    if (SreckaKlik(playerid, playertextid) || AtcKlik(playerid, playertextid) || OruzarnicaKlik(playerid, playertextid) || TrgovinaKlik(playerid, playertextid) || NamjestajKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid) || KazinoKlik(playerid, playertextid) || ArkadaKlik(playerid, playertextid) || PokerKlik(playerid, playertextid) || PcKlik(playerid, playertextid)) return 1;
+    if (SreckaKlik(playerid, playertextid) || AtcKlik(playerid, playertextid) || OruzarnicaKlik(playerid, playertextid) || TrgovinaKlik(playerid, playertextid) || PizzaKlik(playerid, playertextid) || NamjestajKlik(playerid, playertextid) || OdjecaKlik(playerid, playertextid) || MdtKlik(playerid, playertextid) || TuningKlik(playerid, playertextid) || KazinoKlik(playerid, playertextid) || ArkadaKlik(playerid, playertextid) || PokerKlik(playerid, playertextid) || PcKlik(playerid, playertextid)) return 1;
     new s = gUSalonu[playerid];
     if (s == -1) return 0;
     if (playertextid == gSalonTd[playerid][STD_LIJEVO] || playertextid == gSalonTd[playerid][STD_DESNO])
@@ -473,6 +473,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
     {
         OruzarnicaZatvori(playerid);
         TrgovinaZatvori(playerid);
+        PizzaShopZatvori(playerid);
         SreckaKraj(playerid);
         NamjestajZatvori(playerid);
         OdjecaZatvori(playerid);

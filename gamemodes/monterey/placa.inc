@@ -120,7 +120,7 @@ Placa(playerid)
     zarada = DB_GetFieldInt(res, 0);
     DB_FreeResultSet(res);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = 0 WHERE id = %d", racun));
-    bruto += zarada;
+    bruto += zarada + PizzaPlaca(playerid);
     if (!bruto && GetPlayerScore(playerid) <= PLACA_POMOC_LEVEL) bruto = PLACA_POMOC;
     bruto = BlagajnaIsplati(bruto);
     new porez = bruto * PLACA_POREZ / 100, neto = bruto - porez, imovina = PlacaImovina(racun), poruka[144];

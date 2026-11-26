@@ -3,13 +3,14 @@
 #define PIZZA_INT           5
 #define PIZZA_GOSTIJU       4
 #define PIZZA_NARUDZBI      12
-#define PIZZA_STOLOVA       8
+#define PIZZA_STOLOVA       12
 #define PIZZA_DOMET         1.6
 #define PIZZA_KASA_DOMET    2.5
 #define PIZZA_PREDAJA_DOMET 2.2
 #define PIZZA_ULAZ_DOMET    2.0
 #define PIZZA_SKIN          155
-#define PIZZA_PLACA         18
+#define PIZZA_PLACA_SAT     200
+#define PIZZA_AKTIVAN_S     120
 #define PIZZA_STRPLJENJE    240
 #define PIZZA_IGRAC_CEKA    150
 #define PIZZA_GOST_MIN      20
@@ -25,31 +26,48 @@
 #define PIZZA_BOJA          0xE74C3CFF
 #define PIZZA_TRAKA_X       210.0
 #define PIZZA_TRAKA_W       220.0
+#define PIZZA_PULT          0.9
 
-enum { PT_KASA, PT_KUPAC, PT_ROSTILJ, PT_SLAGANJE, PT_POSAO, PT_BROJ }
+enum { PT_KASA, PT_KUPAC, PT_ROSTILJ, PT_SLAGANJE, PT_POSAO, PT_POMFRIT, PT_BROJ }
+enum { PV_BURGER, PV_PIZZA, PV_SALATA, PV_POMFRIT, PV_PICE }
 enum { PG_NEMA, PG_DOLAZI, PG_KASA, PG_STOL_IDE, PG_STOL, PG_JEDE, PG_ODLAZI }
-enum { PN_ROSTILJ, PN_SLAGANJE, PN_NOSI }
-enum { PI_NEMA, PI_ROSTILJ, PI_SLAGANJE, PI_PAKIRANJE }
+enum { PN_ROSTILJ, PN_POMFRIT, PN_SLAGANJE, PN_NOSI }
+enum { PI_NEMA, PI_ROSTILJ, PI_POMFRIT, PI_SLAGANJE, PI_PEC, PI_PAKIRANJE }
 enum { PZTD_POZADINA, PZTD_NASLOV, PZTD_DIO1, PZTD_DIO2, PZTD_DIO3, PZTD_OZNAKA, PZTD_UPUTA, PZTD_SLOJEVI, PZTD_BROJ }
+enum { PZS_LIJEVO, PZS_DESNO, PZS_INFO, PZS_KUPI, PZS_IZADI, PZS_BROJ }
 
 static const Float:gPzUnutra[4] = { 372.3520, -131.6510, 1001.4922, 0.0 };
+static const Float:gPzIzlaz[3] = { 372.3520, -133.3000, 1001.4922 };
 static Float:gPzTocka[PT_BROJ][4] = {
     { 375.60, -117.30, 1001.49, 180.0 },
     { 375.60, -119.70, 1001.49, 0.0 },
     { 373.80, -114.60, 1001.49, 0.0 },
     { 377.40, -115.00, 1001.49, 0.0 },
-    { 379.20, -117.40, 1001.49, 90.0 }
+    { 369.1047, -114.7455, 1001.4995, 3.0862 },
+    { 375.60, -114.60, 1001.49, 0.0 }
 };
-static const gPzTockaIme[PT_BROJ][] = { "Blagajnik", "Mjesto kupca", "Rostilj", "Slaganje i pakiranje", "Zaposlenje" };
-static Float:gPzStol[PIZZA_STOLOVA][4], gPzStolova, bool:gPzStoloviDb;
+static const gPzTockaIme[PT_BROJ][] = { "Blagajnik", "Mjesto kupca", "Rostilj", "Slaganje i pec za pizzu", "Zaposlenje", "Friteza" };
+static Float:gPzStol[PIZZA_STOLOVA][4], gPzStolDb[PIZZA_STOLOVA], gPzStolova;
 
-static const gPzMeni[][] = { "Burger", "Dupli burger", "Pizza", "Sok" };
-static const gPzCijena[] = { 8, 14, 12, 3 };
-static const Float:gPzZdravlje[] = { 25.0, 40.0, 35.0, 8.0 };
-static const gPzModel[] = { 2703, 2703, 2702, 2647 };
-static const gPzStrane[] = { 2, 2, 1 };
-static const gPzSastojak[][] = { "Donja lepinja", "Meso", "Sir", "Salata", "Rajcica", "Gornja lepinja", "Tijesto", "Umak", "Salama", "Gljive" };
-static const gPzRecept[3][7] = { { 0, 1, 2, 3, 4, 5, -1 }, { 0, 1, 2, 1, 2, 5, -1 }, { 6, 7, 2, 8, 9, -1, -1 } };
+static const gPzMeni[][] = { "Moo Kids Meal", "Beef Tower", "Meat Stack", "Buster", "Double D-Luxe", "Full Rack", "Salad Meal", "Pomfrit", "Sok" };
+static const gPzVrsta[] = { PV_BURGER, PV_BURGER, PV_BURGER, PV_PIZZA, PV_PIZZA, PV_PIZZA, PV_SALATA, PV_POMFRIT, PV_PICE };
+static const gPzCijena[] = { 6, 10, 14, 7, 11, 15, 8, 4, 3 };
+static const Float:gPzZdravlje[] = { 20.0, 35.0, 50.0, 25.0, 40.0, 55.0, 20.0, 12.0, 8.0 };
+static const gPzModel[] = { 2703, 2703, 2703, 19580, 19580, 19580, 19811, 19811, 2647 };
+static const gPzRuka[] = { 2703, 2703, 2703, 2702, 2702, 2702, 19811, 19811, 2647 };
+static const gPzStrane[] = { 1, 2, 2, 1, 1, 1, 1, 1, 1 };
+static const gPzSastojak[][] = { "Donja lepinja", "Meso", "Sir", "Salata", "Rajcica", "Gornja lepinja", "Tijesto", "Umak", "Salama", "Gljive", "Preljev" };
+static const gPzRecept[sizeof gPzMeni][7] = {
+    { 0, 1, 2, 5, -1, -1, -1 },
+    { 0, 1, 2, 3, 4, 5, -1 },
+    { 0, 1, 2, 1, 2, 5, -1 },
+    { 6, 7, 2, -1, -1, -1, -1 },
+    { 6, 7, 2, 8, 9, -1, -1 },
+    { 6, 7, 2, 8, 9, 2, -1 },
+    { 3, 4, 2, 10, -1, -1, -1 },
+    { -1, -1, -1, -1, -1, -1, -1 },
+    { -1, -1, -1, -1, -1, -1, -1 }
+};
 static const KEY:gPzTipka[] = { KEY_YES, KEY_NO, KEY_WALK, KEY_SPRINT };
 static const gPzTipkaIme[][] = { "Y", "N", "ALT", "SPACE" };
 
@@ -63,8 +81,10 @@ static gPzNar[PIZZA_MAX][PIZZA_NARUDZBI][E_PZN];
 
 static gPzSmjena[MAX_PLAYERS], gPzIgra[MAX_PLAYERS], gPzRad[MAX_PLAYERS] = { -1, ... }, gPzKorak[MAX_PLAYERS], gPzStrana[MAX_PLAYERS], gPzIgraOd[MAX_PLAYERS], gPzTimer[MAX_PLAYERS];
 static gPzSlojTipka[MAX_PLAYERS][7], Float:gPzPoz[MAX_PLAYERS], Float:gPzBrzina[MAX_PLAYERS], Float:gPzZelOd[MAX_PLAYERS], Float:gPzZelDo[MAX_PLAYERS];
-static PlayerText:gPzTd[MAX_PLAYERS][PZTD_BROJ], bool:gPzTdIma[MAX_PLAYERS], PlayerText:gPzLista[MAX_PLAYERS], bool:gPzListaIma[MAX_PLAYERS], gPzListaTekst[MAX_PLAYERS][320];
-static gPzSavjet[MAX_PLAYERS] = { -1, ... }, bool:gPzJede[MAX_PLAYERS], gPzMeniS[MAX_PLAYERS], gPzApPopis[MAX_PLAYERS][PIZZA_MAX];
+static PlayerText:gPzTd[MAX_PLAYERS][PZTD_BROJ], bool:gPzTdIma[MAX_PLAYERS], PlayerText:gPzLista[MAX_PLAYERS], bool:gPzListaIma[MAX_PLAYERS], gPzListaTekst[MAX_PLAYERS][256];
+static gPzSavjet[MAX_PLAYERS] = { -1, ... }, bool:gPzJede[MAX_PLAYERS], gPzApPopis[MAX_PLAYERS][PIZZA_MAX + PIZZA_STOLOVA];
+static gPzRadio[MAX_PLAYERS], gPzAkcija[MAX_PLAYERS];
+static gPzShop[MAX_PLAYERS] = { -1, ... }, gPzShopIdx[MAX_PLAYERS], PlayerText:gPzShopTd[MAX_PLAYERS][PZS_BROJ], gPzShopObj[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... };
 
 InitPizza()
 {
@@ -79,19 +99,11 @@ InitPizza()
         for (new k = 0; k < 4; k++) gPzTocka[t][k] = DB_GetFieldFloat(res, k + 1);
     }
     DB_FreeResultSet(res);
-    res = DB_ExecuteQuery(gDB, "SELECT 1 FROM pizza_points WHERE tip = -1");
-    gPzStoloviDb = DB_GetRowCount(res) != 0;
-    DB_FreeResultSet(res);
-    res = DB_ExecuteQuery(gDB, "SELECT x, y, z, a FROM pizza_tables ORDER BY id LIMIT %d", PIZZA_STOLOVA);
-    if (gPzStoloviDb)
+    res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM pizza_tables ORDER BY id LIMIT %d", PIZZA_STOLOVA);
+    for (new n = DB_GetRowCount(res); gPzStolova < n; gPzStolova++, DB_SelectNextRow(res))
     {
-        for (new n = DB_GetRowCount(res); gPzStolova < n; gPzStolova++, DB_SelectNextRow(res))
-            for (new k = 0; k < 4; k++) gPzStol[gPzStolova][k] = DB_GetFieldFloat(res, k);
-    }
-    else
-    {
-        static const Float:zadano[][4] = { { 369.8, -126.0, 1001.49, 90.0 }, { 369.8, -122.5, 1001.49, 90.0 }, { 380.6, -126.0, 1001.49, 270.0 }, { 380.6, -122.5, 1001.49, 270.0 } };
-        for (; gPzStolova < sizeof zadano; gPzStolova++) for (new k = 0; k < 4; k++) gPzStol[gPzStolova][k] = zadano[gPzStolova][k];
+        gPzStolDb[gPzStolova] = DB_GetFieldInt(res, 0);
+        for (new k = 0; k < 4; k++) gPzStol[gPzStolova][k] = DB_GetFieldFloat(res, k + 1);
     }
     DB_FreeResultSet(res);
     res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM pizzerias ORDER BY id LIMIT %d", PIZZA_MAX);
@@ -112,13 +124,13 @@ static PizzaStvori(s)
     new svijet = PIZZA_SVIJET + s;
     gPz[s][pzIma] = true;
     gPz[s][pzBroj] = 0;
-    for (new g = 0; g < PIZZA_GOSTIJU; g++) gPzGost[s][g][pgLik] = INVALID_LIK, gPzGost[s][g][pgFaza] = PG_NEMA;
+    for (new g = 0; g < PIZZA_GOSTIJU; g++) gPzGost[s][g][pgLik] = INVALID_LIK, gPzGost[s][g][pgFaza] = PG_NEMA, gPzGost[s][g][pgStol] = -1;
     for (new n = 0; n < PIZZA_NARUDZBI; n++) gPzNar[s][n][pnIma] = false;
     gPz[s][pzPickup] = CreateDynamicPickup(HQ_PICKUP, 1, gPz[s][pzX], gPz[s][pzY], gPz[s][pzZ], 0, 0);
     gPz[s][pzTekst] = CreateDynamic3DTextLabel("Pizzeria", PIZZA_BOJA, gPz[s][pzX], gPz[s][pzY], gPz[s][pzZ] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     InterakcijaOznaka(gPz[s][pzTekst], PIZZA_ULAZ_DOMET, SAVJET_ULAZ);
-    gPz[s][pzPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gPzUnutra[0], gPzUnutra[1], gPzUnutra[2], svijet, PIZZA_INT);
-    gPz[s][pzTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gPzUnutra[0], gPzUnutra[1], gPzUnutra[2] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, PIZZA_INT);
+    gPz[s][pzPickupU] = CreateDynamicPickup(HQ_PICKUP, 1, gPzIzlaz[0], gPzIzlaz[1], gPzIzlaz[2], svijet, PIZZA_INT);
+    gPz[s][pzTekstU] = CreateDynamic3DTextLabel("Izlaz", COLOR_ORG, gPzIzlaz[0], gPzIzlaz[1], gPzIzlaz[2] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, PIZZA_INT);
     InterakcijaOznaka(gPz[s][pzTekstU], PIZZA_ULAZ_DOMET, SAVJET_IZLAZ);
     PizzaOznakeStvori(s);
     FirmaUcitaj(FIRMA_PIZZA, s, gPz[s][pzDb]);
@@ -132,10 +144,18 @@ static PizzaOznakeStvori(s)
     SetActorInvulnerable(gPz[s][pzAktor], true);
     for (new t = 0; t < PT_BROJ; t++)
     {
-        new Float:z = gPzTocka[t][2] + (t == PT_KASA ? 1.2 : 0.4);
         gPz[s][pzOznaka][t] = STREAMER_TAG_3D_TEXT_LABEL:0;
-        if (t != PT_KUPAC) gPz[s][pzOznaka][t] = CreateDynamic3DTextLabel(t == PT_KASA ? ("Blagajna") : t == PT_POSAO ? ("Pizzeria - posao\n/posao") : gPzTockaIme[t], PIZZA_BOJA, gPzTocka[t][0], gPzTocka[t][1], z, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, PIZZA_INT);
-        if (t != PT_KUPAC) InterakcijaOznaka(gPz[s][pzOznaka][t], t == PT_KASA ? PIZZA_KASA_DOMET + 1.0 : PIZZA_DOMET);
+        if (t == PT_KUPAC) continue;
+        new Float:x = gPzTocka[t][0], Float:y = gPzTocka[t][1], Float:z = gPzTocka[t][2] + 1.1;
+        if (t == PT_POSAO) z = gPzTocka[t][2] + 0.4;
+        else if (t != PT_KASA)
+        {
+            x += 0.7 * floatsin(-gPzTocka[t][3], degrees);
+            y += 0.7 * floatcos(-gPzTocka[t][3], degrees);
+            z = gPzTocka[t][2] + 0.25;
+        }
+        gPz[s][pzOznaka][t] = CreateDynamic3DTextLabel(t == PT_KASA ? ("Blagajna") : t == PT_POSAO ? ("Pizzeria - posao\n/posao") : gPzTockaIme[t], PIZZA_BOJA, x, y, z, 6.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet, PIZZA_INT);
+        InterakcijaOznaka(gPz[s][pzOznaka][t], t == PT_KASA ? PIZZA_KASA_DOMET + 1.0 : PIZZA_DOMET + 0.8);
     }
 }
 
@@ -162,7 +182,8 @@ PizzaUlaz(playerid)
     new s = PizzaIgraca(playerid);
     if (s != -1)
     {
-        if (!IsPlayerInRangeOfPoint(playerid, PIZZA_ULAZ_DOMET, gPzUnutra[0], gPzUnutra[1], gPzUnutra[2])) return 0;
+        if (!IsPlayerInRangeOfPoint(playerid, PIZZA_ULAZ_DOMET, gPzIzlaz[0], gPzIzlaz[1], gPzIzlaz[2])) return 0;
+        PizzaShopZatvori(playerid);
         PrebaciIgraca(playerid, 0, 0, gPz[s][pzX], gPz[s][pzY], gPz[s][pzZ], gPz[s][pzA] + 180.0);
         return 1;
     }
@@ -207,13 +228,23 @@ static PizzaRadnicima(s, const tekst[], broj, bool:greska = false)
     }
 }
 
+static PizzaPocetnoStanje(stavka)
+{
+    switch (gPzVrsta[stavka])
+    {
+        case PV_BURGER: return PN_ROSTILJ;
+        case PV_POMFRIT: return PN_POMFRIT;
+    }
+    return PN_SLAGANJE;
+}
+
 static PizzaNovaNarudzba(s, gost, igrac, stavka)
 {
     for (new n = 0; n < PIZZA_NARUDZBI; n++)
     {
         if (gPzNar[s][n][pnIma]) continue;
         gPzNar[s][n][pnIma] = true;
-        gPzNar[s][n][pnStanje] = PN_ROSTILJ;
+        gPzNar[s][n][pnStanje] = PizzaPocetnoStanje(stavka);
         gPzNar[s][n][pnGost] = gost;
         gPzNar[s][n][pnIgrac] = igrac;
         gPzNar[s][n][pnStavka] = stavka;
@@ -233,9 +264,9 @@ static PizzaJedi(playerid, stavka)
     GetPlayerHealth(playerid, hp);
     hp += gPzZdravlje[stavka];
     SetPlayerHealth(playerid, hp > 100.0 ? 100.0 : hp);
-    SetPlayerAttachedObject(playerid, PIZZA_HRANA_SLOT, gPzModel[stavka], 6, 0.06, 0.03, 0.02, 0.0, 0.0, 0.0);
+    SetPlayerAttachedObject(playerid, PIZZA_HRANA_SLOT, gPzRuka[stavka], 6, 0.06, 0.03, 0.02, 0.0, 0.0, 0.0);
     if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT)
-        ApplyAnimation(playerid, stavka == 3 ? ("VENDING") : ("FOOD"), stavka == 3 ? ("VEND_Drink2_P") : ("EAT_Burger"), 4.1, false, false, false, false, 0, SYNC_ALL);
+        ApplyAnimation(playerid, gPzVrsta[stavka] == PV_PICE ? ("VENDING") : ("FOOD"), gPzVrsta[stavka] == PV_PICE ? ("VEND_Drink2_P") : ("EAT_Burger"), 4.1, false, false, false, false, 0, SYNC_ALL);
     gPzJede[playerid] = true;
     SetTimerEx("PizzaPojeo", PIZZA_JEDENJE_MS, false, "ii", playerid, gAccountId[playerid]);
 }
@@ -248,49 +279,99 @@ public PizzaPojeo(playerid, racun)
     RemovePlayerAttachedObject(playerid, PIZZA_HRANA_SLOT);
 }
 
-static PizzaMeni(playerid, s)
+static PizzaPult(&Float:x, &Float:y)
 {
-    new list[256], red[64], len = 0;
-    for (new i = 0; i < sizeof gPzMeni; i++)
-    {
-        format(red, sizeof red, T(playerid, "%s - $%d (+%.0f HP)"), T(playerid, gPzMeni[i]), gPzCijena[i], gPzZdravlje[i]);
-        DodajStupac(list, len, red);
-    }
-    gPzMeniS[playerid] = s;
-    ApplyActorAnimation(gPz[s][pzAktor], "PED", "IDLE_chat", 4.1, false, false, false, false, 2500);
-    return PrikaziDialog(playerid, DLG_PIZZA_MENI, DIALOG_STYLE_LIST, T(playerid, "Pizzeria"), list, T(playerid, "Naruci"), T(playerid, "Zatvori"));
+    new Float:a = gPzTocka[PT_KASA][3];
+    x = gPzTocka[PT_KASA][0] + PIZZA_PULT * floatsin(-a, degrees);
+    y = gPzTocka[PT_KASA][1] + PIZZA_PULT * floatcos(-a, degrees);
 }
 
-DLG:pizza_meni(playerid, response, listitem)
+static PizzaShopPrikazi(playerid)
 {
-    new s = gPzMeniS[playerid];
-    if (!response || listitem < 0 || listitem >= sizeof gPzMeni || PizzaIgraca(playerid) != s || !PizzaTu(playerid, PT_KUPAC, PIZZA_KASA_DOMET + 1.0)) return 1;
-    for (new n = 0; n < PIZZA_NARUDZBI; n++)
-        if (gPzNar[s][n][pnIma] && gPzNar[s][n][pnIgrac] == playerid) return ObavijestGreska(playerid, T(playerid, "Vec cekate narudzbu."));
-    if (!DajNovac(playerid, -gPzCijena[listitem])) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca."));
-    if (FirmaImaVlasnika(FIRMA_PIZZA, s)) FirmaProdaja(FIRMA_PIZZA, s, gPzCijena[listitem], false);
-    else BlagajnaDodaj(gPzCijena[listitem]);
-    if (listitem != 3 && PizzaRadnika(s))
+    new r = gPzShopIdx[playerid], info[128], Float:x, Float:y;
+    format(info, sizeof info, "%s~n~~g~$%d~n~~w~+%.0f HP~n~%d/%d", T(playerid, gPzMeni[r]), gPzCijena[r], gPzZdravlje[r], r + 1, sizeof gPzMeni);
+    PlayerTextDrawSetString(playerid, gPzShopTd[playerid][PZS_INFO], info);
+    if (gPzShopObj[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gPzShopObj[playerid]);
+    PizzaPult(x, y);
+    gPzShopObj[playerid] = CreatePlayerObject(playerid, gPzModel[r], x, y, gPzTocka[PT_KASA][2] + 0.05, gPzModel[r] == 19580 || gPzModel[r] == 2647 ? 0.0 : 90.0, 0.0, gPzTocka[PT_KASA][3] + 90.0);
+}
+
+static PizzaShopOtvori(playerid, s)
+{
+    new Float:a = gPzTocka[PT_KASA][3], Float:x, Float:y;
+    PizzaPult(x, y);
+    gPzShop[playerid] = s;
+    gPzShopIdx[playerid] = 0;
+    TogglePlayerControllable(playerid, false);
+    SetPlayerCameraPos(playerid, x + 1.1 * floatsin(-a, degrees), y + 1.1 * floatcos(-a, degrees), gPzTocka[PT_KASA][2] + 0.7);
+    SetPlayerCameraLookAt(playerid, x, y, gPzTocka[PT_KASA][2] + 0.05);
+    gPzShopTd[playerid][PZS_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
+    gPzShopTd[playerid][PZS_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
+    gPzShopTd[playerid][PZS_INFO] = SalonGumb(playerid, 320.0, 322.0, "_", 0x00000088, 150.0, false);
+    gPzShopTd[playerid][PZS_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
+    gPzShopTd[playerid][PZS_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    PizzaShopPrikazi(playerid);
+    SelectTextDraw(playerid, 0xD4A017FF);
+    PizzaKaze(s, "Dobar dan, sto ce biti?");
+}
+
+PizzaShopZatvori(playerid)
+{
+    if (gPzShop[playerid] == -1) return;
+    gPzShop[playerid] = -1;
+    for (new i = 0; i < PZS_BROJ; i++) PlayerTextDrawDestroy(playerid, gPzShopTd[playerid][i]);
+    if (gPzShopObj[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gPzShopObj[playerid]);
+    gPzShopObj[playerid] = INVALID_OBJECT_ID;
+    CancelSelectTextDraw(playerid);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+}
+
+PizzaKlik(playerid, PlayerText:td)
+{
+    new s = gPzShop[playerid];
+    if (s == -1) return 0;
+    if (td == gPzShopTd[playerid][PZS_IZADI] || PizzaIgraca(playerid) != s)
     {
-        new n = PizzaNovaNarudzba(s, -1, playerid, listitem);
+        PizzaShopZatvori(playerid);
+        return 1;
+    }
+    if (td == gPzShopTd[playerid][PZS_LIJEVO] || td == gPzShopTd[playerid][PZS_DESNO])
+    {
+        gPzShopIdx[playerid] = (gPzShopIdx[playerid] + (td == gPzShopTd[playerid][PZS_DESNO] ? 1 : sizeof gPzMeni - 1)) % sizeof gPzMeni;
+        PizzaShopPrikazi(playerid);
+        return 1;
+    }
+    if (td != gPzShopTd[playerid][PZS_KUPI]) return 1;
+    new r = gPzShopIdx[playerid];
+    for (new n = 0; n < PIZZA_NARUDZBI; n++)
+        if (gPzNar[s][n][pnIma] && gPzNar[s][n][pnIgrac] == playerid) return ObavijestGreska(playerid, T(playerid, "Vec cekate narudzbu.")), 1;
+    if (!DajNovac(playerid, -gPzCijena[r])) return ObavijestGreska(playerid, T(playerid, "Nemate dovoljno novca.")), 1;
+    if (FirmaImaVlasnika(FIRMA_PIZZA, s)) FirmaProdaja(FIRMA_PIZZA, s, gPzCijena[r], false);
+    else BlagajnaDodaj(gPzCijena[r]);
+    PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
+    PizzaShopZatvori(playerid);
+    if (gPzVrsta[r] != PV_PICE && PizzaRadnika(s))
+    {
+        new n = PizzaNovaNarudzba(s, -1, playerid, r);
         if (n != -1)
         {
             new tekst[128];
-            PizzaKaze(s, "Narudzba #%d (%s) je primljena, donijet cemo vam je.", gPzNar[s][n][pnBroj], listitem);
-            format(tekst, sizeof tekst, T(playerid, "Platili ste $%d. Pricekajte, radnik ce vam donijeti narudzbu #%d."), gPzCijena[listitem], gPzNar[s][n][pnBroj]);
-            return ObavijestInfo(playerid, T(playerid, "Pizzeria"), tekst);
+            PizzaKaze(s, "Narudzba #%d (%s) je primljena, donijet cemo vam je.", gPzNar[s][n][pnBroj], r);
+            format(tekst, sizeof tekst, T(playerid, "Platili ste $%d. Pricekajte, radnik ce vam donijeti narudzbu #%d."), gPzCijena[r], gPzNar[s][n][pnBroj]);
+            ObavijestInfo(playerid, T(playerid, "Pizzeria"), tekst);
+            return 1;
         }
     }
     PizzaKaze(s, "Izvolite, dobar tek!");
-    PizzaJedi(playerid, listitem);
+    PizzaJedi(playerid, r);
     return 1;
 }
 
 static PizzaStolSlobodan(s)
 {
-    new zauzet[PIZZA_STOLOVA], n = 0;
+    new zauzet[PIZZA_STOLOVA], slobodni[PIZZA_STOLOVA], n = 0;
     for (new g = 0; g < PIZZA_GOSTIJU; g++) if (gPzGost[s][g][pgFaza] != PG_NEMA && gPzGost[s][g][pgStol] >= 0) zauzet[gPzGost[s][g][pgStol]] = 1;
-    new slobodni[PIZZA_STOLOVA];
     for (new t = 0; t < gPzStolova; t++) if (!zauzet[t]) slobodni[n++] = t;
     return n ? slobodni[random(n)] : -1;
 }
@@ -334,6 +415,7 @@ static PizzaGostMakni(s, g)
     gPzGost[s][g][pgLik] = INVALID_LIK;
     gPzGost[s][g][pgFaza] = PG_NEMA;
     gPzGost[s][g][pgStol] = -1;
+    gPzGost[s][g][pgNar] = -1;
 }
 
 static PizzaGostOdlazi(s, g)
@@ -342,14 +424,27 @@ static PizzaGostOdlazi(s, g)
     if (lik == INVALID_LIK)
     {
         PizzaGostMakni(s, g);
-        return 1;
+        return;
     }
+    new bool:sjedi = gPzGost[s][g][pgFaza] == PG_STOL || gPzGost[s][g][pgFaza] == PG_JEDE;
     gPzGost[s][g][pgFaza] = PG_ODLAZI;
     gPzGost[s][g][pgStol] = -1;
     gPzGost[s][g][pgOd] = gettime();
     Lik_OcistiAnimaciju(lik);
+    if (sjedi)
+    {
+        Lik_Animacija(lik, "FOOD", "FF_Sit_Out_180", 4.1, 0, 1, 1, 0, 0);
+        SetTimerEx("PizzaGostIzlaz", 1500, false, "iii", s, g, lik);
+    }
+    else Lik_Idi(lik, gPzUnutra[0], gPzUnutra[1], gPzUnutra[2], LIK_HOD);
+}
+
+forward PizzaGostIzlaz(s, g, lik);
+public PizzaGostIzlaz(s, g, lik)
+{
+    if (gPzGost[s][g][pgLik] != lik || gPzGost[s][g][pgFaza] != PG_ODLAZI) return;
+    Lik_OcistiAnimaciju(lik);
     Lik_Idi(lik, gPzUnutra[0], gPzUnutra[1], gPzUnutra[2], LIK_HOD);
-    return 1;
 }
 
 static PizzaGostNaKasi(s, g)
@@ -359,8 +454,12 @@ static PizzaGostNaKasi(s, g)
     Lik_Stani(lik);
     Lik_Postavi(lik, x, y, z);
     Lik_Kut(lik, gPzTocka[PT_KUPAC][3]);
-    new stavka = random(3), n = PizzaNovaNarudzba(s, g, INVALID_PLAYER_ID, stavka);
-    if (n == -1) return PizzaGostOdlazi(s, g);
+    new stavka = random(sizeof gPzMeni - 1), n = PizzaNovaNarudzba(s, g, INVALID_PLAYER_ID, stavka);
+    if (n == -1)
+    {
+        PizzaGostOdlazi(s, g);
+        return;
+    }
     gPzGost[s][g][pgNar] = n;
     gPzGost[s][g][pgOd] = gettime();
     PizzaKaze(s, "Narudzba #%d: %s.", gPzNar[s][n][pnBroj], stavka);
@@ -368,22 +467,34 @@ static PizzaGostNaKasi(s, g)
     if (t == -1)
     {
         gPzGost[s][g][pgFaza] = PG_KASA;
-        return 1;
+        return;
     }
     gPzGost[s][g][pgStol] = t;
     gPzGost[s][g][pgFaza] = PG_STOL_IDE;
     Lik_Idi(lik, gPzStol[t][0], gPzStol[t][1], gPzStol[t][2], LIK_HOD);
-    return 1;
 }
 
 static PizzaGostSjedne(s, g)
 {
     new lik = gPzGost[s][g][pgLik], t = gPzGost[s][g][pgStol];
+    if (t < 0)
+    {
+        gPzGost[s][g][pgFaza] = PG_KASA;
+        return;
+    }
     Lik_Stani(lik);
     Lik_Postavi(lik, gPzStol[t][0], gPzStol[t][1], gPzStol[t][2]);
     Lik_Kut(lik, gPzStol[t][3]);
-    Lik_Animacija(lik, "FOOD", "FF_Sit_Loop", 4.1, 1, 0, 0, 1, 0);
+    Lik_Animacija(lik, "FOOD", "FF_Sit_In", 4.1, 0, 1, 1, 1, 0);
     gPzGost[s][g][pgFaza] = PG_STOL;
+    SetTimerEx("PizzaGostSjedi", 1400, false, "iii", s, g, lik);
+}
+
+forward PizzaGostSjedi(s, g, lik);
+public PizzaGostSjedi(s, g, lik)
+{
+    if (gPzGost[s][g][pgLik] != lik || gPzGost[s][g][pgFaza] != PG_STOL) return;
+    Lik_Animacija(lik, "FOOD", "FF_Sit_Loop", 4.1, 1, 1, 1, 1, 0);
 }
 
 PizzaStigao(lik)
@@ -423,16 +534,34 @@ static PizzaNarudzbaMakni(s, n)
     gPzNar[s][n][pnIma] = false;
 }
 
-static PizzaTdMakni(playerid)
+static PizzaKupacOdlazi(s, n)
+{
+    new kupac = gPzNar[s][n][pnIgrac], g = gPzNar[s][n][pnGost], stavka = gPzNar[s][n][pnStavka];
+    PizzaRadnicima(s, "Kupac s narudzbom #%d je otisao nezadovoljan.", gPzNar[s][n][pnBroj], true);
+    PizzaNarudzbaMakni(s, n);
+    if (kupac != INVALID_PLAYER_ID && IsPlayerConnected(kupac))
+    {
+        DajNovac(kupac, gPzCijena[stavka]);
+        if (FirmaImaVlasnika(FIRMA_PIZZA, s)) FirmaProdaja(FIRMA_PIZZA, s, -gPzCijena[stavka], false);
+        ObavijestGreska(kupac, T(kupac, "Radnik je pokvario vasu narudzbu. Novac vam je vracen."));
+    }
+    if (g >= 0 && gPzGost[s][g][pgFaza] != PG_NEMA && gPzGost[s][g][pgFaza] != PG_ODLAZI)
+    {
+        gPzGost[s][g][pgNar] = -1;
+        PizzaGostOdlazi(s, g);
+    }
+}
+
+IgraTdMakni(playerid)
 {
     if (!gPzTdIma[playerid]) return;
     gPzTdIma[playerid] = false;
     for (new k = 0; k < PZTD_BROJ; k++) if (gPzTd[playerid][k] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawDestroy(playerid, gPzTd[playerid][k]), gPzTd[playerid][k] = PlayerText:INVALID_TEXT_DRAW;
 }
 
-static PizzaPanel(playerid, const naslov[], Float:visina)
+IgraPanel(playerid, const naslov[], Float:visina)
 {
-    PizzaTdMakni(playerid);
+    IgraTdMakni(playerid);
     for (new k = 0; k < PZTD_BROJ; k++) gPzTd[playerid][k] = PlayerText:INVALID_TEXT_DRAW;
     gPzTdIma[playerid] = true;
     new Float:y = 400.0 - visina;
@@ -442,7 +571,7 @@ static PizzaPanel(playerid, const naslov[], Float:visina)
     PlayerTextDrawShow(playerid, gPzTd[playerid][PZTD_NASLOV]);
 }
 
-static PizzaTraka(playerid, Float:od, Float:zelDo, boja1, boja2, boja3, const uputa[])
+IgraTraka(playerid, Float:od, Float:zelDo, boja1, boja2, boja3, const uputa[])
 {
     new Float:y = 372.0;
     gPzTd[playerid][PZTD_DIO1] = TdSlika(playerid, PIZZA_TRAKA_X, y, PIZZA_TRAKA_W * od / 100.0, 12.0, boja1);
@@ -455,12 +584,12 @@ static PizzaTraka(playerid, Float:od, Float:zelDo, boja1, boja2, boja3, const up
     gPzZelDo[playerid] = zelDo;
 }
 
-static PizzaOznakaPomakni(playerid)
+IgraOznakaPomakni(playerid, Float:poz)
 {
     new PlayerText:td = gPzTd[playerid][PZTD_OZNAKA];
-    if (td == PlayerText:INVALID_TEXT_DRAW) return;
+    if (!gPzTdIma[playerid] || td == PlayerText:INVALID_TEXT_DRAW) return;
     PlayerTextDrawHide(playerid, td);
-    PlayerTextDrawSetPos(playerid, td, PIZZA_TRAKA_X + gPzPoz[playerid] / 100.0 * PIZZA_TRAKA_W - 1.0, 369.0);
+    PlayerTextDrawSetPos(playerid, td, PIZZA_TRAKA_X + poz / 100.0 * PIZZA_TRAKA_W - 1.0, 369.0);
     PlayerTextDrawShow(playerid, td);
 }
 
@@ -473,7 +602,7 @@ static PizzaIgraKraj(playerid)
 {
     if (gPzTimer[playerid]) KillTimer(gPzTimer[playerid]);
     gPzTimer[playerid] = 0;
-    PizzaTdMakni(playerid);
+    IgraTdMakni(playerid);
     if (gPzIgra[playerid] != PI_NEMA)
     {
         TogglePlayerControllable(playerid, true);
@@ -489,7 +618,7 @@ static PizzaRadnikPusti(playerid)
     if (s >= 0 && n >= 0 && gPzNar[s][n][pnIma] && gPzNar[s][n][pnRadi] == playerid)
     {
         gPzNar[s][n][pnRadi] = INVALID_PLAYER_ID;
-        if (gPzNar[s][n][pnStanje] == PN_NOSI) gPzNar[s][n][pnStanje] = PN_SLAGANJE;
+        if (gPzNar[s][n][pnStanje] == PN_NOSI) gPzNar[s][n][pnStanje] = PizzaPocetnoStanje(gPzNar[s][n][pnStavka]);
     }
     if (n >= 0)
     {
@@ -508,24 +637,47 @@ static PizzaUzmi(playerid, s, stanje)
     gPzNar[s][najbolji][pnRadi] = playerid;
     gPzRad[playerid] = najbolji;
     gPzIgraOd[playerid] = gettime();
+    gPzAkcija[playerid] = gettime();
     TogglePlayerControllable(playerid, false);
     ApplyAnimation(playerid, "INT_SHOP", "shop_cashier", 4.1, true, false, false, true, 0, SYNC_ALL);
     return najbolji;
 }
 
+static PizzaTrakaPocni(playerid, igra, const vrsta[], s, n, Float:od, Float:zelDo, boja1, boja3, const uputa[], Float:brzina)
+{
+    new naslov[64];
+    gPzIgra[playerid] = igra;
+    gPzIgraOd[playerid] = gettime();
+    gPzPoz[playerid] = 0.0;
+    gPzBrzina[playerid] = brzina;
+    PizzaNaslov(playerid, vrsta, s, n, naslov);
+    IgraPanel(playerid, naslov, 60.0);
+    IgraTraka(playerid, od, zelDo, boja1, 0x27AE60FF, boja3, uputa);
+    if (gPzTimer[playerid]) KillTimer(gPzTimer[playerid]);
+    gPzTimer[playerid] = SetTimerEx("PizzaTrakaKorak", PIZZA_TRAKA_MS, true, "i", playerid);
+}
+
+static PizzaPecenjeUputa(playerid, s, n, uputa[], len = sizeof uputa)
+{
+    format(uputa, len, T(playerid, "~y~SPACE~w~ kad je zeleno (%d/%d). ~r~Crveno~w~ - sirovo, ~l~crno~w~ - zagorjelo."), gPzStrana[playerid] + 1, gPzStrane[gPzNar[s][n][pnStavka]]);
+}
+
 static PizzaRostiljPocni(playerid, s)
 {
-    new n = PizzaUzmi(playerid, s, PN_ROSTILJ), naslov[64], uputa[96];
+    new n = PizzaUzmi(playerid, s, PN_ROSTILJ), uputa[128];
     if (n == -1) return ObavijestGreska(playerid, T(playerid, "Nema narudzbi za rostilj.")), 1;
-    gPzIgra[playerid] = PI_ROSTILJ;
     gPzStrana[playerid] = 0;
-    gPzPoz[playerid] = 0.0;
-    gPzBrzina[playerid] = 0.8 + float(random(4)) * 0.1;
-    PizzaNaslov(playerid, gPzNar[s][n][pnStavka] == 2 ? ("Pec") : ("Rostilj"), s, n, naslov);
-    PizzaPanel(playerid, naslov, 60.0);
-    format(uputa, sizeof uputa, T(playerid, "~y~SPACE~w~ kad je zeleno (%d/%d). ~r~Crveno~w~ - sirovo, ~l~crno~w~ - zagorjelo."), 1, gPzStrane[gPzNar[s][n][pnStavka]]);
-    PizzaTraka(playerid, 55.0, 78.0, 0xC0392BFF, 0x27AE60FF, 0x2C2C2CFF, uputa);
-    gPzTimer[playerid] = SetTimerEx("PizzaTrakaKorak", PIZZA_TRAKA_MS, true, "i", playerid);
+    PizzaPecenjeUputa(playerid, s, n, uputa);
+    PizzaTrakaPocni(playerid, PI_ROSTILJ, "Rostilj", s, n, 55.0, 78.0, 0xC0392BFF, 0x2C2C2CFF, uputa, 0.8 + float(random(4)) * 0.1);
+    return 1;
+}
+
+static PizzaPomfritPocni(playerid, s)
+{
+    new n = PizzaUzmi(playerid, s, PN_POMFRIT);
+    if (n == -1) return ObavijestGreska(playerid, T(playerid, "Nema narudzbi za pomfrit.")), 1;
+    gPzStrana[playerid] = 0;
+    PizzaTrakaPocni(playerid, PI_POMFRIT, "Friteza", s, n, 60.0, 82.0, 0xF4D03FFF, 0x6E2C00FF, T(playerid, "Izvadite pomfrit: ~y~SPACE~w~ kad je zlatan (zeleno)."), 0.9 + float(random(4)) * 0.1);
     return 1;
 }
 
@@ -537,9 +689,9 @@ static PizzaSlaganjePocni(playerid, s)
     gPzKorak[playerid] = 0;
     for (new k = 0; k < 7; k++) gPzSlojTipka[playerid][k] = random(sizeof gPzTipka);
     PizzaNaslov(playerid, "Slaganje", s, n, naslov);
-    PizzaPanel(playerid, naslov, 120.0);
+    IgraPanel(playerid, naslov, 120.0);
     gPzTd[playerid][PZTD_SLOJEVI] = TdTekst(playerid, PIZZA_TRAKA_X, 300.0, " ", 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_1);
-    gPzTd[playerid][PZTD_UPUTA] = TdTekst(playerid, PIZZA_TRAKA_X, 386.0, T(playerid, "Pritisnite tipku za sljedeci sloj. Kriva tipka - ispocetka."), 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1);
+    gPzTd[playerid][PZTD_UPUTA] = TdTekst(playerid, PIZZA_TRAKA_X, 386.0, T(playerid, "Pritisnite tipku za sljedeci sloj. Kriva tipka - kupac odlazi!"), 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1);
     PlayerTextDrawShow(playerid, gPzTd[playerid][PZTD_UPUTA]);
     PizzaSlojevi(playerid, s, n);
     return 1;
@@ -559,22 +711,17 @@ static PizzaSlojevi(playerid, s, n)
 
 static PizzaPakiranjePocni(playerid, s, n)
 {
-    new naslov[64], Float:od = float(15 + random(60));
-    gPzIgra[playerid] = PI_PAKIRANJE;
-    gPzPoz[playerid] = 0.0;
-    gPzBrzina[playerid] = 1.6;
-    PizzaNaslov(playerid, "Pakiranje", s, n, naslov);
-    PizzaPanel(playerid, naslov, 60.0);
-    PizzaTraka(playerid, od, od + 20.0, 0x3A3A3AFF, 0x27AE60FF, 0x3A3A3AFF, T(playerid, "Zatvorite vrecicu: ~y~SPACE~w~ kad je oznaka u zelenom."));
-    gPzTimer[playerid] = SetTimerEx("PizzaTrakaKorak", PIZZA_TRAKA_MS, true, "i", playerid);
+    new Float:od = float(15 + random(60));
+    PizzaTrakaPocni(playerid, PI_PAKIRANJE, "Pakiranje", s, n, od, od + 20.0, 0x3A3A3AFF, 0x3A3A3AFF, T(playerid, "Zatvorite vrecicu: ~y~SPACE~w~ kad je oznaka u zelenom."), 1.6);
 }
 
 forward PizzaTrakaKorak(playerid);
 public PizzaTrakaKorak(playerid)
 {
-    if (gPzIgra[playerid] != PI_ROSTILJ && gPzIgra[playerid] != PI_PAKIRANJE) return;
+    new igra = gPzIgra[playerid];
+    if (igra != PI_ROSTILJ && igra != PI_POMFRIT && igra != PI_PEC && igra != PI_PAKIRANJE) return;
     gPzPoz[playerid] += gPzBrzina[playerid];
-    if (gPzIgra[playerid] == PI_PAKIRANJE)
+    if (igra == PI_PAKIRANJE)
     {
         if (gPzPoz[playerid] >= 100.0 || gPzPoz[playerid] <= 0.0) gPzBrzina[playerid] = -gPzBrzina[playerid];
     }
@@ -582,15 +729,16 @@ public PizzaTrakaKorak(playerid)
     {
         PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
         PizzaRadnikPusti(playerid);
-        IgraObavijest(playerid, T(playerid, "Pizzeria"), OBAVIJEST_GRESKA, T(playerid, "Zagorjelo je! Pokusajte ponovno na rostilju."));
+        IgraObavijest(playerid, T(playerid, "Pizzeria"), OBAVIJEST_GRESKA, igra == PI_PEC ? T(playerid, "Pizza je zagorjela! Slozite je ponovno.") : T(playerid, "Zagorjelo je! Pokusajte ponovno."));
         return;
     }
-    PizzaOznakaPomakni(playerid);
+    IgraOznakaPomakni(playerid, gPzPoz[playerid]);
 }
 
 static PizzaGotovo(playerid, s, n)
 {
     PizzaIgraKraj(playerid);
+    gPzAkcija[playerid] = gettime();
     gPzNar[s][n][pnStanje] = PN_NOSI;
     SetPlayerAttachedObject(playerid, PIZZA_NOSI_SLOT, PIZZA_KUTIJA, 6, 0.1, 0.02, -0.05, 0.0, 0.0, 0.0);
     new Float:x, Float:y, Float:z, tekst[128];
@@ -609,6 +757,7 @@ bool:PizzaKey(playerid, KEY:newkeys, KEY:oldkeys)
         PizzaRadnikPusti(playerid);
         return true;
     }
+    new stavka = gPzNar[s][n][pnStavka];
     if (igra == PI_SLAGANJE)
     {
         new pritisnuta = -1;
@@ -617,18 +766,24 @@ bool:PizzaKey(playerid, KEY:newkeys, KEY:oldkeys)
         if (pritisnuta != gPzSlojTipka[playerid][gPzKorak[playerid]])
         {
             PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
-            gPzKorak[playerid] = 0;
+            PizzaIgraKraj(playerid);
+            gPzRad[playerid] = -1;
+            PizzaKupacOdlazi(s, n);
+            return true;
         }
-        else
+        PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
+        if (++gPzKorak[playerid] >= 7 || gPzRecept[stavka][gPzKorak[playerid]] == -1)
         {
-            PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
-            new stavka = gPzNar[s][n][pnStavka];
-            if (++gPzKorak[playerid] >= 7 || gPzRecept[stavka][gPzKorak[playerid]] == -1)
+            IgraTdMakni(playerid);
+            if (gPzVrsta[stavka] == PV_PIZZA)
             {
-                PizzaTdMakni(playerid);
-                PizzaPakiranjePocni(playerid, s, n);
-                return true;
+                new uputa[128];
+                gPzStrana[playerid] = 0;
+                PizzaPecenjeUputa(playerid, s, n, uputa);
+                PizzaTrakaPocni(playerid, PI_PEC, "Pec za pizzu", s, n, 58.0, 80.0, 0xC0392BFF, 0x2C2C2CFF, uputa, 0.8 + float(random(4)) * 0.1);
             }
+            else PizzaPakiranjePocni(playerid, s, n);
+            return true;
         }
         PizzaSlojevi(playerid, s, n);
         return true;
@@ -642,17 +797,23 @@ bool:PizzaKey(playerid, KEY:newkeys, KEY:oldkeys)
         PizzaGotovo(playerid, s, n);
         return true;
     }
-    if (++gPzStrana[playerid] < gPzStrane[gPzNar[s][n][pnStavka]])
+    if (++gPzStrana[playerid] < gPzStrane[stavka])
     {
         new uputa[128];
         gPzPoz[playerid] = 0.0;
         gPzBrzina[playerid] += 0.15;
-        format(uputa, sizeof uputa, T(playerid, "~y~SPACE~w~ kad je zeleno (%d/%d). ~r~Crveno~w~ - sirovo, ~l~crno~w~ - zagorjelo."), gPzStrana[playerid] + 1, gPzStrane[gPzNar[s][n][pnStavka]]);
+        PizzaPecenjeUputa(playerid, s, n, uputa);
         PlayerTextDrawSetString(playerid, gPzTd[playerid][PZTD_UPUTA], uputa);
-        PizzaOznakaPomakni(playerid);
+        IgraOznakaPomakni(playerid, gPzPoz[playerid]);
+        return true;
+    }
+    if (igra == PI_PEC || igra == PI_POMFRIT)
+    {
+        PizzaPakiranjePocni(playerid, s, n);
         return true;
     }
     PizzaIgraKraj(playerid);
+    gPzAkcija[playerid] = gettime();
     gPzNar[s][n][pnStanje] = PN_SLAGANJE;
     gPzNar[s][n][pnRadi] = INVALID_PLAYER_ID;
     gPzRad[playerid] = -1;
@@ -664,9 +825,10 @@ static PizzaPredaj(playerid, s, n)
 {
     new Float:x, Float:y, Float:z;
     if (!PizzaMeta(s, n, x, y, z) || !IsPlayerInRangeOfPoint(playerid, PIZZA_PREDAJA_DOMET, x, y, z)) return 0;
-    new stavka = gPzNar[s][n][pnStavka], kupac = gPzNar[s][n][pnIgrac], g = gPzNar[s][n][pnGost], napojnica = random(100) < 35 ? 1 + random(6) : 0, tekst[128];
+    new stavka = gPzNar[s][n][pnStavka], kupac = gPzNar[s][n][pnIgrac], g = gPzNar[s][n][pnGost], tekst[128];
     gPzNar[s][n][pnIma] = false;
     gPzRad[playerid] = -1;
+    gPzAkcija[playerid] = gettime();
     RemovePlayerAttachedObject(playerid, PIZZA_NOSI_SLOT);
     DisablePlayerCheckpoint(playerid);
     ApplyAnimation(playerid, "DEALER", "DEALER_DEAL", 4.1, false, false, false, false, 0, SYNC_ALL);
@@ -686,16 +848,13 @@ static PizzaPredaj(playerid, s, n)
             {
                 gPzGost[s][g][pgFaza] = PG_JEDE;
                 gPzGost[s][g][pgOd] = gettime();
-                Lik_Animacija(gPzGost[s][g][pgLik], "FOOD", "FF_Sit_Eat1", 4.1, 1, 0, 0, 1, 0);
+                Lik_Animacija(gPzGost[s][g][pgLik], "FOOD", "FF_Sit_Eat1", 4.1, 1, 1, 1, 1, 0);
             }
             else PizzaGostOdlazi(s, g);
         }
     }
-    DajNovac(playerid, PIZZA_PLACA + napojnica);
-    if (napojnica) format(tekst, sizeof tekst, T(playerid, "Narudzba predana. Zaradili ste $%d i napojnicu od $%d."), PIZZA_PLACA, napojnica);
-    else format(tekst, sizeof tekst, T(playerid, "Narudzba predana. Zaradili ste $%d."), PIZZA_PLACA);
     PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
-    ObavijestInfo(playerid, T(playerid, "Pizzeria"), tekst);
+    ObavijestInfo(playerid, T(playerid, "Pizzeria"), T(playerid, "Narudzba predana. Za rad u pizzeriji placu dobivate na placi."));
     return 1;
 }
 
@@ -704,6 +863,7 @@ PizzaAlt(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;
     new s = PizzaIgraca(playerid);
     if (s == -1) return 0;
+    if (gPzShop[playerid] != -1) return 1;
     if (PizzaTu(playerid, PT_POSAO)) return PizzaIzbornik(playerid, s), 1;
     if (gPzSmjena[playerid] == s + 1)
     {
@@ -711,15 +871,20 @@ PizzaAlt(playerid)
         if (n >= 0 && gPzNar[s][n][pnStanje] == PN_NOSI)
         {
             if (PizzaPredaj(playerid, s, n)) return 1;
-            if (PizzaTu(playerid, PT_ROSTILJ) || PizzaTu(playerid, PT_SLAGANJE)) return ObavijestGreska(playerid, T(playerid, "Prvo odnesite narudzbu koju nosite.")), 1;
+            if (PizzaTu(playerid, PT_ROSTILJ) || PizzaTu(playerid, PT_SLAGANJE) || PizzaTu(playerid, PT_POMFRIT)) return ObavijestGreska(playerid, T(playerid, "Prvo odnesite narudzbu koju nosite.")), 1;
         }
         else
         {
             if (PizzaTu(playerid, PT_ROSTILJ)) return PizzaRostiljPocni(playerid, s);
+            if (PizzaTu(playerid, PT_POMFRIT)) return PizzaPomfritPocni(playerid, s);
             if (PizzaTu(playerid, PT_SLAGANJE)) return PizzaSlaganjePocni(playerid, s);
         }
     }
-    if (PizzaTu(playerid, PT_KUPAC, PIZZA_KASA_DOMET + 1.0)) return PizzaMeni(playerid, s), 1;
+    if (PizzaTu(playerid, PT_KUPAC, PIZZA_KASA_DOMET + 1.0))
+    {
+        PizzaShopOtvori(playerid, s);
+        return 1;
+    }
     return 0;
 }
 
@@ -728,6 +893,20 @@ static PizzaIzbornik(playerid, s)
     if (PosaoIgraca(playerid) != POSAO_PIZZA) return UpitDaNe(playerid, UPIT_PIZZA, s, 0, T(playerid, "Pizzeria"), T(playerid, "Zelite li se zaposliti u pizzeriji?"));
     if (gPzSmjena[playerid] != s + 1) return UpitDaNe(playerid, UPIT_PIZZA, s, 1, T(playerid, "Pizzeria"), T(playerid, "Zelite li zapoceti smjenu?"));
     return UpitDaNe(playerid, UPIT_PIZZA, s, 2, T(playerid, "Pizzeria"), T(playerid, "Zelite li zavrsiti smjenu?"));
+}
+
+static PizzaPresvuci(playerid, bool:radno)
+{
+    Fade(playerid, 0);
+    SetTimerEx("PizzaPresvuciKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "iii", playerid, gAccountId[playerid], radno);
+}
+
+forward PizzaPresvuciKraj(playerid, racun, radno);
+public PizzaPresvuciKraj(playerid, racun, radno)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    SetPlayerSkin(playerid, radno && gPzSmjena[playerid] ? PIZZA_SKIN : OdjecaSkinIgraca(playerid));
+    Fade(playerid, FADE_SLOJEVA + 1);
 }
 
 PizzaUpit(playerid, s, opcija, bool:da)
@@ -744,12 +923,14 @@ PizzaUpit(playerid, s, opcija, bool:da)
     {
         PizzaSmjenaKraj(playerid);
         gPzSmjena[playerid] = s + 1;
-        if (!gPz[s][pzSljedeci] || gPz[s][pzSljedeci] < gettime()) gPz[s][pzSljedeci] = gettime() + 5;
-        return ObavijestInfo(playerid, T(playerid, "Pizzeria"), T(playerid, "Smjena je pocela. Ispecite meso na rostilju, slozite i zapakirajte narudzbu, pa je odnesite kupcu."));
+        gPzAkcija[playerid] = gettime();
+        if (gPz[s][pzSljedeci] < gettime()) gPz[s][pzSljedeci] = gettime() + 5;
+        PizzaPresvuci(playerid, true);
+        return ObavijestInfo(playerid, T(playerid, "Pizzeria"), T(playerid, "Smjena je pocela. Pecite na rostilju, frizi i u peci, slozite i zapakirajte narudzbu, pa je odnesite kupcu."));
     }
     if (opcija == 2 && gPzSmjena[playerid] == s + 1)
     {
-        PizzaSmjenaKraj(playerid);
+        PizzaSmjenaKraj(playerid, true);
         return ObavijestInfo(playerid, T(playerid, "Pizzeria"), T(playerid, "Zavrsili ste smjenu."));
     }
     return 1;
@@ -763,6 +944,13 @@ PizzaPosao(playerid)
     return 1;
 }
 
+PizzaPlaca(playerid)
+{
+    new iznos = PIZZA_PLACA_SAT * gPzRadio[playerid] / 3600;
+    gPzRadio[playerid] = 0;
+    return iznos;
+}
+
 static PizzaListaMakni(playerid)
 {
     if (gPzListaIma[playerid]) PlayerTextDrawDestroy(playerid, gPzLista[playerid]);
@@ -770,25 +958,44 @@ static PizzaListaMakni(playerid)
     gPzListaTekst[playerid][0] = EOS;
 }
 
-PizzaSmjenaKraj(playerid)
+PizzaSmjenaKraj(playerid, bool:fade = false)
 {
     if (!gPzSmjena[playerid]) return;
     PizzaRadnikPusti(playerid);
     PizzaListaMakni(playerid);
     gPzSmjena[playerid] = 0;
+    if (!IsPlayerConnected(playerid)) return;
+    if (fade) PizzaPresvuci(playerid, false);
+    else SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
 }
 
 PizzaDisconnect(playerid)
 {
-    PizzaSmjenaKraj(playerid);
+    gPzSmjena[playerid] = 0;
+    gPzRad[playerid] = -1;
+    gPzListaIma[playerid] = false;
     gPzIgra[playerid] = PI_NEMA;
     gPzTdIma[playerid] = false;
     gPzJede[playerid] = false;
     gPzSavjet[playerid] = -1;
+    gPzRadio[playerid] = 0;
+    gPzShop[playerid] = -1;
+    gPzShopObj[playerid] = INVALID_OBJECT_ID;
+    if (gPzTimer[playerid]) KillTimer(gPzTimer[playerid]);
+    gPzTimer[playerid] = 0;
     for (new s = 0; s < PIZZA_MAX; s++)
     {
         if (!gPz[s][pzIma]) continue;
-        for (new n = 0; n < PIZZA_NARUDZBI; n++) if (gPzNar[s][n][pnIma] && gPzNar[s][n][pnIgrac] == playerid) PizzaNarudzbaMakni(s, n);
+        for (new n = 0; n < PIZZA_NARUDZBI; n++)
+        {
+            if (!gPzNar[s][n][pnIma]) continue;
+            if (gPzNar[s][n][pnIgrac] == playerid) gPzNar[s][n][pnIma] = false;
+            else if (gPzNar[s][n][pnRadi] == playerid)
+            {
+                gPzNar[s][n][pnRadi] = INVALID_PLAYER_ID;
+                if (gPzNar[s][n][pnStanje] == PN_NOSI) gPzNar[s][n][pnStanje] = PizzaPocetnoStanje(gPzNar[s][n][pnStavka]);
+            }
+        }
     }
 }
 
@@ -799,8 +1006,8 @@ PizzaCheckpoint(playerid)
 
 static PizzaListaOsvjezi(playerid, s)
 {
-    static const stanje[][] = { "~r~rostilj", "~y~slaganje", "~g~nosi se" };
-    new tekst[320], red[64], n = 0;
+    static const stanje[][] = { "~r~rostilj", "~y~friteza", "~y~slaganje", "~g~nosi se" };
+    new tekst[256], red[64], n = 0;
     strcat(tekst, T(playerid, "~r~NARUDZBE~w~~n~"));
     for (new k = 0; k < PIZZA_NARUDZBI; k++)
     {
@@ -827,13 +1034,14 @@ static PizzaListaOsvjezi(playerid, s)
 static PizzaSavjeti(playerid, s)
 {
     new k = -1;
-    if (gPzIgra[playerid] == PI_NEMA)
+    if (gPzIgra[playerid] == PI_NEMA && gPzRad[playerid] == -1)
     {
-        if (gPzRad[playerid] == -1 && PizzaTu(playerid, PT_ROSTILJ)) k = PT_ROSTILJ;
-        else if (gPzRad[playerid] == -1 && PizzaTu(playerid, PT_SLAGANJE)) k = PT_SLAGANJE;
+        if (PizzaTu(playerid, PT_ROSTILJ)) k = PT_ROSTILJ;
+        else if (PizzaTu(playerid, PT_POMFRIT)) k = PT_POMFRIT;
+        else if (PizzaTu(playerid, PT_SLAGANJE)) k = PT_SLAGANJE;
     }
     if (k != -1 && k != gPzSavjet[playerid])
-        Savjet(playerid, k == PT_ROSTILJ ? T(playerid, "~y~ALT~w~ - peci meso") : T(playerid, "~y~ALT~w~ - slozi i zapakiraj"), 4000);
+        Savjet(playerid, k == PT_ROSTILJ ? T(playerid, "~y~ALT~w~ - peci meso") : k == PT_POMFRIT ? T(playerid, "~y~ALT~w~ - przi pomfrit") : T(playerid, "~y~ALT~w~ - slozi, ispeci pizzu i zapakiraj"), 4000);
     gPzSavjet[playerid] = k;
     new n = gPzRad[playerid], Float:x, Float:y, Float:z;
     if (n >= 0 && gPzNar[s][n][pnStanje] == PN_NOSI && PizzaMeta(s, n, x, y, z)) SetPlayerCheckpoint(playerid, x, y, z, 1.0);
@@ -857,6 +1065,7 @@ PizzaTick()
             PizzaRadnikPusti(i);
             ObavijestGreska(i, T(i, "Predugo vam je trebalo. Narudzba se vraca na cekanje."));
         }
+        if (sad - gPzAkcija[i] < PIZZA_AKTIVAN_S && gPzRadio[i] < 3600) gPzRadio[i]++;
         PizzaListaOsvjezi(i, s);
         PizzaSavjeti(i, s);
     }
@@ -891,20 +1100,15 @@ PizzaTick()
             switch (faza)
             {
                 case PG_DOLAZI: if (proslo >= PIZZA_HODA_S) PizzaGostNaKasi(s, g);
-                case PG_STOL_IDE: if (proslo >= PIZZA_STRPLJENJE / 4) PizzaGostSjedne(s, g);
+                case PG_STOL_IDE: if (proslo >= PIZZA_HODA_S * 2) PizzaGostSjedne(s, g);
                 case PG_JEDE: if (proslo >= PIZZA_JEDE_S) PizzaGostOdlazi(s, g);
                 case PG_ODLAZI: if (proslo >= PIZZA_HODA_S) PizzaGostMakni(s, g);
             }
             if ((faza == PG_KASA || faza == PG_STOL || faza == PG_STOL_IDE) && proslo >= PIZZA_STRPLJENJE)
             {
                 new n = gPzGost[s][g][pgNar];
-                if (n >= 0 && gPzNar[s][n][pnIma] && gPzNar[s][n][pnGost] == g)
-                {
-                    PizzaRadnicima(s, "Kupac s narudzbom #%d je otisao nezadovoljan.", gPzNar[s][n][pnBroj], true);
-                    PizzaNarudzbaMakni(s, n);
-                }
-                gPzGost[s][g][pgNar] = -1;
-                PizzaGostOdlazi(s, g);
+                if (n >= 0 && gPzNar[s][n][pnIma] && gPzNar[s][n][pnGost] == g) PizzaKupacOdlazi(s, n);
+                else PizzaGostOdlazi(s, g);
             }
         }
     }
@@ -919,18 +1123,9 @@ CMD:pizzaint(playerid, params[])
     return 1;
 }
 
-static PizzaStoloviUDb()
-{
-    if (gPzStoloviDb) return;
-    gPzStoloviDb = true;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO pizza_points (tip, x, y, z, a) VALUES (-1, 0, 0, 0, 0)"));
-    for (new t = 0; t < gPzStolova; t++)
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO pizza_tables (x, y, z, a) VALUES (%f, %f, %f, %f)", gPzStol[t][0], gPzStol[t][1], gPzStol[t][2], gPzStol[t][3]));
-}
-
 ShowPizzaAdmin(playerid)
 {
-    new list[2048], red[96], len = 0, n = 0;
+    new list[3072], red[96], len = 0, n = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Nova pizzeria (ulaz na mojoj poziciji)"));
     for (new t = 0; t < PT_BROJ; t++)
     {
@@ -939,8 +1134,13 @@ ShowPizzaAdmin(playerid)
     }
     format(red, sizeof red, T(playerid, "+ Dodaj stol (moja pozicija) - %d/%d"), gPzStolova, PIZZA_STOLOVA);
     DodajStupac(list, len, red);
-    DodajStupac(list, len, T(playerid, "Obrisi sve stolove"));
     DodajStupac(list, len, T(playerid, "Udji u interijer pizzerije"));
+    for (new t = 0; t < gPzStolova; t++)
+    {
+        format(red, sizeof red, T(playerid, "Stol %d - obrisi"), t + 1);
+        DodajStupac(list, len, red);
+        gPzApPopis[playerid][n++] = PIZZA_MAX + t;
+    }
     for (new s = 0; s < PIZZA_MAX; s++)
     {
         if (!gPz[s][pzIma]) continue;
@@ -949,6 +1149,27 @@ ShowPizzaAdmin(playerid)
         gPzApPopis[playerid][n++] = s;
     }
     return PrikaziDialog(playerid, DLG_APANEL_PIZZA, DIALOG_STYLE_LIST, T(playerid, "Pizzerije"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
+}
+
+static PizzaStolMakni(t)
+{
+    for (new s = 0; s < PIZZA_MAX; s++)
+    {
+        if (!gPz[s][pzIma]) continue;
+        for (new g = 0; g < PIZZA_GOSTIJU; g++)
+        {
+            if (gPzGost[s][g][pgFaza] == PG_NEMA || gPzGost[s][g][pgStol] < 0) continue;
+            if (gPzGost[s][g][pgStol] == t) PizzaGostOdlazi(s, g);
+            else if (gPzGost[s][g][pgStol] > t) gPzGost[s][g][pgStol]--;
+        }
+    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM pizza_tables WHERE id = %d", gPzStolDb[t]));
+    for (new k = t; k < gPzStolova - 1; k++)
+    {
+        gPzStolDb[k] = gPzStolDb[k + 1];
+        for (new j = 0; j < 4; j++) gPzStol[k][j] = gPzStol[k + 1][j];
+    }
+    gPzStolova--;
 }
 
 DLG:apanel_pizza(playerid, response, listitem)
@@ -990,35 +1211,38 @@ DLG:apanel_pizza(playerid, response, listitem)
             return ShowPizzaAdmin(playerid);
         }
         if (gPzStolova >= PIZZA_STOLOVA) return ObavijestGreska(playerid, T(playerid, "Dosegnut je maksimalan broj.")), ShowPizzaAdmin(playerid);
-        PizzaStoloviUDb();
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO pizza_tables (x, y, z, a) VALUES (%f, %f, %f, %f)", x, y, z, a));
+        gPzStolDb[gPzStolova] = ZadnjiId();
         gPzStol[gPzStolova][0] = x;
         gPzStol[gPzStolova][1] = y;
         gPzStol[gPzStolova][2] = z;
         gPzStol[gPzStolova][3] = a;
         gPzStolova++;
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Stol je dodan. Postavite se tocno na stolicu, licem prema stolu."));
+        ApplyAnimation(playerid, "FOOD", "FF_Sit_Loop", 4.1, true, true, true, true, 0, SYNC_ALL);
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Stol je dodan. Ovako ce NPC sjediti; ako ne izgleda dobro, obrisite stol i postavite se drugacije."));
         return ShowPizzaAdmin(playerid);
     }
     if (listitem == PT_BROJ + 2)
     {
-        for (new s = 0; s < PIZZA_MAX; s++) if (gPz[s][pzIma]) for (new g = 0; g < PIZZA_GOSTIJU; g++) if (gPzGost[s][g][pgStol] >= 0) PizzaGostOdlazi(s, g);
-        gPzStolova = 0;
-        PizzaStoloviUDb();
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM pizza_tables"));
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Svi stolovi su obrisani."));
-        return ShowPizzaAdmin(playerid);
-    }
-    if (listitem == PT_BROJ + 3)
-    {
         new prazno[1];
         return cmd_pizzaint(playerid, prazno);
     }
-    new i = listitem - PT_BROJ - 4;
-    if (i < 0 || i >= PIZZA_MAX) return 1;
-    new s = gPzApPopis[playerid][i];
+    new i = listitem - PT_BROJ - 3;
+    if (i < 0 || i >= sizeof gPzApPopis[]) return 1;
+    new k = gPzApPopis[playerid][i];
+    if (k >= PIZZA_MAX)
+    {
+        if (k - PIZZA_MAX < gPzStolova) PizzaStolMakni(k - PIZZA_MAX);
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Stol je obrisan."));
+        return ShowPizzaAdmin(playerid);
+    }
+    new s = k;
     if (!gPz[s][pzIma]) return ShowPizzaAdmin(playerid);
-    for (new p = 0, iZadnji = gIgracZadnji; p <= iZadnji; p++) if (gPzSmjena[p] == s + 1) PizzaSmjenaKraj(p);
+    for (new p = 0, iZadnji = gIgracZadnji; p <= iZadnji; p++)
+    {
+        if (gPzSmjena[p] == s + 1) PizzaSmjenaKraj(p);
+        if (gPzShop[p] == s) PizzaShopZatvori(p);
+    }
     for (new g = 0; g < PIZZA_GOSTIJU; g++) PizzaGostMakni(s, g);
     for (new n = 0; n < PIZZA_NARUDZBI; n++) gPzNar[s][n][pnIma] = false;
     PizzaOznakeMakni(s);
