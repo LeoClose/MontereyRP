@@ -35,10 +35,10 @@
 #define SK_TERET_Z          -0.44
 #define SK_VILJ_VRH         2.1
 #define SK_VILJ_NAPRIJED    1.0
-#define SK_DOLAZAK_RAZMAK   20
+#define SK_DOLAZAK_RAZMAK   6
 #define SK_NPC_BRZINA       4.0
 #define SK_CEKA_S           360
-#define SK_DOLAZI_S         180
+#define SK_DOLAZI_S         90
 #define SK_ODLAZI_S         40
 #define SK_LIK_ZONA         4000
 #define SK_KAMION_MODEL     414
@@ -933,7 +933,7 @@ static SkladisteDolazakStvori(r)
     for (new k = 0; k < 10 && !nasao; k++)
     {
         new Float:kut = float(random(360));
-        Lik_Cesta(gSkladisteRampa[r][srX] + 280.0 * floatcos(kut, degrees), gSkladisteRampa[r][srY] + 280.0 * floatsin(kut, degrees), gSkladisteRampa[r][srZ], x, y, z);
+        Lik_Cesta(gSkladisteRampa[r][srX] + 160.0 * floatcos(kut, degrees), gSkladisteRampa[r][srY] + 160.0 * floatsin(kut, degrees), gSkladisteRampa[r][srZ], x, y, z);
         nasao = !SkladisteUZoni(x, y) && Lik_Skriveno(x, y, z);
     }
     if (!nasao) return;
@@ -962,7 +962,7 @@ forward SkladisteDolazakKreni(r, v);
 public SkladisteDolazakKreni(r, v)
 {
     if (gSkladisteRampa[r][srStanje] != SKD_DOLAZI || gSkladisteRampa[r][srVozilo] != v) return;
-    if (!Lik_Vozi(gSkladisteRampa[r][srLik], gSkladisteRampa[r][srX], gSkladisteRampa[r][srY], gSkladisteRampa[r][srZ], 10.0)) SkladisteDolazakParkiraj(r);
+    if (!Lik_Vozi(gSkladisteRampa[r][srLik], gSkladisteRampa[r][srX], gSkladisteRampa[r][srY], gSkladisteRampa[r][srZ], 16.0)) SkladisteDolazakParkiraj(r);
 }
 
 static SkladisteDolazakParkiraj(r)

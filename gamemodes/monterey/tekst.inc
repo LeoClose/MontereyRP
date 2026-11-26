@@ -2090,6 +2090,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "~y~ALT~w~ - skini dio", "~y~ALT~w~ - strip part", "~y~ALT~w~ - snyat detal", "~y~ALT~w~ - quitar pieza", "~y~ALT~w~ - parca sok" },
     { "Smjena je zavrsena. Zaradu dobivate na placi.", "Your shift has ended. Your earnings are added to your payday.", "Смена окончена. Заработок будет добавлен к зарплате.", "Tu turno ha terminado. Lo ganado se suma a tu paga.", "Vardiyaniz bitti. Kazanciniz maasiniza eklenecek." },
     { "Repo posao jos nije postavljen.", "The repo job is not set up yet.", "Работа Repo ещё не настроена.", "El trabajo de embargo aun no esta configurado.", "Haciz isi henuz ayarlanmadi." },
     { "{8AB4F8}+ Mjesto za dovoz repo auta na mojoj poziciji", "{8AB4F8}+ Repo car drop-off at my position", "{8AB4F8}+ Место доставки машин Repo на моей позиции", "{8AB4F8}+ Punto de entrega de embargos en mi posicion", "{8AB4F8}+ Konumuma haciz araci teslim noktasi" },

@@ -4,7 +4,7 @@ static STREAMER_TAG_3D_TEXT_LABEL:gOznakaKopija[OZNAKA_MAX][BROJ_JEZIKA], bool:g
 static STREAMER_TAG_AREA:gInterakcijaZadnja[MAX_PLAYERS], gInterakcijaVrijeme[MAX_PLAYERS];
 
 #define INTERAKCIJA_ZONA    0x494E54
-enum { SAVJET_ALT, SAVJET_KUCA, SAVJET_GARAZA, SAVJET_IZLAZ, SAVJET_ULAZ, SAVJET_PODIGNI, SAVJET_GEPEK }
+enum { SAVJET_ALT, SAVJET_KUCA, SAVJET_GARAZA, SAVJET_IZLAZ, SAVJET_ULAZ, SAVJET_PODIGNI, SAVJET_GEPEK, SAVJET_DIO }
 #define INTERAKCIJA_MS      5000
 #define INTERAKCIJA_PAUZA_MS 5000
 #define SAVJET_X            71.0
@@ -172,7 +172,7 @@ InterakcijaOznaka(STREAMER_TAG_3D_TEXT_LABEL:id, Float:r = 2.5, tip = SAVJET_ALT
 InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
 {
     new tip = Streamer_GetIntData(STREAMER_TYPE_AREA, areaid, E_STREAMER_EXTRA_ID) - INTERAKCIJA_ZONA;
-    if (tip < SAVJET_ALT || tip > SAVJET_GEPEK) return 0;
+    if (tip < SAVJET_ALT || tip > SAVJET_DIO) return 0;
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
     new sad = GetTickCount();
     if (sad - gSavjetBlok[playerid] < 0) return 1;
@@ -187,6 +187,7 @@ InterakcijaUsao(playerid, STREAMER_TAG_AREA:areaid)
         case SAVJET_ULAZ: Savjet(playerid, T(playerid, "~y~F~w~ - ulaz"), INTERAKCIJA_MS);
         case SAVJET_PODIGNI: Savjet(playerid, T(playerid, "~y~ALT~w~ - podigni"), INTERAKCIJA_MS);
         case SAVJET_GEPEK: Savjet(playerid, T(playerid, "~y~ALT~w~ - prtljaznik"), INTERAKCIJA_MS);
+        case SAVJET_DIO: Savjet(playerid, T(playerid, "~y~ALT~w~ - skini dio"), INTERAKCIJA_MS);
         default: Savjet(playerid, T(playerid, "~y~ALT~w~ - interakcija"), INTERAKCIJA_MS);
     }
     if (gSavjetIma[playerid]) gSavjetZona[playerid] = areaid;
