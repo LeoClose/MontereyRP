@@ -70,7 +70,7 @@ static gProvalaGepek[MAX_VEHICLES][PV_GEPEK], gProvalaGepekVlasnik[MAX_VEHICLES]
 static gProvalaKuca[MAX_PLAYERS] = { -1, ... }, bool:gProvalaUnutra[MAX_PLAYERS], gProvalaTpl[MAX_PLAYERS], gProvalaNosi[MAX_PLAYERS] = { -1, ... }, gProvalaUzeto[MAX_PLAYERS];
 static gProvalaUkucanin[MAX_PLAYERS] = { INVALID_LIK, ... }, bool:gProvalaBudan[MAX_PLAYERS], gProvalaBuka[MAX_PLAYERS], gProvalaTimer[MAX_PLAYERS], gProvalaApPopis[MAX_PLAYERS][PV_JATAKA];
 static STREAMER_TAG_OBJECT:gProvalaObjekt[MAX_PLAYERS][PV_PLIJENA], STREAMER_TAG_AREA:gProvalaZona[MAX_PLAYERS][PV_PLIJENA];
-static STREAMER_TAG_AREA:gProvalaIzlaz[MAX_PLAYERS], STREAMER_TAG_AREA:gProvalaVrata[MAX_PLAYERS];
+static STREAMER_TAG_AREA:gProvalaIzlaz[MAX_PLAYERS], STREAMER_TAG_AREA:gProvalaVrata[MAX_PLAYERS], STREAMER_TAG_3D_TEXT_LABEL:gProvalaNatpis[MAX_PLAYERS];
 
 InitProvala()
 {
@@ -200,7 +200,13 @@ static ProvalaAdresaMakni(playerid)
 {
     if (IsValidDynamicArea(gProvalaVrata[playerid])) DestroyDynamicArea(gProvalaVrata[playerid]);
     gProvalaVrata[playerid] = STREAMER_TAG_AREA:0;
-    if (gProvalaKuca[playerid] != -1 && IsPlayerConnected(playerid)) DisablePlayerCheckpoint(playerid);
+    if (IsValidDynamic3DTextLabel(gProvalaNatpis[playerid])) DestroyDynamic3DTextLabel(gProvalaNatpis[playerid]);
+    gProvalaNatpis[playerid] = STREAMER_TAG_3D_TEXT_LABEL:0;
+    if (gProvalaKuca[playerid] != -1 && IsPlayerConnected(playerid))
+    {
+        KucaProvalaSakrij(playerid, gProvalaKuca[playerid], false);
+        DisablePlayerCheckpoint(playerid);
+    }
     gProvalaKuca[playerid] = -1;
     gProvalaBudan[playerid] = false;
 }
@@ -235,6 +241,8 @@ static ProvalaAdresa(playerid, j)
         gProvalaKucaZadnja[k] = gettime();
         SetPlayerCheckpoint(playerid, x, y, z, 1.5);
         gProvalaVrata[playerid] = InterakcijaZona(x, y, z, PV_DOMET, 0, 0, SAVJET_ULAZ);
+        KucaProvalaSakrij(playerid, k, true);
+        gProvalaNatpis[playerid] = CreateDynamic3DTextLabel(T(playerid, "Kuca za provalu\nF - ulaz"), PV_BOJA, x, y, z + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0, playerid);
         new poruka[144];
         format(poruka, sizeof poruka, T(playerid, "Adresa je %s (oznaceno na karti). Udite nocu, budite tihi i pokupite sto vise stvari u kombi."), CestaZona(x, y));
         ObavijestInfo(playerid, T(playerid, "Jatak"), poruka);

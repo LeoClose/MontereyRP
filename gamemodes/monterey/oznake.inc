@@ -136,6 +136,13 @@ OznakaUnisti(STREAMER_TAG_3D_TEXT_LABEL:id)
     return DestroyDynamic3DTextLabel(id);
 }
 
+OznakaSakrijZa(playerid, STREAMER_TAG_3D_TEXT_LABEL:id, bool:sakrij)
+{
+    Streamer_ToggleItem(playerid, STREAMER_TYPE_3D_TEXT_LABEL, id, !sakrij);
+    if (_:id > 0 && _:id < OZNAKA_MAX && gOznakaIma[_:id]) for (new l = 1; l < BROJ_JEZIKA; l++) Streamer_ToggleItem(playerid, STREAMER_TYPE_3D_TEXT_LABEL, gOznakaKopija[_:id][l], !sakrij);
+    Streamer_Update(playerid, STREAMER_TYPE_3D_TEXT_LABEL);
+}
+
 OznakaTekst(STREAMER_TAG_3D_TEXT_LABEL:id, color, const text[])
 {
     if (_:id > 0 && _:id < OZNAKA_MAX && gOznakaIma[_:id])

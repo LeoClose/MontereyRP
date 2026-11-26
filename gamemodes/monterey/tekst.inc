@@ -2090,6 +2090,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Kuca za provalu\nF - ulaz", "House to rob\nF - enter", "Дом для взлома\nF - войти", "Casa para robar\nF - entrar", "Soyulacak ev\nF - gir" },
     { "Svanulo je, ukucani su budni. Adresa je propala.", "It's daylight, the residents are awake. The job is off.", "Рассвело, жильцы проснулись. Наводка сорвалась.", "Ya amanecio, los vecinos estan despiertos. El trabajo se cancelo.", "Gun dogdu, ev sakinleri uyanik. Is iptal oldu." },
     { "Drzite ~y~ALT~w~ i hodajte polako da ne probudite ukucane.", "Hold ~y~ALT~w~ and walk slowly so you don't wake the residents.", "Derzhite ~y~ALT~w~ i idite medlenno, chtoby ne razbudit zhilcov.", "Manten ~y~ALT~w~ y camina despacio para no despertar a los vecinos.", "Ev sakinlerini uyandirmamak icin ~y~ALT~w~ basili tutup yavas yuruyun." },
     { "Igraca konzola", "Game console", "Igrovaya pristavka", "Consola", "Oyun konsolu" },
