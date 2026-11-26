@@ -358,6 +358,7 @@ public OnGameModeInit()
     InitSef();
     InitDroga();
     InitLab();
+    InitRibar();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_snd ON social_messages (sender)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_comments_post ON social_comments (post)"));
@@ -413,6 +414,7 @@ public Sekunda()
     KapijeTick();
     BrodTick();
     LabTick();
+    RibarTick();
     CivilVozilaTick();
     VlakTick();
     BankaTick();
@@ -566,6 +568,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/garaze.inc"
 #include "monterey/lokacije.inc"
 #include "monterey/placa.inc"
+#include "monterey/ribar.inc"
 #include "monterey/login.inc"
 #include "monterey/registracija.inc"
 #include "monterey/stats.inc"

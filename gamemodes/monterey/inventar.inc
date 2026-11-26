@@ -138,7 +138,8 @@ enum
     ITEM_PENDREK, ITEM_CRIJEVO, ITEM_KANISTER, ITEM_KANISTER_BENZIN, ITEM_KANISTER_DIZEL,
     ITEM_MOBITEL, ITEM_NAOCALE1, ITEM_NAOCALE2, ITEM_NAOCALE3, ITEM_BANDANA1, ITEM_BANDANA2, ITEM_BANDANA3, ITEM_KAPA1, ITEM_KAPA2, ITEM_KAPA3, ITEM_ZETONI, ITEM_KARTICA,
     ITEM_SAT1, ITEM_SAT2, ITEM_SAT3, ITEM_PRSTEN, ITEM_LANAC, ITEM_OGRLICA, ITEM_UKRADENI_NAKIT, ITEM_ZLATO, ITEM_ZLATNE_NAOCALE, ITEM_SREBRNE_NAOCALE,
-    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA, ITEM_EKSPLOZIV, ITEM_SANDUK_KOKA, ITEM_SANDUK_KEM
+    ITEM_METH, ITEM_KOKA, ITEM_KEMIKALIJE, ITEM_CIGARETE, ITEM_SRECKA, ITEM_KUTIJA, ITEM_EKSPLOZIV, ITEM_SANDUK_KOKA, ITEM_SANDUK_KEM,
+    ITEM_SKUSA, ITEM_ORADA, ITEM_BRANCIN, ITEM_ZUBATAC, ITEM_TUNA
 }
 
 enum E_ITEM { ITEM_NAME[28], ITEM_UNIT[4], ITEM_MAX, ITEM_WEAPON, ITEM_AMMO, ITEM_MODEL }
@@ -194,7 +195,12 @@ new const gItems[][E_ITEM] = {
     { "Kutija robe",            "kom", 1,   0,  -1, 1220  },
     { "Eksploziv",              "kom", 6,   0,  -1, 1654  },
     { "Sanduk koka paste",      "kom", 1,   0,  -1, 1271  },
-    { "Sanduk kemikalija",      "kom", 1,   0,  -1, 1271  }
+    { "Sanduk kemikalija",      "kom", 1,   0,  -1, 1271  },
+    { "Skusa",                  "kom", 10,  0,  -1, 19630 },
+    { "Orada",                  "kom", 10,  0,  -1, 19630 },
+    { "Brancin",                "kom", 10,  0,  -1, 19630 },
+    { "Zubatac",                "kom", 10,  0,  -1, 19630 },
+    { "Tuna",                   "kom", 10,  0,  -1, 19630 }
 };
 #define BROJ_ITEMA          sizeof (gItems)
 #define MAX_PUSAKA          7
@@ -281,6 +287,7 @@ static KoristiItem(playerid, item)
     if (item == ITEM_KANISTER) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Prazan kanister napunite na pumpi naredbom /tankaj."));
     if (item == ITEM_KANISTER_BENZIN || item == ITEM_KANISTER_DIZEL) return VoziloKanister(playerid, item, -1);
     if (item == ITEM_SJEME) return DrogaPosadi(playerid);
+    if (item >= ITEM_SKUSA && item <= ITEM_TUNA) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Ribu prodajte otkupljivacu ribe."));
     if (item == ITEM_SRECKA) return SreckaOgrebi(playerid);
     if (item == ITEM_CIGARETE)
     {

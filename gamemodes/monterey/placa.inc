@@ -7,6 +7,7 @@
 #define POSAO_NEMA          0
 #define POSAO_DOSTAVLJAC    1
 #define POSAO_KONTROLOR     2
+#define POSAO_RIBAR         3
 #define ATC_ODOBRENJE       40
 #define ATC_DOMET           80.0
 #define DOSTAVA_VOZILO      499
@@ -77,6 +78,19 @@ PlacaUcitaj(playerid)
     gPosao[playerid] = DB_GetRowCount(res) ? DB_GetFieldInt(res, 0) : POSAO_NEMA;
     DB_FreeResultSet(res);
     gPlacaDuty[playerid] = 0;
+}
+
+PosaoIgraca(playerid)
+{
+    return gPosao[playerid];
+}
+
+PosaoPostavi(playerid, posao)
+{
+    gPosao[playerid] = posao;
+    DostavaKraj(playerid);
+    AtcKraj(playerid);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET job = %d WHERE id = %d", posao, gAccountId[playerid]));
 }
 
 PlacaTick()
@@ -286,7 +300,7 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid]) return 1;
+    if (!gUlogiran[playerid] || RibarPosao(playerid)) return 1;
     if (gPosao[playerid] == POSAO_KONTROLOR)
     {
         if (AtcNaSmjeni(playerid))
@@ -338,10 +352,8 @@ PlacaPoslovi(playerid)
 DLG:opstina_posao(playerid, response, listitem)
 {
     if (!response) return ShowUprava(playerid);
-    gPosao[playerid] = listitem == 0 ? POSAO_DOSTAVLJAC : listitem == 1 ? POSAO_KONTROLOR : POSAO_NEMA;
-    DostavaKraj(playerid);
-    AtcKraj(playerid);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET job = %d WHERE id = %d", gPosao[playerid], gAccountId[playerid]));
+    RibarKraj(playerid);
+    PosaoPostavi(playerid, listitem == 0 ? POSAO_DOSTAVLJAC : listitem == 1 ? POSAO_KONTROLOR : POSAO_NEMA);
     if (gPosao[playerid] == POSAO_DOSTAVLJAC) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zaposleni ste kao dostavljac. Smjenu zapocnite s /posao u depou."));
     if (gPosao[playerid] == POSAO_KONTROLOR) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zaposleni ste kao kontrolor leta. Smjenu zapocnite s /posao u tornju aerodroma."));
     return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Dali ste otkaz."));
