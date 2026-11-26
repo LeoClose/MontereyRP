@@ -63,8 +63,8 @@
 #define SK_ZAOBIDJI         1.4
 #define SK_VILICE_NOSI      0.45
 #define SK_VILICE_DOLJE     0.08
-#define SK_BRZO             3.0
-#define SK_SPORO            0.9
+#define SK_BRZO             5.0
+#define SK_SPORO            1.3
 
 enum { SKU_NEMA, SKU_DO_POLICE, SKU_ULAZ_POLICA, SKU_PODIZE, SKU_IZLAZ_POLICA, SKU_DO_KAMIONA, SKU_ULAZ_KAMION, SKU_SPUSTA, SKU_IZLAZ_KAMION, SKU_KUCI }
 

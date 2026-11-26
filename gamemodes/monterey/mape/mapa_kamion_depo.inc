@@ -1,7 +1,7 @@
 #define MAPA_KAMION_DEPO_RESPAWN    300
 #define MAPA_KAMION_LIK_ZONA        4100
 #define MAPA_KAMION_VRATA_DIZANJE   3.9
-#define MAPA_KAMION_SPUST           -1.35
+#define MAPA_KAMION_SPUST           -1.55
 
 static const gMapaKamionDepoModel[] = { 435, 591, 435, 591, 591, 435, 584, 435, 591, 450, 435, 584, 591, 435 };
 static const Float:gMapaKamionDepoPoz[][4] = {
@@ -11,11 +11,11 @@ static const Float:gMapaKamionDepoPoz[][4] = {
     { 2137.638, -2093.028, 13.55, 315.0 }, { 2134.385, -2089.775, 13.55, 315.0 }, { 2131.133, -2086.523, 13.55, 315.0 }, { 2127.880, -2083.270, 13.55, 315.0 }
 };
 static const Float:gMapaKamionDepoRampa[][5] = {
-    { 2176.554, -2251.836, 12.370, 0.0, 225.0 }, { 2172.134, -2247.417, 12.370, 0.0, 225.0 }, { 2167.715, -2242.997, 12.370, 0.0, 225.0 },
-    { 2163.296, -2238.578, 12.370, 0.0, 225.0 }, { 2158.876, -2234.159, 12.370, 0.0, 225.0 }, { 2157.869, -2233.151, 12.360, 0.0, 225.0 }
+    { 2176.554, -2251.836, 12.170, 0.0, 225.0 }, { 2172.134, -2247.417, 12.170, 0.0, 225.0 }, { 2167.715, -2242.997, 12.170, 0.0, 225.0 },
+    { 2163.296, -2238.578, 12.170, 0.0, 225.0 }, { 2158.876, -2234.159, 12.170, 0.0, 225.0 }, { 2157.869, -2233.151, 12.160, 0.0, 225.0 }
 };
-static const Float:gMapaKamionVrataPoz[3] = { 2178.074, -2254.240, 15.32 };
-static const Float:gMapaKamionUredPoz[4] = { 2133.225, -2278.825, 18.32, 135.0 };
+static const Float:gMapaKamionVrataPoz[3] = { 2178.074, -2254.240, 15.12 };
+static const Float:gMapaKamionUredPoz[4] = { 2133.225, -2278.825, 18.12, 135.0 };
 static const Float:gMapaKamionHangar[][5] = {
     { 5171.0, 2124.9453, -2275.4531, 20.1406, 45.00 },
     { 5131.0, 2151.7344, -2273.2969, 18.6562, 315.00 },
