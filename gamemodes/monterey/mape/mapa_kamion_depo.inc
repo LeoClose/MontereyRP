@@ -1,6 +1,5 @@
 #define MAPA_KAMION_DEPO_RESPAWN    300
 #define MAPA_KAMION_VRATA_DIZANJE   3.9
-#define MAPA_KAMION_UR_DOMET        2.2
 
 static const gMapaKamionDepoModel[] = { 435, 591, 435, 591, 591, 435, 584, 435, 591, 450, 435, 584, 591, 435 };
 static const Float:gMapaKamionDepoPoz[][4] = {
@@ -15,21 +14,26 @@ static const Float:gMapaKamionDepoRampa[][5] = {
 };
 static const Float:gMapaKamionVrataPoz[3] = { 2178.074, -2254.240, 16.67 };
 static const Float:gMapaKamionUredPoz[4] = { 2133.225, -2278.825, 19.67, 135.0 };
+static const Float:gMapaKamionDepoZid[][5] = {
+    { 2179.649, -2260.362, 12.110, -5.739, 225.0 }, { 2181.900, -2262.613, 11.790, -5.739, 225.0 }, { 2184.152, -2264.865, 11.470, -5.739, 225.0 }, { 2186.403, -2267.116, 11.150, -5.739, 225.0 },
+    { 2184.196, -2255.815, 12.110, -5.739, 225.0 }, { 2186.447, -2258.066, 11.790, -5.739, 225.0 }, { 2188.698, -2260.318, 11.470, -5.739, 225.0 }, { 2190.950, -2262.569, 11.150, -5.739, 225.0 }
+};
+static const Float:gMapaKamionDepoStupic[][3] = {
+    { 2178.498, -2259.685, 14.260 }, { 2183.519, -2254.665, 14.260 }, { 2187.266, -2268.453, 13.010 }, { 2192.287, -2263.433, 13.010 }
+};
+static const Float:gMapaKamionDepoMakni[][5] = {
+    { 5244.0, 2198.852, -2213.922, 14.883, 0.25 }, { 5305.0, 2198.852, -2213.922, 14.883, 0.25 },
+    { 3569.0, 2219.422, -2259.523, 14.938, 22.0 }, { 3747.0, 2219.422, -2259.523, 14.938, 22.0 },
+    { 3567.0, 2083.523, -2159.617, 13.258, 0.25 },
+    { 5259.0, 2168.844, -2246.781, 13.938, 0.5 }, { 3577.0, 2160.562, -2234.805, 14.562, 0.5 }, { 3577.0, 2160.578, -2234.820, 13.023, 0.5 }
+};
 static gMapaKamionDepoVozilo[sizeof gMapaKamionDepoModel];
-static STREAMER_TAG_OBJECT:gMapaKamionVrata, STREAMER_TAG_OBJECT:gMapaKamionUred, bool:gMapaKamionUredOtvoren;
+static STREAMER_TAG_OBJECT:gMapaKamionVrata;
 
 MapaKamionDepoUkloni(playerid)
 {
-    RemoveBuildingForPlayer(playerid, 5244, 2198.852, -2213.922, 14.883, 0.25);
-    RemoveBuildingForPlayer(playerid, 5305, 2198.852, -2213.922, 14.883, 0.25);
-    RemoveBuildingForPlayer(playerid, 3569, 2219.422, -2259.523, 14.938, 22.0);
-    RemoveBuildingForPlayer(playerid, 3747, 2219.422, -2259.523, 14.938, 22.0);
-    RemoveBuildingForPlayer(playerid, 3567, 2083.523, -2159.617, 13.258, 0.25);
-    RemoveBuildingForPlayer(playerid, 3631, 2149.140, -2266.910, 12.880, 0.6);
-    RemoveBuildingForPlayer(playerid, 3631, 2142.300, -2255.900, 12.880, 0.6);
-    RemoveBuildingForPlayer(playerid, 3633, 2142.910, -2256.340, 13.930, 0.6);
-    RemoveBuildingForPlayer(playerid, 3633, 2140.380, -2254.100, 13.930, 0.6);
-    RemoveBuildingForPlayer(playerid, 3632, 2144.300, -2258.150, 13.930, 0.6);
+    for (new i = 0; i < sizeof gMapaKamionDepoMakni; i++)
+        RemoveBuildingForPlayer(playerid, floatround(gMapaKamionDepoMakni[i][0]), gMapaKamionDepoMakni[i][1], gMapaKamionDepoMakni[i][2], gMapaKamionDepoMakni[i][3], gMapaKamionDepoMakni[i][4]);
 }
 
 MapaKamionDepo()
@@ -39,14 +43,23 @@ MapaKamionDepo()
         gMapaKamionDepoVozilo[i] = CreateVehicle(gMapaKamionDepoModel[i], gMapaKamionDepoPoz[i][0], gMapaKamionDepoPoz[i][1], gMapaKamionDepoPoz[i][2], gMapaKamionDepoPoz[i][3], 1, 1, MAPA_KAMION_DEPO_RESPAWN);
         MapaKamionDepoSpawn(gMapaKamionDepoVozilo[i]);
     }
+    for (new i = 0; i < sizeof gMapaKamionDepoMakni; i++)
+        Kolizija_Ukloni(floatround(gMapaKamionDepoMakni[i][0]), gMapaKamionDepoMakni[i][1], gMapaKamionDepoMakni[i][2], gMapaKamionDepoMakni[i][3], gMapaKamionDepoMakni[i][4]);
     for (new i = 0; i < sizeof gMapaKamionDepoRampa; i++)
     {
         new STREAMER_TAG_OBJECT:o = CreateDynamicObject(19741, gMapaKamionDepoRampa[i][0], gMapaKamionDepoRampa[i][1], gMapaKamionDepoRampa[i][2], gMapaKamionDepoRampa[i][3], 0.0, gMapaKamionDepoRampa[i][4], 0, 0);
         SetDynamicObjectMaterial(o, 0, 5131, "imrancomp_las2", "ws_carpark2", 0);
+        Kolizija_Dodaj(19741, gMapaKamionDepoRampa[i][0], gMapaKamionDepoRampa[i][1], gMapaKamionDepoRampa[i][2], gMapaKamionDepoRampa[i][3], 0.0, gMapaKamionDepoRampa[i][4]);
     }
+    for (new i = 0; i < sizeof gMapaKamionDepoZid; i++)
+    {
+        new STREAMER_TAG_OBJECT:o = CreateDynamicObject(19353, gMapaKamionDepoZid[i][0], gMapaKamionDepoZid[i][1], gMapaKamionDepoZid[i][2], gMapaKamionDepoZid[i][3], 0.0, gMapaKamionDepoZid[i][4], 0, 0);
+        SetDynamicObjectMaterial(o, 0, 5131, "imrancomp_las2", "ws_carparkwall2", 0);
+    }
+    for (new i = 0; i < sizeof gMapaKamionDepoStupic; i++) CreateDynamicObject(19121, gMapaKamionDepoStupic[i][0], gMapaKamionDepoStupic[i][1], gMapaKamionDepoStupic[i][2], 0.0, 0.0, 0.0, 0, 0);
     gMapaKamionVrata = CreateDynamicObject(8957, gMapaKamionVrataPoz[0], gMapaKamionVrataPoz[1], gMapaKamionVrataPoz[2], 0.0, 0.0, 315.0, 0, 0);
     SetDynamicObjectMaterial(gMapaKamionVrata, 0, 5131, "imrancomp_las2", "alleydoor8", 0);
-    gMapaKamionUred = CreateDynamicObject(1498, gMapaKamionUredPoz[0], gMapaKamionUredPoz[1], gMapaKamionUredPoz[2], 0.0, 0.0, gMapaKamionUredPoz[3], 0, 0);
+    CreateDynamicObject(1498, gMapaKamionUredPoz[0], gMapaKamionUredPoz[1], gMapaKamionUredPoz[2], 0.0, 0.0, gMapaKamionUredPoz[3], 0, 0);
 }
 
 MapaKamionDepoVrata(bool:otvori, bool:brzo = false)
@@ -73,10 +86,4 @@ MapaKamionDepoTick()
         DetachTrailerFromVehicle(c);
         SetVehicleToRespawn(v);
     }
-    new bool:blizu = false;
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji && !blizu; i++)
-        blizu = IsPlayerConnected(i) && !GetPlayerVirtualWorld(i) && IsPlayerInRangeOfPoint(i, MAPA_KAMION_UR_DOMET, gMapaKamionUredPoz[0], gMapaKamionUredPoz[1], gMapaKamionUredPoz[2] + 1.0);
-    if (blizu == gMapaKamionUredOtvoren) return;
-    gMapaKamionUredOtvoren = blizu;
-    MoveDynamicObject(gMapaKamionUred, gMapaKamionUredPoz[0], gMapaKamionUredPoz[1], gMapaKamionUredPoz[2] + (blizu ? 0.01 : 0.0), 0.016, 0.0, 0.0, gMapaKamionUredPoz[3] + (blizu ? 90.0 : 0.0));
 }

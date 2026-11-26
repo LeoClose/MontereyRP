@@ -27,7 +27,7 @@
 #define PZ_UTOVAR_MAX       240
 #define PZ_TURA             3
 #define PZ_SCENA_MAX        40
-#define PZ_SCENA_BRZINA     5.0
+#define PZ_SCENA_BRZINA     8.0
 #define PZ_VOZILO_Z         1.6
 
 enum { PZF_NEMA, PZF_KACI, PZF_LUKA, PZF_UTOVAR, PZF_VOZI, PZF_POVRATAK, PZF_SCENA }
@@ -46,15 +46,13 @@ static const gPrijevozTeret[][E_PZ_TERET] = {
     { "Krijumcarena roba", PZ_NIVOA, 515, 435, 1400, -1, 0.0, 5 }
 };
 static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
-static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 20.6719, 46.2314 }, { 2161.3994, -2282.1294, 12.40, 223.9835 }, { 2214.293, -2236.873, 13.2, 315.0 } };
+static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 20.6719, 46.2314 }, { 2193.1111, -2268.1230, 12.53, 227.4294 }, { 2214.293, -2236.873, 13.2, 315.0 } };
 static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 12.30, 225.0 };
 static const Float:gPrijevozRezerva[4] = { 2223.130, -2228.035, 12.55, 315.0 };
-static const Float:gPrijevozKamera[6] = { 2204.060, -2263.397, 17.5, 2177.968, -2254.134, 15.5 };
+static const Float:gPrijevozKamera[6] = { 2195.570, -2249.260, 18.0, 2177.968, -2254.134, 15.5 };
 static const Float:gPrijevozRuta[] = {
     2164.533, -2240.699, 12.300, 2169.191, -2245.357, 12.300, 2173.584, -2249.750, 13.035, 2177.968, -2254.134, 13.770,
-    2180.796, -2256.963, 13.770, 2185.181, -2261.347, 13.145, 2189.591, -2265.757, 12.520, 2187.443, -2270.822, 12.520,
-    2182.847, -2276.125, 12.530, 2176.130, -2280.721, 12.510, 2168.351, -2282.843, 12.460, 2164.109, -2282.843, 12.430,
-    2161.401, -2282.129, 12.400
+    2180.796, -2256.963, 13.770, 2185.181, -2261.347, 13.145, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
 };
 static gPrijevozScenaIgrac = INVALID_PLAYER_ID, gPrijevozScenaLik = INVALID_LIK, gPrijevozScenaTimer, gPrijevozScenaOd;
 
