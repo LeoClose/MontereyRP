@@ -184,6 +184,8 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
     PolicijaDisconnect(playerid, false);
     if (!RanjenPadni(playerid)) OruzjeDeath(playerid);
     TeritorijDeath(playerid);
+    RibarKraj(playerid);
+    PizzaSmjenaKraj(playerid);
     return 1;
 }
 
@@ -197,7 +199,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     MaricaEnter(playerid, newstate);
     SlucajStateChange(playerid, newstate);
     VoziloStateChange(playerid, newstate);
-    RibarStateChange(playerid, newstate);
+    RibarStateChange(playerid, newstate, oldstate);
     VlakStateChange(playerid, newstate);
     GarazaStateChange(playerid, newstate, oldstate);
     if (newstate == PLAYER_STATE_DRIVER) VoziloVozac(playerid);

@@ -241,7 +241,7 @@ public RibarVratiKraj(playerid, racun)
     if (b == -1) return 0;
     new bool:uBrodu = GetPlayerVehicleID(playerid) == gRibarBrod[b][rbVozilo];
     RibarBrodOslobodi(b);
-    if (uBrodu) SetPlayerPos(playerid, gRibarMjesto[0], gRibarMjesto[1], gRibarMjesto[2]);
+    if (uBrodu || !RibarUMarini(playerid, 3.0)) SetPlayerPos(playerid, gRibarMjesto[0], gRibarMjesto[1], gRibarMjesto[2]);
     if (!RibarUlov(playerid)) return ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Vratili ste brod.")), 1;
     new najblizi = -1, Float:najblize = 1.0e9;
     for (new k = 0; k < RIBAR_OTKUPA; k++)
@@ -302,6 +302,11 @@ RibarAlt(playerid)
     for (new r = 0; r < sizeof gRibe; r++) ukupno += gInv[playerid][gRibe[r]] * gRibaCijena[r], n += gInv[playerid][gRibe[r]];
     if (!n) return ObavijestGreska(playerid, T(playerid, "Nemate ribe za prodaju.")), 1;
     new iznos = BlagajnaIsplati(ukupno);
+    if (iznos < ukupno)
+    {
+        BlagajnaDodaj(iznos);
+        return ObavijestGreska(playerid, T(playerid, "Otkupljivac trenutno nema novca. Pokusajte kasnije.")), 1;
+    }
     if (!DajNovac(playerid, iznos))
     {
         BlagajnaDodaj(iznos);
@@ -331,7 +336,7 @@ RibarCheckpoint(playerid)
     gRibarRunda[playerid] = 0;
     gRibarPogodak[playerid] = 0;
     gRibarTraka[playerid] = 0.0;
-    gRibarSmjer[playerid] = 1.4;
+    gRibarSmjer[playerid] = 2.4;
     gRibarZel[playerid] = float(20 + random(60));
     RibarPanel(playerid);
     gRibarTimer[playerid] = SetTimerEx("RibarTrakaKorak", RIBAR_TRAKA_MS, true, "i", playerid);
@@ -368,14 +373,29 @@ bool:RibarKey(playerid, KEY:newkeys, KEY:oldkeys)
         RibarIgraKraj(playerid, true);
         return true;
     }
-    gRibarSmjer[playerid] *= 1.15;
+    gRibarSmjer[playerid] *= 1.2;
     gRibarZel[playerid] = float(10 + random(70));
     RibarPanel(playerid);
     return true;
 }
 
-RibarStateChange(playerid, PLAYER_STATE:newstate)
+RibarStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstate)
 {
+    if (newstate == PLAYER_STATE_ONFOOT && oldstate == PLAYER_STATE_DRIVER)
+    {
+        new m = RibarBrodIgraca(playerid), Float:x, Float:y, Float:z;
+        if (m == -1) return;
+        GetVehiclePos(gRibarBrod[m][rbVozilo], x, y, z);
+        if (!IsPlayerInRangeOfPoint(playerid, 10.0, x, y, z)) return;
+        if (RibarUMarini(playerid, RIBAR_MARINA_DOMET))
+        {
+            RibarVrati(playerid);
+            return;
+        }
+        PutPlayerInVehicle(playerid, gRibarBrod[m][rbVozilo], 0);
+        ObavijestGreska(playerid, T(playerid, "Brod ne mozete napustiti na moru. Vratite ga u marinu."));
+        return;
+    }
     if (newstate != PLAYER_STATE_DRIVER) return;
     new b = RibarBrodPoVozilu(GetPlayerVehicleID(playerid));
     if (b == -1) return;
@@ -395,9 +415,10 @@ RibarTick()
     {
         new i = gRibarBrod[b][rbIgrac];
         if (!gRibarBrod[b][rbIma] || i == INVALID_PLAYER_ID) continue;
-        if (!IsPlayerConnected(i) || PosaoIgraca(i) != POSAO_RIBAR)
+        if (!IsPlayerConnected(i) || PosaoIgraca(i) != POSAO_RIBAR || IsRanjen(i))
         {
-            RibarBrodOslobodi(b);
+            RibarKraj(i);
+            if (IsPlayerConnected(i)) ObavijestGreska(i, T(i, "Smjena je zavrsena. Brod je vracen u marinu."));
             continue;
         }
         if (GetPlayerVehicleID(i) == gRibarBrod[b][rbVozilo])
