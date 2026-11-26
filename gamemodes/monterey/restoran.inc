@@ -7,7 +7,8 @@
 #define REST_MENI           7
 #define REST_DOMET          1.6
 #define REST_KASA_DOMET     2.5
-#define REST_PREDAJA_DOMET  2.2
+#define REST_PREDAJA_DOMET  3.2
+#define REST_RED_POMAK      1.5
 #define REST_ULAZ_DOMET     2.0
 #define REST_PLACA_SAT      200
 #define REST_AKTIVAN_S      120
@@ -27,7 +28,7 @@
 #define REST_ULAZ_POMAK     1.6
 
 enum { RV_PIZZA, RV_BURGER, RV_CLUCKIN }
-enum { PT_KASA, PT_KUPAC, PT_ROSTILJ, PT_SLAGANJE, PT_POSAO, PT_POMFRIT, PT_IZLAZ, PT_BROJ }
+enum { PT_KASA, PT_KUPAC, PT_ROSTILJ, PT_SLAGANJE, PT_POSAO, PT_POMFRIT, PT_IZLAZ, PT_RADNO, PT_BROJ }
 enum { PV_BURGER, PV_PIZZA, PV_SALATA, PV_POMFRIT, PV_PICE, PV_PILETINA }
 enum { PG_NEMA, PG_DOLAZI, PG_KASA, PG_STOL_IDE, PG_STOL, PG_JEDE, PG_ODLAZI }
 enum { PN_ROSTILJ, PN_POMFRIT, PN_SLAGANJE, PN_NOSI }
@@ -39,19 +40,19 @@ static const gRsInt[REST_VRSTA] = { 5, 10, 9 };
 static const gRsSkin[REST_VRSTA] = { 155, 205, 167 };
 static const gRsBoja[REST_VRSTA] = { 0xE74C3CFF, 0xF39C12FF, 0xF1C40FFF };
 static const gRsMeniVrste[REST_VRSTA][REST_MENI] = { { 3, 4, 5, 6, 7, 8, -1 }, { 0, 1, 2, 6, 7, 8, -1 }, { 9, 10, 11, 6, 7, 8, -1 } };
-static const gRsTockaIme[PT_BROJ][] = { "Blagajnik", "Mjesto kupca", "Rostilj", "Slaganje i pakiranje", "Zaposlenje", "Friteza", "Izlaz" };
+static const gRsTockaIme[PT_BROJ][] = { "Blagajnik", "Mjesto kupca", "Rostilj", "Slaganje i pakiranje", "Zaposlenje", "Friteza", "Izlaz", "Radno mjesto iza pulta" };
 static Float:gRsTocka[REST_VRSTA][PT_BROJ][4] = {
     {
         { 375.60, -117.30, 1001.49, 180.0 }, { 375.60, -119.70, 1001.49, 0.0 }, { 373.80, -114.60, 1001.49, 0.0 }, { 377.40, -115.00, 1001.49, 0.0 },
-        { 369.1047, -114.7455, 1001.4995, 3.0862 }, { 375.60, -114.60, 1001.49, 0.0 }, { 372.3520, -133.3000, 1001.4922, 0.0 }
+        { 369.1047, -114.7455, 1001.4995, 3.0862 }, { 375.60, -114.60, 1001.49, 0.0 }, { 372.3520, -133.3000, 1001.4922, 0.0 }, { 0.0, 0.0, 0.0, 0.0 }
     },
     {
-        { 376.60, -65.85, 1001.51, 180.0 }, { 376.60, -68.20, 1001.51, 0.0 }, { 375.00, -63.50, 1001.51, 0.0 }, { 378.40, -63.50, 1001.51, 0.0 },
-        { 372.00, -64.00, 1001.51, 0.0 }, { 376.60, -63.00, 1001.51, 0.0 }, { 363.11, -74.88, 1001.51, 315.0 }
+        { 376.60, -65.85, 1001.51, 180.0 }, { 376.60, -68.20, 1001.51, 0.0 }, { 376.4793, -59.1182, 1001.5078, 92.5779 }, { 379.8015, -57.6346, 1001.5078, 359.5170 },
+        { 380.4156, -62.1695, 1001.5078, 267.4921 }, { 376.4560, -61.1247, 1001.5078, 91.0112 }, { 363.11, -74.88, 1001.51, 315.0 }, { 0.0, 0.0, 0.0, 0.0 }
     },
     {
-        { 368.10, -4.49, 1001.85, 180.0 }, { 368.10, -6.80, 1001.85, 0.0 }, { 366.50, -2.00, 1001.85, 0.0 }, { 369.80, -2.00, 1001.85, 0.0 },
-        { 364.00, -2.50, 1001.85, 0.0 }, { 368.10, -1.60, 1001.85, 0.0 }, { 364.98, -11.61, 1001.85, 0.0 }
+        { 368.10, -4.49, 1001.85, 180.0 }, { 368.10, -6.80, 1001.85, 0.0 }, { 366.50, -2.00, 1001.85, 0.0 }, { 371.8919, -4.1039, 1001.8589, 356.6996 },
+        { 364.9724, -5.3514, 1001.8516, 1.8800 }, { 370.2030, -3.9102, 1001.8589, 1.7130 }, { 364.98, -11.61, 1001.85, 0.0 }, { 370.8183, -4.4893, 1001.8589, 178.1213 }
     }
 };
 static Float:gRsStol[REST_VRSTA][REST_STOLOVA][4], gRsStolDb[REST_VRSTA][REST_STOLOVA], gRsStolova[REST_VRSTA];
@@ -215,7 +216,7 @@ static RestoranOznakeStvori(s)
     for (new t = 0; t < PT_BROJ; t++)
     {
         gRs[s][rsOznaka][t] = STREAMER_TAG_3D_TEXT_LABEL:0;
-        if (t == PT_KUPAC || t == PT_IZLAZ || !RestoranImaStanicu(v, t)) continue;
+        if (t == PT_KUPAC || t == PT_IZLAZ || t == PT_RADNO || !RestoranImaStanicu(v, t)) continue;
         new Float:x = RsT(s, t)[0], Float:y = RsT(s, t)[1], Float:z = RsT(s, t)[2] + 1.1;
         if (t == PT_POSAO) z = RsT(s, t)[2] + 0.4;
         else if (t != PT_KASA)
@@ -248,6 +249,36 @@ static bool:RestoranTu(playerid, s, t, Float:r = REST_DOMET)
     return IsPlayerInRangeOfPoint(playerid, r, RsT(s, t)[0], RsT(s, t)[1], RsT(s, t)[2]);
 }
 
+static bool:RestoranImaRadno(s)
+{
+    return RsT(s, PT_RADNO)[0] != 0.0 || RsT(s, PT_RADNO)[1] != 0.0;
+}
+
+static bool:RestoranKodPosla(playerid, s, Float:r = REST_DOMET)
+{
+    return RestoranTu(playerid, s, PT_POSAO, r) || (gRsSmjena[playerid] == s + 1 && RestoranImaRadno(s) && RestoranTu(playerid, s, PT_RADNO, r));
+}
+
+static RestoranStanica(playerid, s)
+{
+    new najbliza = -1, Float:najmanje = REST_DOMET, v = gRs[s][rsVrsta];
+    static const stanice[] = { PT_ROSTILJ, PT_POMFRIT, PT_SLAGANJE };
+    for (new k = 0; k < sizeof stanice; k++)
+    {
+        new t = stanice[k];
+        if (!RestoranImaStanicu(v, t)) continue;
+        new Float:d = GetPlayerDistanceFromPoint(playerid, RsT(s, t)[0], RsT(s, t)[1], RsT(s, t)[2]);
+        if (d <= najmanje) najmanje = d, najbliza = t;
+    }
+    return najbliza;
+}
+
+static bool:RestoranNosi(playerid)
+{
+    new s = gRsSmjena[playerid] - 1, n = gRsRad[playerid];
+    return s >= 0 && n >= 0 && gRsNar[s][n][pnIma] && gRsNar[s][n][pnStanje] == PN_NOSI;
+}
+
 RestoranUlaz(playerid)
 {
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 0;
@@ -255,6 +286,7 @@ RestoranUlaz(playerid)
     if (s != -1)
     {
         if (!RestoranTu(playerid, s, PT_IZLAZ, REST_ULAZ_DOMET)) return 0;
+        if (RestoranNosi(playerid)) return ObavijestGreska(playerid, T(playerid, "Prvo predajte narudzbu koju nosite.")), 1;
         RestoranShopZatvori(playerid);
         PrebaciIgraca(playerid, 0, 0, gRs[s][rsX], gRs[s][rsY], gRs[s][rsZ], gRs[s][rsA] + 180.0);
         return 1;
@@ -438,9 +470,9 @@ static RestoranStolSlobodan(s)
 
 static RestoranGostRed(s, g, &Float:x, &Float:y, &Float:z)
 {
-    new Float:pomak = (float(g) - 1.5) * 0.9, Float:a = RsT(s, PT_KUPAC)[3] + 90.0;
-    x = RsT(s, PT_KUPAC)[0] + pomak * floatsin(-a, degrees);
-    y = RsT(s, PT_KUPAC)[1] + pomak * floatcos(-a, degrees);
+    new Float:k = RsT(s, PT_KASA)[3], Float:pomak = (float(g) - 1.5) * 0.9, Float:a = k + 90.0;
+    x = RsT(s, PT_KASA)[0] + REST_RED_POMAK * floatsin(-k, degrees) + pomak * floatsin(-a, degrees);
+    y = RsT(s, PT_KASA)[1] + REST_RED_POMAK * floatcos(-k, degrees) + pomak * floatcos(-a, degrees);
     z = RsT(s, PT_KUPAC)[2];
 }
 
@@ -529,7 +561,7 @@ static RestoranGostNaKasi(s, g)
     RestoranGostRed(s, g, x, y, z);
     Lik_Stani(lik);
     Lik_Postavi(lik, x, y, z);
-    Lik_Kut(lik, RsT(s, PT_KUPAC)[3]);
+    Lik_Kut(lik, RsT(s, PT_KASA)[3] + 180.0);
     new n = RestoranNovaNarudzba(s, g, INVALID_PLAYER_ID, RestoranNasumicnaStavka(v));
     if (n == -1)
     {
@@ -910,21 +942,21 @@ RestoranAlt(playerid)
     new s = RestoranIgraca(playerid);
     if (s == -1) return 0;
     if (gRsShop[playerid] != -1) return 1;
-    if (RestoranTu(playerid, s, PT_POSAO)) return RestoranIzbornik(playerid, s), 1;
+    if (RestoranNosi(playerid))
+    {
+        if (!RestoranPredaj(playerid, s, gRsRad[playerid])) ObavijestGreska(playerid, T(playerid, "Pridite blize kupcu da mu predate narudzbu."));
+        return 1;
+    }
+    if (RestoranKodPosla(playerid, s)) return RestoranIzbornik(playerid, s), 1;
     if (gRsSmjena[playerid] == s + 1)
     {
-        new n = gRsRad[playerid], bool:rostilj = RestoranImaStanicu(gRs[s][rsVrsta], PT_ROSTILJ) && RestoranTu(playerid, s, PT_ROSTILJ);
-        if (n >= 0 && gRsNar[s][n][pnStanje] == PN_NOSI)
+        switch (RestoranStanica(playerid, s))
         {
-            if (RestoranPredaj(playerid, s, n)) return 1;
-            if (rostilj || RestoranTu(playerid, s, PT_SLAGANJE) || RestoranTu(playerid, s, PT_POMFRIT)) return ObavijestGreska(playerid, T(playerid, "Prvo odnesite narudzbu koju nosite.")), 1;
+            case PT_ROSTILJ: return RestoranRostiljPocni(playerid, s);
+            case PT_POMFRIT: return RestoranPomfritPocni(playerid, s);
+            case PT_SLAGANJE: return RestoranSlaganjePocni(playerid, s);
         }
-        else
-        {
-            if (rostilj) return RestoranRostiljPocni(playerid, s);
-            if (RestoranTu(playerid, s, PT_POMFRIT)) return RestoranPomfritPocni(playerid, s);
-            if (RestoranTu(playerid, s, PT_SLAGANJE)) return RestoranSlaganjePocni(playerid, s);
-        }
+        return 0;
     }
     if (RestoranTu(playerid, s, PT_KUPAC, REST_KASA_DOMET + 1.0))
     {
@@ -941,24 +973,31 @@ static RestoranIzbornik(playerid, s)
     return UpitDaNe(playerid, UPIT_RESTORAN, s, 2, RestoranNaziv(playerid, s), T(playerid, "Zelite li zavrsiti smjenu?"));
 }
 
-static RestoranPresvuci(playerid, bool:radno)
+static RestoranPresvuci(playerid, s, bool:radno)
 {
     Fade(playerid, 0);
-    SetTimerEx("RestoranPresvuciKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "iii", playerid, gAccountId[playerid], radno);
+    SetTimerEx("RestoranPresvuciKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "iiii", playerid, gAccountId[playerid], s, radno);
 }
 
-forward RestoranPresvuciKraj(playerid, racun, radno);
-public RestoranPresvuciKraj(playerid, racun, radno)
+forward RestoranPresvuciKraj(playerid, racun, s, radno);
+public RestoranPresvuciKraj(playerid, racun, s, radno)
 {
     if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
-    new s = gRsSmjena[playerid] - 1;
-    SetPlayerSkin(playerid, radno && s >= 0 ? gRsSkin[gRs[s][rsVrsta]] : OdjecaSkinIgraca(playerid));
+    new bool:tu = RestoranIgraca(playerid) == s;
+    SetPlayerSkin(playerid, radno && gRsSmjena[playerid] == s + 1 ? gRsSkin[gRs[s][rsVrsta]] : OdjecaSkinIgraca(playerid));
+    if (tu && RestoranImaRadno(s))
+    {
+        new t = radno ? PT_RADNO : PT_POSAO;
+        SetPlayerPos(playerid, RsT(s, t)[0], RsT(s, t)[1], RsT(s, t)[2]);
+        SetPlayerFacingAngle(playerid, RsT(s, t)[3]);
+        SetCameraBehindPlayer(playerid);
+    }
     Fade(playerid, FADE_SLOJEVA + 1);
 }
 
 RestoranUpit(playerid, s, opcija, bool:da)
 {
-    if (!da || RestoranIgraca(playerid) != s || !RestoranTu(playerid, s, PT_POSAO, REST_DOMET + 2.0)) return 1;
+    if (!da || RestoranIgraca(playerid) != s || !RestoranKodPosla(playerid, s, REST_DOMET + 2.0)) return 1;
     if (opcija == 0 && PosaoIgraca(playerid) != POSAO_RESTORAN)
     {
         RibarKraj(playerid);
@@ -972,7 +1011,7 @@ RestoranUpit(playerid, s, opcija, bool:da)
         gRsSmjena[playerid] = s + 1;
         gRsAkcija[playerid] = gettime();
         if (gRs[s][rsSljedeci] < gettime()) gRs[s][rsSljedeci] = gettime() + 5;
-        RestoranPresvuci(playerid, true);
+        RestoranPresvuci(playerid, s, true);
         return ObavijestInfo(playerid, RestoranNaziv(playerid, s), T(playerid, "Smjena je pocela. Pecite na rostilju, frizi i u peci, slozite i zapakirajte narudzbu, pa je odnesite kupcu."));
     }
     if (opcija == 2 && gRsSmjena[playerid] == s + 1)
@@ -986,7 +1025,7 @@ RestoranUpit(playerid, s, opcija, bool:da)
 RestoranPosao(playerid)
 {
     new s = RestoranIgraca(playerid);
-    if (s == -1 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !RestoranTu(playerid, s, PT_POSAO)) return 0;
+    if (s == -1 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !RestoranKodPosla(playerid, s)) return 0;
     RestoranIzbornik(playerid, s);
     return 1;
 }
@@ -1010,7 +1049,7 @@ RestoranSmjenaKraj(playerid, bool:fade = false)
     if (!gRsSmjena[playerid]) return;
     RestoranRadnikPusti(playerid);
     RestoranListaMakni(playerid);
-    if (IsPlayerConnected(playerid) && fade) RestoranPresvuci(playerid, false);
+    if (IsPlayerConnected(playerid) && fade) RestoranPresvuci(playerid, gRsSmjena[playerid] - 1, false);
     gRsSmjena[playerid] = 0;
     if (IsPlayerConnected(playerid) && !fade) SetPlayerSkin(playerid, OdjecaSkinIgraca(playerid));
 }
@@ -1080,12 +1119,7 @@ static RestoranListaOsvjezi(playerid, s)
 static RestoranSavjeti(playerid, s)
 {
     new k = -1, v = gRs[s][rsVrsta];
-    if (gRsIgra[playerid] == PI_NEMA && gRsRad[playerid] == -1)
-    {
-        if (RestoranImaStanicu(v, PT_ROSTILJ) && RestoranTu(playerid, s, PT_ROSTILJ)) k = PT_ROSTILJ;
-        else if (RestoranTu(playerid, s, PT_POMFRIT)) k = PT_POMFRIT;
-        else if (RestoranTu(playerid, s, PT_SLAGANJE)) k = PT_SLAGANJE;
-    }
+    if (gRsIgra[playerid] == PI_NEMA && gRsRad[playerid] == -1) k = RestoranStanica(playerid, s);
     if (k != -1 && k != gRsSavjet[playerid])
         Savjet(playerid, k == PT_ROSTILJ ? T(playerid, "~y~ALT~w~ - peci meso") : k == PT_POMFRIT ? T(playerid, "~y~ALT~w~ - friteza") : v == RV_PIZZA ? T(playerid, "~y~ALT~w~ - slozi, ispeci pizzu i zapakiraj") : T(playerid, "~y~ALT~w~ - slozi i zapakiraj"), 4000);
     gRsSavjet[playerid] = k;
