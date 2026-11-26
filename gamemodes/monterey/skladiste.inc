@@ -33,10 +33,7 @@
 #define SK_VILJ_JEDINICA    2500
 #define SK_TERET_Y          1.45
 #define SK_TERET_Z          -0.44
-#define SK_VILJ_UZMI        0.6
-#define SK_VILJ_PALETA      0.3
 #define SK_VILJ_VRH         2.1
-#define SK_VILJ_PODIGNI     0.05
 #define SK_VILJ_NAPRIJED    1.0
 #define SK_DOLAZAK_RAZMAK   20
 #define SK_NPC_BRZINA       4.0
@@ -822,7 +819,7 @@ static bool:SkladistePoravnat(playerid, cilj)
     new p = cilj / sizeof gSkladisteMjesto, Float:c = floatcos(gSkladistePolica[p][3], degrees), Float:s = floatsin(gSkladistePolica[p][3], degrees);
     new Float:dx = x - gSkladistePolica[p][0], Float:dy = y - gSkladistePolica[p][1];
     new Float:lx = dx * c + dy * s, Float:ly = -dx * s + dy * c, Float:smx = fx * c + fy * s, Float:smy = -fx * s + fy * c;
-    return floatabs(ly - gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][0]) < 0.4 && floatabs(lx) > 0.9 && floatabs(lx) < 2.0 && floatabs(smy) < 0.26 && smx * lx < 0.0;
+    return floatabs(ly - gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][0]) < 0.5 && floatabs(lx) > 0.2 && floatabs(lx) < 2.2 && floatabs(smy) < 0.34 && smx * lx < 0.0;
 }
 
 static SkladisteIznos(playerid)
@@ -904,12 +901,15 @@ public SkladisteKontrola(playerid)
         return;
     }
     new Float:h = float(min(gSkladisteSync[playerid], SK_VILJ_JEDINICA)) * SK_VILJ_HOD / float(SK_VILJ_JEDINICA);
-    new smjer = h > gSkladisteVisina[playerid] + 0.005 ? 1 : h < gSkladisteVisina[playerid] - 0.005 ? -1 : 0;
-    if (!smjer) return;
-    gSkladisteVisina[playerid] = h;
-    if (gSkladisteFaza[playerid] == 2) SkladisteTeretNaVilj(playerid);
-    if (gSkladisteFaza[playerid] == 1 && smjer > 0 && h >= SK_VILJ_PODIGNI && h <= SK_VILJ_UZMI && SkladistePoravnat(playerid, cilj)) SkladistePodigni(playerid);
-    else if (gSkladisteFaza[playerid] == 2 && smjer < 0 && SkladisteVrsta(cilj) == SKC_PALETA && h <= SK_VILJ_PALETA && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
+    if (floatabs(h - gSkladisteVisina[playerid]) > 0.005)
+    {
+        gSkladisteVisina[playerid] = h;
+        if (gSkladisteFaza[playerid] == 2) SkladisteTeretNaVilj(playerid);
+    }
+    new KEY:tipke, gd, lr;
+    GetPlayerKeys(playerid, tipke, gd, lr);
+    if (gSkladisteFaza[playerid] == 1 && (tipke & KEY_ANALOG_UP) && SkladistePoravnat(playerid, cilj)) SkladistePodigni(playerid);
+    else if (gSkladisteFaza[playerid] == 2 && (tipke & KEY_ANALOG_DOWN) && SkladisteVrsta(cilj) == SKC_PALETA && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
 }
 
 static SkladisteUtovari(r)
