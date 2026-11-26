@@ -1,4 +1,5 @@
 #define GEPEK_MJESTA        6
+#define DASH_MS             150
 #define VLASNIK_PIJACA      (-1)
 #define GEPEK_DOMET         2.5
 #define GEPEK_PRETRES_MS    5000
@@ -1052,7 +1053,7 @@ InitVozilo()
     assert(JeDizel(431) && !JeDizel(411) && gVoziloBrzina[411 - 400] == 240);
     assert(VoziloSteta(1.0, 1) < VoziloSteta(1.0, 0));
     ManualVehicleEngineAndLights();
-    SetTimer("VoziloDash", 250, true);
+    SetTimer("VoziloDash", DASH_MS, true);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gas_pumps (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, dizel INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS gas_pump_shops (pump INTEGER PRIMARY KEY, shop INTEGER NOT NULL)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT p.id, p.x, p.y, p.z, p.dizel, IFNULL(s.shop, 0) FROM gas_pumps p LEFT JOIN gas_pump_shops s ON s.pump = p.id ORDER BY p.id LIMIT %d", PUMPA_MAX);
@@ -1610,8 +1611,8 @@ static KradjaKorak(playerid)
 #define DASH_R              31.0
 #define DASH_ASP            1.07
 #define DASH_CRTICA         9
-#define DASH_KAZ            6
-#define DASH_KUT_KORAK      3
+#define DASH_KAZ            4
+#define DASH_KUT_KORAK      2
 #define DASH_TD             (DT_LAMPICE + sizeof gDashDio)
 #define DASH_BOJA_SLABO     0x2A3644CC
 #define DASH_BOJA_LABEL     0x8AA0B6FF
@@ -1692,8 +1693,7 @@ static DashKazaljka(playerid, Float:cx, kaz, kut)
     for (new i = 0; i < DASH_KAZ; i++)
     {
         new PlayerText:td = gDash[playerid][kaz + i];
-        DashTocka(cx, DASH_GY, 4.0 + 4.0 * float(i), float(kut), x, y);
-        PlayerTextDrawHide(playerid, td);
+        DashTocka(cx, DASH_GY, 4.0 + 6.0 * float(i), float(kut), x, y);
         PlayerTextDrawSetPos(playerid, td, x - 1.0, y - 1.0);
         PlayerTextDrawShow(playerid, td);
     }
@@ -1796,15 +1796,22 @@ static DashOkretaji(v, kmh, mjenjac)
     return r > 100 ? 100 : r < 12 ? 12 : r;
 }
 
+static DashGlatko(trenutni, cilj)
+{
+    cilj = cilj / DASH_KUT_KORAK * DASH_KUT_KORAK;
+    if (trenutni == -1 || (cilj - trenutni <= DASH_KUT_KORAK && trenutni - cilj <= DASH_KUT_KORAK)) return cilj;
+    return (trenutni + (cilj - trenutni) / 2) / DASH_KUT_KORAK * DASH_KUT_KORAK;
+}
+
 static DashOsvjezi(playerid, v)
 {
     new Float:vx, Float:vy, Float:vz, Float:zdravlje, bool:motor = VoziloGet(v, VP_MOTOR) == 1;
     GetVehicleVelocity(v, vx, vy, vz);
     new kmh = floatround(VectorSize(vx, vy, 0.0) * 180.0), mjenjac = DashMjenjac(v, kmh, motor), skala = gDashStanje[playerid][DS_SKALA];
     new kut = -120 + 240 * (kmh > skala ? skala : kmh) / skala;
-    if (DashPromjena(playerid, DS_S_KUT, kut / DASH_KUT_KORAK * DASH_KUT_KORAK)) DashKazaljka(playerid, DASH_SX, DT_S_KAZ, gDashStanje[playerid][DS_S_KUT]);
+    if (DashPromjena(playerid, DS_S_KUT, DashGlatko(gDashStanje[playerid][DS_S_KUT], kut))) DashKazaljka(playerid, DASH_SX, DT_S_KAZ, gDashStanje[playerid][DS_S_KUT]);
     kut = -120 + 240 * DashOkretaji(v, kmh, mjenjac) * 7 / 800;
-    if (DashPromjena(playerid, DS_T_KUT, kut / DASH_KUT_KORAK * DASH_KUT_KORAK)) DashKazaljka(playerid, DASH_TX, DT_T_KAZ, gDashStanje[playerid][DS_T_KUT]);
+    if (DashPromjena(playerid, DS_T_KUT, DashGlatko(gDashStanje[playerid][DS_T_KUT], kut))) DashKazaljka(playerid, DASH_TX, DT_T_KAZ, gDashStanje[playerid][DS_T_KUT]);
     new boja = gGorivo[v] <= VOZILO_REZERVA ? DASH_BOJA_CRVENO : gGorivo[v] <= VoziloTank(v) * 0.5 ? DASH_BOJA_ZUTO : DASH_BOJA_SLABO;
     if (DashPromjena(playerid, DS_GORIVO_BOJA, boja)) DashIkona(playerid, 0, boja);
     GetVehicleHealth(v, zdravlje);
@@ -1846,7 +1853,7 @@ public VoziloDash()
         if (v != gDashV[i]) DashPokazi(i, v);
         new Float:vx, Float:vy, Float:vz, Float:m;
         GetVehicleVelocity(v, vx, vy, vz);
-        m = VectorSize(vx, vy, 0.0) * 50.0 * 0.25;
+        m = VectorSize(vx, vy, 0.0) * 50.0 * float(DASH_MS) / 1000.0;
         if (m > 0.05)
         {
             VoziloKmUcitaj(v);

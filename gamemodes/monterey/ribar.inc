@@ -5,7 +5,7 @@
 #define RIBAR_MARINA_DOMET  80.0
 #define RIBAR_MIRUJE_S      900
 #define RIBAR_CILJ_DOMET    15.0
-#define RIBAR_RUNDI         3
+#define RIBAR_RUNDI_MIN     2
 #define RIBAR_TRAKA_MS      40
 #define RIBAR_TRAKA_ZELENO  16.0
 #define RIBAR_SKIN          34
@@ -23,7 +23,7 @@ enum E_RIBAR_OTKUP { bool:roIma, roDb, roAktor, Float:roX, Float:roY, Float:roZ,
 static gRibarOtkup[RIBAR_OTKUPA][E_RIBAR_OTKUP];
 static Float:gRibarMjesto[3], gRibarIkona, STREAMER_TAG_3D_TEXT_LABEL:gRibarTekst, bool:gRibarImaMjesto;
 static gRibarCilj[MAX_PLAYERS], Float:gRibarCiljPoz[MAX_PLAYERS][3];
-static bool:gRibarIgra[MAX_PLAYERS], gRibarTimer[MAX_PLAYERS], gRibarRunda[MAX_PLAYERS], gRibarPogodak[MAX_PLAYERS];
+static bool:gRibarIgra[MAX_PLAYERS], gRibarTimer[MAX_PLAYERS], gRibarRunda[MAX_PLAYERS], gRibarRundi[MAX_PLAYERS], gRibarRiba[MAX_PLAYERS];
 static Float:gRibarTraka[MAX_PLAYERS], Float:gRibarSmjer[MAX_PLAYERS], Float:gRibarZel[MAX_PLAYERS];
 static gRibarApPopis[MAX_PLAYERS][RIBAR_BRODOVA + RIBAR_OTKUPA];
 
@@ -123,14 +123,13 @@ static RibarIgraKraj(playerid, bool:gotovo)
     gRibarTimer[playerid] = 0;
     IgraTdMakni(playerid);
     if (!gotovo) return;
-    if (gRibarPogodak[playerid] < 2)
+    if (gRibarRunda[playerid] < gRibarRundi[playerid])
     {
         IgraObavijest(playerid, T(playerid, "Ribolov"), OBAVIJEST_GRESKA, T(playerid, "Riba se otkacila. Pokusajte na sljedecoj oznaci."));
     }
     else
     {
-        new r = RibaNasumicno(), poruka[144];
-        if (gRibarPogodak[playerid] == RIBAR_RUNDI) r = max(r, RibaNasumicno());
+        new r = gRibarRiba[playerid], poruka[144];
         if (!GiveItem(playerid, gRibe[r], 1)) IgraObavijest(playerid, T(playerid, "Ribolov"), OBAVIJEST_GRESKA, T(playerid, "Nemate mjesta za tu ribu. Prodajte ulov otkupljivacu ribe."));
         else
         {
@@ -341,7 +340,8 @@ RibarCheckpoint(playerid)
     RibarCiljMakni(playerid);
     gRibarIgra[playerid] = true;
     gRibarRunda[playerid] = 0;
-    gRibarPogodak[playerid] = 0;
+    gRibarRiba[playerid] = RibaNasumicno();
+    gRibarRundi[playerid] = RIBAR_RUNDI_MIN + gRibarRiba[playerid];
     gRibarTraka[playerid] = 0.0;
     gRibarSmjer[playerid] = 2.4;
     gRibarZel[playerid] = float(20 + random(60));
@@ -353,7 +353,7 @@ RibarCheckpoint(playerid)
 static RibarPanel(playerid)
 {
     new tekst[144];
-    format(tekst, sizeof tekst, T(playerid, "Izvlacite mrezu: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d)."), gRibarRunda[playerid] + 1, RIBAR_RUNDI);
+    format(tekst, sizeof tekst, T(playerid, "Izvlacite mrezu: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d)."), gRibarRunda[playerid] + 1, gRibarRundi[playerid]);
     IgraPanel(playerid, T(playerid, "Ribolov"), 60.0, RIBAR_BOJA);
     IgraTraka(playerid, gRibarZel[playerid], gRibarZel[playerid] + RIBAR_TRAKA_ZELENO, 0x1F3A5FFF, 0x27AE60FF, 0x1F3A5FFF, tekst);
     IgraOznakaPomakni(playerid, gRibarTraka[playerid]);
@@ -373,9 +373,8 @@ bool:RibarKey(playerid, KEY:newkeys, KEY:oldkeys)
     if (!gRibarIgra[playerid]) return false;
     if (!(newkeys & KEY_HANDBRAKE) || (oldkeys & KEY_HANDBRAKE)) return true;
     new bool:pogodak = gRibarTraka[playerid] >= gRibarZel[playerid] && gRibarTraka[playerid] <= gRibarZel[playerid] + RIBAR_TRAKA_ZELENO;
-    if (pogodak) gRibarPogodak[playerid]++;
     PlayerPlaySound(playerid, pogodak ? 1056 : 1055, 0.0, 0.0, 0.0);
-    if (++gRibarRunda[playerid] >= RIBAR_RUNDI)
+    if (!pogodak || ++gRibarRunda[playerid] >= gRibarRundi[playerid])
     {
         RibarIgraKraj(playerid, true);
         return true;

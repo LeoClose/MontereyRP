@@ -4,7 +4,7 @@
 #define RP_STRANA_DOMET     1.6
 #define RP_STRANA_RAZMAK    0.6
 #define RP_KUKA             3.2
-#define RP_RUB              1.0
+#define RP_RUB              1.6
 #define RP_PLOCNIK_MIN      4.0
 #define RP_PLOCNIK_MAX      14.0
 #define RP_KUKA_DOMET       1.8
@@ -15,10 +15,12 @@
 #define RP_ISPLATA_MAX      500
 #define RP_CIJENA_ZADANO    20000
 #define RP_DIJELOVA         8
-#define RP_RAD_MS           2500
 #define RP_KAMION_HP        300.0
 #define RP_BOJA             0x95A5A6FF
 #define RP_OZNAKA_MODEL     1318
+#define RP_TRAKA_MS         40
+#define RP_TRAKA_ZELENO     14.0
+#define RP_SAVJET_MS        3000
 
 enum { RPF_NEMA, RPF_TRAZI, RPF_VUCE, RPF_RASTAVLJA }
 
@@ -31,12 +33,14 @@ static const gRepoZabranjeni[] = {
 static const gRepoRezerva[] = { 400, 401, 404, 405, 410, 412, 419, 421, 426, 436, 445, 466, 467, 474, 475, 479, 491, 492, 496, 507, 516, 517, 518, 526, 527, 529, 540, 542, 546, 547, 549, 550, 551, 560, 562, 565, 566, 567, 575, 576, 580, 585, 587, 589, 600, 602, 603 };
 
 static Float:gRepoMjesto[4], Float:gRepoKamionPoz[4], Float:gRepoCilj[4], STREAMER_TAG_3D_TEXT_LABEL:gRepoTekst, bool:gRepoImaMjesto, bool:gRepoImaKamion, bool:gRepoImaCilj, bool:gRepoDozvoljen[212];
-static gRepoFaza[MAX_PLAYERS], gRepoKamion[MAX_PLAYERS], gRepoAuto[MAX_PLAYERS], gRepoIsplata[MAX_PLAYERS], gRepoGotovo[MAX_PLAYERS], gRepoDijelovi[MAX_PLAYERS], bool:gRepoRadi[MAX_PLAYERS];
+static gRepoFaza[MAX_PLAYERS], gRepoKamion[MAX_PLAYERS], gRepoAuto[MAX_PLAYERS], gRepoIsplata[MAX_PLAYERS], gRepoGotovo[MAX_PLAYERS], gRepoDijelovi[MAX_PLAYERS], gRepoSavjet[MAX_PLAYERS];
+static bool:gRepoIgra[MAX_PLAYERS], gRepoIgraStrana[MAX_PLAYERS], gRepoIgraTimer[MAX_PLAYERS], Float:gRepoTraka[MAX_PLAYERS], Float:gRepoSmjer[MAX_PLAYERS], Float:gRepoZel[MAX_PLAYERS];
 static STREAMER_TAG_OBJECT:gRepoOznaka[MAX_PLAYERS][4], STREAMER_TAG_AREA:gRepoZona[MAX_PLAYERS][4];
 
 InitRepo()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS job_repo (id INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS repo_cars (account INTEGER PRIMARY KEY, model INTEGER NOT NULL, price INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, parts INTEGER NOT NULL DEFAULT 0, earned INTEGER NOT NULL DEFAULT 0)"));
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_repo WHERE id IN (1, 2, 3)");
     for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
     {
@@ -96,17 +100,17 @@ static RepoStrana(v, s, &Float:ox, &Float:oy)
     oy = s == 0 ? sy / 2.0 + RP_STRANA_RAZMAK : s == 1 ? -(sy / 2.0 + RP_STRANA_RAZMAK) : 0.0;
 }
 
-static RepoOznakeMakni(playerid)
-{
-    for (new s = 0; s < 4; s++) RepoStranaMakni(playerid, s);
-}
-
 static RepoStranaMakni(playerid, s)
 {
     if (_:gRepoOznaka[playerid][s]) DestroyDynamicObject(gRepoOznaka[playerid][s]);
     if (IsValidDynamicArea(gRepoZona[playerid][s])) DestroyDynamicArea(gRepoZona[playerid][s]);
     gRepoOznaka[playerid][s] = STREAMER_TAG_OBJECT:0;
     gRepoZona[playerid][s] = STREAMER_TAG_AREA:0;
+}
+
+static RepoOznakeMakni(playerid)
+{
+    for (new s = 0; s < 4; s++) RepoStranaMakni(playerid, s);
 }
 
 static RepoAutoMakni(playerid)
@@ -133,56 +137,6 @@ static bool:RepoUlica(&Float:x, &Float:y, &Float:z, &Float:a)
     return true;
 }
 
-static RepoNovoAuto(playerid)
-{
-    RepoAutoMakni(playerid);
-    new cijena = RP_CIJENA_ZADANO, model = SalonNasumicnoVozilo(cijena, gRepoDozvoljen);
-    if (!model) model = gRepoRezerva[random(sizeof gRepoRezerva)], cijena = RP_CIJENA_ZADANO;
-    new Float:x, Float:y, Float:z, Float:a = float(random(360)), Float:hx, Float:hy, Float:hz;
-    new bool:nasao = false;
-    for (new k = 0; k < 60 && !nasao; k++) nasao = RepoUlica(x, y, z, a);
-    if (!nasao) Lik_Cesta(gRepoMjesto[0] + RP_UDALJENOST_MIN, gRepoMjesto[1], gRepoMjesto[2], x, y, z);
-    if (Kolizija_Zraka(x, y, z + 4.0, x, y, z - 6.0, hx, hy, hz)) z = hz;
-    gRepoAuto[playerid] = CreateVehicle(model, x, y, z + 0.8, a, -1, -1, -1);
-    if (gRepoAuto[playerid] == INVALID_VEHICLE_ID) return 0;
-    GepekZonaMakni(gRepoAuto[playerid]);
-    VoziloSet(gRepoAuto[playerid], VP_MOTOR, 0);
-    VoziloSet(gRepoAuto[playerid], VP_VRATA, 1);
-    gRepoIsplata[playerid] = clamp(cijena / 100 * RP_POSTO, RP_ISPLATA_MIN, RP_ISPLATA_MAX);
-    gRepoGotovo[playerid] = 0;
-    gRepoDijelovi[playerid] = 0;
-    gRepoFaza[playerid] = RPF_TRAZI;
-    SetPlayerCheckpoint(playerid, x, y, z, 4.0);
-    new poruka[144];
-    format(poruka, sizeof poruka, T(playerid, "Pronadite %s (oznaceno na karti) i prikacite ga kamionom unatrag."), gImenaVozila[model - 400]);
-    ObavijestInfo(playerid, T(playerid, "Repo"), poruka);
-    return 1;
-}
-
-static RepoPocni(playerid)
-{
-    if (!gRepoImaKamion || !gRepoImaCilj) return ObavijestGreska(playerid, T(playerid, "Repo posao jos nije postavljen.")), 1;
-    new v = CreateVehicle(RP_KAMION_MODEL, gRepoKamionPoz[0], gRepoKamionPoz[1], gRepoKamionPoz[2] + 0.5, gRepoKamionPoz[3], 0, 0, -1);
-    if (v == INVALID_VEHICLE_ID) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kamiona.")), 1;
-    gRepoKamion[playerid] = v;
-    PutPlayerInVehicle(playerid, v, 0);
-    VoziloSet(v, VP_MOTOR, 1);
-    RepoNovoAuto(playerid);
-    Savjet(playerid, T(playerid, "Dovezite se unatrag do auta da ga prikacite~n~Odvezite ga na mjesto za dovoz~n~Obidite auto i pritisnite ~y~ALT~w~ kod strelica"), 8000);
-    return 1;
-}
-
-RepoKraj(playerid)
-{
-    if (!gRepoFaza[playerid]) return;
-    gRepoFaza[playerid] = RPF_NEMA;
-    gRepoRadi[playerid] = false;
-    RepoAutoMakni(playerid);
-    if (gRepoKamion[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gRepoKamion[playerid]);
-    gRepoKamion[playerid] = INVALID_VEHICLE_ID;
-    if (IsPlayerConnected(playerid)) DisablePlayerCheckpoint(playerid);
-}
-
 static RepoDioPostavi(v, s, dio)
 {
     new VEHICLE_PANEL_STATUS:paneli, VEHICLE_DOOR_STATUS:vrata, VEHICLE_LIGHT_STATUS:svjetla, VEHICLE_TIRE_STATUS:gume;
@@ -199,6 +153,89 @@ static RepoDioPostavi(v, s, dio)
         case 7: gume = VEHICLE_TIRE_STATUS:(_:gume | 0x03);
     }
     UpdateVehicleDamageStatus(v, paneli, vrata, svjetla, gume);
+}
+
+static RepoNovoAuto(playerid)
+{
+    RepoAutoMakni(playerid);
+    new model, cijena, Float:x, Float:y, Float:z, Float:a, dijelovi = 0, zaradjeno = 0;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT model, price, x, y, z, a, parts, earned FROM repo_cars WHERE account = %d", gAccountId[playerid]);
+    new bool:spremljeno = DB_GetRowCount(res) > 0;
+    if (spremljeno)
+    {
+        model = DB_GetFieldInt(res, 0);
+        cijena = DB_GetFieldInt(res, 1);
+        x = DB_GetFieldFloat(res, 2);
+        y = DB_GetFieldFloat(res, 3);
+        z = DB_GetFieldFloat(res, 4);
+        a = DB_GetFieldFloat(res, 5);
+        dijelovi = DB_GetFieldInt(res, 6);
+        zaradjeno = DB_GetFieldInt(res, 7);
+    }
+    DB_FreeResultSet(res);
+    if (!spremljeno)
+    {
+        cijena = RP_CIJENA_ZADANO;
+        model = SalonNasumicnoVozilo(cijena, gRepoDozvoljen);
+        if (!model) model = gRepoRezerva[random(sizeof gRepoRezerva)], cijena = RP_CIJENA_ZADANO;
+        new bool:nasao = false, Float:hx, Float:hy, Float:hz;
+        a = float(random(360));
+        for (new k = 0; k < 60 && !nasao; k++) nasao = RepoUlica(x, y, z, a);
+        if (!nasao) Lik_Cesta(gRepoMjesto[0] + RP_UDALJENOST_MIN, gRepoMjesto[1], gRepoMjesto[2], x, y, z);
+        if (Kolizija_Zraka(x, y, z + 1.5, x, y, z - 5.0, hx, hy, hz)) z = hz;
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO repo_cars (account, model, price, x, y, z, a, parts, earned) VALUES (%d, %d, %d, %f, %f, %f, %f, 0, 0)", gAccountId[playerid], model, cijena, x, y, z, a));
+    }
+    gRepoAuto[playerid] = CreateVehicle(model, x, y, z + 0.6, a, -1, -1, -1);
+    if (gRepoAuto[playerid] == INVALID_VEHICLE_ID) return 0;
+    GepekZonaMakni(gRepoAuto[playerid]);
+    VoziloSet(gRepoAuto[playerid], VP_MOTOR, 0);
+    VoziloSet(gRepoAuto[playerid], VP_VRATA, 1);
+    gRepoIsplata[playerid] = clamp(cijena / 100 * RP_POSTO, RP_ISPLATA_MIN, RP_ISPLATA_MAX);
+    gRepoGotovo[playerid] = zaradjeno;
+    gRepoDijelovi[playerid] = dijelovi;
+    for (new b = 0; b < RP_DIJELOVA; b++) if (dijelovi >> b & 1) RepoDioPostavi(gRepoAuto[playerid], b / 2, b % 2);
+    gRepoFaza[playerid] = RPF_TRAZI;
+    gRepoSavjet[playerid] = 0;
+    SetPlayerCheckpoint(playerid, x, y, z, 4.0);
+    new poruka[144];
+    format(poruka, sizeof poruka, T(playerid, "Pronadite %s (oznaceno na karti) i prikacite ga kamionom unatrag."), gImenaVozila[model - 400]);
+    ObavijestInfo(playerid, T(playerid, "Repo"), poruka);
+    return 1;
+}
+
+static RepoPocni(playerid)
+{
+    if (!gRepoImaKamion || !gRepoImaCilj) return ObavijestGreska(playerid, T(playerid, "Repo posao jos nije postavljen.")), 1;
+    new v = CreateVehicle(RP_KAMION_MODEL, gRepoKamionPoz[0], gRepoKamionPoz[1], gRepoKamionPoz[2] + 0.5, gRepoKamionPoz[3], 0, 0, -1);
+    if (v == INVALID_VEHICLE_ID) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kamiona.")), 1;
+    gRepoKamion[playerid] = v;
+    PutPlayerInVehicle(playerid, v, 0);
+    VoziloSet(v, VP_MOTOR, 1);
+    RepoNovoAuto(playerid);
+    Savjet(playerid, T(playerid, "Dovezite se unatrag do auta i pritisnite ~y~~k~~TOGGLE_SUBMISSIONS~~w~~n~Odvezite ga na mjesto za dovoz~n~Obidite auto i pritisnite ~y~ALT~w~ kod strelica"), 8000);
+    return 1;
+}
+
+static RepoIgraKraj(playerid)
+{
+    if (!gRepoIgra[playerid]) return;
+    gRepoIgra[playerid] = false;
+    if (gRepoIgraTimer[playerid]) KillTimer(gRepoIgraTimer[playerid]);
+    gRepoIgraTimer[playerid] = 0;
+    if (!IsPlayerConnected(playerid)) return;
+    IgraTdMakni(playerid);
+    ClearAnimations(playerid, SYNC_ALL);
+}
+
+RepoKraj(playerid)
+{
+    if (!gRepoFaza[playerid]) return;
+    RepoIgraKraj(playerid);
+    gRepoFaza[playerid] = RPF_NEMA;
+    RepoAutoMakni(playerid);
+    if (gRepoKamion[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gRepoKamion[playerid]);
+    gRepoKamion[playerid] = INVALID_VEHICLE_ID;
+    if (IsPlayerConnected(playerid)) DisablePlayerCheckpoint(playerid);
 }
 
 static RepoBlizuStrane(playerid)
@@ -218,9 +255,16 @@ static RepoBlizuStrane(playerid)
     return -1;
 }
 
+static RepoIgraPanel(playerid)
+{
+    IgraPanel(playerid, T(playerid, "Repo"), 60.0, RP_BOJA);
+    IgraTraka(playerid, gRepoZel[playerid], gRepoZel[playerid] + RP_TRAKA_ZELENO, 0x1F3A5FFF, 0x27AE60FF, 0x1F3A5FFF, T(playerid, "Odvrnite dio: ~y~ALT~w~ kad je oznaka u zelenom."));
+    IgraOznakaPomakni(playerid, gRepoTraka[playerid]);
+}
+
 static RepoRastavi(playerid)
 {
-    if (gRepoRadi[playerid]) return 1;
+    if (gRepoIgra[playerid]) return 1;
     new s = RepoBlizuStrane(playerid);
     if (s == -1) return ObavijestGreska(playerid, T(playerid, "Pridite strelici kraj auta.")), 1;
     new v = gRepoAuto[playerid], Float:px, Float:py, Float:pz, Float:vx, Float:vy, Float:vz, Float:va, Float:ox, Float:oy;
@@ -231,34 +275,46 @@ static RepoRastavi(playerid)
     new Float:sx = vx + ox * floatcos(va, degrees) - oy * floatsin(va, degrees), Float:sy = vy + ox * floatsin(va, degrees) + oy * floatcos(va, degrees);
     SetPlayerPos(playerid, sx, sy, pz);
     SetPlayerFacingAngle(playerid, atan2(-(sx - vx), sy - vy));
-    gRepoRadi[playerid] = true;
     ApplyAnimation(playerid, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0, SYNC_ALL);
-    SetTimerEx("RepoDioGotov", RP_RAD_MS, false, "iii", playerid, gAccountId[playerid], s);
+    gRepoIgra[playerid] = true;
+    gRepoIgraStrana[playerid] = s;
+    gRepoTraka[playerid] = 0.0;
+    gRepoSmjer[playerid] = 2.4;
+    gRepoZel[playerid] = float(15 + random(65));
+    RepoIgraPanel(playerid);
+    gRepoIgraTimer[playerid] = SetTimerEx("RepoTrakaKorak", RP_TRAKA_MS, true, "i", playerid);
     return 1;
 }
 
-forward RepoDioGotov(playerid, racun, s);
-public RepoDioGotov(playerid, racun, s)
+forward RepoTrakaKorak(playerid);
+public RepoTrakaKorak(playerid)
 {
-    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || !gRepoRadi[playerid]) return;
-    gRepoRadi[playerid] = false;
-    ClearAnimations(playerid, SYNC_ALL);
-    if (gRepoFaza[playerid] != RPF_RASTAVLJA) return;
+    if (!gRepoIgra[playerid]) return;
+    gRepoTraka[playerid] += gRepoSmjer[playerid];
+    if (gRepoTraka[playerid] >= 100.0 || gRepoTraka[playerid] <= 0.0) gRepoSmjer[playerid] = -gRepoSmjer[playerid];
+    IgraOznakaPomakni(playerid, gRepoTraka[playerid]);
+}
+
+static RepoDioSkini(playerid, s, bool:cijel)
+{
     new dio = (gRepoDijelovi[playerid] >> (s * 2) & 1) ? 1 : 0;
     gRepoDijelovi[playerid] |= 1 << (s * 2 + dio);
     RepoDioPostavi(gRepoAuto[playerid], s, dio);
     if ((gRepoDijelovi[playerid] >> (s * 2) & 3) == 3) RepoStranaMakni(playerid, s);
     new n = 0, poruka[144];
     for (new b = 0; b < RP_DIJELOVA; b++) if (gRepoDijelovi[playerid] >> b & 1) n++;
-    new iznos = n == RP_DIJELOVA ? gRepoIsplata[playerid] - gRepoGotovo[playerid] : gRepoIsplata[playerid] / RP_DIJELOVA;
-    if (DajNovac(playerid, iznos)) gRepoGotovo[playerid] += iznos;
-    PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
+    new iznos = cijel ? gRepoIsplata[playerid] / RP_DIJELOVA : 0;
+    if (iznos && DajNovac(playerid, iznos)) gRepoGotovo[playerid] += iznos;
+    PlayerPlaySound(playerid, cijel ? 1056 : 1055, 0.0, 0.0, 0.0);
+    if (cijel) format(poruka, sizeof poruka, T(playerid, "Skinuli ste dio (%d/%d). +$%d"), n, RP_DIJELOVA, iznos);
+    else format(poruka, sizeof poruka, T(playerid, "Dio je unisten (%d/%d). Za njega ne dobivate nista."), n, RP_DIJELOVA);
+    IgraObavijest(playerid, T(playerid, "Repo"), cijel ? RP_BOJA : OBAVIJEST_GRESKA, poruka);
     if (n < RP_DIJELOVA)
     {
-        format(poruka, sizeof poruka, T(playerid, "Skinuli ste dio (%d/%d). +$%d"), n, RP_DIJELOVA, iznos);
-        IgraObavijest(playerid, T(playerid, "Repo"), RP_BOJA, poruka);
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE repo_cars SET parts = %d, earned = %d WHERE account = %d", gRepoDijelovi[playerid], gRepoGotovo[playerid], gAccountId[playerid]));
         return;
     }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM repo_cars WHERE account = %d", gAccountId[playerid]));
     format(poruka, sizeof poruka, T(playerid, "Auto je rastavljen. Ukupno ste zaradili $%d."), gRepoGotovo[playerid]);
     IgraObavijest(playerid, T(playerid, "Repo"), RP_BOJA, poruka);
     RepoNovoAuto(playerid);
@@ -276,6 +332,7 @@ static RepoIstovari(playerid)
     RepoOznakeMakni(playerid);
     for (new s = 0; s < 4; s++)
     {
+        if ((gRepoDijelovi[playerid] >> (s * 2) & 3) == 3) continue;
         RepoStrana(v, s, ox, oy);
         gRepoOznaka[playerid][s] = CreateDynamicObject(RP_OZNAKA_MODEL, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 0, 0, playerid);
         AttachDynamicObjectToVehicle(gRepoOznaka[playerid][s], v, ox, oy, 1.0, 0.0, 0.0, 0.0);
@@ -283,6 +340,71 @@ static RepoIstovari(playerid)
         AttachDynamicAreaToVehicle(gRepoZona[playerid][s], v, ox, oy, 0.0);
     }
     ObavijestInfo(playerid, T(playerid, "Repo"), T(playerid, "Auto je na mjestu. Izadite, obidite ga i pritisnite ALT kod strelica da skinete dijelove."));
+}
+
+static bool:RepoIzaKamiona(playerid)
+{
+    new k = gRepoKamion[playerid], v = gRepoAuto[playerid], Float:kx, Float:ky, Float:kz, Float:ka, Float:vx, Float:vy, Float:vz, Float:sx, Float:sy, Float:sz;
+    GetVehiclePos(k, kx, ky, kz);
+    GetVehicleZAngle(k, ka);
+    GetVehiclePos(v, vx, vy, vz);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    return VectorSize(vx - (kx + floatsin(ka, degrees) * RP_KUKA), vy - (ky - floatcos(ka, degrees) * RP_KUKA), vz - kz) <= sy / 2.0 + RP_KUKA_DOMET;
+}
+
+static bool:RepoNaCilju(playerid)
+{
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(gRepoAuto[playerid], x, y, z);
+    return VectorSize(x - gRepoCilj[0], y - gRepoCilj[1], z - gRepoCilj[2]) < RP_ISTOVAR_DOMET;
+}
+
+static RepoVuce(playerid)
+{
+    gRepoFaza[playerid] = RPF_VUCE;
+    gRepoSavjet[playerid] = 0;
+    SetPlayerCheckpoint(playerid, gRepoCilj[0], gRepoCilj[1], gRepoCilj[2], RP_ISTOVAR_DOMET / 2.0);
+    ObavijestInfo(playerid, T(playerid, "Repo"), T(playerid, "Auto je prikacen. Odvezite ga na mjesto za dovoz (oznaceno na karti)."));
+}
+
+static RepoTrazi(playerid)
+{
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(gRepoAuto[playerid], x, y, z);
+    gRepoFaza[playerid] = RPF_TRAZI;
+    gRepoSavjet[playerid] = 0;
+    SetPlayerCheckpoint(playerid, x, y, z, 4.0);
+}
+
+bool:RepoKey(playerid, KEY:newkeys, KEY:oldkeys)
+{
+    if (!gRepoFaza[playerid]) return false;
+    if (gRepoIgra[playerid])
+    {
+        if (!(newkeys & KEY_WALK) || (oldkeys & KEY_WALK)) return true;
+        new s = gRepoIgraStrana[playerid], bool:pogodak = gRepoTraka[playerid] >= gRepoZel[playerid] && gRepoTraka[playerid] <= gRepoZel[playerid] + RP_TRAKA_ZELENO;
+        RepoIgraKraj(playerid);
+        if (gRepoFaza[playerid] == RPF_RASTAVLJA) RepoDioSkini(playerid, s, pogodak);
+        return true;
+    }
+    if (!(newkeys & KEY_SUBMISSION) || (oldkeys & KEY_SUBMISSION) || GetPlayerState(playerid) != PLAYER_STATE_DRIVER || GetPlayerVehicleID(playerid) != gRepoKamion[playerid]) return false;
+    if (gRepoFaza[playerid] == RPF_TRAZI)
+    {
+        if (!RepoIzaKamiona(playerid)) return ObavijestGreska(playerid, T(playerid, "Auto nije iza kamiona.")), true;
+        AttachTrailerToVehicle(gRepoAuto[playerid], gRepoKamion[playerid]);
+        RepoVuce(playerid);
+        return true;
+    }
+    if (gRepoFaza[playerid] != RPF_VUCE) return false;
+    if (RepoNaCilju(playerid))
+    {
+        RepoIstovari(playerid);
+        return true;
+    }
+    DetachTrailerFromVehicle(gRepoKamion[playerid]);
+    RepoTrazi(playerid);
+    ObavijestInfo(playerid, T(playerid, "Repo"), T(playerid, "Otkacili ste auto."));
+    return true;
 }
 
 static RepoIzbornik(playerid)
@@ -337,6 +459,20 @@ RepoStateChange(playerid, PLAYER_STATE:newstate)
     }
 }
 
+static RepoUspravi(v)
+{
+    new Float:hp, Float:qw, Float:qx, Float:qy, Float:qz;
+    GetVehicleHealth(v, hp);
+    if (hp < 1000.0) SetVehicleHealth(v, 1000.0);
+    GetVehicleRotationQuat(v, qw, qx, qy, qz);
+    if (1.0 - 2.0 * (qx * qx + qy * qy) > 0.3) return;
+    new Float:x, Float:y, Float:z, Float:a;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    SetVehiclePos(v, x, y, z + 1.0);
+    SetVehicleZAngle(v, a);
+}
+
 RepoTick()
 {
     for (new i = 0; i < MAX_PLAYERS; i++)
@@ -352,36 +488,21 @@ RepoTick()
         }
         if (gRepoFaza[i] == RPF_RASTAVLJA) continue;
         new bool:vuce = GetVehicleTrailer(k) == v;
-        if (gRepoFaza[i] == RPF_VUCE)
+        if (gRepoFaza[i] == RPF_TRAZI && !vuce) RepoUspravi(v);
+        if (gRepoFaza[i] == RPF_TRAZI && vuce) RepoVuce(i);
+        else if (gRepoFaza[i] == RPF_VUCE && !vuce)
         {
-            new Float:x, Float:y, Float:z;
-            GetVehiclePos(v, x, y, z);
-            if (!vuce)
-            {
-                gRepoFaza[i] = RPF_TRAZI;
-                SetPlayerCheckpoint(i, x, y, z, 4.0);
-                ObavijestGreska(i, T(i, "Auto se otkacio. Ponovo ga prikacite."));
-            }
-            else if (VectorSize(x - gRepoCilj[0], y - gRepoCilj[1], z - gRepoCilj[2]) < RP_ISTOVAR_DOMET) RepoIstovari(i);
-            continue;
+            RepoTrazi(i);
+            ObavijestGreska(i, T(i, "Auto se otkacio. Ponovo ga prikacite."));
         }
-        if (!vuce && GetPlayerVehicleID(i) == k)
+        new savjet = 0;
+        if (GetPlayerVehicleID(i) == k)
         {
-            new Float:kx, Float:ky, Float:kz, Float:fx, Float:fy, Float:ka, Float:vx, Float:vy, Float:vz, Float:sx, Float:sy, Float:sz;
-            GetVehiclePos(k, kx, ky, kz);
-            GetVehicleZAngle(k, ka);
-            fx = -floatsin(ka, degrees);
-            fy = floatcos(ka, degrees);
-            GetVehiclePos(v, vx, vy, vz);
-            GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-            if (VectorSize(vx - (kx - fx * RP_KUKA), vy - (ky - fy * RP_KUKA), vz - kz) > sy / 2.0 + RP_KUKA_DOMET) continue;
-            AttachTrailerToVehicle(v, k);
-            vuce = true;
+            if (gRepoFaza[i] == RPF_TRAZI && RepoIzaKamiona(i)) savjet = 1;
+            else if (gRepoFaza[i] == RPF_VUCE && RepoNaCilju(i)) savjet = 2;
         }
-        if (!vuce) continue;
-        gRepoFaza[i] = RPF_VUCE;
-        SetPlayerCheckpoint(i, gRepoCilj[0], gRepoCilj[1], gRepoCilj[2], RP_ISTOVAR_DOMET / 2.0);
-        ObavijestInfo(i, T(i, "Repo"), T(i, "Auto je prikacen. Odvezite ga na mjesto za dovoz (oznaceno na karti)."));
+        if (savjet != gRepoSavjet[i] && savjet) Savjet(i, savjet == 1 ? T(i, "~y~~k~~TOGGLE_SUBMISSIONS~~w~ - zakaci auto") : T(i, "~y~~k~~TOGGLE_SUBMISSIONS~~w~ - otkaci auto"), RP_SAVJET_MS);
+        gRepoSavjet[i] = savjet;
     }
 }
 
