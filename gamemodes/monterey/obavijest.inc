@@ -60,6 +60,11 @@ IgraObavijestPanel(playerid, const naslov[], boja, const tekst[])
     return ObPrikazi(playerid, naslov, boja, tekst);
 }
 
+bool:IgraObavijestVidljiva(playerid)
+{
+    return gObVidi[playerid];
+}
+
 IgraObavijestUkloni(playerid)
 {
     IgraObavijestSkrij(playerid, ++gObToken[playerid]);
