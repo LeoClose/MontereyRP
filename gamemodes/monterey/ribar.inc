@@ -7,7 +7,7 @@
 #define RIBAR_CILJ_DOMET    15.0
 #define RIBAR_RUNDI         3
 #define RIBAR_TRAKA_MS      40
-#define RIBAR_TRAKA_ZELENO  18.0
+#define RIBAR_TRAKA_ZELENO  24.0
 #define RIBAR_SKIN          34
 #define RIBAR_BOJA          0x2980B9FF
 
@@ -240,25 +240,23 @@ static RibarVrati(playerid)
 
 static RibarIzbornik(playerid)
 {
-    if (PosaoIgraca(playerid) != POSAO_RIBAR)
-        return PrikaziDialog(playerid, DLG_RIBAR, DIALOG_STYLE_MSGBOX, T(playerid, "Ribar"), T(playerid, "Zelite li se zaposliti kao ribar?\n\nUzmete brod u marini, na pucini ulovite ribu i prodate je otkupljivacu ribe."), T(playerid, "Zaposli se"), T(playerid, "Zatvori"));
-    new tekst[96];
-    format(tekst, sizeof tekst, "%s\n%s", RibarBrodIgraca(playerid) == -1 ? T(playerid, "Uzmi brod") : T(playerid, "Vrati brod"), T(playerid, "Daj otkaz"));
-    return PrikaziDialog(playerid, DLG_RIBAR, DIALOG_STYLE_LIST, T(playerid, "Ribar"), tekst, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
+    if (PosaoIgraca(playerid) != POSAO_RIBAR) return UpitDaNe(playerid, UPIT_RIBAR, 0, 0, T(playerid, "Ribar"), T(playerid, "Zelite li se zaposliti kao ribar?"));
+    if (RibarBrodIgraca(playerid) == -1) return UpitDaNe(playerid, UPIT_RIBAR, 0, 1, T(playerid, "Ribar"), T(playerid, "Zelite li uzeti brod?"));
+    return UpitDaNe(playerid, UPIT_RIBAR, 0, 2, T(playerid, "Ribar"), T(playerid, "Zelite li vratiti brod?"));
 }
 
-DLG:ribar(playerid, response, listitem)
+RibarUpit(playerid, opcija, bool:da)
 {
-    if (!response || !RibarUMarini(playerid, RIBAR_DOMET + 2.0)) return 1;
-    if (PosaoIgraca(playerid) != POSAO_RIBAR)
+    if (!da || !RibarUMarini(playerid, RIBAR_DOMET + 2.0)) return 1;
+    if (opcija == 0 && PosaoIgraca(playerid) != POSAO_RIBAR)
     {
         PosaoPostavi(playerid, POSAO_RIBAR);
         return ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Zaposleni ste kao ribar. Pritisnite ALT ovdje (ili /posao) da dobijete brod."));
     }
-    if (listitem == 0) return RibarBrodIgraca(playerid) == -1 ? RibarUzmiBrod(playerid) : RibarVrati(playerid);
-    RibarKraj(playerid);
-    PosaoPostavi(playerid, POSAO_NEMA);
-    return ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Dali ste otkaz."));
+    if (PosaoIgraca(playerid) != POSAO_RIBAR) return 1;
+    if (opcija == 1 && RibarBrodIgraca(playerid) == -1) return RibarUzmiBrod(playerid);
+    if (opcija == 2) return RibarVrati(playerid);
+    return 1;
 }
 
 RibarPosao(playerid)
@@ -309,7 +307,7 @@ RibarCheckpoint(playerid)
     gRibarRunda[playerid] = 0;
     gRibarPogodak[playerid] = 0;
     gRibarTraka[playerid] = 0.0;
-    gRibarSmjer[playerid] = 3.0;
+    gRibarSmjer[playerid] = 1.4;
     gRibarZel[playerid] = float(20 + random(60));
     SnagaBarStvori(playerid, gRibarTd[playerid][0], gRibarTd[playerid][1]);
     gRibarTimer[playerid] = SetTimerEx("RibarTrakaKorak", RIBAR_TRAKA_MS, true, "i", playerid);
@@ -345,7 +343,7 @@ bool:RibarKey(playerid, KEY:newkeys, KEY:oldkeys)
         RibarIgraKraj(playerid, true);
         return true;
     }
-    gRibarSmjer[playerid] *= 1.3;
+    gRibarSmjer[playerid] *= 1.15;
     gRibarZel[playerid] = float(10 + random(70));
     RibarPanel(playerid);
     return true;

@@ -1185,6 +1185,15 @@ BezMotora(model)
     return model == 481 || model == 509 || model == 510;
 }
 
+static bool:JeBrod(model)
+{
+    switch (model)
+    {
+        case 430, 446, 452, 453, 454, 472, 473, 484, 493, 595: return true;
+    }
+    return false;
+}
+
 static JeDizel(model)
 {
     switch (model)
@@ -1830,7 +1839,7 @@ public VoziloDash()
     {
         if (!gUlogiran[i]) continue;
         new PLAYER_STATE:s = GetPlayerState(i), v = GetPlayerVehicleID(i);
-        if (s != PLAYER_STATE_DRIVER || !v || BezMotora(GetVehicleModel(v)))
+        if (s != PLAYER_STATE_DRIVER || !v || BezMotora(GetVehicleModel(v)) || JeBrod(GetVehicleModel(v)))
         {
             DashSakrij(i);
             continue;

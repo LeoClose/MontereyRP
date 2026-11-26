@@ -757,6 +757,7 @@ bool:HqUlazIzlaz(playerid)
     if (NamjestajUlaz(playerid)) return true;
     if (OdjecaUlaz(playerid)) return true;
     if (OpstinaUlaz(playerid)) return true;
+    if (PizzaUlaz(playerid)) return true;
     return bool:PrikolicaUlaz(playerid);
 }
 
