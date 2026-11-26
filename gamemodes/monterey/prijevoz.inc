@@ -43,6 +43,7 @@ static const gPrijevozTeret[][E_PZ_TERET] = {
     { "Krijumcarena roba", PZ_NIVOA, 515, 435, 1400, -1, 0.0, 5 }
 };
 static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
+static const Float:gPrijevozZadano[3][4] = { { 2217.828, -2225.561, 13.55, 315.0 }, { 2223.130, -2228.035, 13.2, 315.0 }, { 2214.293, -2236.873, 13.2, 315.0 } };
 
 static Float:gPrijevozPoz[4][4], bool:gPrijevozIma[4], STREAMER_TAG_3D_TEXT_LABEL:gPrijevozTekst;
 static gPrijevozFaza[MAX_PLAYERS], gPrijevozVrsta[MAX_PLAYERS], gPrijevozKamion[MAX_PLAYERS], gPrijevozPrikolica[MAX_PLAYERS], gPrijevozRok[MAX_PLAYERS], gPrijevozOtkaceno[MAX_PLAYERS];
@@ -54,6 +55,11 @@ InitPrijevoz()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS job_trucker (id INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS trucker_xp (account INTEGER PRIMARY KEY, xp INTEGER NOT NULL DEFAULT 0, runs INTEGER NOT NULL DEFAULT 0)"));
+    for (new id = 0; id < sizeof gPrijevozZadano; id++)
+    {
+        for (new k = 0; k < 4; k++) gPrijevozPoz[id][k] = gPrijevozZadano[id][k];
+        gPrijevozIma[id] = true;
+    }
     new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_trucker WHERE id IN (1, 2, 3, 4)");
     for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
     {

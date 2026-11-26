@@ -24,6 +24,7 @@ public OnPlayerConnect(playerid)
     MapaSurenosiUkloni(playerid);
     MapaRuskaMafijaUkloni(playerid);
     MapaGettelSalonUkloni(playerid);
+    MapaKamionDepoUkloni(playerid);
     MapaJeffersonFlatsUkloni(playerid);
     MapaSpawnUkloni(playerid);
     MapaMontereyPeakUkloni(playerid);

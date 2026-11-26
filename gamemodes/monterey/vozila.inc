@@ -1311,6 +1311,7 @@ public OnVehicleSpawn(vehicleid)
     VoziloReset(vehicleid);
     VlasnickoSpawn(vehicleid);
     StandKombiSpawn(vehicleid);
+    MapaKamionDepoSpawn(vehicleid);
     return 1;
 }
 

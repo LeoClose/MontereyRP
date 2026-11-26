@@ -312,6 +312,8 @@ public OnGameModeInit()
     MapaRuskaMafija();
     MapaGettelSalonUkloni(INVALID_PLAYER_ID);
     MapaGettelSalon();
+    MapaKamionDepoUkloni(INVALID_PLAYER_ID);
+    MapaKamionDepo();
     Lik_OsvjeziMapu();
     InitNpcGustoca();
     InitKapije();
@@ -426,6 +428,7 @@ public Sekunda()
     SkladisteTick();
     RepoTick();
     PrijevozTick();
+    MapaKamionDepoTick();
     CivilVozilaTick();
     VlakTick();
     BankaTick();
@@ -566,6 +569,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_surenosi.inc"
 #include "monterey/mape/mapa_ruska_mafija.inc"
 #include "monterey/mape/mapa_gettel_salon.inc"
+#include "monterey/mape/mapa_kamion_depo.inc"
 #include "monterey/brod.inc"
 #include "monterey/lab.inc"
 #include "monterey/teritorij.inc"
