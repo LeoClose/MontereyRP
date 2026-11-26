@@ -240,11 +240,6 @@ KucaIntPoz(tpl, &interijer, &Float:x, &Float:y, &Float:z)
     z = gKucaInt[tpl][kiZ];
 }
 
-KucaIntVelicina(tpl)
-{
-    return gKucaInt[tpl][kiVel];
-}
-
 static KucaUdi(playerid, k)
 {
     new i = gKuca[k][kuInt];

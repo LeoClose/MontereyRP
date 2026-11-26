@@ -248,6 +248,7 @@ static InterakcijaF(playerid)
     if (!gUlogiran[playerid] || PrikolicaUnutra(playerid)) return;
     if (GarazaKey(playerid)) return;
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    if (ProvalaF(playerid)) return;
     if (HqUlazIzlaz(playerid)) return;
     KucaKey(playerid);
 }

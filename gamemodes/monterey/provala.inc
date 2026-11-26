@@ -4,7 +4,7 @@
 #define PV_DOMET            2.0
 #define PV_JATAK_BLIZU      40.0
 #define PV_SVIJET           50000
-#define PV_PLIJENA          8
+#define PV_PLIJENA          7
 #define PV_GEPEK            8
 #define PV_KUCA_PAUZA       7200
 #define PV_JATAK_UDALJENOST 200.0
@@ -15,7 +15,6 @@
 #define PV_BUKA_CRVENO      85.0
 #define PV_WANTED           2
 #define PV_SLOT             2
-#define PV_NOSI_MODEL       1271
 #define PV_KUTIJA_DOMET     1.6
 #define PV_STRAG_DOMET      1.8
 #define PV_SACMARICA_METAKA 200
@@ -25,34 +24,52 @@ static const gProvalaKombi[] = { 413, 414, 440, 456, 459, 482, 498, 499, 609 };
 
 enum E_PV_STVAR { psModel, psIme[24], psCijena }
 static const gProvalaStvar[][E_PV_STVAR] = {
-    { 1781, "Televizor", 150 },
-    { 1792, "Plazma televizor", 260 },
-    { 1785, "Video rekorder", 70 },
-    { 2103, "Linija", 110 },
-    { 2225, "Skupa linija", 180 },
+    { 2318, "Televizor", 150 },
+    { 2103, "Linija", 90 },
+    { 1783, "Video rekorder", 80 },
+    { 2312, "Televizor", 150 },
     { 2149, "Mikrovalna", 60 },
-    { 1840, "Zvucnik", 50 }
+    { 2102, "Linija", 100 },
+    { 2317, "Televizor", 160 },
+    { 1719, "Igraca konzola", 120 },
+    { 2316, "Televizor", 170 },
+    { 2226, "Linija", 110 },
+    { 2320, "Televizor", 140 },
+    { 1809, "Linija", 130 },
+    { 2322, "Televizor", 180 },
+    { 2101, "Skupa linija", 180 },
+    { 2028, "Skupa konzola", 200 }
 };
 
-static const Float:gProvalaTocke[7][PV_PLIJENA][3] = {
-    { { 2278.04, -1134.28, 1049.90 }, { 2285.54, -1137.78, 1049.90 }, { 2280.04, -1139.78, 1049.90 }, { 2282.54, -1134.28, 1049.90 }, { 2277.54, -1139.28, 1049.90 }, { 2282.04, -1136.78, 1049.90 }, { 2280.04, -1134.78, 1049.90 }, { 0.00, 0.00, 0.00 } },
-    { { 217.70, 1293.08, 1081.14 }, { 226.70, 1287.58, 1081.14 }, { 220.20, 1287.58, 1081.14 }, { 224.20, 1293.08, 1081.14 }, { 223.70, 1289.58, 1081.14 }, { 226.70, 1291.08, 1081.14 }, { 220.70, 1292.58, 1081.14 }, { 221.20, 1290.08, 1081.14 } },
-    { { 2361.80, -1120.10, 1049.88 }, { 2373.30, -1135.10, 1049.88 }, { 2358.30, -1135.10, 1049.88 }, { 2373.30, -1123.10, 1049.88 }, { 2365.80, -1129.10, 1049.88 }, { 2367.80, -1120.60, 1049.88 }, { 2371.80, -1129.10, 1049.88 }, { 2363.80, -1124.60, 1049.88 } },
-    { { 2333.03, -1136.04, 1049.70 }, { 2311.53, -1146.04, 1049.70 }, { 2327.03, -1149.04, 1049.70 }, { 2320.53, -1137.54, 1049.49 }, { 2337.53, -1145.54, 1049.70 }, { 2319.53, -1145.54, 1049.70 }, { 2327.53, -1141.54, 1049.49 }, { 2333.03, -1149.04, 1049.70 } },
-    { { 2276.38, -1212.85, 1046.56 }, { 2272.38, -1208.35, 1046.56 }, { 2271.88, -1212.85, 1046.56 }, { 2276.38, -1208.85, 1046.56 }, { 2273.88, -1210.85, 1046.56 }, { 2273.88, -1212.85, 1046.56 }, { 2274.38, -1208.85, 1046.56 }, { 2275.88, -1210.85, 1046.56 } },
-    { { 225.68, 1037.45, 1083.01 }, { 241.18, 1017.95, 1083.02 }, { 227.68, 1023.95, 1083.01 }, { 237.68, 1031.95, 1083.01 }, { 236.18, 1023.95, 1083.01 }, { 230.18, 1031.45, 1083.02 }, { 234.18, 1017.95, 1083.01 }, { 224.68, 1029.45, 1083.01 } },
-    { { 153.67, 1374.57, 1082.86 }, { 135.17, 1366.57, 1082.86 }, { 137.17, 1381.57, 1082.87 }, { 145.67, 1367.57, 1082.86 }, { 144.67, 1376.57, 1082.86 }, { 153.67, 1366.57, 1082.86 }, { 136.17, 1374.07, 1082.86 }, { 140.17, 1369.57, 1082.86 } }
+static const Float:gProvalaMjesto[7][PV_PLIJENA][4] = {
+    { { 2277.04, -1135.78, 1052.90, 0.0 }, { 2285.04, -1140.03, 1050.88, 0.0 }, { 2281.29, -1136.28, 1050.83, 0.0 }, { 2276.79, -1140.03, 1051.10, 180.0 }, { 2286.04, -1136.78, 1050.64, 0.0 }, { 2280.54, -1138.78, 1051.10, 90.0 }, { 2286.04, -1134.03, 1050.64, 0.0 } },
+    { { 216.95, 1291.58, 1084.14, 0.0 }, { 216.95, 1288.83, 1082.18, 0.0 }, { 224.70, 1287.08, 1082.38, 90.0 }, { 217.45, 1287.08, 1082.44, 90.0 }, { 220.95, 1293.58, 1084.14, 0.0 }, { 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0 } },
+    { { 2371.30, -1132.85, 1050.69, 0.0 }, { 2368.80, -1122.10, 1050.84, 0.0 }, { 2374.55, -1131.35, 1051.04, 0.0 }, { 2374.55, -1133.35, 1050.87, 0.0 }, { 2367.55, -1133.35, 1050.93, 0.0 }, { 2360.05, -1130.35, 1051.04, 0.0 }, { 2373.55, -1129.35, 1050.80, 0.0 } },
+    { { 2334.28, -1138.04, 1053.30, 0.0 }, { 2337.53, -1137.04, 1050.73, 0.0 }, { 2314.03, -1144.79, 1050.48, 0.0 }, { 2334.53, -1138.54, 1050.51, 0.0 }, { 2312.53, -1142.29, 1054.53, 135.0 }, { 2337.78, -1142.54, 1056.30, 0.0 }, { 2311.03, -1135.29, 1056.30, 0.0 } },
+    { { 2250.13, -1212.10, 1048.84, 0.0 }, { 2251.38, -1215.35, 1048.77, 0.0 }, { 2255.13, -1213.10, 1048.77, 315.0 }, { 2261.63, -1224.60, 1049.17, 0.0 }, { 2262.38, -1209.10, 1048.97, 0.0 }, { 2254.63, -1207.35, 1048.65, 0.0 }, { 2254.38, -1218.35, 1048.97, 0.0 } },
+    { { 238.68, 1035.45, 1087.31, 0.0 }, { 234.68, 1022.20, 1087.31, 0.0 }, { 238.93, 1016.95, 1085.43, 0.0 }, { 237.43, 1039.20, 1088.32, 0.0 }, { 236.18, 1034.95, 1084.14, 90.0 }, { 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0 } },
+    { { 150.67, 1383.82, 1083.66, 0.0 }, { 142.42, 1377.82, 1088.73, 0.0 }, { 134.42, 1377.82, 1088.73, 0.0 }, { 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0, 0.0 } }
 };
-static const gProvalaTockaBroj[7] = { 7, 8, 8, 8, 8, 8, 8 };
+static const gProvalaMjestaBroj[7] = { 7, 5, 7, 7, 7, 5, 3 };
+static const Float:gProvalaKrevet[7][4] = {
+    { 2285.04, -1135.28, 1050.53, 90.0 },
+    { 217.20, 1289.83, 1081.83, 90.0 },
+    { 2362.30, -1122.60, 1050.57, 90.0 },
+    { 2309.03, -1141.79, 1054.15, 0.0 },
+    { 2258.13, -1223.85, 1048.79, 0.0 },
+    { 0.0, 0.0, 0.0, 0.0 },
+    { 144.42, 1379.82, 1087.37, 0.0 }
+};
+static const bool:gProvalaImaKrevet[7] = { true, true, true, true, true, false, true };
 
 enum E_PV_JATAK { bool:pjIma, pjDb, Float:pjX, Float:pjY, Float:pjZ, Float:pjA, pjAktor, STREAMER_TAG_3D_TEXT_LABEL:pjTekst }
 static gProvalaJatak[PV_JATAKA][E_PV_JATAK];
 static gProvalaKucaZadnja[KUCA_MAX];
 static gProvalaGepek[MAX_VEHICLES][PV_GEPEK], gProvalaGepekVlasnik[MAX_VEHICLES];
 
-static gProvalaKuca[MAX_PLAYERS] = { -1, ... }, bool:gProvalaUnutra[MAX_PLAYERS], gProvalaTpl[MAX_PLAYERS], gProvalaNosi[MAX_PLAYERS] = { -1, ... };
+static gProvalaKuca[MAX_PLAYERS] = { -1, ... }, bool:gProvalaUnutra[MAX_PLAYERS], gProvalaTpl[MAX_PLAYERS], gProvalaNosi[MAX_PLAYERS] = { -1, ... }, gProvalaUzeto[MAX_PLAYERS];
 static gProvalaUkucanin[MAX_PLAYERS] = { INVALID_LIK, ... }, bool:gProvalaBudan[MAX_PLAYERS], gProvalaBuka[MAX_PLAYERS], gProvalaTimer[MAX_PLAYERS], gProvalaApPopis[MAX_PLAYERS][PV_JATAKA];
-static gProvalaPlijen[MAX_PLAYERS][PV_PLIJENA], STREAMER_TAG_OBJECT:gProvalaObjekt[MAX_PLAYERS][PV_PLIJENA], STREAMER_TAG_AREA:gProvalaZona[MAX_PLAYERS][PV_PLIJENA];
+static STREAMER_TAG_OBJECT:gProvalaObjekt[MAX_PLAYERS][PV_PLIJENA], STREAMER_TAG_AREA:gProvalaZona[MAX_PLAYERS][PV_PLIJENA];
 static STREAMER_TAG_AREA:gProvalaIzlaz[MAX_PLAYERS], STREAMER_TAG_AREA:gProvalaVrata[MAX_PLAYERS];
 
 InitProvala()
@@ -129,11 +146,16 @@ static ProvalaStragKombija(playerid)
     return IsPlayerInRangeOfPoint(playerid, PV_STRAG_DOMET + 0.5, x + floatsin(a, degrees) * (sy / 2.0 + 0.4), y - floatcos(a, degrees) * (sy / 2.0 + 0.4), z) ? v : 0;
 }
 
+static ProvalaStvarMjesta(tpl, p)
+{
+    return (tpl * 5 + p * 4) % sizeof gProvalaStvar;
+}
+
 static ProvalaNosiPrikazi(playerid, bool:nosi)
 {
     if (nosi)
     {
-        SetPlayerAttachedObject(playerid, PV_SLOT, PV_NOSI_MODEL, 5, 0.1, 0.1, 0.15, 0.0, 90.0, 90.0, 0.6, 0.6, 0.6);
+        SetPlayerAttachedObject(playerid, PV_SLOT, gProvalaStvar[gProvalaNosi[playerid]][psModel], 5, 0.1, 0.1, 0.15, 0.0, 90.0, 90.0, 0.8, 0.8, 0.8);
         SetPlayerSpecialAction(playerid, SPECIAL_ACTION_CARRY);
         return;
     }
@@ -163,7 +185,6 @@ static ProvalaUnutraMakni(playerid)
         if (IsValidDynamicArea(gProvalaZona[playerid][p])) DestroyDynamicArea(gProvalaZona[playerid][p]);
         gProvalaObjekt[playerid][p] = STREAMER_TAG_OBJECT:0;
         gProvalaZona[playerid][p] = STREAMER_TAG_AREA:0;
-        gProvalaPlijen[playerid][p] = -1;
     }
     if (IsValidDynamicArea(gProvalaIzlaz[playerid])) DestroyDynamicArea(gProvalaIzlaz[playerid]);
     gProvalaIzlaz[playerid] = STREAMER_TAG_AREA:0;
@@ -172,8 +193,16 @@ static ProvalaUnutraMakni(playerid)
     if (gProvalaUnutra[playerid] && !gProvalaBudan[playerid] && IsPlayerConnected(playerid)) IgraTdMakni(playerid);
     if (gProvalaUkucanin[playerid] != INVALID_LIK) Lik_Ukloni(gProvalaUkucanin[playerid]);
     gProvalaUkucanin[playerid] = INVALID_LIK;
-    gProvalaBudan[playerid] = false;
     gProvalaUnutra[playerid] = false;
+}
+
+static ProvalaAdresaMakni(playerid)
+{
+    if (IsValidDynamicArea(gProvalaVrata[playerid])) DestroyDynamicArea(gProvalaVrata[playerid]);
+    gProvalaVrata[playerid] = STREAMER_TAG_AREA:0;
+    if (gProvalaKuca[playerid] != -1 && IsPlayerConnected(playerid)) DisablePlayerCheckpoint(playerid);
+    gProvalaKuca[playerid] = -1;
+    gProvalaBudan[playerid] = false;
 }
 
 ProvalaKraj(playerid)
@@ -181,10 +210,14 @@ ProvalaKraj(playerid)
     ProvalaUnutraMakni(playerid);
     if (gProvalaNosi[playerid] != -1 && IsPlayerConnected(playerid)) ProvalaNosiPrikazi(playerid, false);
     gProvalaNosi[playerid] = -1;
-    if (IsValidDynamicArea(gProvalaVrata[playerid])) DestroyDynamicArea(gProvalaVrata[playerid]);
-    gProvalaVrata[playerid] = STREAMER_TAG_AREA:0;
-    if (gProvalaKuca[playerid] != -1 && IsPlayerConnected(playerid)) DisablePlayerCheckpoint(playerid);
-    gProvalaKuca[playerid] = -1;
+    ProvalaAdresaMakni(playerid);
+}
+
+static ProvalaPreostalo(playerid)
+{
+    new n = 0, tpl = gProvalaTpl[playerid];
+    for (new p = 0; p < gProvalaMjestaBroj[tpl]; p++) if (!(gProvalaUzeto[playerid] >> p & 1)) n++;
+    return n;
 }
 
 static ProvalaAdresa(playerid, j)
@@ -193,16 +226,15 @@ static ProvalaAdresa(playerid, j)
     for (new pokusaj = 0; pokusaj < 80; pokusaj++)
     {
         new k = random(KUCA_MAX);
-        if (!KucaProvala(k, x, y, z, tpl) || gettime() - gProvalaKucaZadnja[k] < PV_KUCA_PAUZA) continue;
-        if (VectorSize(x - gProvalaJatak[j][pjX], y - gProvalaJatak[j][pjY], 0.0) < PV_JATAK_UDALJENOST) continue;
+        if (!KucaProvala(k, x, y, z, tpl) || tpl < 0 || tpl >= sizeof gProvalaImaKrevet || !gProvalaImaKrevet[tpl] || !gProvalaMjestaBroj[tpl]) continue;
+        if (gettime() - gProvalaKucaZadnja[k] < PV_KUCA_PAUZA || VectorSize(x - gProvalaJatak[j][pjX], y - gProvalaJatak[j][pjY], 0.0) < PV_JATAK_UDALJENOST) continue;
         gProvalaKuca[playerid] = k;
         gProvalaTpl[playerid] = tpl;
+        gProvalaUzeto[playerid] = 0;
+        gProvalaBudan[playerid] = false;
         gProvalaKucaZadnja[k] = gettime();
         SetPlayerCheckpoint(playerid, x, y, z, 1.5);
-        gProvalaVrata[playerid] = InterakcijaZona(x, y, z, PV_DOMET, 0, 0, SAVJET_ALT);
-        for (new p = 0; p < PV_PLIJENA; p++) gProvalaPlijen[playerid][p] = -1;
-        new n = min(gProvalaTockaBroj[tpl] - 1, 3 + 2 * KucaIntVelicina(tpl));
-        for (new p = 0; p < n; p++) gProvalaPlijen[playerid][p] = random(sizeof gProvalaStvar);
+        gProvalaVrata[playerid] = InterakcijaZona(x, y, z, PV_DOMET, 0, 0, SAVJET_ULAZ);
         new poruka[144];
         format(poruka, sizeof poruka, T(playerid, "Adresa je %s (oznaceno na karti). Udite nocu, budite tihi i pokupite sto vise stvari u kombi."), CestaZona(x, y));
         ObavijestInfo(playerid, T(playerid, "Jatak"), poruka);
@@ -212,9 +244,29 @@ static ProvalaAdresa(playerid, j)
     return 1;
 }
 
+static ProvalaUkucaninStvori(playerid, interijer)
+{
+    new tpl = gProvalaTpl[playerid];
+    new lik = Lik_Stvori(gProvalaUkucani[(gProvalaKuca[playerid] + tpl) % sizeof gProvalaUkucani], gProvalaKrevet[tpl][0], gProvalaKrevet[tpl][1], gProvalaKrevet[tpl][2] + 1.0, gProvalaKrevet[tpl][3], PV_SVIJET + playerid, interijer);
+    gProvalaUkucanin[playerid] = lik;
+    if (lik == INVALID_LIK) return;
+    Lik_Neranjiv(lik, false);
+    if (!gProvalaBudan[playerid])
+    {
+        Lik_Animacija(lik, "INT_HOUSE", "BED_Loop_R", 4.1, 1, 0, 0, 1);
+        return;
+    }
+    Lik_Oruzje(lik, _:WEAPON_SHOTGUN, PV_SACMARICA_METAKA);
+    Lik_Napadni(lik, playerid);
+}
+
 static ProvalaUdji(playerid)
 {
-    if (!ProvalaNoc()) return ObavijestGreska(playerid, T(playerid, "Provaljuje se samo nocu (19-7h)."));
+    if (!ProvalaNoc())
+    {
+        ProvalaAdresaMakni(playerid);
+        return ObavijestGreska(playerid, T(playerid, "Svanulo je, ukucani su budni. Adresa je propala."));
+    }
     if (gProvalaNosi[playerid] != -1) return ObavijestGreska(playerid, T(playerid, "Prvo odlozite ono sto nosite."));
     new tpl = gProvalaTpl[playerid], interijer, Float:ix, Float:iy, Float:iz;
     KucaIntPoz(tpl, interijer, ix, iy, iz);
@@ -222,24 +274,17 @@ static ProvalaUdji(playerid)
     PrebaciIgraca(playerid, interijer, PV_SVIJET + playerid, ix, iy, iz);
     gProvalaUnutra[playerid] = true;
     gProvalaBuka[playerid] = 0;
-    for (new p = 0; p < PV_PLIJENA; p++)
+    for (new p = 0; p < gProvalaMjestaBroj[tpl]; p++)
     {
-        new s = gProvalaPlijen[playerid][p];
-        if (s == -1) continue;
-        gProvalaObjekt[playerid][p] = CreateDynamicObject(gProvalaStvar[s][psModel], gProvalaTocke[tpl][p][0], gProvalaTocke[tpl][p][1], gProvalaTocke[tpl][p][2], 0.0, 0.0, float(random(360)), PV_SVIJET + playerid, interijer);
-        gProvalaZona[playerid][p] = InterakcijaZona(gProvalaTocke[tpl][p][0], gProvalaTocke[tpl][p][1], gProvalaTocke[tpl][p][2] + 0.5, PV_KUTIJA_DOMET, PV_SVIJET + playerid, interijer, SAVJET_PODIGNI);
+        if (gProvalaUzeto[playerid] >> p & 1) continue;
+        gProvalaObjekt[playerid][p] = CreateDynamicObject(gProvalaStvar[ProvalaStvarMjesta(tpl, p)][psModel], gProvalaMjesto[tpl][p][0], gProvalaMjesto[tpl][p][1], gProvalaMjesto[tpl][p][2], 0.0, 0.0, gProvalaMjesto[tpl][p][3], PV_SVIJET + playerid, interijer);
+        gProvalaZona[playerid][p] = InterakcijaZona(gProvalaMjesto[tpl][p][0], gProvalaMjesto[tpl][p][1], gProvalaMjesto[tpl][p][2], PV_KUTIJA_DOMET, PV_SVIJET + playerid, interijer, SAVJET_PODIGNI);
     }
-    gProvalaIzlaz[playerid] = InterakcijaZona(ix, iy, iz, PV_DOMET, PV_SVIJET + playerid, interijer, SAVJET_ALT);
-    new t = gProvalaTockaBroj[tpl] - 1, lik = Lik_Stvori(gProvalaUkucani[random(sizeof gProvalaUkucani)], gProvalaTocke[tpl][t][0], gProvalaTocke[tpl][t][1], gProvalaTocke[tpl][t][2] + 1.0, float(random(360)), PV_SVIJET + playerid, interijer);
-    if (lik != INVALID_LIK)
-    {
-        Lik_Neranjiv(lik, false);
-        Lik_Animacija(lik, "INT_HOUSE", "BED_Loop_R", 4.1, 1, 0, 0, 1);
-    }
-    gProvalaUkucanin[playerid] = lik;
-    gProvalaBudan[playerid] = false;
+    gProvalaIzlaz[playerid] = InterakcijaZona(ix, iy, iz, PV_DOMET, PV_SVIJET + playerid, interijer, SAVJET_IZLAZ);
+    ProvalaUkucaninStvori(playerid, interijer);
+    if (gProvalaBudan[playerid]) return 1;
     IgraPanel(playerid, T(playerid, "Buka"), 60.0, PV_BOJA);
-    IgraTraka(playerid, 0.0, 60.0, 0x27AE60FF, 0x27AE60FF, 0xF39C12FF, T(playerid, "Cucnite (~k~~PED_DUCK~) i hodajte polako da ne probudite ukucane."), PV_BUKA_CRVENO);
+    IgraTraka(playerid, 0.0, 60.0, 0x27AE60FF, 0x27AE60FF, 0xF39C12FF, T(playerid, "Drzite ~y~ALT~w~ i hodajte polako da ne probudite ukucane."), PV_BUKA_CRVENO);
     IgraOznakaPomakni(playerid, 0.0);
     gProvalaTimer[playerid] = SetTimerEx("ProvalaBuka", PV_TIK_MS, true, "i", playerid);
     return 1;
@@ -247,14 +292,11 @@ static ProvalaUdji(playerid)
 
 static ProvalaIzadji(playerid)
 {
-    new k = gProvalaKuca[playerid], Float:x, Float:y, Float:z, tpl, preostalo = 0;
+    new k = gProvalaKuca[playerid], Float:x, Float:y, Float:z, tpl;
     ProvalaUnutraMakni(playerid);
-    for (new p = 0; p < PV_PLIJENA; p++) if (gProvalaPlijen[playerid][p] != -1) preostalo++;
-    for (new p = 0; p < PV_PLIJENA; p++) gProvalaPlijen[playerid][p] = -1;
     if (KucaProvala(k, x, y, z, tpl)) PrebaciIgraca(playerid, 0, 0, x, y, z);
-    if (IsValidDynamicArea(gProvalaVrata[playerid])) DestroyDynamicArea(gProvalaVrata[playerid]);
-    gProvalaVrata[playerid] = STREAMER_TAG_AREA:0;
-    gProvalaKuca[playerid] = -1;
+    if (!ProvalaPreostalo(playerid)) ProvalaAdresaMakni(playerid);
+    else SetPlayerCheckpoint(playerid, x, y, z, 1.5);
     if (gProvalaNosi[playerid] != -1) ObavijestInfo(playerid, T(playerid, "Jatak"), T(playerid, "Odnesite stvar do svog kombija (ALT kod straznjih vrata), pa robu prodajte jataku."));
     return 1;
 }
@@ -263,14 +305,15 @@ forward ProvalaBuka(playerid);
 public ProvalaBuka(playerid)
 {
     if (!gProvalaUnutra[playerid] || !IsPlayerConnected(playerid)) return;
-    new Float:vx, Float:vy, Float:vz;
+    new Float:vx, Float:vy, Float:vz, KEY:tipke, gd, lr;
     GetPlayerVelocity(playerid, vx, vy, vz);
+    GetPlayerKeys(playerid, tipke, gd, lr);
     new Float:brzina = VectorSize(vx, vy, 0.0), korak;
-    if (GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_DUCK) korak = brzina > 0.02 ? 0 : -2;
+    if (brzina <= 0.02) korak = -2;
+    else if (tipke & KEY_WALK) korak = 0;
     else if (brzina > 0.15) korak = 7;
     else if (brzina > 0.09) korak = gProvalaNosi[playerid] != -1 ? 4 : 3;
-    else if (brzina > 0.02) korak = 1;
-    else korak = -1;
+    else korak = 1;
     gProvalaBuka[playerid] = clamp(gProvalaBuka[playerid] + korak, 0, PV_BUKA_MAX);
     IgraOznakaPomakni(playerid, float(gProvalaBuka[playerid]));
     if (gProvalaBuka[playerid] < PV_BUKA_MAX) return;
@@ -294,8 +337,8 @@ public ProvalaBuka(playerid)
 static ProvalaPlijenBlizu(playerid)
 {
     new tpl = gProvalaTpl[playerid];
-    for (new p = 0; p < PV_PLIJENA; p++)
-        if (gProvalaPlijen[playerid][p] != -1 && IsPlayerInRangeOfPoint(playerid, PV_KUTIJA_DOMET, gProvalaTocke[tpl][p][0], gProvalaTocke[tpl][p][1], gProvalaTocke[tpl][p][2] + 0.5)) return p;
+    for (new p = 0; p < gProvalaMjestaBroj[tpl]; p++)
+        if (!(gProvalaUzeto[playerid] >> p & 1) && IsPlayerInRangeOfPoint(playerid, PV_KUTIJA_DOMET, gProvalaMjesto[tpl][p][0], gProvalaMjesto[tpl][p][1], gProvalaMjesto[tpl][p][2])) return p;
     return -1;
 }
 
@@ -339,25 +382,36 @@ static ProvalaProdaj(playerid, j)
     return IgraObavijest(playerid, T(playerid, "Jatak"), PV_BOJA, poruka), 1;
 }
 
+ProvalaF(playerid)
+{
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || gProvalaKuca[playerid] == -1) return 0;
+    if (gProvalaUnutra[playerid])
+    {
+        new interijer, Float:ix, Float:iy, Float:iz;
+        KucaIntPoz(gProvalaTpl[playerid], interijer, ix, iy, iz);
+        if (!IsPlayerInRangeOfPoint(playerid, PV_DOMET, ix, iy, iz)) return 0;
+        return ProvalaIzadji(playerid);
+    }
+    new Float:x, Float:y, Float:z, tpl;
+    if (!KucaProvala(gProvalaKuca[playerid], x, y, z, tpl) || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid) || !IsPlayerInRangeOfPoint(playerid, PV_DOMET, x, y, z)) return 0;
+    return ProvalaUdji(playerid), 1;
+}
+
 ProvalaAlt(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;
     if (gProvalaUnutra[playerid])
     {
-        new tpl = gProvalaTpl[playerid], interijer, Float:ix, Float:iy, Float:iz;
-        KucaIntPoz(tpl, interijer, ix, iy, iz);
-        if (IsPlayerInRangeOfPoint(playerid, PV_DOMET, ix, iy, iz)) return ProvalaIzadji(playerid);
         if (gProvalaNosi[playerid] != -1) return 0;
         new p = ProvalaPlijenBlizu(playerid);
         if (p == -1) return 0;
-        new s = gProvalaPlijen[playerid][p];
-        gProvalaPlijen[playerid][p] = -1;
+        gProvalaUzeto[playerid] |= 1 << p;
         DestroyDynamicObject(gProvalaObjekt[playerid][p]);
         gProvalaObjekt[playerid][p] = STREAMER_TAG_OBJECT:0;
         if (IsValidDynamicArea(gProvalaZona[playerid][p])) DestroyDynamicArea(gProvalaZona[playerid][p]);
         gProvalaZona[playerid][p] = STREAMER_TAG_AREA:0;
-        gProvalaBuka[playerid] = min(gProvalaBuka[playerid] + 10, PV_BUKA_MAX - 1);
-        ProvalaUzmi(playerid, s);
+        if (!gProvalaBudan[playerid]) gProvalaBuka[playerid] = min(gProvalaBuka[playerid] + 10, PV_BUKA_MAX - 1);
+        ProvalaUzmi(playerid, ProvalaStvarMjesta(gProvalaTpl[playerid], p));
         return 1;
     }
     new j = ProvalaJatakBlizu(playerid);
@@ -385,11 +439,6 @@ ProvalaAlt(playerid)
             break;
         }
         return 1;
-    }
-    if (gProvalaKuca[playerid] != -1 && gProvalaNosi[playerid] == -1)
-    {
-        new Float:x, Float:y, Float:z, tpl;
-        if (KucaProvala(gProvalaKuca[playerid], x, y, z, tpl) && !GetPlayerInterior(playerid) && !GetPlayerVirtualWorld(playerid) && IsPlayerInRangeOfPoint(playerid, PV_DOMET, x, y, z)) return ProvalaUdji(playerid), 1;
     }
     if (j != -1) return ProvalaJatakPrica(playerid, j);
     return 0;
