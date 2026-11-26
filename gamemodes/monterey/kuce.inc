@@ -222,6 +222,29 @@ KucaPristupDb(playerid)
     return gKuca[k][kuVlasnik] == gAccountId[playerid] || KucaStanar(playerid, k) ? gKuca[k][kuDb] : 0;
 }
 
+bool:KucaProvala(k, &Float:x, &Float:y, &Float:z, &tpl)
+{
+    if (k < 0 || k >= KUCA_MAX || !gKuca[k][kuIma]) return false;
+    x = gKuca[k][kuX];
+    y = gKuca[k][kuY];
+    z = gKuca[k][kuZ];
+    tpl = gKuca[k][kuInt];
+    return true;
+}
+
+KucaIntPoz(tpl, &interijer, &Float:x, &Float:y, &Float:z)
+{
+    interijer = gKucaInt[tpl][kiInt];
+    x = gKucaInt[tpl][kiX];
+    y = gKucaInt[tpl][kiY];
+    z = gKucaInt[tpl][kiZ];
+}
+
+KucaIntVelicina(tpl)
+{
+    return gKucaInt[tpl][kiVel];
+}
+
 static KucaUdi(playerid, k)
 {
     new i = gKuca[k][kuInt];

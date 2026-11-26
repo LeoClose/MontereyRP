@@ -93,6 +93,11 @@ static VrijemeIgra(t, izlazak, zalazak)
     return 12 * 60;
 }
 
+VrijemeIgraSat()
+{
+    return gVrijemeSat;
+}
+
 VrijemeIgrac(playerid)
 {
     if (UMarici(playerid)) return;

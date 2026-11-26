@@ -111,6 +111,7 @@ public OnPlayerDisconnect(playerid, reason)
     RibarKraj(playerid);
     SkladisteKraj(playerid);
     RepoKraj(playerid);
+    ProvalaKraj(playerid);
     RestoranDisconnect(playerid);
     KaficDisconnect(playerid);
     BilijarIgracOdlazi(playerid);
@@ -191,6 +192,7 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
     RibarKraj(playerid);
     SkladisteKraj(playerid);
     RepoKraj(playerid);
+    ProvalaKraj(playerid);
     RestoranSmjenaKraj(playerid);
     return 1;
 }
@@ -253,7 +255,7 @@ static InterakcijaF(playerid)
 static InterakcijaAlt(playerid)
 {
     if (PikadoCilja(playerid) || KuglanjeCilja(playerid) || BilijarCilja(playerid)) return 1;
-    return RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid);
+    return RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || ProvalaAlt(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid);
 }
 
 static Interakcija(playerid)
