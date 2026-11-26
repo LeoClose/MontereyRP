@@ -28,7 +28,7 @@
 
 enum { LM_SANDUCI, LM_KOKAIN, LM_METH, LM_SKLADISTE }
 enum { LS_PASTA, LS_KEM, LS_KOKAIN, LS_METH }
-enum E_LAB_MJESTO { bool:lmIma, lmDb, lmOrg, lmTip, Float:lmX, Float:lmY, Float:lmZ, STREAMER_TAG_3D_TEXT_LABEL:lmTekst, STREAMER_TAG_OBJECT:lmObjekt }
+enum E_LAB_MJESTO { bool:lmIma, lmDb, lmTer, lmTip, Float:lmX, Float:lmY, Float:lmZ, STREAMER_TAG_3D_TEXT_LABEL:lmTekst, STREAMER_TAG_OBJECT:lmObjekt }
 enum { LIGRA_NEMA, LIGRA_METH, LIGRA_KOKA }
 
 static const gLabMjestoIme[][] = { "Mjesto za sanduke", "Stol za kokain", "Stol za metamfetamin", "Skladiste laboratorija" };
@@ -43,18 +43,19 @@ static Float:gLuka[3], bool:gLukaIma, STREAMER_TAG_3D_TEXT_LABEL:gLukaTekst, STR
 
 InitLab()
 {
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS lab_places (id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, tip INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DROP TABLE IF EXISTS lab_places"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS lab_spots (id INTEGER PRIMARY KEY AUTOINCREMENT, ter INTEGER NOT NULL, tip INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS lab_stock (org INTEGER PRIMARY KEY, pasta INTEGER NOT NULL DEFAULT 0, chemicals INTEGER NOT NULL DEFAULT 0, cocaine INTEGER NOT NULL DEFAULT 0, meth INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS drug_orders (id INTEGER PRIMARY KEY AUTOINCREMENT, org INTEGER NOT NULL, tip INTEGER NOT NULL, crates INTEGER NOT NULL, remaining INTEGER NOT NULL, slot INTEGER NOT NULL, state INTEGER NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS drug_dock (id INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO lab_stock (org) SELECT org FROM drug_labs WHERE cocaine > 0"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE lab_stock SET cocaine = cocaine + (SELECT cocaine FROM drug_labs WHERE drug_labs.org = lab_stock.org) WHERE org IN (SELECT org FROM drug_labs WHERE cocaine > 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE drug_labs SET cocaine = 0"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, org, tip, x, y, z FROM lab_places ORDER BY id LIMIT %d", LAB_MJESTA_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, ter, tip, x, y, z FROM lab_spots ORDER BY id LIMIT %d", LAB_MJESTA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++, DB_SelectNextRow(res))
     {
         gLabMjesto[k][lmDb] = DB_GetFieldInt(res, 0);
-        gLabMjesto[k][lmOrg] = DB_GetFieldInt(res, 1);
+        gLabMjesto[k][lmTer] = DB_GetFieldInt(res, 1);
         gLabMjesto[k][lmTip] = DB_GetFieldInt(res, 2);
         gLabMjesto[k][lmX] = DB_GetFieldFloat(res, 3);
         gLabMjesto[k][lmY] = DB_GetFieldFloat(res, 4);
@@ -74,11 +75,10 @@ InitLab()
 
 static LabMjestoStvori(k)
 {
-    new svijet = HQ_SVIJET + gLabMjesto[k][lmOrg];
     gLabMjesto[k][lmIma] = true;
-    gLabMjesto[k][lmTekst] = CreateDynamic3DTextLabel(gLabMjestoIme[gLabMjesto[k][lmTip]], LAB_BOJA, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ] + 0.6, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, svijet);
+    gLabMjesto[k][lmTekst] = CreateDynamic3DTextLabel(gLabMjestoIme[gLabMjesto[k][lmTip]], LAB_BOJA, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ] + 0.6, 8.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     InterakcijaOznaka(gLabMjesto[k][lmTekst], LAB_DOMET);
-    gLabMjesto[k][lmObjekt] = gLabMjesto[k][lmTip] == LM_SANDUCI ? CreateDynamicObject(1318, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ] + 0.2, 0.0, 0.0, 0.0, svijet) : STREAMER_TAG_OBJECT:0;
+    gLabMjesto[k][lmObjekt] = gLabMjesto[k][lmTip] == LM_SANDUCI ? CreateDynamicObject(1318, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ] + 0.2, 0.0, 0.0, 0.0, 0, 0) : STREAMER_TAG_OBJECT:0;
 }
 
 static LukaStvori()
@@ -115,9 +115,10 @@ static bool:LabMafija(playerid)
 
 static LabMjestoBlizu(playerid)
 {
-    if (!LabMafija(playerid) || GetPlayerVirtualWorld(playerid) != HQ_SVIJET + gOrg[playerid]) return -1;
+    new ter = LabMafija(playerid) ? TerLabDb(playerid) : 0;
+    if (!ter) return -1;
     for (new k = 0; k < LAB_MJESTA_MAX; k++)
-        if (gLabMjesto[k][lmIma] && gLabMjesto[k][lmOrg] == gOrg[playerid] && IsPlayerInRangeOfPoint(playerid, LAB_DOMET, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ])) return k;
+        if (gLabMjesto[k][lmIma] && gLabMjesto[k][lmTer] == ter && IsPlayerInRangeOfPoint(playerid, LAB_DOMET, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ])) return k;
     return -1;
 }
 
@@ -213,15 +214,13 @@ LabGepekAlt(playerid, v)
 
 static LabHqCilj(playerid)
 {
-    new Float:x, Float:y, Float:z, Float:a;
-    for (new i = 0; i < MAX_HQ; i++)
+    for (new k = 0; k < LAB_MJESTA_MAX; k++)
     {
-        new o = OrgLokacija(i, x, y, z, a);
-        if (o == -1) break;
-        if (o != gOrg[playerid]) continue;
-        SetPlayerCheckpoint(playerid, x, y, z, 3.0);
+        if (!gLabMjesto[k][lmIma] || gLabMjesto[k][lmTip] != LM_SANDUCI || TerOrgPoDb(gLabMjesto[k][lmTer]) != gOrg[playerid]) continue;
+        SetPlayerCheckpoint(playerid, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ], LAB_DOMET);
         return;
     }
+    ObavijestGreska(playerid, T(playerid, "Vasa organizacija nema laboratorij. Osvojite teritorij laboratorija."));
 }
 
 static LukaSanduci()
@@ -279,7 +278,7 @@ static LukaAlt(playerid)
     LabSandukPrikazi(playerid, true);
     LukaSanduci();
     LabHqCilj(playerid);
-    ObavijestInfo(playerid, T(playerid, "Luka"), T(playerid, "Preuzeli ste sanduk. Stavite ga u vozilo (ALT kod prtljaznika) i odvezite u laboratorij HQ-a."));
+    ObavijestInfo(playerid, T(playerid, "Luka"), T(playerid, "Preuzeli ste sanduk. Stavite ga u vozilo (ALT kod prtljaznika) i odvezite u laboratorij vase organizacije."));
     return 1;
 }
 
@@ -627,15 +626,15 @@ DLG:narudzba_kol(playerid, response, const inputtext[])
 
 LabMjestoDodaj(playerid, tip)
 {
-    new org = GetPlayerVirtualWorld(playerid) - HQ_SVIJET;
-    if (org <= 0 || org > 999) return ObavijestGreska(playerid, T(playerid, "Morate biti u HQ-u organizacije.")), 0;
+    new ter = TerLabTu(playerid);
+    if (!ter) return ObavijestGreska(playerid, T(playerid, "Morate stajati na teritoriju laboratorija.")), 0;
     new k = 0;
     while (k < LAB_MJESTA_MAX && gLabMjesto[k][lmIma]) k++;
     if (k == LAB_MJESTA_MAX) return ObavijestGreska(playerid, T(playerid, "Dosegnut je maksimalan broj.")), 0;
-    gLabMjesto[k][lmOrg] = org;
+    gLabMjesto[k][lmTer] = ter;
     gLabMjesto[k][lmTip] = tip;
     GetPlayerPos(playerid, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ]);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO lab_places (org, tip, x, y, z) VALUES (%d, %d, %f, %f, %f)", org, tip, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO lab_spots (ter, tip, x, y, z) VALUES (%d, %d, %f, %f, %f)", ter, tip, gLabMjesto[k][lmX], gLabMjesto[k][lmY], gLabMjesto[k][lmZ]));
     gLabMjesto[k][lmDb] = ZadnjiId();
     LabMjestoStvori(k);
     return 1;
@@ -648,7 +647,7 @@ bool:LabMjestoIma(k)
 
 LabMjestoOpis(playerid, k, row[], len = sizeof row)
 {
-    format(row, len, T(playerid, "Lab [org %d] %s - obrisi"), gLabMjesto[k][lmOrg], T(playerid, gLabMjestoIme[gLabMjesto[k][lmTip]]));
+    format(row, len, T(playerid, "Lab [teritorij %d] %s - obrisi"), gLabMjesto[k][lmTer], T(playerid, gLabMjestoIme[gLabMjesto[k][lmTip]]));
 }
 
 LabMjestoObrisi(k)
@@ -657,7 +656,7 @@ LabMjestoObrisi(k)
     DestroyDynamic3DTextLabel(gLabMjesto[k][lmTekst]);
     if (gLabMjesto[k][lmObjekt]) DestroyDynamicObject(gLabMjesto[k][lmObjekt]);
     gLabMjesto[k][lmIma] = false;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM lab_places WHERE id = %d", gLabMjesto[k][lmDb]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM lab_spots WHERE id = %d", gLabMjesto[k][lmDb]));
 }
 
 LukaPostavi(playerid)

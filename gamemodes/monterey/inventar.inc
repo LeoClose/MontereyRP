@@ -905,7 +905,7 @@ CMD:spremi(playerid, params[])
 #define HALUC_MAX           2
 #define HALUC_TRAJE_MS      8000
 
-static gDrogaTip[MAX_PLAYERS] = { -1, ... }, gDrogaDo[MAX_PLAYERS], bool:gMethSkill[MAX_PLAYERS], gMethVjestina[MAX_PLAYERS][11];
+static gDrogaTip[MAX_PLAYERS] = { -1, ... }, gDrogaDo[MAX_PLAYERS], gDrogaTrajanje[MAX_PLAYERS] = { DROGA_TRAJE_MS, ... }, gVizualDo[MAX_PLAYERS], bool:gMethSkill[MAX_PLAYERS], gMethVjestina[MAX_PLAYERS][11];
 static gOvisnostSljedeci[MAX_PLAYERS], gOvisnostEpizoda[MAX_PLAYERS], bool:gOvisnostUcitana[MAX_PLAYERS];
 static PlayerText:gVizualTd[MAX_PLAYERS] = { PlayerText:INVALID_TEXT_DRAW, ... }, gVizualKorak[MAX_PLAYERS];
 static gHaluc[MAX_PLAYERS][HALUC_MAX], gHalucOd[MAX_PLAYERS][HALUC_MAX], gHalucSljedeca[MAX_PLAYERS];
@@ -919,7 +919,7 @@ static bool:DrogaAktivna(playerid)
 DrogaPostotak(playerid)
 {
     if (!DrogaAktivna(playerid)) return 0;
-    new p = (gDrogaDo[playerid] - GetTickCount()) * 100 / DROGA_TRAJE_MS;
+    new p = (gDrogaDo[playerid] - GetTickCount()) * 100 / gDrogaTrajanje[playerid];
     return p < 1 ? 1 : p > 100 ? 100 : p;
 }
 
@@ -1031,7 +1031,7 @@ static HalucTick(playerid)
         }
         Lik_IdiDo(gHaluc[playerid][k], x, y, z, LIK_SPRINT);
     }
-    if (gDrogaTip[playerid] != ITEM_METH || !DrogaAktivna(playerid) || sad - gHalucSljedeca[playerid] < 0 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
+    if (gDrogaTip[playerid] != ITEM_METH || gVizualTd[playerid] == PlayerText:INVALID_TEXT_DRAW || sad - gHalucSljedeca[playerid] < 0 || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
     gHalucSljedeca[playerid] = sad + 25000 + random(20000);
     new Float:a;
     GetPlayerFacingAngle(playerid, a);
@@ -1081,8 +1081,12 @@ DrogaUcinak(playerid, item)
     gOvisnostEpizoda[playerid] = 0;
     OvisnostSpremi(playerid);
     if (gDrogaTip[playerid] != item) DrogaKraj(playerid);
+    new bool:bonus = TerCrackhouseBonus(playerid);
     gDrogaTip[playerid] = item;
-    gDrogaDo[playerid] = GetTickCount() + DROGA_TRAJE_MS;
+    gDrogaTrajanje[playerid] = bonus ? DROGA_TRAJE_MS * 3 / 2 : DROGA_TRAJE_MS;
+    gDrogaDo[playerid] = GetTickCount() + gDrogaTrajanje[playerid];
+    gVizualDo[playerid] = GetTickCount() + DROGA_TRAJE_MS;
+    if (bonus) ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Crackhouse vase organizacije: ucinak traje 50% duze."));
     VizualPocni(playerid, item);
     SetPlayerDrunkLevel(playerid, item == ITEM_METH ? 4500 : item == ITEM_KOKAIN ? 2300 : 2600);
     switch (item)
@@ -1091,7 +1095,8 @@ DrogaUcinak(playerid, item)
         {
             new Float:o;
             GetArmor(playerid, o);
-            SetArmor(playerid, o + DROGA_MARIHUANA > 100.0 ? 100.0 : o + DROGA_MARIHUANA);
+            new Float:dodatak = bonus ? DROGA_MARIHUANA * 1.5 : DROGA_MARIHUANA;
+            SetArmor(playerid, o + dodatak > 100.0 ? 100.0 : o + dodatak);
             ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Marihuana vas je opustila: +20 oklopa."));
         }
         case ITEM_KOKAIN: ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Kokain: 5 minuta primate 30% manje stete."));
@@ -1130,7 +1135,12 @@ DrogaUcinakTick(playerid)
             else if (bila == ITEM_METH) ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Ucinak metamfetamina je prosao."));
             else ObavijestInfo(playerid, T(playerid, "Droga"), T(playerid, "Ucinak marihuane je prosao."));
         }
-        else
+        else if (gVizualTd[playerid] != PlayerText:INVALID_TEXT_DRAW && GetTickCount() - gVizualDo[playerid] >= 0)
+        {
+            for (new k = 0; k < HALUC_MAX; k++) HalucMakni(playerid, k);
+            VizualMakni(playerid);
+        }
+        else if (gVizualTd[playerid] != PlayerText:INVALID_TEXT_DRAW)
         {
             VizualBoja(playerid);
             if (GetPlayerDrunkLevel(playerid) < 2100) SetPlayerDrunkLevel(playerid, gDrogaTip[playerid] == ITEM_METH ? 4000 : 2200);

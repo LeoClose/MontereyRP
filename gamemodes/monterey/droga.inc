@@ -1,6 +1,7 @@
 #define DROGA_MAFIJA        1
 #define BILJKA_MAX          400
 #define BILJKA_PO_KUCI      6
+#define BILJKA_PO_PLANTAZI  20
 #define BILJKA_MODEL        19473
 #define BILJKA_RAST_S       7200
 #define BILJKA_SUHA_S       10800
@@ -107,8 +108,18 @@ static BiljkaFaza(b)
 {
     new sad = gettime();
     if (sad - gBiljka[b][biZalito] > BILJKA_SUHA_S) return 4;
-    new rast = sad - gBiljka[b][biPosadjeno];
-    return rast >= BILJKA_RAST_S ? 3 : rast >= BILJKA_RAST_S * 2 / 3 ? 2 : rast >= BILJKA_RAST_S / 3 ? 1 : 0;
+    new rast = sad - gBiljka[b][biPosadjeno], trajanje = BiljkaRast(b);
+    return rast >= trajanje ? 3 : rast >= trajanje * 2 / 3 ? 2 : rast >= trajanje / 3 ? 1 : 0;
+}
+
+static BiljkaRast(b)
+{
+    return gBiljka[b][biKuca] < 0 ? BILJKA_RAST_S / 2 : BILJKA_RAST_S;
+}
+
+static bool:BiljkaPristup(playerid, b)
+{
+    return gBiljka[b][biKuca] < 0 ? TerPlantazaDb(playerid) == -gBiljka[b][biKuca] : KucaPristupDb(playerid) == gBiljka[b][biKuca];
 }
 
 static BiljkaStvori(b)
@@ -117,7 +128,7 @@ static BiljkaStvori(b)
     if (gBiljka[b][biIma]) DestroyDynamicObject(gBiljka[b][biObj]);
     gBiljka[b][biIma] = true;
     gBiljka[b][biFaza] = faza;
-    gBiljka[b][biObj] = CreateDynamicObject(BILJKA_MODEL, gBiljka[b][biX], gBiljka[b][biY], z, faza == 4 ? 25.0 : 0.0, 0.0, 0.0, KUCA_SVIJET + gBiljka[b][biKuca], KucaInterijerDb(gBiljka[b][biKuca]), -1, 30.0);
+    gBiljka[b][biObj] = CreateDynamicObject(BILJKA_MODEL, gBiljka[b][biX], gBiljka[b][biY], z, faza == 4 ? 25.0 : 0.0, 0.0, 0.0, gBiljka[b][biKuca] < 0 ? 0 : KUCA_SVIJET + gBiljka[b][biKuca], gBiljka[b][biKuca] < 0 ? 0 : KucaInterijerDb(gBiljka[b][biKuca]), -1, gBiljka[b][biKuca] < 0 ? 80.0 : 30.0);
     if (faza == 4) SetDynamicObjectMaterial(gBiljka[b][biObj], 0, 3922, "bistro", "Marble2", 0xFF6E5A2A);
 }
 
@@ -130,9 +141,9 @@ static BiljkaUkloni(b)
 
 static BiljkaBlizu(playerid)
 {
-    new svijet = GetPlayerVirtualWorld(playerid) - KUCA_SVIJET;
+    new svijet = GetPlayerVirtualWorld(playerid), bool:vani = !svijet && !GetPlayerInterior(playerid);
     for (new b = 0; b < BILJKA_MAX; b++)
-        if (gBiljka[b][biIma] && gBiljka[b][biKuca] == svijet && IsPlayerInRangeOfPoint(playerid, BILJKA_DOMET, gBiljka[b][biX], gBiljka[b][biY], gBiljka[b][biZ])) return b;
+        if (gBiljka[b][biIma] && (gBiljka[b][biKuca] < 0 ? vani : (gBiljka[b][biKuca] == svijet - KUCA_SVIJET)) && IsPlayerInRangeOfPoint(playerid, BILJKA_DOMET, gBiljka[b][biX], gBiljka[b][biY], gBiljka[b][biZ])) return b;
     return -1;
 }
 
@@ -146,15 +157,20 @@ DrogaTick()
 
 DrogaPosadi(playerid)
 {
-    new kuca = KucaPristupDb(playerid);
-    if (!kuca) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Sjemenke mozete posaditi u lonac u svojoj kuci (ili kuci koju unajmljujete)."));
+    new kuca = KucaPristupDb(playerid), najvise = BILJKA_PO_KUCI;
+    if (!kuca && TerPlantazaDb(playerid))
+    {
+        kuca = -TerPlantazaDb(playerid);
+        najvise = BILJKA_PO_PLANTAZI;
+    }
+    if (!kuca) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Sjemenke mozete posaditi u lonac u svojoj kuci (ili kuci koju unajmljujete) ili na plantazi vase organizacije."));
     new n = 0, slobodno = -1;
     for (new b = 0; b < BILJKA_MAX; b++)
     {
         if (!gBiljka[b][biIma]) { if (slobodno == -1) slobodno = b; }
         else if (gBiljka[b][biKuca] == kuca) n++;
     }
-    if (n >= BILJKA_PO_KUCI) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "U kuci mozete imati najvise %d biljaka."), BILJKA_PO_KUCI);
+    if (n >= najvise) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, kuca < 0 ? ("Na plantazi mozete imati najvise %d biljaka.") : ("U kuci mozete imati najvise %d biljaka.")), najvise);
     if (slobodno == -1 || BiljkaBlizu(playerid) != -1) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovdje ne mozete posaditi biljku."));
     if (!GiveItem(playerid, ITEM_SJEME, -1)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate tog predmeta."));
     new b = slobodno, Float:a, sad = gettime();
@@ -172,18 +188,18 @@ DrogaPosadi(playerid)
     gBiljka[b][biIma] = false;
     BiljkaStvori(b);
     ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, false, false, false, false, 0);
-    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s sadi sjemenku u lonac.", GetRPIme(playerid), "", 1);
+    PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, kuca < 0 ? ("* %s sadi sjemenku u zemlju.") : ("* %s sadi sjemenku u lonac."), GetRPIme(playerid), "", 1);
     return 1;
 }
 
 static BiljkaMeni(playerid, b)
 {
-    new faza = BiljkaFaza(b), sad = gettime(), tekst[256], postotak = (sad - gBiljka[b][biPosadjeno]) * 100 / BILJKA_RAST_S, suho = (BILJKA_SUHA_S - (sad - gBiljka[b][biZalito])) / 60;
+    new faza = BiljkaFaza(b), sad = gettime(), tekst[256], postotak = (sad - gBiljka[b][biPosadjeno]) * 100 / BiljkaRast(b), suho = (BILJKA_SUHA_S - (sad - gBiljka[b][biZalito])) / 60;
     if (faza != gBiljka[b][biFaza]) BiljkaStvori(b);
     gDrogaBiljka[playerid] = b;
     if (PolicajacNaDuznosti(playerid))
         return PrikaziDialog(playerid, DLG_BILJKA, DIALOG_STYLE_LIST, T(playerid, "Biljka marihuane"), T(playerid, "Zaplijeni i unisti biljku"), T(playerid, "Odaberi"), T(playerid, "Zatvori"));
-    if (KucaPristupDb(playerid) != gBiljka[b][biKuca]) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo nije vasa biljka.")), 1;
+    if (!BiljkaPristup(playerid, b)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo nije vasa biljka.")), 1;
     if (faza == 4) format(tekst, sizeof tekst, T(playerid, "{C0392B}Biljka se osusila.\n{FFFFFF}Ukloni biljku"));
     else format(tekst, sizeof tekst, T(playerid, "{AAAAAA}Rast: %d%%  |  Voda jos: %d min\n{FFFFFF}Zalij\n%sOberi\n{FFFFFF}Ukloni biljku"), postotak > 100 ? 100 : postotak, suho < 0 ? 0 : suho, faza == 3 ? ("{2ECC71}") : ("{777777}"));
     return PrikaziDialog(playerid, DLG_BILJKA, DIALOG_STYLE_LIST, T(playerid, "Biljka marihuane"), tekst, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
@@ -199,7 +215,7 @@ DLG:biljka(playerid, response, listitem)
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s cupa biljku marihuane i stavlja je u vrecicu za dokaze.", GetRPIme(playerid), "", 1);
         return 1;
     }
-    if (KucaPristupDb(playerid) != gBiljka[b][biKuca]) return 1;
+    if (!BiljkaPristup(playerid, b)) return 1;
     new faza = BiljkaFaza(b);
     if (faza == 4)
     {

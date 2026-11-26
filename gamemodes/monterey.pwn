@@ -45,6 +45,7 @@ forward bool:LabTipke(playerid, KEY:newkeys, KEY:oldkeys);
 forward bool:LabMjestoIma(k);
 forward bool:ImaIzvadenoOruzje(playerid);
 forward bool:PredmetZaAdmina(item);
+forward bool:TerCrackhouseBonus(playerid);
 
 new gPrenosZamrz[MAX_PLAYERS], bool:gPrenosCekaj[MAX_PLAYERS], bool:gAdminZamrznut[MAX_PLAYERS], gZastitaDo[MAX_PLAYERS];
 stock PrenosConnect(playerid)

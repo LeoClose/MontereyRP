@@ -16,8 +16,8 @@
 #define TER_MAX_ZALIHA      5000
 #define TER_MAX_CIJENA      100000
 
-enum { TER_CRACKHOUSE, TER_PLANTAZA }
-static const gTerTip[2][] = { "Crackhouse", "Plantaza" };
+enum { TER_CRACKHOUSE, TER_PLANTAZA, TER_LABORATORIJ }
+static const gTerTip[3][] = { "Crackhouse", "Plantaza", "Laboratorij" };
 
 enum E_TER
 {
@@ -166,7 +166,7 @@ static TerPoDb(dbid)
 
 static DrogaTeritorija(t)
 {
-    return gTer[t][terTip] == TER_CRACKHOUSE ? ITEM_KOKAIN : ITEM_MARIHUANA;
+    return gTer[t][terTip] == TER_CRACKHOUSE ? ITEM_KOKAIN : gTer[t][terTip] == TER_LABORATORIJ ? ITEM_METH : ITEM_MARIHUANA;
 }
 
 static DilerPostavi(lik, t, n)
@@ -260,6 +260,43 @@ static bool:IsUZoni(playerid, t, Float:rub = 0.0)
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     return x >= gTer[t][terMinX] - rub && x <= gTer[t][terMaxX] + rub && y >= gTer[t][terMinY] - rub && y <= gTer[t][terMaxY] + rub;
+}
+
+static TerVlastiti(playerid, tip)
+{
+    if (!gOrg[playerid] || GetPlayerVirtualWorld(playerid) || GetPlayerInterior(playerid)) return 0;
+    for (new t = 0; t < MAX_TER; t++)
+        if (gTer[t][terDb] && gTer[t][terTip] == tip && gTer[t][terOrg] == gOrg[playerid] && IsUZoni(playerid, t)) return gTer[t][terDb];
+    return 0;
+}
+
+TerPlantazaDb(playerid)
+{
+    return TerVlastiti(playerid, TER_PLANTAZA);
+}
+
+bool:TerCrackhouseBonus(playerid)
+{
+    return TerVlastiti(playerid, TER_CRACKHOUSE) != 0;
+}
+
+TerLabDb(playerid)
+{
+    return TerVlastiti(playerid, TER_LABORATORIJ);
+}
+
+TerLabTu(playerid)
+{
+    if (GetPlayerVirtualWorld(playerid) || GetPlayerInterior(playerid)) return 0;
+    for (new t = 0; t < MAX_TER; t++)
+        if (gTer[t][terDb] && gTer[t][terTip] == TER_LABORATORIJ && IsUZoni(playerid, t)) return gTer[t][terDb];
+    return 0;
+}
+
+TerOrgPoDb(dbid)
+{
+    new t = TerPoDb(dbid);
+    return t == -1 ? 0 : gTer[t][terOrg];
 }
 
 static ClanoviUZoni(t, org, ids[], osim = INVALID_PLAYER_ID)
@@ -562,7 +599,7 @@ static ShowTeritorij(playerid)
     format(title, sizeof title, T(playerid, "%s | zaliha %d | $%d | profit $%d"), gTer[t][terIme], gTer[t][terZaliha], gTer[t][terCijena], gTer[t][terProfit]);
     new list[256];
     format(list, sizeof list, T(playerid, "%s\nPostavi cijenu\nUzmi profit\nDaj oruzje dilerima\nUzmi oruzje od dilera (%s)"),
-        gTer[t][terTip] == TER_CRACKHOUSE ? T(playerid, "Daj kokain dilerima") : T(playerid, "Daj sjemenke za uzgoj"), oruzje);
+        gTer[t][terTip] == TER_CRACKHOUSE ? T(playerid, "Daj kokain dilerima") : gTer[t][terTip] == TER_LABORATORIJ ? T(playerid, "Daj metamfetamin dilerima") : T(playerid, "Daj sjemenke za uzgoj"), oruzje);
     return PrikaziDialog(playerid, DLG_TERITORIJ, DIALOG_STYLE_LIST, title, list, T(playerid, "Odaberi"), T(playerid, "Zatvori"));
 }
 
@@ -671,13 +708,13 @@ DLG:ter_droga(playerid, response, const inputtext[])
     new t = gTerOdabran[playerid];
     if (!response) return ShowTeritorij(playerid);
     if (!CanManage(playerid, t)) return 1;
-    new item = gTer[t][terTip] == TER_CRACKHOUSE ? ITEM_KOKAIN : ITEM_SJEME, amount = strval(inputtext);
+    new item = gTer[t][terTip] == TER_PLANTAZA ? ITEM_SJEME : DrogaTeritorija(t), amount = strval(inputtext);
     if (!ProvjeriBroj(inputtext) || strlen(inputtext) > 5 || !amount) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Neispravna kolicina."));
-    else if (item == ITEM_KOKAIN && gTer[t][terZaliha] + amount > TER_MAX_ZALIHA) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dileri mogu imati najvise %d."), TER_MAX_ZALIHA);
+    else if (item != ITEM_SJEME && gTer[t][terZaliha] + amount > TER_MAX_ZALIHA) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Dileri mogu imati najvise %d."), TER_MAX_ZALIHA);
     else if (!GiveItem(playerid, item, -amount)) SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate toliko."));
     else
     {
-        if (item == ITEM_KOKAIN) gTer[t][terZaliha] += amount;
+        if (item != ITEM_SJEME) gTer[t][terZaliha] += amount;
         else gTer[t][terSjemenke] += amount;
         SaveTeritorij(t);
     }
@@ -741,8 +778,8 @@ CreateTer(playerid, const params[])
 {
     new idx = 0, p1[8], p2[8], name[32];
     if (!ProvjeriOvlasti(playerid, ALVL_ORG)) return 1;
-    if (!SljedeciParam(params, idx, p1) || !ProvjeriBroj(p1) || strval(p1) > 1 || !SljedeciParam(params, idx, p2) || !ProvjeriBroj(p2) || strval(p2) < 20 || strval(p2) > 300)
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite: [tip: 0 crackhouse, 1 plantaza] [velicina 20-300 m] [ime]"));
+    if (!SljedeciParam(params, idx, p1) || !ProvjeriBroj(p1) || strval(p1) > 2 || !SljedeciParam(params, idx, p2) || !ProvjeriBroj(p2) || strval(p2) < 20 || strval(p2) > 300)
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite: [tip: 0 crackhouse, 1 plantaza, 2 laboratorij] [velicina 20-300 m] [ime]"));
     RestParam(params, idx, name);
     RemoveBoje(name);
     if (!name[0]) return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Unesite ime teritorija."));
@@ -868,7 +905,7 @@ ShowTerMeni(playerid)
 DLG:apanel_ter(playerid, response, listitem)
 {
     if (!response) return ShowAdminPanel(playerid);
-    if (listitem == 0) return ShowUnos(playerid, AP_TER_KREIRAJ, T(playerid, "Centar teritorija je vasa pozicija.\nUnesite: [tip: 0 crackhouse, 1 plantaza] [velicina 20-300 m] [ime]"));
+    if (listitem == 0) return ShowUnos(playerid, AP_TER_KREIRAJ, T(playerid, "Centar teritorija je vasa pozicija.\nUnesite: [tip: 0 crackhouse, 1 plantaza, 2 laboratorij] [velicina 20-300 m] [ime]"));
     if (listitem == 1)
     {
         TerUkloniDilera(playerid);

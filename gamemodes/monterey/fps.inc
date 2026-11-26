@@ -1,10 +1,11 @@
 #define FPS_MODEL           19300
-#define FPS_MS              200
+#define FPS_MS              100
+#define FPS_VOZILO_KUT      -0.42
 
 enum { FM_NEMA = -1, FM_STOJI, FM_TRCI, FM_CUCI, FM_VOZILO }
 
 static gFpsObj[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... }, bool:gFps[MAX_PLAYERS], bool:gFpsPrisilno[MAX_PLAYERS], bool:gFpsPrije[MAX_PLAYERS];
-static gFpsNacin[MAX_PLAYERS] = { FM_NEMA, ... }, gFpsVozilo[MAX_PLAYERS], gFpsSjedalo[MAX_PLAYERS], bool:gFpsTimer;
+static gFpsNacin[MAX_PLAYERS] = { FM_NEMA, ... }, gFpsVozilo[MAX_PLAYERS], gFpsSjedalo[MAX_PLAYERS], bool:gFpsTimer, bool:gFpsNisani[MAX_PLAYERS];
 
 static bool:FpsMotor(model)
 {
@@ -60,13 +61,14 @@ static FpsPrimijeni(playerid)
         sx = floatabs(sx);
         if (sjedalo == 0 || sjedalo == 2) sx = -sx;
         if (FpsMotor(model)) sx = 0.0;
-        AttachPlayerObjectToVehicle(playerid, gFpsObj[playerid], vozilo, sx, sy + 0.12, sz + 0.68, 0.0, 0.0, 0.0);
+        AttachPlayerObjectToVehicle(playerid, gFpsObj[playerid], vozilo, sx, sy - 0.18, sz + 0.74, 0.0, 0.0, 0.0);
     }
     else
     {
         new Float:naprijed = nacin == FM_TRCI ? 0.32 : nacin == FM_CUCI ? 0.30 : 0.18, Float:visina = nacin == FM_CUCI ? 0.16 : nacin == FM_TRCI ? 0.64 : 0.70;
         AttachPlayerObjectToPlayer(playerid, gFpsObj[playerid], playerid, 0.0, naprijed, visina, 0.0, 0.0, 0.0);
     }
+    gFpsNisani[playerid] = false;
     AttachCameraToPlayerObject(playerid, gFpsObj[playerid]);
     gFpsNacin[playerid] = nacin;
     gFpsVozilo[playerid] = vozilo;
@@ -82,7 +84,28 @@ public FpsTick()
         new PLAYER_STATE:st = GetPlayerState(i);
         if (st != PLAYER_STATE_ONFOOT && st != PLAYER_STATE_DRIVER && st != PLAYER_STATE_PASSENGER) continue;
         new vozilo, sjedalo, nacin = FpsNacin(i, vozilo, sjedalo);
-        if (nacin != gFpsNacin[i] || vozilo != gFpsVozilo[i] || sjedalo != gFpsSjedalo[i]) FpsPrimijeni(i);
+        if (nacin != gFpsNacin[i] || vozilo != gFpsVozilo[i] || sjedalo != gFpsSjedalo[i])
+        {
+            FpsPrimijeni(i);
+            continue;
+        }
+        if (gFpsObj[i] == INVALID_OBJECT_ID) continue;
+        if (nacin == FM_VOZILO && vozilo)
+        {
+            new Float:fx, Float:fy, Float:fz, Float:kut;
+            GetPlayerCameraFrontVector(i, fx, fy, fz);
+            GetVehicleZAngle(vozilo, kut);
+            new Float:d = floatsqroot(fx * fx + fy * fy);
+            if (d > 0.1 && (fx * -floatsin(kut, degrees) + fy * floatcos(kut, degrees)) / d < FPS_VOZILO_KUT) AttachCameraToPlayerObject(i, gFpsObj[i]);
+            continue;
+        }
+        new KEY:tipke, gore, strana;
+        GetPlayerKeys(i, tipke, gore, strana);
+        new bool:nisani = (tipke & KEY_HANDBRAKE) != KEY:0 && GetPlayerWeapon(i) >= WEAPON_COLT45;
+        if (nisani == gFpsNisani[i]) continue;
+        gFpsNisani[i] = nisani;
+        if (nisani) SetCameraBehindPlayer(i);
+        else AttachCameraToPlayerObject(i, gFpsObj[i]);
     }
 }
 
