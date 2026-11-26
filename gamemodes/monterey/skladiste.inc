@@ -55,11 +55,18 @@
 #define SK_CILJ_RAMPA       (SK_SLOTOVA + SK_PALETA)
 #define SK_KUT_B            -135.0
 #define SK_UTOVAR_TURA      3
-#define SK_UTOVAR_TOCAKA    24
-#define SK_UTOVAR_IZA       2.6
-#define SK_UTOVAR_KORAK     30.0
-#define SK_UTOVAR_STANKA    1500
+#define SK_UTOVAR_TOCAKA    16
 #define SK_UTOVAR_REZERVA   (MAX_PLAYERS + 1)
+#define SK_DVORISTE_X       2768.0
+#define SK_SJEVER_Y         -2404.0
+#define SK_POLICA_RAZMAK    1.75
+#define SK_ZAOBIDJI         1.4
+#define SK_VILICE_NOSI      0.45
+#define SK_VILICE_DOLJE     0.08
+#define SK_BRZO             3.0
+#define SK_SPORO            0.9
+
+enum { SKU_NEMA, SKU_DO_POLICE, SKU_ULAZ_POLICA, SKU_PODIZE, SKU_IZLAZ_POLICA, SKU_DO_KAMIONA, SKU_ULAZ_KAMION, SKU_SPUSTA, SKU_IZLAZ_KAMION, SKU_KUCI }
 
 enum { SKT_OBICNO, SKT_LOMLJIVO, SKT_TESKO, SKT_HITNO }
 enum { SKC_SLOT, SKC_PALETA, SKC_RAMPA }
@@ -102,8 +109,10 @@ static Float:gSkladisteCilj[MAX_PLAYERS][3], Float:gSkladisteZdravlje[MAX_PLAYER
 static STREAMER_TAG_OBJECT:gSkladisteStrelica[MAX_PLAYERS];
 static PlayerText:gSkladisteHud[MAX_PLAYERS], bool:gSkladisteHudIma[MAX_PLAYERS], gSkladisteKontrola[MAX_PLAYERS];
 static gSkladisteApPopis[MAX_PLAYERS][SK_VILJUSKARA + SK_RAMPI + SK_PALETA];
-static gSkladisteUtovarVozilo = INVALID_VEHICLE_ID, gSkladisteUtovarB = -1, gSkladisteUtovarFaza, gSkladisteUtovarTura, gSkladisteUtovarSlot = -1, gSkladisteUtovarToken;
-static Float:gSkladisteUtovarPut[SK_UTOVAR_TOCAKA][2], gSkladisteUtovarBroj, gSkladisteUtovarIdx;
+static gSkladisteUtovarVozilo = INVALID_VEHICLE_ID, gSkladisteUtovarKamion = INVALID_VEHICLE_ID, gSkladisteUtovarB = -1, gSkladisteUtovarFaza, gSkladisteUtovarTura, gSkladisteUtovarSlot = -1, gSkladisteUtovarToken;
+static Float:gSkladisteUtovarPut[SK_UTOVAR_TOCAKA * 3], gSkladisteUtovarBroj, bool:gSkladisteUtovarNosi, Float:gSkladisteUtovarVilice, Float:gSkladisteUtovarViliceCilj, gSkladisteUtovarViliceTimer;
+static Float:gSkladisteUtovarA[2], Float:gSkladisteUtovarP[2], Float:gSkladisteUtovarC[2], Float:gSkladisteUtovarE[2], Float:gSkladisteUtovarPp[2], Float:gSkladisteUtovarPq[2], Float:gSkladisteUtovarPd[2], Float:gSkladisteUtovarVisina;
+static const Float:gSkladisteZgradaY[3] = { -2417.79, -2455.88, -2493.98 };
 
 InitSkladiste()
 {
@@ -227,7 +236,6 @@ public SkladisteViljNpc(b)
     Lik_UVozilo(lik, gSkladisteVilj[b][svVozilo], 0);
     gSkladisteVilj[b][svLik] = lik;
     gSkladisteVilj[b][svCvor] = -1;
-    SetTimerEx("SkladisteViljKreni", 1500, false, "ii", b, lik);
 }
 
 static SkladisteRedova(h)
@@ -1006,7 +1014,6 @@ SkladisteStigao(lik)
     for (new b = 0; b < SK_VILJUSKARA; b++)
     {
         if (!gSkladisteVilj[b][svIma] || gSkladisteVilj[b][svLik] != lik) continue;
-        SetTimerEx("SkladisteViljKreni", 3000 + random(5000), false, "ii", b, lik);
         return 1;
     }
     for (new r = 0; r < SK_RAMPI; r++)
@@ -1077,109 +1084,306 @@ STREAMER_TAG_OBJECT:SkladisteTeretNaVozilo(v, Float:x, Float:y, Float:z)
     return o;
 }
 
-static SkladisteUtovarTocka(Float:x, Float:y)
+static Float:SkladisteBlizaZgrada(Float:y)
+{
+    new najbliza = 0;
+    for (new w = 1; w < sizeof gSkladisteZgradaY; w++)
+        if (floatabs(y - gSkladisteZgradaY[w]) < floatabs(y - gSkladisteZgradaY[najbliza])) najbliza = w;
+    return gSkladisteZgradaY[najbliza];
+}
+
+static SkladistePutPocni()
+{
+    new lik = gSkladisteVilj[gSkladisteUtovarB][svLik], Float:x, Float:y, Float:z;
+    Lik_Pozicija(lik, x, y, z);
+    gSkladisteUtovarBroj = 0;
+    SkladistePutDodaj(x, y);
+}
+
+static SkladistePutDodaj(Float:x, Float:y)
 {
     if (gSkladisteUtovarBroj >= SK_UTOVAR_TOCAKA) return;
-    gSkladisteUtovarPut[gSkladisteUtovarBroj][0] = x;
-    gSkladisteUtovarPut[gSkladisteUtovarBroj][1] = y;
+    new i = gSkladisteUtovarBroj * 3;
+    gSkladisteUtovarPut[i] = x;
+    gSkladisteUtovarPut[i + 1] = y;
+    gSkladisteUtovarPut[i + 2] = gSkladisteVilj[gSkladisteUtovarB][svZ] - 0.6;
     gSkladisteUtovarBroj++;
 }
 
-static SkladisteUtovarRuta(Float:tx, Float:ty)
+static SkladistePutVozi(Float:brzina, bool:unatrag = false, Float:tocnost = 1.0)
 {
-    new b = gSkladisteUtovarB, h = SkladisteHangarBlizu(gSkladisteVilj[b][svX], gSkladisteVilj[b][svY]), st = sizeof gSkladisteStupac, Float:x, Float:y, Float:z, Float:cx, Float:cy;
-    GetVehiclePos(gSkladisteVilj[b][svVozilo], x, y, z);
-    gSkladisteUtovarBroj = 0;
-    gSkladisteUtovarIdx = 0;
-    new s = SkladisteCvorSljedeci(h, -1, x, y), e = SkladisteCvorSljedeci(h, -1, tx, ty), sr = s / st, ss = s % st, er = e / st, es = e % st;
-    SkladisteCvorPoz(h, s, cx, cy);
-    SkladisteUtovarTocka(cx, cy);
-    while (sr != er)
-    {
-        sr += sr < er ? 1 : -1;
-        SkladisteCvorPoz(h, sr * st + ss, cx, cy);
-        SkladisteUtovarTocka(cx, cy);
-    }
-    while (ss != es)
-    {
-        ss += ss < es ? 1 : -1;
-        SkladisteCvorPoz(h, sr * st + ss, cx, cy);
-        SkladisteUtovarTocka(cx, cy);
-    }
-    new k = floatround(VectorSize(tx - cx, ty - cy, 0.0) / SK_UTOVAR_KORAK, floatround_floor);
-    for (new j = 1; j <= k; j++) SkladisteUtovarTocka(cx + (tx - cx) * float(j) / float(k + 1), cy + (ty - cy) * float(j) / float(k + 1));
-    SkladisteUtovarTocka(tx, ty);
+    new lik = gSkladisteVilj[gSkladisteUtovarB][svLik];
+    if (lik != INVALID_LIK && Lik_VoziPutem(lik, gSkladisteUtovarPut, gSkladisteUtovarBroj, brzina, unatrag, tocnost)) return;
+    SetTimerEx("SkladisteUtovarPonovi", 1500, false, "ifii", gSkladisteUtovarToken, brzina, unatrag, floatround(tocnost * 100.0));
 }
 
-static SkladisteUtovarVozi()
+forward SkladisteUtovarPonovi(token, Float:brzina, bool:unatrag, tocnost);
+public SkladisteUtovarPonovi(token, Float:brzina, bool:unatrag, tocnost)
 {
-    new b = gSkladisteUtovarB, lik = gSkladisteVilj[b][svLik];
-    if (lik == INVALID_LIK) return;
-    if (!Lik_Vozi(lik, gSkladisteUtovarPut[gSkladisteUtovarIdx][0], gSkladisteUtovarPut[gSkladisteUtovarIdx][1], gSkladisteVilj[b][svZ] - 0.6, SK_NPC_BRZINA)) SetTimerEx("SkladisteUtovarDalje", 2000, false, "i", gSkladisteUtovarToken);
+    if (token == gSkladisteUtovarToken && gSkladisteUtovarFaza && gSkladisteUtovarB != -1) SkladistePutVozi(brzina, unatrag, float(tocnost) / 100.0);
+}
+
+static SkladisteTeretNaVilicama()
+{
+    new b = gSkladisteUtovarB;
+    if (gSkladisteUtovarNosi) AttachObjectToVehicle(gSkladisteVilj[b][svTeret], gSkladisteVilj[b][svVozilo], 0.0, SK_TERET_Y, SK_TERET_Z + gSkladisteUtovarVilice, 0.0, 0.0, 0.0);
+    else SkladisteTeretSakrij(b);
+}
+
+static SkladisteVilice(Float:h)
+{
+    gSkladisteUtovarViliceCilj = h;
+    if (!gSkladisteUtovarViliceTimer) gSkladisteUtovarViliceTimer = SetTimer("SkladisteViliceKorak", 100, true);
+}
+
+forward SkladisteViliceKorak();
+public SkladisteViliceKorak()
+{
+    new b = gSkladisteUtovarB;
+    if (b == -1 || gSkladisteVilj[b][svLik] == INVALID_LIK)
+    {
+        KillTimer(gSkladisteUtovarViliceTimer);
+        gSkladisteUtovarViliceTimer = 0;
+        return;
+    }
+    new Float:razlika = gSkladisteUtovarViliceCilj - gSkladisteUtovarVilice;
+    gSkladisteUtovarVilice += floatabs(razlika) <= 0.12 ? razlika : (razlika > 0.0 ? 0.12 : -0.12);
+    Lik_Vilice(gSkladisteVilj[b][svLik], gSkladisteUtovarVilice);
+    SkladisteTeretNaVilicama();
+    if (gSkladisteUtovarVilice != gSkladisteUtovarViliceCilj) return;
+    KillTimer(gSkladisteUtovarViliceTimer);
+    gSkladisteUtovarViliceTimer = 0;
+}
+
+static SkladisteOkvir(v, Float:o[5])
+{
+    new Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    o[0] = x, o[1] = y, o[2] = a, o[3] = sx / 2.0 + SK_ZAOBIDJI, o[4] = sy / 2.0 + SK_ZAOBIDJI;
+}
+
+static bool:SkladisteKrozOkvir(Float:ax, Float:ay, Float:bx, Float:by, const Float:o[5])
+{
+    new Float:c = floatcos(-o[2], degrees), Float:sn = floatsin(-o[2], degrees);
+    new Float:px = (ax - o[0]) * c - (ay - o[1]) * sn, Float:py = (ax - o[0]) * sn + (ay - o[1]) * c;
+    new Float:qx = (bx - o[0]) * c - (by - o[1]) * sn, Float:qy = (bx - o[0]) * sn + (by - o[1]) * c;
+    new Float:t0 = 0.0, Float:t1 = 1.0, Float:d[2], Float:p0[2], Float:gr[2];
+    d[0] = qx - px, d[1] = qy - py, p0[0] = px, p0[1] = py, gr[0] = o[3], gr[1] = o[4];
+    for (new k = 0; k < 2; k++)
+    {
+        if (floatabs(d[k]) < 0.0001)
+        {
+            if (p0[k] < -gr[k] || p0[k] > gr[k]) return false;
+            continue;
+        }
+        new Float:u1 = (-gr[k] - p0[k]) / d[k], Float:u2 = (gr[k] - p0[k]) / d[k];
+        if (u1 > u2)
+        {
+            new Float:tmp = u1;
+            u1 = u2, u2 = tmp;
+        }
+        if (u1 > t0) t0 = u1;
+        if (u2 < t1) t1 = u2;
+        if (t0 > t1) return false;
+    }
+    return true;
+}
+
+static bool:SkladisteSlobodno(Float:ax, Float:ay, Float:bx, Float:by, const Float:o[][5], n)
+{
+    for (new i = 0; i < n; i++) if (SkladisteKrozOkvir(ax, ay, bx, by, o[i])) return false;
+    return true;
+}
+
+static SkladisteZaobidji(Float:ax, Float:ay, Float:bx, Float:by)
+{
+    new Float:o[2][5], n = 0;
+    if (gSkladisteUtovarVozilo != INVALID_VEHICLE_ID) SkladisteOkvir(gSkladisteUtovarVozilo, o[n++]);
+    if (gSkladisteUtovarKamion != INVALID_VEHICLE_ID && gSkladisteUtovarKamion != gSkladisteUtovarVozilo) SkladisteOkvir(gSkladisteUtovarKamion, o[n++]);
+    if (!n || SkladisteSlobodno(ax, ay, bx, by, o, n)) return;
+    new Float:ux[8], Float:uy[8], m = 0;
+    for (new i = 0; i < n; i++)
+    {
+        new Float:c = floatcos(o[i][2], degrees), Float:sn = floatsin(o[i][2], degrees);
+        for (new k = 0; k < 4; k++)
+        {
+            new Float:lx = (k == 0 || k == 3) ? o[i][3] + 0.2 : -o[i][3] - 0.2, Float:ly = k < 2 ? o[i][4] + 0.2 : -o[i][4] - 0.2;
+            ux[m] = o[i][0] + lx * c - ly * sn;
+            uy[m] = o[i][1] + lx * sn + ly * c;
+            m++;
+        }
+    }
+    new najbolji = -1, Float:duljina = 1.0e9;
+    for (new k = 0; k < m; k++)
+    {
+        if (!SkladisteSlobodno(ax, ay, ux[k], uy[k], o, n) || !SkladisteSlobodno(ux[k], uy[k], bx, by, o, n)) continue;
+        new Float:d = VectorSize(ux[k] - ax, uy[k] - ay, 0.0) + VectorSize(bx - ux[k], by - uy[k], 0.0);
+        if (d < duljina) duljina = d, najbolji = k;
+    }
+    if (najbolji != -1)
+    {
+        SkladistePutDodaj(ux[najbolji], uy[najbolji]);
+        return;
+    }
+    new prvi = -1, drugi = -1;
+    for (new k = 0; k < m; k++)
+    {
+        if (!SkladisteSlobodno(ax, ay, ux[k], uy[k], o, n)) continue;
+        for (new j = 0; j < m; j++)
+        {
+            if (j == k || !SkladisteSlobodno(ux[k], uy[k], ux[j], uy[j], o, n) || !SkladisteSlobodno(ux[j], uy[j], bx, by, o, n)) continue;
+            new Float:d = VectorSize(ux[k] - ax, uy[k] - ay, 0.0) + VectorSize(ux[j] - ux[k], uy[j] - uy[k], 0.0) + VectorSize(bx - ux[j], by - uy[j], 0.0);
+            if (d < duljina) duljina = d, prvi = k, drugi = j;
+        }
+    }
+    if (prvi == -1) return;
+    SkladistePutDodaj(ux[prvi], uy[prvi]);
+    SkladistePutDodaj(ux[drugi], uy[drugi]);
+}
+
+static bool:SkladisteKamionTocke()
+{
+    new v = gSkladisteUtovarVozilo;
+    if (v == INVALID_VEHICLE_ID || !GetVehicleModel(v)) return false;
+    new Float:x, Float:y, Float:z, Float:a, Float:sx, Float:sy, Float:sz;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees), Float:rx = x - fx * sy / 2.0, Float:ry = y - fy * sy / 2.0;
+    gSkladisteUtovarPd[0] = rx - fx * 1.5, gSkladisteUtovarPd[1] = ry - fy * 1.5;
+    gSkladisteUtovarPp[0] = rx - fx * 6.5, gSkladisteUtovarPp[1] = ry - fy * 6.5;
+    gSkladisteUtovarPq[0] = rx - fx * 11.0, gSkladisteUtovarPq[1] = ry - fy * 11.0;
+    gSkladisteUtovarVisina = sz * 0.32;
+    if (gSkladisteUtovarVisina < 0.6) gSkladisteUtovarVisina = 0.6;
+    else if (gSkladisteUtovarVisina > 1.45) gSkladisteUtovarVisina = 1.45;
+    return true;
+}
+
+static SkladistePutIzlaz()
+{
+    new Float:x, Float:y, Float:z;
+    Lik_Pozicija(gSkladisteVilj[gSkladisteUtovarB][svLik], x, y, z);
+    if (x <= SK_DVORISTE_X + 4.0) return;
+    if (y > SK_SJEVER_Y)
+    {
+        SkladistePutDodaj(SK_DVORISTE_X, y);
+        return;
+    }
+    new Float:yc = SkladisteBlizaZgrada(y);
+    SkladistePutDodaj(x, yc);
+    SkladistePutDodaj(SK_DVORISTE_X, yc);
+}
+
+static SkladisteDoPolice()
+{
+    new k = SkladisteUzmiPuno(SkladisteHangarBlizu(gSkladisteVilj[gSkladisteUtovarB][svX], gSkladisteVilj[gSkladisteUtovarB][svY]));
+    gSkladisteUtovarSlot = k;
+    if (k == -1 || k / sizeof gSkladisteMjesto >= SK_POLICA_A)
+    {
+        if (k != -1) gSkladisteUtovarSlot = -1;
+        gSkladisteUtovarNosi = true;
+        SkladisteVilice(SK_VILICE_NOSI);
+        SkladisteDoKamiona(false);
+        return;
+    }
+    gSkladisteRezerva[k] = SK_UTOVAR_REZERVA;
+    new p = k / sizeof gSkladisteMjesto, Float:px = gSkladistePolica[p][0], Float:py = gSkladistePolica[p][1] + gSkladisteMjesto[k % sizeof gSkladisteMjesto][0];
+    new Float:prolaz = px < 2788.0 ? 2787.87 : (px < 2795.0 ? 2787.87 : 2800.4), Float:strana = prolaz > px ? 1.0 : -1.0;
+    new Float:yc = SkladisteBlizaZgrada(py);
+    gSkladisteUtovarA[0] = prolaz, gSkladisteUtovarA[1] = py;
+    gSkladisteUtovarP[0] = px + strana * SK_POLICA_RAZMAK, gSkladisteUtovarP[1] = py;
+    gSkladisteUtovarC[0] = prolaz, gSkladisteUtovarC[1] = yc;
+    gSkladisteUtovarE[0] = SK_DVORISTE_X, gSkladisteUtovarE[1] = yc;
+    SkladistePutPocni();
+    SkladistePutIzlaz();
+    SkladistePutDodaj(gSkladisteUtovarE[0], gSkladisteUtovarE[1]);
+    SkladistePutDodaj(gSkladisteUtovarC[0], gSkladisteUtovarC[1]);
+    SkladistePutDodaj(gSkladisteUtovarA[0], gSkladisteUtovarA[1]);
+    gSkladisteUtovarFaza = SKU_DO_POLICE;
+    SkladisteVilice(SK_VILICE_DOLJE);
+    SkladistePutVozi(SK_BRZO);
+}
+
+static SkladisteDoKamiona(bool:izPolice)
+{
+    if (!SkladisteKamionTocke())
+    {
+        SkladisteUtovarStani();
+        return;
+    }
+    SkladistePutPocni();
+    if (izPolice)
+    {
+        SkladistePutDodaj(gSkladisteUtovarC[0], gSkladisteUtovarC[1]);
+        SkladistePutDodaj(gSkladisteUtovarE[0], gSkladisteUtovarE[1]);
+    }
+    else SkladistePutIzlaz();
+    new i = (gSkladisteUtovarBroj - 1) * 3;
+    SkladisteZaobidji(gSkladisteUtovarPut[i], gSkladisteUtovarPut[i + 1], gSkladisteUtovarPq[0], gSkladisteUtovarPq[1]);
+    SkladistePutDodaj(gSkladisteUtovarPq[0], gSkladisteUtovarPq[1]);
+    SkladistePutDodaj(gSkladisteUtovarPp[0], gSkladisteUtovarPp[1]);
+    gSkladisteUtovarFaza = SKU_DO_KAMIONA;
+    SkladistePutVozi(SK_BRZO);
+}
+
+static SkladisteKuci()
+{
+    new b = gSkladisteUtovarB;
+    SkladistePutPocni();
+    SkladistePutIzlaz();
+    SkladistePutDodaj(SK_DVORISTE_X, gSkladisteVilj[b][svY]);
+    SkladistePutDodaj(gSkladisteVilj[b][svX], gSkladisteVilj[b][svY]);
+    gSkladisteUtovarFaza = SKU_KUCI;
+    SkladisteVilice(SK_VILICE_DOLJE);
+    SkladistePutVozi(SK_BRZO);
 }
 
 forward SkladisteUtovarDalje(token);
 public SkladisteUtovarDalje(token)
 {
-    if (token == gSkladisteUtovarToken && gSkladisteUtovarFaza && gSkladisteUtovarB != -1) SkladisteUtovarVozi();
-}
-
-forward SkladisteUtovarSljedeci(token);
-public SkladisteUtovarSljedeci(token)
-{
-    if (token != gSkladisteUtovarToken || !gSkladisteUtovarFaza || gSkladisteUtovarB == -1) return;
-    new b = gSkladisteUtovarB, Float:x, Float:y, Float:z, Float:fx, Float:fy;
+    if (token != gSkladisteUtovarToken || gSkladisteUtovarB == -1) return;
     switch (gSkladisteUtovarFaza)
     {
-        case 1:
+        case SKU_PODIZE:
         {
-            new h = SkladisteHangarBlizu(gSkladisteVilj[b][svX], gSkladisteVilj[b][svY]), k = SkladisteUzmiPuno(h);
-            if (k == -1)
-            {
-                AttachObjectToVehicle(gSkladisteVilj[b][svTeret], gSkladisteVilj[b][svVozilo], 0.0, SK_TERET_Y, SK_TERET_Z + 0.25, 0.0, 0.0, 0.0);
-                gSkladisteUtovarFaza = 2;
-                SkladisteUtovarSljedeci(token);
-                return;
-            }
-            gSkladisteUtovarSlot = k;
-            gSkladisteRezerva[k] = SK_UTOVAR_REZERVA;
-            new p = k / sizeof gSkladisteMjesto, Float:ax, Float:ay, Float:bx, Float:by;
-            SkladisteLokalno(p, SK_PRILAZ, gSkladisteMjesto[k % sizeof gSkladisteMjesto][0], ax, ay);
-            SkladisteLokalno(p, -SK_PRILAZ, gSkladisteMjesto[k % sizeof gSkladisteMjesto][0], bx, by);
-            GetVehiclePos(gSkladisteVilj[b][svVozilo], x, y, z);
-            if (VectorSize(ax - x, ay - y, 0.0) <= VectorSize(bx - x, by - y, 0.0)) SkladisteUtovarRuta(ax, ay);
-            else SkladisteUtovarRuta(bx, by);
+            gSkladisteUtovarFaza = SKU_IZLAZ_POLICA;
+            SkladistePutPocni();
+            SkladistePutDodaj(gSkladisteUtovarA[0], gSkladisteUtovarA[1]);
+            SkladistePutVozi(SK_SPORO, true, 0.5);
         }
-        case 2:
+        case SKU_DO_KAMIONA:
         {
-            new v = gSkladisteUtovarVozilo, Float:sx, Float:sy, Float:sz;
-            if (v == INVALID_VEHICLE_ID || !GetVehicleModel(v))
-            {
-                SkladisteUtovarStani();
-                return;
-            }
-            GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
-            SkladisteVoziloSmjer(v, x, y, z, fx, fy);
-            SkladisteUtovarRuta(x - fx * (sy / 2.0 + SK_UTOVAR_IZA), y - fy * (sy / 2.0 + SK_UTOVAR_IZA));
+            gSkladisteUtovarFaza = SKU_ULAZ_KAMION;
+            SkladistePutPocni();
+            SkladistePutDodaj(gSkladisteUtovarPd[0], gSkladisteUtovarPd[1]);
+            SkladistePutVozi(SK_SPORO, false, 0.5);
         }
-        default: SkladisteUtovarRuta(gSkladisteVilj[b][svX], gSkladisteVilj[b][svY]);
+        case SKU_SPUSTA:
+        {
+            gSkladisteUtovarFaza = SKU_IZLAZ_KAMION;
+            SkladisteVilice(SK_VILICE_DOLJE);
+            SkladistePutPocni();
+            SkladistePutDodaj(gSkladisteUtovarPp[0], gSkladisteUtovarPp[1]);
+            SkladistePutVozi(SK_SPORO, true, 0.6);
+        }
     }
-    SkladisteUtovarVozi();
 }
 
 static SkladisteUtovarStigao()
 {
-    if (!gSkladisteUtovarBroj) return;
-    if (++gSkladisteUtovarIdx < gSkladisteUtovarBroj)
-    {
-        SkladisteUtovarVozi();
-        return;
-    }
     new b = gSkladisteUtovarB, token = ++gSkladisteUtovarToken;
-    gSkladisteUtovarBroj = 0;
     switch (gSkladisteUtovarFaza)
     {
-        case 1:
+        case SKU_DO_POLICE:
+        {
+            gSkladisteUtovarFaza = SKU_ULAZ_POLICA;
+            SkladistePutPocni();
+            SkladistePutDodaj(gSkladisteUtovarP[0], gSkladisteUtovarP[1]);
+            SkladistePutVozi(SK_SPORO, false, 0.45);
+        }
+        case SKU_ULAZ_POLICA:
         {
             if (gSkladisteUtovarSlot != -1)
             {
@@ -1187,43 +1391,69 @@ static SkladisteUtovarStigao()
                 gSkladisteRezerva[gSkladisteUtovarSlot] = 0;
             }
             gSkladisteUtovarSlot = -1;
-            AttachObjectToVehicle(gSkladisteVilj[b][svTeret], gSkladisteVilj[b][svVozilo], 0.0, SK_TERET_Y, SK_TERET_Z + 0.25, 0.0, 0.0, 0.0);
-            gSkladisteUtovarFaza = 2;
+            gSkladisteUtovarNosi = true;
+            SkladisteVilice(SK_VILICE_NOSI);
+            gSkladisteUtovarFaza = SKU_PODIZE;
+            SetTimerEx("SkladisteUtovarDalje", 1100, false, "i", token);
         }
-        case 2:
+        case SKU_IZLAZ_POLICA: SkladisteDoKamiona(true);
+        case SKU_DO_KAMIONA:
         {
-            SkladisteTeretSakrij(b);
-            PrijevozTeretUtovaren();
-            if (++gSkladisteUtovarTura < SK_UTOVAR_TURA) gSkladisteUtovarFaza = 1;
+            if (!SkladisteKamionTocke())
+            {
+                SkladisteUtovarStani();
+                return;
+            }
+            SkladisteVilice(gSkladisteUtovarVisina);
+            SetTimerEx("SkladisteUtovarDalje", 1300, false, "i", token);
+        }
+        case SKU_ULAZ_KAMION:
+        {
+            SkladisteVilice(gSkladisteUtovarVisina - 0.15);
+            gSkladisteUtovarFaza = SKU_SPUSTA;
+            SetTimerEx("SkladisteUtovarSpusti", 400, false, "i", token);
+            SetTimerEx("SkladisteUtovarDalje", 900, false, "i", token);
+        }
+        case SKU_IZLAZ_KAMION:
+        {
+            if (++gSkladisteUtovarTura < SK_UTOVAR_TURA) SkladisteDoPolice();
             else
             {
-                gSkladisteUtovarFaza = 3;
-                gSkladisteUtovarVozilo = INVALID_VEHICLE_ID;
+                gSkladisteUtovarVozilo = gSkladisteUtovarKamion = INVALID_VEHICLE_ID;
                 PrijevozUtovaren();
+                SkladisteKuci();
             }
         }
-        default:
+        case SKU_KUCI:
         {
-            gSkladisteUtovarFaza = 0;
+            gSkladisteUtovarFaza = SKU_NEMA;
             gSkladisteUtovarB = -1;
-            SetTimerEx("SkladisteViljKreni", 3000, false, "ii", b, gSkladisteVilj[b][svLik]);
-            return;
+            Lik_Vilice(gSkladisteVilj[b][svLik], 0.0);
         }
     }
-    SetTimerEx("SkladisteUtovarSljedeci", SK_UTOVAR_STANKA, false, "i", token);
 }
 
-bool:SkladisteUtovarPocni(v)
+forward SkladisteUtovarSpusti(token);
+public SkladisteUtovarSpusti(token)
+{
+    if (token != gSkladisteUtovarToken || gSkladisteUtovarFaza != SKU_SPUSTA) return;
+    gSkladisteUtovarNosi = false;
+    SkladisteTeretNaVilicama();
+    PrijevozTeretUtovaren();
+}
+
+bool:SkladisteUtovarPocni(teret, kamion)
 {
     new b = SkladisteRezervni();
-    if (b == -1 || gSkladisteUtovarFaza == 1 || gSkladisteUtovarFaza == 2 || gSkladisteVilj[b][svLik] == INVALID_LIK) return false;
+    if (b == -1 || (gSkladisteUtovarFaza && gSkladisteUtovarFaza != SKU_KUCI) || gSkladisteVilj[b][svLik] == INVALID_LIK) return false;
     gSkladisteUtovarB = b;
-    gSkladisteUtovarVozilo = v;
+    gSkladisteUtovarVozilo = teret;
+    gSkladisteUtovarKamion = kamion;
     gSkladisteUtovarTura = 0;
-    gSkladisteUtovarBroj = 0;
-    gSkladisteUtovarFaza = 1;
+    gSkladisteUtovarNosi = false;
+    gSkladisteUtovarToken++;
     Lik_TipkeVozila(gSkladisteVilj[b][svLik], 0);
-    SetTimerEx("SkladisteUtovarSljedeci", 500, false, "i", ++gSkladisteUtovarToken);
+    SkladisteDoPolice();
     return true;
 }
 
@@ -1232,12 +1462,12 @@ SkladisteUtovarStani()
     if (!gSkladisteUtovarFaza || gSkladisteUtovarB == -1) return;
     if (gSkladisteUtovarSlot != -1) gSkladisteRezerva[gSkladisteUtovarSlot] = 0;
     gSkladisteUtovarSlot = -1;
-    gSkladisteUtovarVozilo = INVALID_VEHICLE_ID;
-    if (gSkladisteUtovarFaza == 3) return;
-    SkladisteTeretSakrij(gSkladisteUtovarB);
-    gSkladisteUtovarBroj = 0;
-    gSkladisteUtovarFaza = 3;
-    SetTimerEx("SkladisteUtovarSljedeci", 300, false, "i", ++gSkladisteUtovarToken);
+    gSkladisteUtovarVozilo = gSkladisteUtovarKamion = INVALID_VEHICLE_ID;
+    if (gSkladisteUtovarFaza == SKU_KUCI) return;
+    gSkladisteUtovarNosi = false;
+    SkladisteTeretNaVilicama();
+    gSkladisteUtovarToken++;
+    SkladisteKuci();
 }
 
 SkladisteStateChange(playerid, PLAYER_STATE:newstate)

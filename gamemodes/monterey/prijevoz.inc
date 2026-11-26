@@ -46,16 +46,17 @@ static const gPrijevozTeret[][E_PZ_TERET] = {
     { "Krijumcarena roba", PZ_NIVOA, 515, 435, 1400, -1, 0.0, 5 }
 };
 static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
-static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 20.6719, 46.2314 }, { 2193.1111, -2268.1230, 12.53, 227.4294 }, { 2214.293, -2236.873, 13.2, 315.0 } };
-static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 12.30, 225.0 };
+static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 19.3219, 46.2314 }, { 2193.1111, -2268.1230, 12.53, 227.4294 }, { 2214.293, -2236.873, 13.2, 315.0 } };
+static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 10.95, 225.0 };
 static const Float:gPrijevozRezerva[4] = { 2223.130, -2228.035, 12.55, 315.0 };
-static const Float:gPrijevozKamera[6] = { 2195.575, -2249.255, 18.0, 2177.968, -2254.134, 15.5 };
+static const Float:gPrijevozKamera[6] = { 2195.575, -2249.255, 18.0, 2177.968, -2254.134, 14.15 };
 static const Float:gPrijevozKameraPut[2][3] = { { 2195.575, -2253.498, 17.0 }, { 2204.767, -2266.933, 16.0 } };
 static const Float:gPrijevozKameraKraj[3] = { 2193.111, -2268.123, 14.0 };
 static const Float:gPrijevozRuta[] = {
-    2164.533, -2240.699, 12.300, 2169.191, -2245.357, 12.300, 2173.584, -2249.750, 13.035, 2177.968, -2254.134, 13.770,
-    2180.796, -2256.963, 13.770, 2185.181, -2261.347, 13.145, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
+    2164.533, -2240.699, 10.950, 2169.191, -2245.357, 10.950, 2173.584, -2249.750, 11.685, 2177.968, -2254.134, 12.420,
+    2180.796, -2256.963, 12.420, 2185.181, -2261.347, 12.450, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
 };
+static bool:gPrijevozOdustaje[MAX_PLAYERS];
 static gPrijevozScenaIgrac = INVALID_PLAYER_ID, gPrijevozScenaLik = INVALID_LIK, gPrijevozScenaTimer, gPrijevozScenaOd;
 
 static Float:gPrijevozPoz[4][4], bool:gPrijevozIma[4], STREAMER_TAG_3D_TEXT_LABEL:gPrijevozTekst;
@@ -452,7 +453,7 @@ static PrijevozLukaTick(playerid)
     gPrijevozFaza[playerid] = PZF_UTOVAR;
     PrijevozTeretMakni(playerid);
     DisablePlayerCheckpoint(playerid);
-    gPrijevozViljuskar = (tr == INVALID_VEHICLE_ID || GetVehicleModel(tr) != PZ_GORIVO_MODEL) && SkladisteUtovarPocni(PrijevozTovar(playerid));
+    gPrijevozViljuskar = (tr == INVALID_VEHICLE_ID || GetVehicleModel(tr) != PZ_GORIVO_MODEL) && SkladisteUtovarPocni(PrijevozTovar(playerid), gPrijevozKamion[playerid]);
     if (tr == INVALID_VEHICLE_ID) SkladisteStraznjaVrata(k, true);
     gPrijevozPauza[playerid] = 0;
 }
@@ -493,6 +494,7 @@ static PrijevozPrikolicaMakni(playerid)
 PrijevozKraj(playerid)
 {
     gPrijevozPonudaBroj[playerid] = 0;
+    gPrijevozOdustaje[playerid] = false;
     if (!gPrijevozFaza[playerid]) return;
     if (gPrijevozFaza[playerid] == PZF_SCENA) PrijevozScenaPrekini(playerid);
     gPrijevozFaza[playerid] = PZF_NEMA;
@@ -644,11 +646,24 @@ PrijevozPosao(playerid)
 {
     if (gPrijevozFaza[playerid])
     {
-        PrijevozKraj(playerid);
-        return ObavijestInfo(playerid, T(playerid, "Prijevoz tereta"), T(playerid, "Tura je prekinuta.")), 1;
+        if (gPrijevozOdustaje[playerid]) return 1;
+        gPrijevozOdustaje[playerid] = true;
+        Fade(playerid, 0);
+        SetTimerEx("PrijevozPosaoKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
+        return 1;
     }
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !PrijevozNaDepou(playerid)) return 0;
     return PrijevozPonude(playerid), 1;
+}
+
+forward PrijevozPosaoKraj(playerid, racun);
+public PrijevozPosaoKraj(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun) return;
+    gPrijevozOdustaje[playerid] = false;
+    PrijevozKraj(playerid);
+    ObavijestInfo(playerid, T(playerid, "Prijevoz tereta"), T(playerid, "Tura je prekinuta."));
+    SetTimerEx("PrijevozOtkrij", 300, false, "ii", playerid, racun);
 }
 
 PrijevozAlt(playerid)
