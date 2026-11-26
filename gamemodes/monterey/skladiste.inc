@@ -29,9 +29,11 @@
 #define SK_ZALIHA_POSTO     55
 #define SK_VILJ_TIK_MS      100
 #define SK_VILJ_GORE        0.3
-#define SK_VILJ_DOLJE       2.0
+#define SK_VILJ_DOLJE       0.6
 #define SK_VILJ_TESKO       0.6
-#define SK_VILJ_HOD         0.44
+#define SK_VILJ_HOD         1.5
+#define SK_VILJ_UZMI        0.6
+#define SK_VILJ_RAMPA       0.6
 #define SK_VILJ_PODIGNI     0.05
 #define SK_VILJ_NAPRIJED    1.0
 #define SK_VILJ_TERET_Z     -0.47
@@ -289,8 +291,8 @@ static SkladistePaletaStvori(k, db, Float:x, Float:y, Float:z, Float:a)
     gSkladistePaleta[k][spTeret] = STREAMER_TAG_OBJECT:0;
     new Float:c = floatcos(a, degrees), Float:s = floatsin(a, degrees);
     gSkladistePaleta[k][spObjekt] = CreateDynamicObject(SK_PALETA_MODEL, x - (SK_PALETA_X * c - SK_PALETA_Y * s), y - (SK_PALETA_X * s + SK_PALETA_Y * c), z - 1.0 - SK_PALETA_SPUSTI, 0.0, 0.0, a, 0, 0);
-    SetDynamicObjectMaterial(gSkladistePaleta[k][spObjekt], 0, 18646, "matcolours", "white", 0x00000000);
-    SetDynamicObjectMaterial(gSkladistePaleta[k][spObjekt], 2, 18646, "matcolours", "white", 0x00000000);
+    SetDynamicObjectMaterial(gSkladistePaleta[k][spObjekt], 0, 19279, "matlights", "invisible", 0);
+    SetDynamicObjectMaterial(gSkladistePaleta[k][spObjekt], 2, 19279, "matlights", "invisible", 0);
     format(oznaka, sizeof oznaka, "Paleta P%d", k + 1);
     gSkladistePaleta[k][spTekst] = CreateDynamic3DTextLabel(oznaka, SK_BOJA, x, y, z + 0.8, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
 }
@@ -857,8 +859,8 @@ public SkladisteKontrola(playerid)
     if (gSkladisteFaza[playerid] == 2) AttachDynamicObjectToVehicle(gSkladisteTeret[playerid], GetPlayerVehicleID(playerid), 0.0, SK_VILJ_NAPRIJED, h + SK_VILJ_TERET_Z, 0.0, 0.0, 0.0);
     new cilj = gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid];
     if (!SkladisteCiljPostoji(cilj)) SkladisteZadatak(playerid);
-    else if (gSkladisteFaza[playerid] == 1 && smjer > 0 && h >= SK_VILJ_PODIGNI && h <= SK_VILJ_PODIGNI * 4.0 && SkladistePoravnat(playerid, cilj)) SkladistePodigni(playerid);
-    else if (gSkladisteFaza[playerid] == 2 && smjer < 0 && SkladisteVrsta(cilj) == SKC_RAMPA && h >= SK_VILJ_HOD * 0.5 && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
+    else if (gSkladisteFaza[playerid] == 1 && smjer > 0 && h >= SK_VILJ_PODIGNI && h <= SK_VILJ_UZMI && SkladistePoravnat(playerid, cilj)) SkladistePodigni(playerid);
+    else if (gSkladisteFaza[playerid] == 2 && smjer < 0 && SkladisteVrsta(cilj) == SKC_RAMPA && h >= SK_VILJ_RAMPA && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
     else if (gSkladisteFaza[playerid] == 2 && smjer < 0 && SkladisteVrsta(cilj) == SKC_PALETA && h <= SK_VILJ_PODIGNI && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
 }
 
