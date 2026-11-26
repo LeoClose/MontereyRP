@@ -39,6 +39,7 @@ static const gRsVrstaIme[REST_VRSTA][] = { "Well Stacked Pizza", "Burger Shot", 
 static const gRsInt[REST_VRSTA] = { 5, 10, 9 };
 static const gRsSkin[REST_VRSTA] = { 155, 205, 167 };
 static const gRsBoja[REST_VRSTA] = { 0xE74C3CFF, 0xF39C12FF, 0xF1C40FFF };
+static const bool:gRsStolovi[REST_VRSTA] = { true, true, false };
 static const gRsMeniVrste[REST_VRSTA][REST_MENI] = { { 3, 4, 5, 6, 7, 8, -1 }, { 0, 1, 2, 6, 7, 8, -1 }, { 9, 10, 11, 6, 7, 8, -1 } };
 static const gRsTockaIme[PT_BROJ][] = { "Blagajnik", "Mjesto kupca", "Rostilj", "Slaganje i pakiranje", "Zaposlenje", "Friteza", "Izlaz", "Radno mjesto iza pulta" };
 static Float:gRsTocka[REST_VRSTA][PT_BROJ][4] = {
@@ -571,7 +572,7 @@ static RestoranGostNaKasi(s, g)
     gRsGost[s][g][pgNar] = n;
     gRsGost[s][g][pgOd] = gettime();
     ApplyActorAnimation(gRs[s][rsAktor], "PED", "IDLE_chat", 4.1, false, false, false, false, 2500);
-    new t = random(2) ? RestoranStolSlobodan(s) : -1;
+    new t = gRsStolovi[v] && random(2) ? RestoranStolSlobodan(s) : -1;
     if (t == -1)
     {
         gRsGost[s][g][pgFaza] = PG_KASA;
@@ -947,7 +948,6 @@ RestoranAlt(playerid)
         if (!RestoranPredaj(playerid, s, gRsRad[playerid])) ObavijestGreska(playerid, T(playerid, "Pridite blize kupcu da mu predate narudzbu."));
         return 1;
     }
-    if (RestoranKodPosla(playerid, s)) return RestoranIzbornik(playerid, s), 1;
     if (gRsSmjena[playerid] == s + 1)
     {
         switch (RestoranStanica(playerid, s))
@@ -956,8 +956,10 @@ RestoranAlt(playerid)
             case PT_POMFRIT: return RestoranPomfritPocni(playerid, s);
             case PT_SLAGANJE: return RestoranSlaganjePocni(playerid, s);
         }
+        if (RestoranKodPosla(playerid, s)) return RestoranIzbornik(playerid, s), 1;
         return 0;
     }
+    if (RestoranKodPosla(playerid, s)) return RestoranIzbornik(playerid, s), 1;
     if (RestoranTu(playerid, s, PT_KUPAC, REST_KASA_DOMET + 1.0))
     {
         RestoranShopOtvori(playerid, s);
@@ -991,6 +993,7 @@ public RestoranPresvuciKraj(playerid, racun, s, radno)
         SetPlayerPos(playerid, RsT(s, t)[0], RsT(s, t)[1], RsT(s, t)[2]);
         SetPlayerFacingAngle(playerid, RsT(s, t)[3]);
         SetCameraBehindPlayer(playerid);
+        if (radno) Savjet(playerid, T(playerid, "~y~ALT~w~ kod stanice - radi~n~~y~/posao~w~ - zavrsi smjenu"), 6000);
     }
     Fade(playerid, FADE_SLOJEVA + 1);
 }

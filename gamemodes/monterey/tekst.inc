@@ -2090,6 +2090,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "~y~ALT~w~ kod stanice - radi~n~~y~/posao~w~ - zavrsi smjenu", "~y~ALT~w~ at a station - work~n~~y~/posao~w~ - end shift", "~y~ALT~w~ u stantsii - rabotat~n~~y~/posao~w~ - zakonchit smenu", "~y~ALT~w~ en una estacion - trabajar~n~~y~/posao~w~ - terminar turno", "~y~ALT~w~ istasyonda - calis~n~~y~/posao~w~ - vardiyayi bitir" },
     { "Radno mjesto iza pulta", "Work spot behind the counter", "Рабочее место за стойкой", "Puesto detras del mostrador", "Tezgah arkasi calisma yeri" },
     { "Prvo predajte narudzbu koju nosite.", "First deliver the order you are carrying.", "Сначала отдайте заказ, который несете.", "Primero entrega el pedido que llevas.", "Once tasidiginiz siparisi teslim edin." },
     { "Pridite blize kupcu da mu predate narudzbu.", "Get closer to the customer to hand over the order.", "Подойдите ближе к покупателю, чтобы отдать заказ.", "Acercate al cliente para entregarle el pedido.", "Siparisi vermek icin musteriye yaklasin." },
