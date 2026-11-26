@@ -19,7 +19,7 @@ enum
     DLG_APANEL_PIKADO, DLG_APANEL_KUGLANJE, DLG_APANEL_AC, DLG_APANEL_AC_LOG,
     DLG_BILJKA, DLG_DOBAVLJAC, DLG_LAB, DLG_NARUDZBA, DLG_NARUDZBA_KOL, DLG_APANEL_DROGA, DLG_SEF, DLG_SEF_STAVI, DLG_SEF_KOL, DLG_ORG_DNEVNIK, DLG_OKLADA,
     DLG_STAND, DLG_STAND_KUPI, DLG_STAND_IME, DLG_STAND_ROBA, DLG_STAND_HRANA, DLG_APANEL_STAND, DLG_APANEL_STAND_MODEL, DLG_APANEL_STAND_MENI,
-    DLG_FIRMA, DLG_FIRMA_KUPI, DLG_APANEL_BANKA_SALTER, DLG_PLJACKA_POSTAVKE, DLG_PLJACKA_POSTAVKA, DLG_PLJACKA_POMOC, DLG_FRISK_LISTA, DLG_NPC_GUSTOCA, DLG_NPC_GUSTOCA_UNOS, DLG_APANEL_RIBAR, DLG_APANEL_RESTORAN, DLG_APANEL_RESTORAN_VRSTA, DLG_APANEL_SKLADISTE, DLG_APANEL_REPO, DLG_APANEL_PROVALA
+    DLG_FIRMA, DLG_FIRMA_KUPI, DLG_APANEL_BANKA_SALTER, DLG_PLJACKA_POSTAVKE, DLG_PLJACKA_POSTAVKA, DLG_PLJACKA_POMOC, DLG_FRISK_LISTA, DLG_NPC_GUSTOCA, DLG_NPC_GUSTOCA_UNOS, DLG_APANEL_RIBAR, DLG_APANEL_RESTORAN, DLG_APANEL_RESTORAN_VRSTA, DLG_APANEL_SKLADISTE, DLG_APANEL_REPO, DLG_APANEL_PROVALA, DLG_APANEL_PRIJEVOZ, DLG_PRIJEVOZ
 }
 
 static gDlg[MAX_PLAYERS];
@@ -130,6 +130,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_APANEL_SKLADISTE:  return Dlg_apanel_skladiste(playerid, response, listitem);
         case DLG_APANEL_REPO:       return Dlg_apanel_repo(playerid, response, listitem);
         case DLG_APANEL_PROVALA:    return Dlg_apanel_provala(playerid, response, listitem);
+        case DLG_APANEL_PRIJEVOZ:   return Dlg_apanel_prijevoz(playerid, response, listitem);
+        case DLG_PRIJEVOZ:          return Dlg_prijevoz(playerid, response, listitem);
         case DLG_APANEL_RESTORAN:   return Dlg_apanel_restoran(playerid, response, listitem);
         case DLG_APANEL_RESTORAN_VRSTA: return Dlg_apanel_restoran_vrsta(playerid, response, listitem);
         case DLG_ORMAR:             return Dlg_ormar(playerid, response, listitem);

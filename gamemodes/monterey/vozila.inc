@@ -1066,6 +1066,16 @@ InitVozilo()
     DB_FreeResultSet(res);
 }
 
+PumpaLokacija(i, &Float:x, &Float:y, &Float:z)
+{
+    if (i >= PUMPA_MAX) return -1;
+    if (!gPumpa[i][pmIma]) return 0;
+    x = gPumpa[i][pmX];
+    y = gPumpa[i][pmY];
+    z = gPumpa[i][pmZ];
+    return 1;
+}
+
 static PumpaStvori(p, dizel, Float:x, Float:y, Float:z, trgovina)
 {
     gPumpa[p][pmIma] = true;

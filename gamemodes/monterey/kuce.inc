@@ -237,6 +237,8 @@ KucaProvalaSakrij(playerid, k, bool:sakrij)
     if (k < 0 || k >= KUCA_MAX || !gKuca[k][kuIma]) return;
     OznakaSakrijZa(playerid, gKuca[k][kuTekst], sakrij);
     Streamer_ToggleItem(playerid, STREAMER_TYPE_AREA, gKuca[k][kuZona], !sakrij);
+    Streamer_ToggleItem(playerid, STREAMER_TYPE_PICKUP, gKuca[k][kuPickup], !sakrij);
+    Streamer_Update(playerid, STREAMER_TYPE_PICKUP);
 }
 
 KucaIntPoz(tpl, &interijer, &Float:x, &Float:y, &Float:z)

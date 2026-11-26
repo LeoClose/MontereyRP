@@ -112,6 +112,7 @@ public OnPlayerDisconnect(playerid, reason)
     SkladisteKraj(playerid);
     RepoKraj(playerid);
     ProvalaKraj(playerid);
+    PrijevozKraj(playerid);
     RestoranDisconnect(playerid);
     KaficDisconnect(playerid);
     BilijarIgracOdlazi(playerid);
@@ -193,6 +194,7 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
     SkladisteKraj(playerid);
     RepoKraj(playerid);
     ProvalaKraj(playerid);
+    PrijevozKraj(playerid);
     RestoranSmjenaKraj(playerid);
     return 1;
 }
@@ -210,6 +212,8 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     RibarStateChange(playerid, newstate, oldstate);
     SkladisteStateChange(playerid, newstate);
     RepoStateChange(playerid, newstate);
+    ProvalaStateChange(playerid, newstate);
+    PrijevozStateChange(playerid, newstate);
     VlakStateChange(playerid, newstate);
     GarazaStateChange(playerid, newstate, oldstate);
     if (newstate == PLAYER_STATE_DRIVER) VoziloVozac(playerid);
@@ -222,7 +226,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
-    if (RestoranKey(playerid, newkeys, oldkeys) || RibarKey(playerid, newkeys, oldkeys) || RepoKey(playerid, newkeys, oldkeys) || PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
+    if (RestoranKey(playerid, newkeys, oldkeys) || RibarKey(playerid, newkeys, oldkeys) || RepoKey(playerid, newkeys, oldkeys) || PrijevozKey(playerid, newkeys, oldkeys) || PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
     if (KradjaKey(playerid, newkeys, oldkeys)) return 1;
     if (KapijaKey(playerid, newkeys, oldkeys)) return 1;
     if (UtrkaKey(playerid, newkeys, oldkeys)) return 1;
@@ -256,7 +260,7 @@ static InterakcijaF(playerid)
 static InterakcijaAlt(playerid)
 {
     if (PikadoCilja(playerid) || KuglanjeCilja(playerid) || BilijarCilja(playerid)) return 1;
-    return RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || ProvalaAlt(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid);
+    return RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || ProvalaAlt(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid) || PrijevozAlt(playerid);
 }
 
 static Interakcija(playerid)

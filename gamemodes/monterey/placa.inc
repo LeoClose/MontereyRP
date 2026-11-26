@@ -319,7 +319,7 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid] || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid)) return 1;
+    if (!gUlogiran[playerid] || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid) || PrijevozPosao(playerid)) return 1;
     if (gPosao[playerid] == POSAO_KONTROLOR)
     {
         if (AtcNaSmjeni(playerid))
