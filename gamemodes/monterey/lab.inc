@@ -19,9 +19,6 @@
 #define LAB_METH_EKSPLOZIJA 1500
 #define LAB_METH_OD         55.0
 #define LAB_METH_DO         75.0
-#define LAB_BAR_X           240.0
-#define LAB_BAR_Y           330.0
-#define LAB_BAR_W           160.0
 #define LAB_BOJA            0x8E44ADE6
 #define LUKA_DOMET          4.0
 #define LUKA_NARUDZBI       16
@@ -34,7 +31,7 @@ enum { LIGRA_NEMA, LIGRA_METH, LIGRA_KOKA }
 static const gLabMjestoIme[][] = { "Mjesto za sanduke", "Stol za kokain", "Stol za metamfetamin", "Skladiste laboratorija" };
 static const gLabStupac[][] = { "pasta", "chemicals", "cocaine", "meth" };
 static gLabMjesto[LAB_MJESTA_MAX][E_LAB_MJESTO], gLabSavjet[MAX_PLAYERS];
-static gLabIgra[MAX_PLAYERS], gLabToken[MAX_PLAYERS], gLabOd[MAX_PLAYERS], PlayerText:gLabTd[MAX_PLAYERS][5];
+static gLabIgra[MAX_PLAYERS], gLabToken[MAX_PLAYERS], gLabOd[MAX_PLAYERS];
 static Float:gMethTemp[MAX_PLAYERS], Float:gMethBrzina[MAX_PLAYERS], gMethDobro[MAX_PLAYERS], gMethUkupno[MAX_PLAYERS], gMethVruce[MAX_PLAYERS];
 static Float:gKokaPoz[MAX_PLAYERS], Float:gKokaSmjer[MAX_PLAYERS], Float:gKokaZona[MAX_PLAYERS], gKokaRunda[MAX_PLAYERS], gKokaPogodak[MAX_PLAYERS];
 enum E_LAB_POD { bool:lpIma, lpItem, STREAMER_TAG_OBJECT:lpObjekt, Float:lpX, Float:lpY, Float:lpZ, lpSvijet, lpInt }
@@ -307,28 +304,28 @@ DLG:lab(playerid, response, listitem)
     return LabSkladiste(playerid);
 }
 
-static PlayerText:LabKutija(playerid, Float:x, Float:y, Float:w, Float:h, boja)
-{
-    new PlayerText:td = TdSlika(playerid, x, y, w, h, boja);
-    PlayerTextDrawShow(playerid, td);
-    return td;
-}
-
 static LabIgraPocni(playerid, igra)
 {
     gLabIgra[playerid] = igra;
     gLabOd[playerid] = GetTickCount();
     TogglePlayerControllable(playerid, false);
     ApplyAnimation(playerid, "BD_FIRE", "wash_up", 4.1, true, false, false, false, 0);
-    gLabTd[playerid][0] = LabKutija(playerid, LAB_BAR_X - 3.0, LAB_BAR_Y - 3.0, LAB_BAR_W + 6.0, 16.0, 0x000000C0);
-    gLabTd[playerid][1] = LabKutija(playerid, LAB_BAR_X, LAB_BAR_Y, LAB_BAR_W, 10.0, 0x3A3A3AFF);
+}
+
+static KokaPanel(playerid)
+{
+    new uputa[128];
+    format(uputa, sizeof uputa, T(playerid, "~y~SPACE~w~ kad je oznaka u zelenom (%d/%d), svaki put brze. ~y~ENTER~w~ - odustani."), gKokaRunda[playerid] + 1, LAB_KOKA_RUNDI);
+    IgraPanel(playerid, T(playerid, "Laboratorij - kokain"), 60.0, LAB_BOJA);
+    IgraTraka(playerid, gKokaZona[playerid], gKokaZona[playerid] + 15.0, 0x3A3A3AFF, 0x27AE60FF, 0x3A3A3AFF, uputa);
+    IgraOznakaPomakni(playerid, gKokaPoz[playerid]);
 }
 
 static LabIgraKraj(playerid)
 {
     gLabIgra[playerid] = LIGRA_NEMA;
     gLabToken[playerid]++;
-    for (new i = 0; i < sizeof gLabTd[]; i++) PlayerTextDrawDestroy(playerid, gLabTd[playerid][i]);
+    IgraTdMakni(playerid);
     if (!IsPlayerConnected(playerid)) return;
     TogglePlayerControllable(playerid, true);
     ClearAnimations(playerid);
@@ -351,10 +348,9 @@ static MethPocni(playerid)
     gMethUkupno[playerid] = 0;
     gMethVruce[playerid] = 0;
     LabIgraPocni(playerid, LIGRA_METH);
-    gLabTd[playerid][2] = LabKutija(playerid, LAB_BAR_X + LAB_METH_OD / 100.0 * LAB_BAR_W, LAB_BAR_Y, (LAB_METH_DO - LAB_METH_OD) / 100.0 * LAB_BAR_W, 10.0, 0x2ECC71AA);
-    gLabTd[playerid][3] = LabKutija(playerid, LAB_BAR_X + 85.0 / 100.0 * LAB_BAR_W, LAB_BAR_Y, 15.0 / 100.0 * LAB_BAR_W, 10.0, 0xC0392BAA);
-    gLabTd[playerid][4] = LabKutija(playerid, LAB_BAR_X, LAB_BAR_Y - 2.0, 2.0, 14.0, 0xFFFFFFFF);
-    IgraObavijest(playerid, T(playerid, "Laboratorij"), LAB_BOJA, T(playerid, "Drzite temperaturu u zelenom.~n~W - grijanje, S - hladjenje, ENTER - odustani.~n~Crveno predugo = eksplozija!"), 0);
+    IgraPanel(playerid, T(playerid, "Laboratorij - metamfetamin"), 60.0, LAB_BOJA);
+    IgraTraka(playerid, LAB_METH_OD, LAB_METH_DO, 0x2C5F8AFF, 0x27AE60FF, 0xD35400FF, T(playerid, "~y~W~w~ grijanje, ~y~S~w~ hladjenje, ~y~ENTER~w~ odustani. ~r~Crveno~w~ predugo = eksplozija!"), 85.0);
+    IgraOznakaPomakni(playerid, gMethTemp[playerid]);
     SetTimerEx("LabMethTick", LAB_METH_MS, false, "ii", playerid, ++gLabToken[playerid]);
     return 1;
 }
@@ -379,9 +375,7 @@ public LabMethTick(playerid, token)
     gMethUkupno[playerid]++;
     if (gMethTemp[playerid] >= LAB_METH_OD && gMethTemp[playerid] <= LAB_METH_DO) gMethDobro[playerid]++;
     gMethVruce[playerid] = gMethTemp[playerid] >= 85.0 ? gMethVruce[playerid] + LAB_METH_MS : 0;
-    PlayerTextDrawHide(playerid, gLabTd[playerid][4]);
-    PlayerTextDrawSetPos(playerid, gLabTd[playerid][4], LAB_BAR_X + gMethTemp[playerid] / 100.0 * LAB_BAR_W - 1.0, LAB_BAR_Y - 2.0);
-    PlayerTextDrawShow(playerid, gLabTd[playerid][4]);
+    IgraOznakaPomakni(playerid, gMethTemp[playerid]);
     if (gMethVruce[playerid] >= LAB_METH_EKSPLOZIJA)
     {
         new Float:x, Float:y, Float:z;
@@ -406,9 +400,7 @@ public LabMethTick(playerid, token)
 static KokaZona(playerid)
 {
     gKokaZona[playerid] = float(10 + random(66));
-    PlayerTextDrawHide(playerid, gLabTd[playerid][2]);
-    PlayerTextDrawSetPos(playerid, gLabTd[playerid][2], LAB_BAR_X + gKokaZona[playerid] / 100.0 * LAB_BAR_W, LAB_BAR_Y);
-    PlayerTextDrawShow(playerid, gLabTd[playerid][2]);
+    KokaPanel(playerid);
 }
 
 static KokaPocni(playerid)
@@ -428,11 +420,7 @@ static KokaPocni(playerid)
     gKokaRunda[playerid] = 0;
     gKokaPogodak[playerid] = 0;
     LabIgraPocni(playerid, LIGRA_KOKA);
-    gLabTd[playerid][2] = LabKutija(playerid, LAB_BAR_X, LAB_BAR_Y, 15.0 / 100.0 * LAB_BAR_W, 10.0, 0x2ECC71AA);
-    gLabTd[playerid][3] = LabKutija(playerid, LAB_BAR_X, LAB_BAR_Y, 0.0, 0.0, 0);
-    gLabTd[playerid][4] = LabKutija(playerid, LAB_BAR_X, LAB_BAR_Y - 2.0, 2.0, 14.0, 0xFFFFFFFF);
     KokaZona(playerid);
-    IgraObavijest(playerid, T(playerid, "Laboratorij"), LAB_BOJA, T(playerid, "Pritisnite SPACE kad je oznaka u zelenom.~n~5 pokusaja, svaki je brzi.~n~ENTER - odustani."), 0);
     SetTimerEx("LabKokaTick", LAB_KOKA_MS, false, "ii", playerid, ++gLabToken[playerid]);
     return 1;
 }
@@ -449,9 +437,7 @@ public LabKokaTick(playerid, token)
     gKokaPoz[playerid] += gKokaSmjer[playerid];
     if (gKokaPoz[playerid] >= 100.0) gKokaPoz[playerid] = 100.0, gKokaSmjer[playerid] = -gKokaSmjer[playerid];
     if (gKokaPoz[playerid] <= 0.0) gKokaPoz[playerid] = 0.0, gKokaSmjer[playerid] = -gKokaSmjer[playerid];
-    PlayerTextDrawHide(playerid, gLabTd[playerid][4]);
-    PlayerTextDrawSetPos(playerid, gLabTd[playerid][4], LAB_BAR_X + gKokaPoz[playerid] / 100.0 * LAB_BAR_W - 1.0, LAB_BAR_Y - 2.0);
-    PlayerTextDrawShow(playerid, gLabTd[playerid][4]);
+    IgraOznakaPomakni(playerid, gKokaPoz[playerid]);
     if (GetTickCount() - gLabOd[playerid] > 40000)
     {
         KokaRunda(playerid, false);

@@ -347,7 +347,7 @@ static RibarPanel(playerid)
 {
     new tekst[144];
     format(tekst, sizeof tekst, T(playerid, "Izvlacite mrezu: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d)."), gRibarRunda[playerid] + 1, RIBAR_RUNDI);
-    IgraPanel(playerid, T(playerid, "Ribolov"), 60.0);
+    IgraPanel(playerid, T(playerid, "Ribolov"), 60.0, RIBAR_BOJA);
     IgraTraka(playerid, gRibarZel[playerid], gRibarZel[playerid] + RIBAR_TRAKA_ZELENO, 0x1F3A5FFF, 0x27AE60FF, 0x1F3A5FFF, tekst);
     IgraOznakaPomakni(playerid, gRibarTraka[playerid]);
 }

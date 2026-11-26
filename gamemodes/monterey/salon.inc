@@ -351,17 +351,36 @@ SalonUlaz(playerid)
     return 0;
 }
 
-PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true)
+KupovinaGumbi(playerid, PlayerText:td[], Float:infoY = 330.0, Float:infoW = 130.0)
+{
+    td[0] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
+    td[1] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
+    td[2] = SalonGumb(playerid, 320.0, infoY, "_", 0x00000088, infoW, false);
+    td[3] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
+    td[4] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    TogglePlayerControllable(playerid, false);
+    SelectTextDraw(playerid, 0xD4A017FF);
+}
+
+KupovinaZatvori(playerid, const PlayerText:td[])
+{
+    for (new i = 0; i < 5; i++) PlayerTextDrawDestroy(playerid, td[i]);
+    CancelSelectTextDraw(playerid);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+}
+
+PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true, Float:slovo = 0.4, Float:visina = 1.6, Float:kutija = 16.0)
 {
     new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
     PlayerTextDrawAlignment(playerid, td, TEXT_DRAW_ALIGN_CENTER);
     PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_2);
-    PlayerTextDrawLetterSize(playerid, td, 0.4, 1.6);
+    PlayerTextDrawLetterSize(playerid, td, slovo, visina);
     PlayerTextDrawColour(playerid, td, 0xFFFFFFFF);
     PlayerTextDrawSetOutline(playerid, td, 1);
     PlayerTextDrawUseBox(playerid, td, true);
     PlayerTextDrawBoxColour(playerid, td, boja);
-    PlayerTextDrawTextSize(playerid, td, 16.0, sirina);
+    PlayerTextDrawTextSize(playerid, td, kutija, sirina);
     PlayerTextDrawSetSelectable(playerid, td, gumb);
     PlayerTextDrawShow(playerid, td);
     return td;

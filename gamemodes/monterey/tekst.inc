@@ -1,5 +1,7 @@
-#define TEKST_HASH          4096
 #define TEKST_LEN           256
+native Tekst_Dodaj(jezik, const hr[], const prijevod[]);
+native Tekst_Prevedi(jezik, const hr[], out[], len = sizeof out);
+native Tekst_Broj(jezik);
 
 static const gTekst[][BROJ_JEZIKA][] = {
     { "  %d - %s (najvise %d %s)", "  %d - %s (max %d %s)", "  %d - %s (макс. %d %s)", "  %d - %s (max %d %s)", "  %d - %s (en fazla %d %s)" },
@@ -225,7 +227,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Sigurno zelite izbaciti ovog clana?", "Are you sure you want to kick this member?", "Точно исключить этого участника?", "Seguro que quieres expulsar a este miembro?", "Bu uyeyi atmak istediginize emin misiniz?" },
     { "Sigurno zelite napustiti organizaciju?", "Are you sure you want to leave the organisation?", "Точно покинуть организацию?", "Seguro que quieres dejar la organizacion?", "Organizasyondan ayrilmak istediginize emin misiniz?" },
     { "Sjemenke marihuane", "Marijuana seeds", "Семена марихуаны", "Semillas de marihuana", "Esrar tohumu" },
-    { "Sjemenke se sade na teritoriju za uzgoj.", "Seeds are planted on a grow territory.", "Семена сажают на территории для выращивания.", "Las semillas se plantan en un territorio de cultivo.", "Tohumlar yetistirme bolgesine ekilir." },
     { "Skin %d dodan organizaciji %s.", "Skin %d added to %s.", "Скин %d добавлен организации %s.", "Skin %d anadido a %s.", "Skin %d, %s organizasyonuna eklendi." },
     { "Skin %d uklonjen iz organizacije %s.", "Skin %d removed from %s.", "Скин %d убран из организации %s.", "Skin %d quitado de %s.", "Skin %d, %s organizasyonundan kaldirildi." },
     { "Skin mogu birati samo clanovi organizacija.", "Only organisation members can pick a skin.", "Скин могут выбирать только участники организаций.", "Solo los miembros de organizaciones pueden elegir skin.", "Skini sadece organizasyon uyeleri secebilir." },
@@ -621,7 +622,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Korak %d/%d", "Step %d/%d", "Шаг %d/%d", "Paso %d/%d", "Adim %d/%d" },
     { "Greske: %d/%d", "Mistakes: %d/%d", "Ошибки: %d/%d", "Errores: %d/%d", "Hatalar: %d/%d" },
     { "Spajanje zica", "Hotwiring", "Соединение проводов", "Puenteando cables", "Kablolari birlestirme" },
-    { "Kradja vozila", "Vehicle theft", "Угон автомобиля", "Robo de vehiculo", "Arac hirsizligi" },
     { "Kalauz je pukao.", "Your lockpick broke.", "Отмычка сломалась.", "La ganzua se ha roto.", "Maymuncuk kirildi." },
     { "Spojili ste krive zice.", "You connected the wrong wires.", "Вы соединили не те провода.", "Has conectado los cables equivocados.", "Yanlis kablolari birlestirdiniz." },
     { "Kriva zica! Udarila vas je struja.", "Wrong wire! You got a shock.", "Не тот провод! Вас ударило током.", "Cable equivocado! Te ha dado la corriente.", "Yanlis kablo! Elektrik carpti." },
@@ -682,7 +682,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Gorivo", "Fuel", "Топливо", "Combustible", "Yakit" },
     { "Najvise mozete %d L.", "You can take at most %d L.", "Максимум %d л.", "Como maximo %d L.", "En fazla %d L." },
     { "Kanister je pun.", "The jerrycan is full.", "Канистра полна.", "El bidon esta lleno.", "Bidon dolu." },
-    { "Niste uspjeli obiti vozilo.", "You failed to break into the vehicle.", "Вам не удалось взломать машину.", "No has logrado forzar el vehiculo.", "Araci acmayi basaramadiniz." },
     { "Zatvori prtljaznik", "Close trunk", "Закрыть багажник", "Cerrar maletero", "Bagaji kapat" },
     { "Netko vec pretrazuje prtljaznik.", "Someone is already going through the trunk.", "Кто-то уже роется в багажнике.", "Alguien ya esta mirando el maletero.", "Bagaji zaten biri karistiriyor." },
     { "Ovo vozilo nema haubu.", "This vehicle has no hood.", "У этого транспорта нет капота.", "Este vehiculo no tiene capo.", "Bu aracin kaputu yok." },
@@ -693,7 +692,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Ovo nije vase vozilo.", "This is not your vehicle.", "Это не ваш транспорт.", "Este no es tu vehiculo.", "Bu sizin araciniz degil." },
     { "Vozilo se parkira samo izvana.", "Vehicles can only be parked outside.", "Транспорт можно парковать только снаружи.", "Los vehiculos solo se aparcan fuera.", "Arac sadece disarida park edilebilir." },
     { "Vozilo je parkirano ovdje.", "Vehicle parked here.", "Транспорт припаркован здесь.", "Vehiculo aparcado aqui.", "Arac buraya park edildi." },
-    { "Salon trenutno nema vozila u ponudi.", "This dealership has no vehicles for sale right now.", "В этом салоне сейчас нет машин в продаже.", "Este concesionario no tiene vehiculos a la venta ahora.", "Bu galeride su an satilik arac yok." },
     { "KUPI", "BUY", "КУПИТЬ", "COMPRAR", "SATIN AL" },
     { "IZLAZ", "EXIT", "ВЫХОД", "SALIR", "CIKIS" },
     { "Mozete imati najvise %d vozila.", "You can own at most %d vehicles.", "Можно иметь не больше %d машин.", "Puedes tener como maximo %d vehiculos.", "En fazla %d araca sahip olabilirsiniz." },
@@ -871,7 +869,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Nema parking mjesta u blizini (10 m).", "No parking spot nearby (10 m).", "Рядом нет парковочного места (10 м).", "No hay plaza cerca (10 m).", "Yakinda park yeri yok (10 m)." },
     { "Parking mjesto je uklonjeno.", "Parking spot removed.", "Парковочное место убрано.", "Plaza quitada.", "Park yeri kaldirildi." },
     { "Pijaca se postavlja samo izvana.", "The market can only be placed outside.", "Рынок можно поставить только снаружи.", "El mercado solo se pone fuera.", "Pazar sadece disarida kurulabilir." },
-    { "Mjesto otkupa je postavljeno.", "Buy-in point set.", "Точка выкупа поставлена.", "Punto de compra fijado.", "Satin alma noktasi ayarlandi." },
     { "  Auto pijaca: ALT u svom vozilu kod otkupa (1/3 cijene), ALT kod vozila na prodaji (kupnja)", "  Used car market: ALT in your car at the buy-in point (1/3 of the price), ALT at a car for sale (buy)", "  Авторынок: ALT в своей машине у точки выкупа (1/3 цены), ALT у машины на продаже (покупка)", "  Mercado de usados: ALT en tu coche en el punto de compra (1/3 del precio), ALT junto a un coche en venta (comprar)", "  Ikinci el pazari: satin alma noktasinda kendi aracinizda ALT (fiyatin 1/3u), satilik aracin yaninda ALT (satin al)" },
     { "Salter je uklonjen.", "Counter removed.", "Окно убрано.", "Ventanilla quitada.", "Gise kaldirildi." },
     { "Taj salter nije postavljen.", "That counter isn't placed.", "Это окно не поставлено.", "Esa ventanilla no esta colocada.", "Bu gise kurulmamis." },
@@ -1192,7 +1189,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Novac: ~g~$%d", "Money: ~g~$%d", "Деньги: ~g~$%d", "Dinero: ~g~$%d", "Para: ~g~$%d" },
     { "NATRAG", "BACK", "НАЗАД", "ATRAS", "GERI" },
     { "To je vec ugradeno.", "That is already installed.", "Это уже установлено.", "Eso ya esta instalado.", "Bu zaten takili." },
-    { "Tuning je dostupan samo za vlastita vozila.", "Tuning is only available for your own vehicles.", "Тюнинг доступен только для своих машин.", "El tuning solo esta disponible para tus vehiculos.", "Tuning sadece kendi araclariniz icin." },
     { "{8AB4F8}+ Nova tuning garaza na mojoj poziciji", "{8AB4F8}+ New tuning garage at my position", "{8AB4F8}+ Новый тюнинг-гараж на моей позиции", "{8AB4F8}+ Nuevo taller de tuning en mi posicion", "{8AB4F8}+ Konumumda yeni tuning garaji" },
     { "Tuning garaze", "Tuning garages", "Тюнинг-гаражи", "Talleres de tuning", "Tuning garajlari" },
     { "Tuning garaza se postavlja samo izvana.", "A tuning garage can only be placed outside.", "Тюнинг-гараж ставится только снаружи.", "El taller solo se puede colocar en el exterior.", "Tuning garaji sadece disarida kurulur." },
@@ -1483,7 +1479,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Banka dodana: %s. Udite i postavite sluzbenika.", "Bank added: %s. Go inside and place the clerk.", "Банк добавлен: %s. Зайдите и поставьте служащего.", "Banco anadido: %s. Entra y coloca al empleado.", "Banka eklendi: %s. Iceri girip memuru yerlestirin." },
     { "Banka obrisana.", "Bank deleted.", "Банк удалён.", "Banco eliminado.", "Banka silindi." },
     { "Banka se postavlja samo izvana.", "A bank can only be placed outside.", "Банк ставится только снаружи.", "El banco solo se coloca afuera.", "Banka sadece disarida yerlestirilir." },
-    { "Dobar dan, izvolite na salter.", "Good day, please come to the counter.", "Добрый день, подходите к окошку.", "Buenos dias, pase a la ventanilla.", "Iyi gunler, vezneye buyurun." },
     { "Dobili ste novu bankovnu karticu.", "You received a new bank card.", "Вы получили новую банковскую карту.", "Recibiste una nueva tarjeta bancaria.", "Yeni bir banka karti aldiniz." },
     { "Dosegnut je maksimalan broj banaka.", "Maximum number of banks reached.", "Достигнуто максимальное число банков.", "Se alcanzo el maximo de bancos.", "Maksimum banka sayisina ulasildi." },
     { "Iznos kredita (najvise $%d). Kamata %d%%, otplata u %d dnevnih rata:", "Loan amount (max $%d). Interest %d%%, repaid in %d daily installments:", "Сумма кредита (макс. $%d). Процент %d%%, выплата %d ежедневными платежами:", "Cantidad del prestamo (max $%d). Interes %d%%, se paga en %d cuotas diarias:", "Kredi tutari (en fazla $%d). Faiz %%%d, %d gunluk taksitle odenir:" },
@@ -1527,11 +1522,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Cuvar je postavljen.", "Guard placed.", "Охранник поставлен.", "Guardia colocado.", "Guvenlik yerlestirildi." },
     { "Cuvari obrisani.", "Guards deleted.", "Охранники удалены.", "Guardias eliminados.", "Guvenlikler silindi." },
     { "Ova banka je nedavno opljackana.", "This bank was robbed recently.", "Этот банк недавно ограбили.", "Este banco fue robado hace poco.", "Bu banka yakin zamanda soyuldu." },
-    { "Pljacka banke je pocela! Izdrzite %d s unutar banke.", "The bank robbery has started! Hold out %d s inside the bank.", "Ограбление банка началось! Продержитесь %d с внутри.", "El robo al banco ha empezado! Aguanta %d s dentro.", "Banka soygunu basladi! Bankanin icinde %d sn dayanin." },
     { "Dojava: pljacka banke u tijeku, %s.", "Dispatch: bank robbery in progress, %s.", "Вызов: ограбление банка, %s.", "Aviso: robo al banco en curso, %s.", "Ihbar: banka soygunu devam ediyor, %s." },
     { "Pljacka banke je propala.", "The bank robbery failed.", "Ограбление банка провалилось.", "El robo al banco ha fracasado.", "Banka soygunu basarisiz oldu." },
-    { "Pljacka uspjela! Vas dio: $%d.", "Robbery successful! Your cut: $%d.", "Ограбление удалось! Ваша доля: $%d.", "Robo exitoso! Tu parte: $%d.", "Soygun basarili! Payiniz: $%d." },
-    { "Oruzje u banci mozete izvaditi samo s najmanje 4 clana organizacije.", "You can only draw weapons in a bank with at least 4 members of your organisation.", "Оружие в банке можно достать только вместе с минимум 4 членами организации.", "Solo puedes sacar armas en el banco con al menos 4 miembros de tu organizacion.", "Bankada silah ancak orgutunuzden en az 4 kisiyle cekilebilir." },
     { "Informacije", "Information", "Информация", "Informacion", "Bilgiler" },
     { "Racunalo", "Computer", "Компьютер", "Ordenador", "Bilgisayar" },
     { "Ugasi", "Shut down", "Выключить", "Apagar", "Kapat" },
@@ -1583,7 +1575,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Otkup", "Buyback", "Выкуп", "Recompra", "Geri alim" },
     { "Ova zlatara je nedavno opljackana.", "This jewellery store was robbed recently.", "Этот ювелирный недавно ограбили.", "Esta joyeria fue robada hace poco.", "Bu kuyumcu yakin zamanda soyuldu." },
     { "Pljacka uspjela! Uzeli ste %d komada nakita. Prodajte ih preprodavacu.", "Robbery successful! You took %d pieces of jewellery. Sell them to a fence.", "Ограбление удалось! Вы взяли %d украшений. Продайте их скупщику.", "Robo exitoso! Tomaste %d joyas. Vendelas a un perista.", "Soygun basarili! %d parca mucevher aldiniz. Bir yatakciya satin." },
-    { "Pljacka zlatare je pocela! Razbijate vitrine, izdrzite %d s unutra.", "The jewellery store robbery has started! Smash the cases, hold out %d s inside.", "Ограбление ювелирного началось! Бейте витрины, продержитесь %d с внутри.", "El robo a la joyeria ha empezado! Rompe las vitrinas, aguanta %d s dentro.", "Kuyumcu soygunu basladi! Vitrinleri kirin, icerde %d sn dayanin." },
     { "Pljacka zlatare je propala.", "The jewellery store robbery failed.", "Ограбление ювелирного провалилось.", "El robo a la joyeria ha fracasado.", "Kuyumcu soygunu basarisiz oldu." },
     { "Postavi prodavaca na mojoj poziciji\nObrisi zlataru", "Place the seller at my position\nDelete jewellery store", "Поставить продавца на мою позицию\nУдалить ювелирный", "Colocar al vendedor en mi posicion\nEliminar joyeria", "Saticiyi konumuma yerlestir\nKuyumcuyu sil" },
     { "Preprodavac", "Fence", "Скупщик", "Perista", "Yatakci" },
@@ -1635,12 +1626,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Razgovor s: %s~n~~n~Jos nema poruka.", "Chat with: %s~n~~n~No messages yet.", "Чат с: %s~n~~n~Сообщений пока нет.", "Chat con: %s~n~~n~Aun no hay mensajes.", "Sohbet: %s~n~~n~Henuz mesaj yok." },
     { "Sada ste prijatelji.", "You are now friends.", "Теперь вы друзья.", "Ahora son amigos.", "Artik arkadassiniz." },
     { "Svidja mi se", "Like", "Нравится", "Me gusta", "Begen" },
-    { "Ukloni prijatelja", "Remove friend", "Удалить из друзей", "Eliminar amigo", "Arkadasliktan cikar" },
     { "Vas komentar (najvise %d znakova):", "Your comment (max %d characters):", "Ваш комментарий (не более %d символов):", "Tu comentario (max %d caracteres):", "Yorumunuz (en fazla %d karakter):" },
     { "Vasa poruka (najvise %d znakova):", "Your message (max %d characters):", "Ваше сообщение (не более %d символов):", "Tu mensaje (max %d caracteres):", "Mesajiniz (en fazla %d karakter):" },
     { "Vec ste prijatelji.", "You are already friends.", "Вы уже друзья.", "Ya son amigos.", "Zaten arkadassiniz." },
     { "Zahtjev je vec poslan.", "Request already sent.", "Запрос уже отправлен.", "Solicitud ya enviada.", "Istek zaten gonderildi." },
-    { "Zahtjev poslan", "Request sent", "Запрос отправлен", "Solicitud enviada", "Istek gonderildi" },
     { "Zahtjev za prijateljstvo poslan.", "Friend request sent.", "Запрос в друзья отправлен.", "Solicitud de amistad enviada.", "Arkadaslik istegi gonderildi." },
     { "prije %d d", "%d d ago", "%d дн. назад", "hace %d d", "%d g once" },
     { "prije %d h", "%d h ago", "%d ч назад", "hace %d h", "%d sa once" },
@@ -1657,7 +1646,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Naplacena je rata kredita $%d. Preostali dug: $%d.", "Loan instalment of $%d charged. Remaining debt: $%d.", "Списан платёж по кредиту $%d. Остаток долга: $%d.", "Se cobro la cuota del prestamo de $%d. Deuda restante: $%d.", "$%d kredi taksiti tahsil edildi. Kalan borc: $%d." },
     { "Vrijeme je vraceno na automatsko (Zagreb).", "Time set back to automatic (Zagreb).", "Время возвращено в автоматический режим (Загреб).", "Hora devuelta a automatico (Zagreb).", "Saat otomatige dondu (Zagreb)." },
     { "Koristenje: /time [sat 0-23] (bez broja = automatsko)", "Usage: /time [hour 0-23] (no number = automatic)", "Использование: /time [час 0-23] (без числа = авто)", "Uso: /time [hora 0-23] (sin numero = automatico)", "Kullanim: /time [saat 0-23] (sayi yok = otomatik)" },
-    { "Lokacije", "Locations", "Локации", "Ubicaciones", "Konumlar" },
     { "<< Prethodna strana", "<< Previous page", "<< Предыдущая страница", "<< Pagina anterior", "<< Onceki sayfa" },
     { "Sljedeca strana >>", "Next page >>", "Следующая страница >>", "Pagina siguiente >>", "Sonraki sayfa >>" },
     { "Nema lokacija u ovoj kategoriji.", "There are no locations in this category.", "В этой категории нет локаций.", "No hay ubicaciones en esta categoria.", "Bu kategoride konum yok." },
@@ -1709,9 +1697,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Uplata za dostavu hrane: $%d.", "Food delivery payment: $%d.", "Оплата за доставку еды: $%d.", "Pago por entrega de comida: $%d.", "Yemek teslimati odemesi: $%d." },
     { "Hrana je dostavljena. $%d je uplaceno na vas racun.", "Food delivered. $%d was paid into your bank account.", "Еда доставлена. $%d зачислено на ваш счёт.", "Comida entregada. Se ingresaron $%d en tu cuenta.", "Yemek teslim edildi. Hesabiniza $%d yatirildi." },
     { "Dostava zavrsena. Dobili ste $%d na ruke.", "Delivery done. You got $%d in cash.", "Доставка выполнена. Вы получили $%d наличными.", "Entrega hecha. Recibiste $%d en efectivo.", "Teslimat tamam. Elden $%d aldiniz." },
-    { "Brod je vec u plovidbi.", "The ship is already sailing.", "Корабль уже в пути.", "El barco ya esta navegando.", "Gemi zaten seyirde." },
-    { "Brod isplovljava iz luke.", "The ship is leaving the port.", "Корабль выходит из порта.", "El barco sale del puerto.", "Gemi limandan ayriliyor." },
-    { "Brod uplovljava u luku.", "The ship is sailing into the port.", "Корабль входит в порт.", "El barco entra en el puerto.", "Gemi limana giriyor." },
     { "Kladionica", "Sportsbook", "Букмекер", "Apuestas", "Bahis" },
     { "Trenutno nema dostupnih utakmica.", "No matches available right now.", "Сейчас нет доступных матчей.", "No hay partidos disponibles ahora.", "Su anda mac yok." },
     { "Na listicu moze biti najvise %d parova.", "A slip can have at most %d picks.", "В купоне может быть не более %d событий.", "Un boleto puede tener como maximo %d selecciones.", "Kuponda en fazla %d mac olabilir." },
@@ -1740,7 +1725,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Blagajnik internet kafica je postavljen.", "Internet cafe cashier placed.", "Кассир интернет-кафе установлен.", "Cajero del cibercafe colocado.", "Internet kafe kasiyeri yerlestirildi." },
     { "Dosegnut je najveci broj racunala.", "The maximum number of computers has been reached.", "Достигнуто максимальное число компьютеров.", "Se alcanzo el numero maximo de ordenadores.", "En fazla bilgisayar sayisina ulasildi." },
     { "Prvo postavite blagajnika u blizini (%.0f m).", "Place a cashier nearby first (%.0f m).", "Сначала поставьте кассира рядом (%.0f м).", "Primero coloca un cajero cerca (%.0f m).", "Once yakina bir kasiyer koyun (%.0f m)." },
-    { "Racunalo internet kafica je postavljeno.", "Internet cafe computer placed.", "Компьютер интернет-кафе установлен.", "Ordenador del cibercafe colocado.", "Internet kafe bilgisayari yerlestirildi." },
     { "Blagajnik je obrisan.", "Cashier deleted.", "Кассир удалён.", "Cajero borrado.", "Kasiyer silindi." },
     { "Racunalo je obrisano.", "Computer deleted.", "Компьютер удалён.", "Ordenador borrado.", "Bilgisayar silindi." },
     { "Platite vrijeme na blagajni internet kafica.", "Pay for time at the internet cafe cashier.", "Оплатите время у кассира интернет-кафе.", "Paga tiempo en la caja del cibercafe.", "Internet kafe kasasinda sure odeyin." },
@@ -1775,7 +1759,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~Protivnik je na potezu", "~y~Opponent's turn", "~y~Ход соперника", "~y~Turno del rival", "~y~Sira rakipte" },
     { "Napustili ste bilijarski stol.", "You left the pool table.", "Вы отошли от бильярдного стола.", "Dejaste la mesa de billar.", "Bilardo masasindan ayrildiniz." },
     { "Za ovim stolom se vec igra.", "This table is already in use.", "За этим столом уже играют.", "Ya se esta jugando en esta mesa.", "Bu masada zaten oynaniyor." },
-    { "Sjeli ste za bilijarski stol. Ceka se protivnik (Y za odlazak).", "You joined the pool table. Waiting for an opponent (Y to leave).", "Вы заняли бильярдный стол. Ожидание соперника (Y - уйти).", "Te uniste a la mesa de billar. Esperando rival (Y para salir).", "Bilardo masasina katildiniz. Rakip bekleniyor (Y - ayril)." },
     { "[Bilijar] Igra pocinje! Razbija %s.", "[Pool] Game on! %s breaks.", "[Бильярд] Игра началась! Разбивает %s.", "[Billar] Empieza la partida! Rompe %s.", "[Bilardo] Oyun basladi! %s acis yapiyor." },
     { "SNAGA", "POWER", "СИЛА", "FUERZA", "GUC" },
     { "Pridite blize bijeloj kugli.", "Move closer to the cue ball.", "Подойдите ближе к битку.", "Acercate a la bola blanca.", "Beyaz topa yaklasin." },
@@ -1831,7 +1814,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~LMB ~w~sut   ~y~N ~w~dodaj   ~y~ALT ~w~ispusti", "~y~LMB ~w~shoot   ~y~N ~w~pass   ~y~ALT ~w~drop", "~y~ЛКМ ~w~бросок   ~y~N ~w~пас   ~y~ALT ~w~бросить", "~y~LMB ~w~tirar   ~y~N ~w~pasar   ~y~ALT ~w~soltar", "~y~LMB ~w~sut   ~y~N ~w~pas   ~y~ALT ~w~birak" },
     { "~y~ALT ~w~uzmi / ukradi loptu", "~y~ALT ~w~pick up / steal ball", "~y~ALT ~w~взять / перехватить мяч", "~y~ALT ~w~coger / robar balon", "~y~ALT ~w~topu al / cal" },
     { "~r~Krivi kos!", "~r~Wrong hoop!", "~r~Не то кольцо!", "~r~Canasta equivocada!", "~r~Yanlis pota!" },
-    { "~w~Ucitavanje...", "~w~Loading...", "~w~Загрузка...", "~w~Cargando...", "~w~Yukleniyor..." },
     { "[AC] IP %s je blokiran na 10 minuta: %s (#%03d).", "[AC] IP %s blocked for 10 minutes: %s (#%03d).", "[AC] IP %s заблокирован на 10 минут: %s (#%03d).", "[AC] IP %s bloqueada por 10 minutos: %s (#%03d).", "[AC] IP %s 10 dakika engellendi: %s (#%03d)." },
     { "Izbaceni ste zbog sumnje na varanje (#%03d).", "You were kicked on suspicion of cheating (#%03d).", "Вы были кикнуты по подозрению в читерстве (#%03d).", "Has sido expulsado por sospecha de trampas (#%03d).", "Hile suphesiyle sunucudan atildiniz (#%03d)." },
     { "[AC] %s (%d) je izbacen: %s (#%03d).", "[AC] %s (%d) was kicked: %s (#%03d).", "[AC] %s (%d) кикнут: %s (#%03d).", "[AC] %s (%d) fue expulsado: %s (#%03d).", "[AC] %s (%d) atildi: %s (#%03d)." },
@@ -1846,7 +1828,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Previse je igraca spojeno s vase IP adrese.", "Too many players are connected from your IP address.", "С вашего IP-адреса подключено слишком много игроков.", "Hay demasiados jugadores conectados desde tu direccion IP.", "IP adresinizden cok fazla oyuncu bagli." },
     { "Ova verzija klijenta nije podrzana na serveru.", "This client version is not supported on the server.", "Эта версия клиента не поддерживается на сервере.", "Esta version del cliente no es compatible con el servidor.", "Bu istemci surumu sunucuda desteklenmiyor." },
     { "Streljana", "Shooting Gallery", "Тир", "Galeria de tiro", "Atis Poligonu" },
-    { "WASD nisan, LMB pucaj, ne gadjajte civile   ENTER - izlaz", "WASD aim, LMB shoot, don't hit civilians   ENTER - exit", "WASD прицел, ЛКМ выстрел, не стреляйте в мирных жителей   ENTER - выход", "WASD apuntar, LMB disparar, no dispares a civiles   ENTER - salir", "WASD nisan, LMB ates, sivillere ates etmeyin   ENTER - cikis" },
     { "ZDRAVLJE", "HEALTH", "ЗДОРОВЬЕ", "SALUD", "SAGLIK" },
     { "~r~Ubili ste civila!", "~r~You shot a civilian!", "~r~Вы убили мирного жителя!", "~r~Has matado a un civil!", "~r~Bir sivili vurdunuz!" },
     { "Auto i garaze", "Cars & garages", "Авто и гаражи", "Autos y garajes", "Araclar ve garajlar" },
@@ -1859,7 +1840,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "l", "l", "л", "l", "l" },
     { "* %s bere biljku marihuane.", "* %s harvests a marijuana plant.", "* %s собирает куст марихуаны.", "* %s cosecha una planta de marihuana.", "* %s esrar bitkisini hasat ediyor." },
     { "* %s cupa biljku marihuane i stavlja je u vrecicu za dokaze.", "* %s pulls out the marijuana plant and bags it as evidence.", "* %s вырывает куст марихуаны и кладет его в пакет для улик.", "* %s arranca la planta de marihuana y la guarda como prueba.", "* %s esrar bitkisini sokup delil torbasina koyuyor." },
-    { "* %s mijesa kemikalije s koka pastom.", "* %s mixes chemicals with the coca paste.", "* %s смешивает химикаты с кока-пастой.", "* %s mezcla quimicos con la pasta de coca.", "* %s kimyasallari koka ezmesiyle karistiriyor." },
     { "* %s pusi metamfetamin iz lule.", "* %s smokes meth from a pipe.", "* %s курит метамфетамин из трубки.", "* %s fuma metanfetamina en una pipa.", "* %s pipodan metamfetamin iciyor." },
     { "* %s sadi sjemenku u lonac.", "* %s plants a seed in a pot.", "* %s сажает семя в горшок.", "* %s planta una semilla en una maceta.", "* %s saksiya bir tohum ekiyor." },
     { "* %s zaljeva biljku.", "* %s waters the plant.", "* %s поливает растение.", "* %s riega la planta.", "* %s bitkiyi suluyor." },
@@ -1873,27 +1853,18 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Dojava: sumnjiva primopredaja paketa, %s.", "Tip-off: suspicious package handover, %s.", "Сигнал: подозрительная передача посылки, %s.", "Aviso: entrega sospechosa de un paquete, %s.", "Ihbar: supheli paket teslimi, %s." },
     { "Dosegnut je najveci broj dobavljaca.", "The maximum number of suppliers has been reached.", "Достигнуто максимальное число поставщиков.", "Se ha alcanzado el numero maximo de proveedores.", "En fazla tedarikci sayisina ulasildi." },
     { "Droga", "Drugs", "Наркотики", "Drogas", "Uyusturucu" },
-    { "Drzite temperaturu u zelenom.~n~W - grijanje, S - hladjenje, ENTER - odustani.~n~Crveno predugo = eksplozija!", "Keep the temperature in the green.~n~W - heat, S - cool, ENTER - give up.~n~Red too long = explosion!", "Держите температуру в зеленой зоне.~n~W - нагрев, S - охлаждение, ENTER - отмена.~n~Долго в красной = взрыв!", "Manten la temperatura en verde.~n~W - calentar, S - enfriar, ENTER - abandonar.~n~Demasiado en rojo = explosion!", "Sicakligi yesilde tutun.~n~W - isit, S - sogut, ENTER - vazgec.~n~Uzun sure kirmizi = patlama!" },
     { "Koka pasta i kemikalije preraduju se u laboratoriju mafije (/lab).", "Coca paste and chemicals are processed in a mafia lab (/lab).", "Кока-паста и химикаты перерабатываются в лаборатории мафии (/lab).", "La pasta de coca y los quimicos se procesan en el laboratorio de la mafia (/lab).", "Koka ezmesi ve kimyasallar mafya laboratuvarinda islenir (/lab)." },
-    { "Koliko grama koka paste preradujete? (visekratnik od 10)", "How many grams of coca paste do you process? (multiple of 10)", "Сколько граммов кока-пасты переработать? (кратно 10)", "Cuantos gramos de pasta de coca procesas? (multiplo de 10)", "Kac gram koka ezmesi isleyeceksiniz? (10'un katlari)" },
     { "Kvaliteta: %d%%~n~Dobili ste %d g metamfetamina.", "Quality: %d%%~n~You got %d g of meth.", "Качество: %d%%~n~Вы получили %d г метамфетамина.", "Calidad: %d%%~n~Obtuviste %d g de metanfetamina.", "Kalite: %d%%~n~%d g metamfetamin elde ettiniz." },
     { "Laboratorij", "Lab", "Лаборатория", "Laboratorio", "Laboratuvar" },
-    { "Laboratorij se nalazi u HQ-u mafije.", "The lab is inside a mafia HQ.", "Лаборатория находится в штабе мафии.", "El laboratorio esta en el cuartel de la mafia.", "Laboratuvar mafya karargahinda." },
     { "Ne mozete nositi toliko (najvise %d).", "You cannot carry that much (max %d).", "Вы не можете нести столько (максимум %d).", "No puedes llevar tanto (maximo %d).", "Bu kadar tasiyamazsiniz (en fazla %d)." },
     { "Ne mozete nositi vise koka paste.", "You cannot carry any more coca paste.", "Вы не можете нести больше кока-пасты.", "No puedes llevar mas pasta de coca.", "Daha fazla koka ezmesi tasiyamazsiniz." },
-    { "Ne mozete nositi vise kokaina.", "You cannot carry any more cocaine.", "Вы не можете нести больше кокаина.", "No puedes llevar mas cocaina.", "Daha fazla kokain tasiyamazsiniz." },
     { "Ne mozete nositi vise marihuane.", "You cannot carry any more marijuana.", "Вы не можете нести больше марихуаны.", "No puedes llevar mas marihuana.", "Daha fazla esrar tasiyamazsiniz." },
-    { "Odustali ste. Kemikalije su izgubljene.", "You gave up. The chemicals are lost.", "Вы отказались. Химикаты потеряны.", "Abandonaste. Los quimicos se perdieron.", "Vazgectiniz. Kimyasallar kayboldu." },
     { "Ovdje ne mozete posaditi biljku.", "You cannot plant here.", "Здесь нельзя посадить растение.", "No puedes plantar aqui.", "Buraya bitki ekemezsiniz." },
     { "Ovo nije vasa biljka.", "This is not your plant.", "Это не ваше растение.", "Esta no es tu planta.", "Bu sizin bitkiniz degil." },
-    { "Pokupili ste %d g kokaina.", "You collected %d g of cocaine.", "Вы забрали %d г кокаина.", "Recogiste %d g de cocaina.", "%d g kokain aldiniz." },
     { "Posiljka ceka na %s. Dodite vozilom u roku od %d min.", "The shipment is waiting at %s. Come with a vehicle within %d min.", "Груз ждет в %s. Приезжайте на машине в течение %d мин.", "El envio espera en %s. Ven con un vehiculo en %d min.", "Sevkiyat %s bolgesinde bekliyor. %d dk icinde bir aracla gelin." },
     { "Posiljka je propala, niste stigli na vrijeme.", "The shipment is lost, you did not arrive in time.", "Груз потерян, вы не успели вовремя.", "El envio se perdio, no llegaste a tiempo.", "Sevkiyat kayboldu, zamaninda gelmediniz." },
     { "Preradi", "Process", "Переработать", "Procesar", "Isle" },
     { "Preuzeli ste %d g koka paste. Preradite je u laboratoriju HQ-a (/lab).", "You picked up %d g of coca paste. Process it in your HQ lab (/lab).", "Вы забрали %d г кока-пасты. Переработайте ее в лаборатории штаба (/lab).", "Recogiste %d g de pasta de coca. Procesala en el laboratorio del cuartel (/lab).", "%d g koka ezmesi aldiniz. Karargah laboratuvarinda isleyin (/lab)." },
-    { "Prvo pokupite prethodnu seriju.", "Collect the previous batch first.", "Сначала заберите предыдущую партию.", "Primero recoge el lote anterior.", "Once onceki partiyi alin." },
-    { "Serija moze imati 10 - %d g.", "A batch can be 10 - %d g.", "Партия может быть от 10 до %d г.", "Un lote puede ser de 10 - %d g.", "Bir parti 10 - %d g olabilir." },
-    { "Serija od %d g kokaina bit ce gotova za %d min.", "A batch of %d g of cocaine will be ready in %d min.", "Партия кокаина %d г будет готова через %d мин.", "Un lote de %d g de cocaina estara listo en %d min.", "%d g kokain partisi %d dk icinde hazir olacak." },
     { "Sjemenke marihuane ($%d/kom, zaliha %d)\n%sKemikalije ($%d/l, zaliha %d)\n%sSanduk oruzja ($%d)", "Marijuana seeds ($%d/pc, stock %d)\n%sChemicals ($%d/l, stock %d)\n%sWeapon crate ($%d)", "Семена марихуаны ($%d/шт, запас %d)\n%sХимикаты ($%d/л, запас %d)\n%sЯщик оружия ($%d)", "Semillas de marihuana ($%d/u, stock %d)\n%sQuimicos ($%d/l, stock %d)\n%sCaja de armas ($%d)", "Esrar tohumu ($%d/adet, stok %d)\n%sKimyasallar ($%d/l, stok %d)\n%sSilah sandigi ($%d)" },
     { "Sjemenke mozete posaditi u lonac u svojoj kuci (ili kuci koju unajmljujete) ili na plantazi vase organizacije.", "You can plant seeds in a pot in your own (or rented) house, or on your organisation's plantation.", "Семена можно посадить в горшок в своём (или арендованном) доме или на плантации вашей организации.", "Puedes plantar semillas en una maceta en tu casa (o alquilada) o en la plantacion de tu organizacion.", "Tohumlari kendi (ya da kiraladiginiz) evinizdeki saksiya ya da orgutunuzun plantasyonuna ekebilirsiniz." },
     { "Sljedeca posiljka bit ce spremna za %d min.", "The next shipment will be ready in %d min.", "Следующий груз будет готов через %d мин.", "El proximo envio estara listo en %d min.", "Sonraki sevkiyat %d dk icinde hazir olacak." },
@@ -1912,14 +1883,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Vec imate aktivnu posiljku.", "You already have an active shipment.", "У вас уже есть активный груз.", "Ya tienes un envio activo.", "Zaten aktif bir sevkiyatiniz var." },
     { "Za posiljku trebate vozilo.", "You need a vehicle for the shipment.", "Для груза нужна машина.", "Necesitas un vehiculo para el envio.", "Sevkiyat icin araca ihtiyaciniz var." },
     { "Zaplijeni i unisti biljku", "Seize and destroy the plant", "Изъять и уничтожить растение", "Confiscar y destruir la planta", "Bitkiye el koy ve yok et" },
-    { "{2ECC71}Pokupi gotov kokain: %d g", "{2ECC71}Collect finished cocaine: %d g", "{2ECC71}Забрать готовый кокаин: %d г", "{2ECC71}Recoger cocaina lista: %d g", "{2ECC71}Hazir kokaini al: %d g" },
-    { "{777777}Nema serije u obradi", "{777777}No batch in progress", "{777777}Нет партии в обработке", "{777777}No hay lote en proceso", "{777777}Islenen parti yok" },
     { "{8AB4F8}+ Nova tocka uvoza na mojoj poziciji", "{8AB4F8}+ New import point at my position", "{8AB4F8}+ Новая точка импорта на моей позиции", "{8AB4F8}+ Nuevo punto de importacion en mi posicion", "{8AB4F8}+ Konumumda yeni ithalat noktasi" },
     { "{8AB4F8}+ Novi dobavljac na mojoj poziciji", "{8AB4F8}+ New supplier at my position", "{8AB4F8}+ Новый поставщик на моей позиции", "{8AB4F8}+ Nuevo proveedor en mi posicion", "{8AB4F8}+ Konumumda yeni tedarikci" },
     { "{AAAAAA}Rast: %d%%  |  Voda jos: %d min\n{FFFFFF}Zalij\n%sOberi\n{FFFFFF}Ukloni biljku", "{AAAAAA}Growth: %d%%  |  Water left: %d min\n{FFFFFF}Water\n%sHarvest\n{FFFFFF}Remove plant", "{AAAAAA}Рост: %d%%  |  Воды еще: %d мин\n{FFFFFF}Полить\n%sСобрать\n{FFFFFF}Убрать растение", "{AAAAAA}Crecimiento: %d%%  |  Agua restante: %d min\n{FFFFFF}Regar\n%sCosechar\n{FFFFFF}Quitar planta", "{AAAAAA}Buyume: %d%%  |  Kalan su: %d dk\n{FFFFFF}Sula\n%sHasat et\n{FFFFFF}Bitkiyi kaldir" },
     { "{C0392B}Biljka se osusila.\n{FFFFFF}Ukloni biljku", "{C0392B}The plant dried out.\n{FFFFFF}Remove plant", "{C0392B}Растение засохло.\n{FFFFFF}Убрать растение", "{C0392B}La planta se seco.\n{FFFFFF}Quitar planta", "{C0392B}Bitki kurudu.\n{FFFFFF}Bitkiyi kaldir" },
-    { "{F1C40F}Kokain u obradi: %d g (jos %d min)", "{F1C40F}Cocaine processing: %d g (%d min left)", "{F1C40F}Кокаин в обработке: %d г (еще %d мин)", "{F1C40F}Cocaina en proceso: %d g (faltan %d min)", "{F1C40F}Islenen kokain: %d g (%d dk kaldi)" },
-    { "%s\n{FFFFFF}Preradi koka pastu u kokain (%d g paste + 1 l kemikalija = %d g)\nKuhaj metamfetamin (%d l kemikalija)", "%s\n{FFFFFF}Process coca paste into cocaine (%d g paste + 1 l chemicals = %d g)\nCook meth (%d l chemicals)", "%s\n{FFFFFF}Переработать кока-пасту в кокаин (%d г пасты + 1 л химикатов = %d г)\nВарить метамфетамин (%d л химикатов)", "%s\n{FFFFFF}Procesar pasta de coca en cocaina (%d g de pasta + 1 l de quimicos = %d g)\nCocinar metanfetamina (%d l de quimicos)", "%s\n{FFFFFF}Koka ezmesini kokaine isle (%d g ezme + 1 l kimyasal = %d g)\nMetamfetamin pisir (%d l kimyasal)" },
     { "{2ECC71}Novac\t$%d", "{2ECC71}Money\t$%d", "{2ECC71}Деньги\t$%d", "{2ECC71}Dinero\t$%d", "{2ECC71}Para\t$%d" },
     { "{8AB4F8}Ostavi novac", "{8AB4F8}Deposit money", "{8AB4F8}Положить деньги", "{8AB4F8}Depositar dinero", "{8AB4F8}Para birak" },
     { "{8AB4F8}Ostavi predmet", "{8AB4F8}Deposit item", "{8AB4F8}Положить предмет", "{8AB4F8}Depositar objeto", "{8AB4F8}Esya birak" },
@@ -2019,21 +1986,18 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Zadnje transakcije", "Recent transactions", "Последние операции", "Transacciones recientes", "Son islemler" },
     { "Nema transakcija.", "No transactions.", "Операций нет.", "No hay transacciones.", "Islem yok." },
     { "Grupe", "Groups", "Группы", "Grupos", "Gruplar" },
-    { "+ Dodaj clana", "+ Add member", "+ Добавить участника", "+ Agregar miembro", "+ Uye ekle" },
     { "Blokiraj", "Block", "Заблокировать", "Bloquear", "Engelle" },
     { "Clan je dodan u grupu.", "Member added to the group.", "Участник добавлен в группу.", "Miembro agregado al grupo.", "Uye gruba eklendi." },
     { "Clan je uklonjen iz grupe.", "Member removed from the group.", "Участник удалён из группы.", "Miembro eliminado del grupo.", "Uye gruptan cikarildi." },
     { "Clanovi", "Members", "Участники", "Miembros", "Uyeler" },
     { "Grupa je obrisana.", "Group deleted.", "Группа удалена.", "Grupo eliminado.", "Grup silindi." },
     { "Grupa: %s~n~~n~Jos nema poruka.", "Group: %s~n~~n~No messages yet.", "Группа: %s~n~~n~Сообщений пока нет.", "Grupo: %s~n~~n~Aun no hay mensajes.", "Grup: %s~n~~n~Henuz mesaj yok." },
-    { "Ime i prezime prijatelja kojeg dodajete:", "Full name of the friend to add:", "Имя и фамилия друга для добавления:", "Nombre completo del amigo a agregar:", "Eklenecek arkadasin adi soyadi:" },
     { "Komentar", "Comment", "Комментарий", "Comentario", "Yorum" },
     { "Komentar je obrisan.", "Comment deleted.", "Комментарий удалён.", "Comentario eliminado.", "Yorum silindi." },
     { "Korisnik je blokiran.", "User blocked.", "Пользователь заблокирован.", "Usuario bloqueado.", "Kullanici engellendi." },
     { "Korisnik je odblokiran.", "User unblocked.", "Пользователь разблокирован.", "Usuario desbloqueado.", "Kullanicinin engeli kaldirildi." },
     { "Korisnik je vec u grupi.", "User is already in the group.", "Пользователь уже в группе.", "El usuario ya esta en el grupo.", "Kullanici zaten grupta." },
     { "Moji oglasi", "My ads", "Мои объявления", "Mis anuncios", "Ilanlarim" },
-    { "Napusti grupu", "Leave group", "Покинуть группу", "Salir del grupo", "Gruptan ayril" },
     { "Napustili ste grupu.", "You left the group.", "Вы покинули группу.", "Saliste del grupo.", "Gruptan ayrildiniz." },
     { "Naziv nove grupe (najvise 24 znaka):", "New group name (max 24 characters):", "Название группы (до 24 символов):", "Nombre del grupo (max 24 caracteres):", "Yeni grup adi (en fazla 24 karakter):" },
     { "Ne mozete poslati poruku ovom korisniku.", "You can't message this user.", "Вы не можете написать этому пользователю.", "No puedes enviar mensajes a este usuario.", "Bu kullaniciya mesaj gonderemezsiniz." },
@@ -2052,8 +2016,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Odblokiraj", "Unblock", "Разблокировать", "Desbloquear", "Engeli kaldir" },
     { "Oglas je obrisan.", "Ad deleted.", "Объявление удалено.", "Anuncio eliminado.", "Ilan silindi." },
     { "Opcije", "Options", "Опции", "Opciones", "Secenekler" },
-    { "Otkazi zahtjev", "Cancel request", "Отменить запрос", "Cancelar solicitud", "Istegi iptal et" },
-    { "Podijeli s prijateljima", "Share with friends", "Поделиться с друзьями", "Compartir con amigos", "Arkadaslarla paylas" },
     { "Pretrazi", "Search", "Искать", "Buscar", "Ara" },
     { "Pretrazite korisnike po imenu.", "Search users by name.", "Ищите пользователей по имени.", "Busca usuarios por nombre.", "Kullanicilari isme gore arayin." },
     { "Prikaz: prijatelji", "Show: friends", "Показ: друзья", "Mostrar: amigos", "Goster: arkadaslar" },
@@ -2066,14 +2028,10 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~p~LifeStalker~n~~w~%s vas je dodao u grupu %s.", "~p~LifeStalker~n~~w~%s added you to the group %s.", "~p~LifeStalker~n~~w~%s добавил вас в группу %s.", "~p~LifeStalker~n~~w~%s te agrego al grupo %s.", "~p~LifeStalker~n~~w~%s sizi %s grubuna ekledi." },
     { "~y~Prijedlog: ~b~%s~n~~l~Mozda ga poznajete", "~y~Suggested: ~b~%s~n~~l~You may know them", "~y~Рекомендация: ~b~%s~n~~l~Возможно, вы знакомы", "~y~Sugerencia: ~b~%s~n~~l~Quiza lo conozcas", "~y~Oneri: ~b~%s~n~~l~Taniyor olabilirsiniz" },
     { "~y~Prijedlog: ~b~%s~n~~l~Zajednickih prijatelja: %d", "~y~Suggested: ~b~%s~n~~l~Mutual friends: %d", "~y~Рекомендация: ~b~%s~n~~l~Общих друзей: %d", "~y~Sugerencia: ~b~%s~n~~l~Amigos en comun: %d", "~y~Oneri: ~b~%s~n~~l~Ortak arkadas: %d" },
-    { "Mala kamp prikolica", "Small camper trailer", "Малый жилой прицеп", "Caravana pequena", "Kucuk karavan" },
-    { "Velika kamp prikolica", "Large camper trailer", "Большой жилой прицеп", "Caravana grande", "Buyuk karavan" },
     { "+ Novo prodajno mjesto (prikolice se pojavljuju ispred vas)", "+ New sales point (trailers spawn in front of you)", "+ Новая точка продажи (прицепы появятся перед вами)", "+ Nuevo punto de venta (las caravanas aparecen delante)", "+ Yeni satis noktasi (karavanlar onunuzde cikar)" },
     { "Kamp prikolica", "Camper trailer", "Жилой прицеп", "Caravana", "Karavan" },
     { "Kamp prikolice", "Camper trailers", "Жилые прицепы", "Caravanas", "Karavanlar" },
     { "Kupili ste kamp prikolicu za $%d. Zakacite je vozilom (/zakaci), a /kamp otvara izbornik.", "You bought a camper trailer for $%d. Hitch it with a vehicle (/zakaci), /kamp opens the menu.", "Вы купили жилой прицеп за $%d. Прицепите его (/zakaci), меню: /kamp.", "Compraste una caravana por $%d. Enganchala con un vehiculo (/zakaci), /kamp abre el menu.", "$%d karsiliginda karavan aldiniz. Araca takin (/zakaci), menu: /kamp." },
-    { "Namjestaj se postavlja unutar prikolice.", "Furniture is placed inside the trailer.", "Мебель ставится внутри прицепа.", "Los muebles se colocan dentro de la caravana.", "Mobilya karavanin icine yerlestirilir." },
-    { "Niste kod svoje kamp prikolice.", "You are not at your camper trailer.", "Вы не у своего жилого прицепа.", "No estas junto a tu caravana.", "Karavaninizin yaninda degilsiniz." },
     { "Prodajno mjesto kamp prikolica je obrisano.", "Camper trailer sales point deleted.", "Точка продажи прицепов удалена.", "Punto de venta de caravanas eliminado.", "Karavan satis noktasi silindi." },
     { "Prodajno mjesto kamp prikolica je postavljeno.", "Camper trailer sales point placed.", "Точка продажи прицепов установлена.", "Punto de venta de caravanas colocado.", "Karavan satis noktasi yerlestirildi." },
     { "Prodajno mjesto se postavlja samo izvana.", "Sales points can only be placed outside.", "Точку продажи можно ставить только снаружи.", "El punto de venta solo se coloca afuera.", "Satis noktasi sadece disarida yerlestirilir." },
@@ -2086,14 +2044,11 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Otkazi", "Cancel", "Отменить", "Cancelar", "Iptal" },
     { "Potvrdi?", "Confirm?", "Подтвердить?", "Confirmar?", "Onayla?" },
     { "Svi oglasi", "All ads", "Все объявления", "Todos los anuncios", "Tum ilanlar" },
-    { "Ukloni clana", "Remove member", "Удалить", "Quitar miembro", "Uyeyi cikar" },
     { "~y~Vlasnik grupe", "~y~Group owner", "~y~Владелец группы", "~y~Dueno del grupo", "~y~Grup sahibi" },
-    { "Nemate kamp prikolicu.", "You have no camper trailer.", "У вас нет жилого прицепа.", "No tienes caravana.", "Karavaniniz yok." },
     { "Pozicija racunala je spremljena.", "Computer position saved.", "Позиция компьютера сохранена.", "Posicion del ordenador guardada.", "Bilgisayar konumu kaydedildi." },
     { "Racunalo je postavljeno. Pomaknite ga i kliknite na disketu za spremanje.", "Computer placed. Move it and click the floppy disk to save.", "Компьютер установлен. Переместите его и нажмите на дискету для сохранения.", "Ordenador colocado. Muevelo y pulsa el disquete para guardar.", "Bilgisayar yerlestirildi. Tasiyin ve kaydetmek icin diskete tiklayin." },
     { "{F39C12}Kosarka", "{F39C12}Basketball", "{F39C12}Баскетбол", "{F39C12}Baloncesto", "{F39C12}Basketbol" },
     { "Oruzarnica", "Gun shop", "Оружейный магазин", "Armeria", "Silah dukkani" },
-    { "Dovezite svoje vozilo i pritisnite ALT za prodaju", "Bring your vehicle and press ALT to sell it", "Пригоните машину и нажмите ALT для продажи", "Trae tu vehiculo y pulsa ALT para venderlo", "Aracinizi getirin ve satmak icin ALT'ye basin" },
     { "Depo", "Depot", "Депо", "Deposito", "Depo" },
     { "Tuning", "Tuning", "Тюнинг", "Tuning", "Tuning" },
     { "Otvori", "Open", "Открыть", "Abrir", "Ac" },
@@ -2127,10 +2082,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { " ~r~Klikni opet za izbacivanje", " ~r~Click again to kick", " ~r~Нажмите ещё раз, чтобы исключить", " ~r~Haz clic otra vez para expulsar", " ~r~Atmak icin tekrar tiklayin" },
     { "Admin vas je izlijecio.", "An admin healed you.", "Администратор вас вылечил.", "Un admin te curo.", "Bir admin sizi iyilestirdi." },
     { "Izlijecili ste igraca %s.", "You healed %s.", "Вы вылечили игрока %s.", "Curaste a %s.", "%s oyuncusunu iyilestirdiniz." },
-    { "Koristenje: /kill [id/ime]", "Usage: /kill [id/name]", "Использование: /kill [id/имя]", "Uso: /kill [id/nombre]", "Kullanim: /kill [id/isim]" },
     { "Ubili ste igraca %s.", "You killed %s.", "Вы убили игрока %s.", "Mataste a %s.", "%s oyuncusunu oldurdunuz." },
-    { "Koristenje: /pikadorot [rx] [rz] [x] [y] [prsten]", "Usage: /pikadorot [rx] [rz] [x] [y] [ring]", "Использование: /pikadorot [rx] [rz] [x] [y] [кольцо]", "Uso: /pikadorot [rx] [rz] [x] [y] [anillo]", "Kullanim: /pikadorot [rx] [rz] [x] [y] [halka]" },
-    { "Rotacija pikada: rx %.1f, rz %.1f, x %.1f, y %.1f, prsten %.2f", "Dartboard rotation: rx %.1f, rz %.1f, x %.1f, y %.1f, ring %.2f", "Вращение мишени: rx %.1f, rz %.1f, x %.1f, y %.1f, кольцо %.2f", "Rotacion de la diana: rx %.1f, rz %.1f, x %.1f, y %.1f, anillo %.2f", "Dart tahtasi donusu: rx %.1f, rz %.1f, x %.1f, y %.1f, halka %.2f" },
     { "Igra kosta $%d.", "The game costs $%d.", "Игра стоит $%d.", "El juego cuesta $%d.", "Oyun $%d tutar." },
     { "%s: $%d/%s, na zalihi %d.", "%s: $%d/%s, %d in stock.", "%s: $%d/%s, в наличии %d.", "%s: $%d/%s, %d en stock.", "%s: $%d/%s, stokta %d." },
     { "Upisite kolicinu u chat ili N za odbijanje.", "Type the amount in chat or press N to decline.", "Напишите количество в чат или нажмите N, чтобы отказаться.", "Escribe la cantidad en el chat o pulsa N para rechazar.", "Miktari sohbete yazin veya reddetmek icin N basin." },
@@ -2138,6 +2090,12 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Pritisnite ~y~SPACE~w~ kad je oznaka u zelenom.", "Press ~y~SPACE~w~ when the marker is in the green.", "Nazhmite ~y~SPACE~w~, kogda metka v zelenom.", "Pulsa ~y~SPACE~w~ cuando la marca este en verde.", "Isaret yesildeyken ~y~SPACE~w~ basin." },
+    { "Sisajte: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d).", "Cut: ~y~SPACE~w~ when the marker is in the green (%d/%d).", "Strigite: ~y~SPACE~w~, kogda metka v zelenom (%d/%d).", "Corta: ~y~SPACE~w~ cuando la marca este en verde (%d/%d).", "Kesin: isaret yesildeyken ~y~SPACE~w~ (%d/%d)." },
+    { "~y~SPACE~w~ kad je oznaka u zelenom (%d/%d), svaki put brze. ~y~ENTER~w~ - odustani.", "~y~SPACE~w~ when the marker is in the green (%d/%d), faster each time. ~y~ENTER~w~ - give up.", "~y~SPACE~w~, kogda metka v zelenom (%d/%d), kazhdyy raz bystree. ~y~ENTER~w~ - otmena.", "~y~SPACE~w~ cuando la marca este en verde (%d/%d), cada vez mas rapido. ~y~ENTER~w~ - abandonar.", "Isaret yesildeyken ~y~SPACE~w~ (%d/%d), her seferinde daha hizli. ~y~ENTER~w~ - vazgec." },
+    { "Laboratorij - kokain", "Lab - cocaine", "Laboratoriya - kokain", "Laboratorio - cocaina", "Laboratuvar - kokain" },
+    { "Laboratorij - metamfetamin", "Lab - meth", "Laboratoriya - metamfetamin", "Laboratorio - metanfetamina", "Laboratuvar - meth" },
+    { "~y~W~w~ grijanje, ~y~S~w~ hladjenje, ~y~ENTER~w~ odustani. ~r~Crveno~w~ predugo = eksplozija!", "~y~W~w~ heat, ~y~S~w~ cool, ~y~ENTER~w~ give up. ~r~Red~w~ too long = explosion!", "~y~W~w~ nagrev, ~y~S~w~ okhlazhdenie, ~y~ENTER~w~ otmena. ~r~Krasnoe~w~ dolgo = vzryv!", "~y~W~w~ calentar, ~y~S~w~ enfriar, ~y~ENTER~w~ abandonar. ~r~Rojo~w~ demasiado = explosion!", "~y~W~w~ isit, ~y~S~w~ sogut, ~y~ENTER~w~ vazgec. ~r~Kirmizi~w~ cok uzun = patlama!" },
     { "Brod ne mozete napustiti na moru. Vratite ga u marinu.", "You can't leave the boat at sea. Bring it back to the marina.", "Нельзя покинуть лодку в море. Верните её в марину.", "No puedes dejar el barco en el mar. Devuelvelo al puerto deportivo.", "Tekneyi denizde birakamazsiniz. Marinaya geri getirin." },
     { "Otkupljivac trenutno nema novca. Pokusajte kasnije.", "The fish buyer has no money right now. Try later.", "У скупщика сейчас нет денег. Попробуйте позже.", "El comprador no tiene dinero ahora. Prueba mas tarde.", "Balik alicisinin su anda parasi yok. Daha sonra deneyin." },
     { "Smjena je zavrsena. Brod je vracen u marinu.", "Your shift is over. The boat was returned to the marina.", "Смена окончена. Лодка возвращена в марину.", "Tu turno ha terminado. El barco ha vuelto al puerto deportivo.", "Vardiyaniz bitti. Tekne marinaya geri gonderildi." },
@@ -2210,21 +2168,17 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~g~nosi se", "~g~delivering", "~g~dostavka", "~g~en entrega", "~g~teslimatta" },
     { "~w~Nema narudzbi.", "~w~No orders.", "~w~Net zakazov.", "~w~No hay pedidos.", "~w~Siparis yok." },
     { "~y~ALT~w~ - peci meso", "~y~ALT~w~ - cook", "~y~ALT~w~ - gotovit", "~y~ALT~w~ - cocinar", "~y~ALT~w~ - pisir" },
-    { "~y~ALT~w~ - slozi i zapakiraj", "~y~ALT~w~ - stack and bag", "~y~ALT~w~ - sobrat i upakovat", "~y~ALT~w~ - montar y empaquetar", "~y~ALT~w~ - hazirla ve paketle" },
     { "Izasli ste iz pizzerije i zavrsili smjenu.", "You left the pizzeria and ended your shift.", "Вы вышли из пиццерии и закончили смену.", "Has salido de la pizzeria y terminado el turno.", "Pizzacidan ciktiniz ve vardiyanizi bitirdiniz." },
     { "Predugo vam je trebalo. Narudzba se vraca na cekanje.", "You took too long. The order goes back to the queue.", "Вы слишком долго. Заказ возвращается в очередь.", "Has tardado demasiado. El pedido vuelve a la cola.", "Cok uzun surdu. Siparis siraya geri dondu." },
     { "Blagajnik vam je sam predao narudzbu. Dobar tek!", "The cashier handed you your order. Enjoy!", "Кассир сам выдал вам заказ. Приятного аппетита!", "El cajero te ha entregado el pedido. Buen provecho!", "Kasiyer siparisinizi kendisi verdi. Afiyet olsun!" },
     { "{8AB4F8}+ Nova pizzeria (ulaz na mojoj poziciji)", "{8AB4F8}+ New pizzeria (entrance at my position)", "{8AB4F8}+ Новая пиццерия (вход на моей позиции)", "{8AB4F8}+ Nueva pizzeria (entrada en mi posicion)", "{8AB4F8}+ Yeni pizzaci (giris konumumda)" },
     { "Postavi: %s (moja pozicija u interijeru)", "Set: %s (my position in the interior)", "Установить: %s (моя позиция в интерьере)", "Colocar: %s (mi posicion en el interior)", "Ayarla: %s (ic mekandaki konumum)" },
     { "+ Dodaj stol (moja pozicija) - %d/%d", "+ Add table (my position) - %d/%d", "+ Добавить стол (моя позиция) - %d/%d", "+ Anadir mesa (mi posicion) - %d/%d", "+ Masa ekle (konumum) - %d/%d" },
-    { "Obrisi sve stolove", "Delete all tables", "Удалить все столы", "Borrar todas las mesas", "Tum masalari sil" },
     { "Udji u interijer pizzerije", "Enter the pizzeria interior", "Войти в интерьер пиццерии", "Entrar en el interior de la pizzeria", "Pizzaci ic mekanina gir" },
     { "[%d] Pizzeria (%s) - obrisi", "[%d] Pizzeria (%s) - delete", "[%d] Пиццерия (%s) - удалить", "[%d] Pizzeria (%s) - borrar", "[%d] Pizzaci (%s) - sil" },
     { "Pizzeria je postavljena.", "Pizzeria placed.", "Пиццерия установлена.", "Pizzeria colocada.", "Pizzaci yerlestirildi." },
     { "Morate biti u interijeru pizzerije (/pizzaint).", "You must be inside a pizzeria interior (/pizzaint).", "Вы должны быть в интерьере пиццерии (/pizzaint).", "Debes estar en el interior de una pizzeria (/pizzaint).", "Bir pizzaci ic mekaninda olmalisiniz (/pizzaint)." },
     { "Tocka je postavljena za sve pizzerije.", "Point set for all pizzerias.", "Точка установлена для всех пиццерий.", "Punto colocado para todas las pizzerias.", "Nokta tum pizzacilar icin ayarlandi." },
-    { "Stol je dodan. Postavite se tocno na stolicu, licem prema stolu.", "Table added. Stand exactly on the chair, facing the table.", "Стол добавлен. Встаньте точно на стул, лицом к столу.", "Mesa anadida. Colocate justo en la silla, mirando a la mesa.", "Masa eklendi. Tam sandalyenin uzerinde, masaya donuk durun." },
-    { "Svi stolovi su obrisani.", "All tables deleted.", "Все столы удалены.", "Todas las mesas borradas.", "Tum masalar silindi." },
     { "Pizzeria je obrisana.", "Pizzeria deleted.", "Пиццерия удалена.", "Pizzeria borrada.", "Pizzaci silindi." },
     { "Morate biti u trgovini 24/7, frizerskom salonu ili pizzeriji.", "You must be in a 24/7 shop, a barber shop or a pizzeria.", "Вы должны быть в магазине 24/7, парикмахерской или пиццерии.", "Debes estar en una tienda 24/7, una peluqueria o una pizzeria.", "Bir 24/7 markette, berberde ya da pizzacida olmalisiniz." },
     { "Zelite li se zaposliti kao ribar?", "Do you want to work as a fisherman?", "Hotite rabotat rybakom?", "Quieres trabajar de pescador?", "Balikci olarak calismak ister misiniz?" },
@@ -2311,7 +2265,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "U laboratoriju treba biti barem %d l kemikalija.", "The lab needs at least %d l of chemicals.", "В лаборатории должно быть не менее %d л химикатов.", "El laboratorio necesita al menos %d l de quimicos.", "Laboratuvarda en az %d l kimyasal olmali." },
     { "Kvaliteta: %d%%~n~%d g metamfetamina je u skladistu laboratorija.", "Quality: %d%%~n~%d g of meth is in the lab storage.", "Kachestvo: %d%%~n~%d g metamfetamina na sklade laboratorii.", "Calidad: %d%%~n~%d g de metanfetamina estan en el almacen.", "Kalite: %d%%~n~%d g metamfetamin laboratuvar deposunda." },
     { "U laboratoriju treba biti barem %d g koka paste i %d l kemikalija.", "The lab needs at least %d g of coca paste and %d l of chemicals.", "В лаборатории должно быть не менее %d г коки и %d л химикатов.", "El laboratorio necesita al menos %d g de pasta de coca y %d l de quimicos.", "Laboratuvarda en az %d g koka macunu ve %d l kimyasal olmali." },
-    { "Pritisnite SPACE kad je oznaka u zelenom.~n~5 pokusaja, svaki je brzi.~n~ENTER - odustani.", "Press SPACE when the marker is in the green.~n~5 attempts, each one faster.~n~ENTER - give up.", "Nazhmite SPACE, kogda metka v zelenom.~n~5 popytok, kazhdaya bystree.~n~ENTER - otmena.", "Pulsa SPACE cuando la marca este en verde.~n~5 intentos, cada uno mas rapido.~n~ENTER - abandonar.", "Isaret yesildeyken SPACE'e basin.~n~5 deneme, her biri daha hizli.~n~ENTER - vazgec." },
     { "Pogodaka: %d/%d~n~%d g kokaina je u skladistu laboratorija.", "Hits: %d/%d~n~%d g of cocaine is in the lab storage.", "Popadaniy: %d/%d~n~%d g kokaina na sklade laboratorii.", "Aciertos: %d/%d~n~%d g de cocaina estan en el almacen.", "Isabet: %d/%d~n~%d g kokain laboratuvar deposunda." },
     { "Odustali ste. Sastojci su izgubljeni.", "You gave up. The ingredients are lost.", "Вы сдались. Ингредиенты потеряны.", "Has abandonado. Los ingredientes se han perdido.", "Vazgectiniz. Malzemeler kayboldu." },
     { "Ne nosite sanduk.", "You are not carrying a crate.", "Вы не несёте ящик.", "No llevas ninguna caja.", "Sandik tasimiyorsunuz." },
@@ -2448,16 +2401,12 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "~y~ALT~w~ - postavi eksploziv", "~y~ALT~w~ - plant explosive", "~y~ALT~w~ - zalozhit vzryvchatku", "~y~ALT~w~ - colocar explosivo", "~y~ALT~w~ - patlayici yerlestir" },
     { "~y~ALT~w~ - detoniraj", "~y~ALT~w~ - detonate", "~y~ALT~w~ - vzorvat", "~y~ALT~w~ - detonar", "~y~ALT~w~ - patlat" },
     { "~r~Udaljite se od eksploziva", "~r~Move away from the explosives", "~r~Otoydite ot vzryvchatki", "~r~Alejate de los explosivos", "~r~Patlayicilardan uzaklasin" },
-    { "~y~ALT~w~ - uzmi novac", "~y~ALT~w~ - take the money", "~y~ALT~w~ - vzyat dengi", "~y~ALT~w~ - coger el dinero", "~y~ALT~w~ - parayi al" },
-    { "Izgubili ste vrecu novca.", "You lost the money bag.", "Вы потеряли мешок с деньгами.", "Has perdido la bolsa de dinero.", "Para cantasini kaybettiniz." },
-    { "Pobjegli ste s plijenom: $%d.", "You escaped with the loot: $%d.", "Вы скрылись с добычей: $%d.", "Has escapado con el botin: $%d.", "Ganimetle kactiniz: $%d." },
     { "Morate biti u banci.", "You must be inside a bank.", "Вы должны быть в банке.", "Debes estar dentro de un banco.", "Bir bankanin icinde olmalisiniz." },
     { "Mjesto menadzera postavljeno.", "Manager position set.", "Место менеджера установлено.", "Posicion del gerente establecida.", "Mudur konumu ayarlandi." },
     { "Ispred vas nema objekta.", "There is no object in front of you.", "Перед вами нет объекта.", "No hay ningun objeto delante de ti.", "Onunuzde nesne yok." },
     { "Najprije postavite mjesto menadzera.", "Set the manager position first.", "Сначала установите место менеджера.", "Primero establece la posicion del gerente.", "Once mudur konumunu ayarlayin." },
     { "Vrata trezora: objekt %d. Menadzer ce stati na vase mjesto.", "Vault door: object %d. The manager will stand where you are.", "Дверь хранилища: объект %d. Менеджер встанет на ваше место.", "Puerta de la camara: objeto %d. El gerente se pondra donde estas.", "Kasa kapisi: nesne %d. Mudur sizin yerinizde duracak." },
     { "Dosegnut je maksimalan broj.", "The maximum number has been reached.", "Достигнуто максимальное количество.", "Se ha alcanzado el numero maximo.", "Azami sayiya ulasildi." },
-    { "Pretinac dodan: objekt %d (%d).", "Deposit box added: object %d (%d).", "Ячейка добавлена: объект %d (%d).", "Caja de seguridad anadida: objeto %d (%d).", "Kasa bolmesi eklendi: nesne %d (%d)." },
     { "Mjesto za eksploziv dodano (%d).", "Explosive spot added (%d).", "Место для взрывчатки добавлено (%d).", "Punto para explosivo anadido (%d).", "Patlayici noktasi eklendi (%d)." },
     { "Postavke pljacke su obrisane.", "Robbery setup deleted.", "Настройки ограбления удалены.", "Configuracion del robo eliminada.", "Soygun ayarlari silindi." },
     { "Podizna vrata trezora: objekt %d (%d).", "Vault lift door: object %d (%d).", "Подъёмная дверь хранилища: объект %d (%d).", "Puerta elevable de la camara: objeto %d (%d).", "Kasanin kalkan kapisi: nesne %d (%d)." },
@@ -2470,7 +2419,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Pljacka i cekanje u ovoj banci su resetirani.", "Robbery and cooldown reset in this bank.", "Ограбление и ожидание в этом банке сброшены.", "Robo y espera reiniciados en este banco.", "Bu bankada soygun ve bekleme suresi sifirlandi." },
     { "Menadzer upisuje sifru trezora...", "The manager is entering the vault code...", "Менеджер вводит код хранилища...", "El gerente esta introduciendo el codigo de la camara...", "Mudur kasa sifresini giriyor..." },
     { "Trezor je otvoren! Postavite eksploziv na oznacena mjesta.", "The vault is open! Plant explosives on the marked spots.", "Хранилище открыто! Заложите взрывчатку в отмеченных местах.", "La camara esta abierta! Coloca explosivos en los puntos marcados.", "Kasa acik! Isaretli noktalara patlayici yerlestirin." },
-    { "Pretinci su otvoreni! Pokupite novac.", "The deposit boxes are open! Grab the money.", "Ячейки открыты! Забирайте деньги.", "Las cajas de seguridad estan abiertas! Coged el dinero.", "Kasa bolmeleri acik! Paralari toplayin." },
     { "~y~ALT~w~ - kapija", "~y~ALT~w~ - gate", "~y~ALT~w~ - vorota", "~y~ALT~w~ - puerta", "~y~ALT~w~ - kapi" },
     { "Koristenje: /kapija [id organizacije] [1 klizi, 2 rampa, 3 rampa X, 4 okretna, 5 dize se, 6 klizi uzduz] [metara ili stupnjeva]", "Usage: /kapija [organisation id] [1 slide, 2 barrier, 3 barrier X, 4 swing, 5 lift, 6 slide lengthwise] [metres or degrees]", "Использование: /kapija [id организации] [1 откатные, 2 шлагбаум, 3 шлагбаум X, 4 распашные, 5 подъёмные, 6 откатные вдоль] [метры или градусы]", "Uso: /kapija [id de organizacion] [1 corredera, 2 barrera, 3 barrera X, 4 batiente, 5 elevable, 6 corredera a lo largo] [metros o grados]", "Kullanim: /kapija [orgut id] [1 surgulu, 2 bariyer, 3 bariyer X, 4 donen, 5 kalkan, 6 boyuna surgulu] [metre veya derece]" },
     { "Dosegnut je maksimalan broj kapija.", "The maximum number of gates has been reached.", "Достигнуто максимальное количество ворот.", "Se ha alcanzado el numero maximo de puertas.", "Azami kapi sayisina ulasildi." },
@@ -2582,7 +2530,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Naruci", "Order", "Заказать", "Pedir", "Siparis et" },
     { "Naruci robu", "Order stock", "Заказать товар", "Pedir mercancia", "Mal siparis et" },
     { "Naruci robu (zaliha %d/%d, $%d po komadu)", "Order stock (stock %d/%d, $%d each)", "Заказать товар (запас %d/%d, $%d за штуку)", "Pedir mercancia (stock %d/%d, $%d cada una)", "Mal siparis et (stok %d/%d, adet $%d)" },
-    { "Narucili ste %d komada za $%d.", "You ordered %d pieces for $%d.", "Вы заказали %d штук за $%d.", "Pediste %d piezas por $%d.", "%d adet $%d karsiliginda siparis ettiniz." },
     { "Netko vec radi na ovom standu.", "Someone is already working at this stand.", "На этом стенде уже кто-то работает.", "Alguien ya trabaja en este puesto.", "Bu stantta zaten biri calisiyor." },
     { "Otpusti radnika", "Fire the worker", "Уволить работника", "Despedir al empleado", "Calisani kov" },
     { "Otpusti radnika (ceka placu)", "Fire the worker (waiting for pay)", "Уволить работника (ждёт зарплату)", "Despedir al empleado (espera su paga)", "Calisani kov (maas bekliyor)" },
@@ -2629,7 +2576,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Ulaz u internet kafic je postavljen.", "The internet cafe entrance was placed.", "Вход в интернет-кафе установлен.", "Se coloco la entrada al cibercafe.", "Internet kafe girisi yerlestirildi." },
     { "Ulaz u internet kafic je obrisan.", "The internet cafe entrance was deleted.", "Вход в интернет-кафе удалён.", "Se borro la entrada al cibercafe.", "Internet kafe girisi silindi." },
     { "Kupac zeli: %s ($%d)", "Customer wants: %s ($%d)", "Покупатель хочет: %s ($%d)", "El cliente quiere: %s ($%d)", "Musteri istiyor: %s ($%d)" },
-    { "Pritisnite ~y~SPACE~w~ kad je traka zelena.", "Press ~y~SPACE~w~ when the bar is green.", "Нажмите ~y~SPACE~w~, когда полоса зелёная.", "Pulsa ~y~SPACE~w~ cuando la barra este verde.", "Cubuk yesilken ~y~SPACE~w~ basin." },
     { "Pritisnite redom:", "Press in order:", "Нажмите по порядку:", "Pulsa en orden:", "Sirayla basin:" },
     { "Kupac daje $%d. Upisite ostatak u chat.", "The customer gives $%d. Type the change in the chat.", "Покупатель даёт $%d. Введите сдачу в чат.", "El cliente da $%d. Escribe el cambio en el chat.", "Musteri $%d veriyor. Para ustunu sohbete yazin." },
     { "Kupac", "Customer", "Покупатель", "Cliente", "Musteri" },
@@ -2637,7 +2583,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Stand je trenutno zatvoren.", "The stand is closed right now.", "Стенд сейчас закрыт.", "El puesto esta cerrado ahora.", "Stant su an kapali." },
     { "Vec jedete.", "You are already eating.", "Вы уже едите.", "Ya estas comiendo.", "Zaten yemek yiyorsunuz." },
     { "Kupili ste %s za $%d.", "You bought %s for $%d.", "Вы купили %s за $%d.", "Compraste %s por $%d.", "%s urununu $%d karsiliginda aldiniz." },
-    { "Podigli ste $%d.", "You picked up $%d.", "Вы подобрали $%d.", "Recogiste $%d.", "$%d aldiniz." },
     { "Kupac je platio $%d i ostavio napojnicu od $%d.", "The customer paid $%d and left a $%d tip.", "Покупатель заплатил $%d и оставил $%d чаевых.", "El cliente pago $%d y dejo $%d de propina.", "Musteri $%d odedi ve $%d bahsis birakti." },
     { "U blizini nema nikoga kome treba pomoc.", "There is nobody nearby who needs help.", "Рядом нет никого, кому нужна помощь.", "No hay nadie cerca que necesite ayuda.", "Yakinda yardima ihtiyaci olan kimse yok." },
     { "* %s pruza prvu pomoc ranjenom prolazniku.", "* %s gives first aid to an injured passerby.", "* %s оказывает первую помощь раненому прохожему.", "* %s da primeros auxilios a un transeunte herido.", "* %s yarali bir yoldasa ilk yardim yapiyor." },
@@ -2669,7 +2614,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Fleeca banka", "Fleeca bank", "Банк Fleeca", "Banco Fleeca", "Fleeca bankasi" },
     { "Trgovina 24/7", "24/7 store", "Магазин 24/7", "Tienda 24/7", "24/7 market" },
     { "Frizerski salon", "Barber shop", "Парикмахерская", "Peluqueria", "Berber dukkani" },
-    { "Morate biti u trgovini 24/7 ili frizerskom salonu.", "You must be inside a 24/7 store or a barber shop.", "Вы должны быть в магазине 24/7 или в парикмахерской.", "Debes estar dentro de una tienda 24/7 o una peluqueria.", "Bir 24/7 marketin veya berber dukkaninin icinde olmalisiniz." },
     { "Kupiti ovu firmu (%s) za $%d?", "Buy this business (%s) for $%d?", "Купить этот бизнес (%s) за $%d?", "Comprar este negocio (%s) por $%d?", "Bu isletmeyi (%s) $%d karsiliginda satin al?" },
     { "Ova firma vec ima vlasnika.", "This business already has an owner.", "У этого бизнеса уже есть владелец.", "Este negocio ya tiene dueno.", "Bu isletmenin zaten bir sahibi var." },
     { "Dug za nabavu robe: $%d", "Debt for restocking: $%d", "Долг за закупку товара: $%d", "Deuda por reabastecimiento: $%d", "Stok borcu: $%d" },
@@ -2685,7 +2629,6 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Sisanje", "Haircut", "Стрижка", "Corte de pelo", "Sac kesimi" },
     { "Hvala, dovidenja!", "Thanks, goodbye!", "Спасибо, до свидания!", "Gracias, adios!", "Tesekkurler, gorusmek uzere!" },
     { "Izasli ste iz firme i prestali raditi.", "You left the business and stopped working.", "Вы вышли из заведения и прекратили работу.", "Saliste del negocio y dejaste de trabajar.", "Isletmeden ciktiniz ve calismayi biraktiniz." },
-    { "Sisajte: ~y~SPACE~w~ kad je traka zelena (%d/%d).", "Cut: ~y~SPACE~w~ when the bar is green (%d/%d).", "Стригите: ~y~SPACE~w~, когда полоса зелёная (%d/%d).", "Corta: ~y~SPACE~w~ cuando la barra este verde (%d/%d).", "Kesin: cubuk yesilken ~y~SPACE~w~ (%d/%d)." },
     { "Kombi s hranom", "Food truck", "Фургон с едой", "Camion de comida", "Yemek kamyonu" },
     { "Hamburger", "Hamburger", "Гамбургер", "Hamburguesa", "Hamburger" },
     { "Kupiti kombi s hranom za $%d?", "Buy the food truck for $%d?", "Купить фургон с едой за $%d?", "Comprar el camion de comida por $%d?", "Yemek kamyonunu $%d karsiliginda satin al?" },
@@ -2746,45 +2689,26 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Tekst reklame (najvise %d znakova, znak | za novi red). Traje %d dana:", "Ad text (max %d characters, | for a new line). Lasts %d days:", "Текст рекламы (не более %d символов, | для новой строки). Действует %d дней:", "Texto del anuncio (max %d caracteres, | para nueva linea). Dura %d dias:", "Reklam metni (en fazla %d karakter, yeni satir icin |). %d gun surer:" },
     { "[LS News] Nova vijest: %s", "[LS News] Breaking: %s", "[LS News] Новая статья: %s", "[LS News] Nueva noticia: %s", "[LS News] Yeni haber: %s" }
 };
-static gTekstHash[TEKST_HASH] = { -1, ... };
-
-static HashTeksta(const s[])
-{
-    new h = 5381;
-    for (new i = 0; s[i]; i++) h = h * 33 + s[i];
-    return h & (TEKST_HASH - 1);
-}
-
 TekstPokreni()
 {
     for (new id = 0; id < sizeof gTekst; id++)
-    {
-        new h = HashTeksta(gTekst[id][0]);
-        while (gTekstHash[h] != -1) h = (h + 1) & (TEKST_HASH - 1);
-        gTekstHash[h] = id;
-    }
+        for (new l = 1; l < BROJ_JEZIKA; l++)
+            if (gTekst[id][l][0]) Tekst_Dodaj(l, gTekst[id][0], gTekst[id][l]);
+    printf("[MRP] tekst: %d prijevoda (en).", Tekst_Broj(1));
 }
 
 T(playerid, const hr[])
 {
     new ret[TEKST_LEN];
-    strcat(ret, TJ(gJezik[playerid], hr));
+    if (gJezik[playerid] > 0 && gJezik[playerid] < BROJ_JEZIKA && hr[0] && Tekst_Prevedi(gJezik[playerid], hr, ret)) return ret;
+    strcat(ret, hr);
     return ret;
 }
 
 TJ(l, const hr[])
 {
     new ret[TEKST_LEN];
-    if (l > 0 && l < BROJ_JEZIKA && hr[0])
-    {
-        for (new h = HashTeksta(hr), id; (id = gTekstHash[h]) != -1; h = (h + 1) & (TEKST_HASH - 1))
-        {
-            if (strcmp(gTekst[id][0], hr)) continue;
-            if (gTekst[id][l][0]) strcat(ret, gTekst[id][l]);
-            else break;
-            return ret;
-        }
-    }
+    if (l > 0 && l < BROJ_JEZIKA && hr[0] && Tekst_Prevedi(l, hr, ret)) return ret;
     strcat(ret, hr);
     return ret;
 }

@@ -213,14 +213,7 @@ static PlayerText:MobitelKutija(playerid, Float:x, Float:y, Float:w, Float:h, bo
 
 static PlayerText:MobitelTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, Float:visina, TEXT_DRAW_ALIGN:poravnanje = TEXT_DRAW_ALIGN_LEFT)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, MOBITEL_X + x, MOBITEL_Y + y, tekst);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_2);
-    PlayerTextDrawLetterSize(playerid, td, sirina, visina);
-    PlayerTextDrawColour(playerid, td, boja);
-    PlayerTextDrawSetShadow(playerid, td, 0);
-    PlayerTextDrawAlignment(playerid, td, poravnanje);
-    gMobitelTd[playerid][gMobitelBroj[playerid]++] = td;
-    return td;
+    return gMobitelTd[playerid][gMobitelBroj[playerid]++] = TdTekst(playerid, MOBITEL_X + x, MOBITEL_Y + y, tekst, boja, sirina, visina, TEXT_DRAW_FONT_2, poravnanje);
 }
 
 static bool:MobitelUnosEkran(ekran)

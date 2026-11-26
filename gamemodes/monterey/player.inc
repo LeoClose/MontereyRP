@@ -82,6 +82,7 @@ public OnPlayerDisconnect(playerid, reason)
     SlucajDisconnect(playerid);
     gPrenosZamrz[playerid] = 0;
     if (IsPlayerNPC(playerid)) return 1;
+    BankaOnline(playerid, false);
     TaksiPlayerLeft(playerid);
     KurvaDisconnect(playerid);
     MaricaReset(playerid);

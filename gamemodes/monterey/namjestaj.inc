@@ -238,16 +238,10 @@ static NamjestajOtvori(playerid, s)
     gNamIdx[playerid] = 0;
     gNamKupac[s] = playerid;
     new Float:a = gNam[s][nmIa];
-    TogglePlayerControllable(playerid, false);
     SetPlayerCameraPos(playerid, gNam[s][nmIx] - NAMJESTAJ_KAMERA * floatsin(a, degrees), gNam[s][nmIy] + NAMJESTAJ_KAMERA * floatcos(a, degrees), gNam[s][nmIz] + 1.0);
     SetPlayerCameraLookAt(playerid, gNam[s][nmIx], gNam[s][nmIy], gNam[s][nmIz] - 0.5);
-    gNamTd[playerid][NMTD_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
-    gNamTd[playerid][NMTD_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
-    gNamTd[playerid][NMTD_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
-    gNamTd[playerid][NMTD_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
-    gNamTd[playerid][NMTD_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    KupovinaGumbi(playerid, gNamTd[playerid]);
     NamjestajPrikazi(playerid);
-    SelectTextDraw(playerid, 0xD4A017FF);
 }
 
 NamjestajZatvori(playerid)
@@ -257,12 +251,9 @@ NamjestajZatvori(playerid)
     new s = gNamU[playerid];
     if (s >= 0 && gNamKupac[s] == playerid) gNamKupac[s] = INVALID_PLAYER_ID;
     gNamU[playerid] = -1;
-    for (new i = 0; i < NAMJESTAJ_TD; i++) PlayerTextDrawDestroy(playerid, gNamTd[playerid][i]);
     if (gNamPregled[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gNamPregled[playerid]);
     gNamPregled[playerid] = INVALID_OBJECT_ID;
-    CancelSelectTextDraw(playerid);
-    TogglePlayerControllable(playerid, true);
-    SetCameraBehindPlayer(playerid);
+    KupovinaZatvori(playerid, gNamTd[playerid]);
 }
 
 static NamjestajBroj(playerid)

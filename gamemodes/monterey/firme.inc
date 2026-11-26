@@ -31,7 +31,7 @@ static const KEY:gStTipke[] = { KEY_YES, KEY_NO, KEY_WALK, KEY_SPRINT };
 static const gStTipkeIme[][] = { "Y", "N", "ALT", "SPACE" };
 static const gStNovcanice[] = { 5, 10, 20, 50, 100 };
 static gStIgra[MAX_PLAYERS], gStIgraIzvor[MAX_PLAYERS], gStIgraId[MAX_PLAYERS], gStIgraCijena[MAX_PLAYERS], gStIgraOdg[MAX_PLAYERS], gStIgraTipke[MAX_PLAYERS][4], gStIgraKorak[MAX_PLAYERS], gStIgraTimer[MAX_PLAYERS], gStIgraZelja[MAX_PLAYERS][32];
-static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:gStIgraZel[MAX_PLAYERS], PlayerText:gStIgraTd[MAX_PLAYERS][2];
+static Float:gStIgraTraka[MAX_PLAYERS], Float:gStIgraSmjer[MAX_PLAYERS], Float:gStIgraZel[MAX_PLAYERS];
 
 enum E_FIRMA { bool:fIma, fDb, fVlasnik, fVlasnikIme[MAX_PLAYER_NAME + 1], fKasa, fZaliha, fRadnik, fGost, fGostFaza, fGostOd, fSljedeci, fCijena, fRoba[32] }
 static gFirma[FIRMA_VRSTA][FIRMA_MAX][E_FIRMA];
@@ -431,17 +431,12 @@ FirmaDisconnect(playerid)
 
 static PosaoIgraPanel(playerid)
 {
-    new tekst[256], red[128];
-    format(tekst, sizeof tekst, T(playerid, "Kupac zeli: %s ($%d)"), T(playerid, gStIgraZelja[playerid]), gStIgraCijena[playerid]);
-    strcat(tekst, "~n~");
+    new naslov[96], tekst[192], red[128];
+    format(naslov, sizeof naslov, T(playerid, "Kupac zeli: %s ($%d)"), T(playerid, gStIgraZelja[playerid]), gStIgraCijena[playerid]);
     switch (gStIgra[playerid])
     {
-        case SI_TRAKA: strcat(tekst, T(playerid, "Pritisnite ~y~SPACE~w~ kad je traka zelena."));
-        case SI_SKARE:
-        {
-            format(red, sizeof red, T(playerid, "Sisajte: ~y~SPACE~w~ kad je traka zelena (%d/%d)."), gStIgraKorak[playerid] + 1, POSAO_SKARE_REZOVA);
-            strcat(tekst, red);
-        }
+        case SI_TRAKA: strcat(tekst, T(playerid, "Pritisnite ~y~SPACE~w~ kad je oznaka u zelenom."));
+        case SI_SKARE: format(tekst, sizeof tekst, T(playerid, "Sisajte: ~y~SPACE~w~ kad je oznaka u zelenom (%d/%d)."), gStIgraKorak[playerid] + 1, POSAO_SKARE_REZOVA);
         case SI_TIPKE:
         {
             strcat(tekst, T(playerid, "Pritisnite redom:"));
@@ -457,7 +452,14 @@ static PosaoIgraPanel(playerid)
             strcat(tekst, red);
         }
     }
-    IgraObavijestPanel(playerid, T(playerid, "Kupac"), POSAO_BOJA, tekst);
+    IgraPanel(playerid, naslov, 60.0, POSAO_BOJA);
+    if (gStIgra[playerid] != SI_TRAKA && gStIgra[playerid] != SI_SKARE)
+    {
+        IgraTekst(playerid, tekst);
+        return;
+    }
+    IgraTraka(playerid, gStIgraZel[playerid], gStIgraZel[playerid] + POSAO_TRAKA_ZELENO, 0x3A3A3AFF, 0x27AE60FF, 0x3A3A3AFF, tekst);
+    IgraOznakaPomakni(playerid, gStIgraTraka[playerid]);
 }
 
 PosaoIgraPocni(playerid, izvor, id, igra, const zelja[], cijena)
@@ -478,7 +480,6 @@ PosaoIgraPocni(playerid, izvor, id, igra, const zelja[], cijena)
             gStIgraTraka[playerid] = 0.0;
             gStIgraSmjer[playerid] = 3.5;
             gStIgraZel[playerid] = float(25 + random(55));
-            SnagaBarStvori(playerid, gStIgraTd[playerid][0], gStIgraTd[playerid][1]);
             gStIgraTimer[playerid] = SetTimerEx("PosaoTrakaKorak", POSAO_TRAKA_MS, true, "i", playerid);
         }
         case SI_TIPKE: for (new i = 0; i < 4; i++) gStIgraTipke[playerid][i] = random(sizeof gStTipke);
@@ -493,7 +494,7 @@ public PosaoTrakaKorak(playerid)
     if (gStIgra[playerid] != SI_TRAKA && gStIgra[playerid] != SI_SKARE) return;
     gStIgraTraka[playerid] += gStIgraSmjer[playerid];
     if (gStIgraTraka[playerid] >= 100.0 || gStIgraTraka[playerid] <= 0.0) gStIgraSmjer[playerid] = -gStIgraSmjer[playerid];
-    SnagaBarPostavi(playerid, gStIgraTd[playerid][1], gStIgraTraka[playerid], gStIgraZel[playerid], gStIgraZel[playerid] + POSAO_TRAKA_ZELENO);
+    IgraOznakaPomakni(playerid, gStIgraTraka[playerid]);
 }
 
 bool:PosaoIgraZa(playerid, izvor, id)
@@ -510,10 +511,8 @@ PosaoIgraKraj(playerid, bool:uspjeh)
     {
         if (gStIgraTimer[playerid]) KillTimer(gStIgraTimer[playerid]);
         gStIgraTimer[playerid] = 0;
-        PlayerTextDrawDestroy(playerid, gStIgraTd[playerid][0]);
-        PlayerTextDrawDestroy(playerid, gStIgraTd[playerid][1]);
     }
-    IgraObavijestUkloni(playerid);
+    IgraTdMakni(playerid);
     if (gStIgraIzvor[playerid] == IZVOR_STAND) StandIgraGotova(playerid, gStIgraId[playerid], uspjeh, gStIgraCijena[playerid]);
     else FirmaIgraGotova(playerid, gStIgraId[playerid], uspjeh, gStIgraCijena[playerid]);
 }

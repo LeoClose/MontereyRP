@@ -101,6 +101,8 @@ static BankaKamata(stednja)
 InitBanka()
 {
     assert(BankaDug(1000) == 1100 && BankaRata(1100) == 110 && BankaRata(1101) == 111 && BankaKamata(100) == 0 && BankaKamata(1000000) == BANKA_STEDNJA_MAX);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TEMP TABLE IF NOT EXISTS bank_online (account INTEGER PRIMARY KEY)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_online"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS banks (id INTEGER PRIMARY KEY AUTOINCREMENT, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, interior INTEGER NOT NULL, ix REAL NOT NULL, iy REAL NOT NULL, iz REAL NOT NULL, Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_guards (id INTEGER PRIMARY KEY AUTOINCREMENT, bank INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS bank_log (id INTEGER PRIMARY KEY AUTOINCREMENT, account INTEGER NOT NULL, amount INTEGER NOT NULL, kind TEXT NOT NULL, other INTEGER NOT NULL DEFAULT 0, created INTEGER NOT NULL)"));
@@ -1296,23 +1298,34 @@ static bool:BankaPosalji(playerid, racun, iznos)
     return true;
 }
 
+BankaOnline(playerid, bool:da)
+{
+    if (!gAccountId[playerid]) return;
+    if (da) DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO bank_online (account) VALUES (%d)", gAccountId[playerid]));
+    else DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM bank_online WHERE account = %d", gAccountId[playerid]));
+}
+
+static BankaIgracRacuna(racun)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gUlogiran[i] && gAccountId[i] == racun) return i;
+    return INVALID_PLAYER_ID;
+}
+
 BankaTick()
 {
     BankaPljackaTick();
     if (++gBankaSat < 60) return;
     gBankaSat = 0;
-    new sad = gettime();
-    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    static racuni[MAX_PLAYERS][7];
+    new sad = gettime(), n = 0;
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT b.account, b.balance, b.savings, b.loan, b.loan_rate, b.loan_due, b.savings_tick FROM bank_online o JOIN bank_accounts b ON b.account = o.account WHERE (b.savings > 0 AND %d - b.savings_tick >= %d) OR (b.loan > 0 AND b.loan_due <= %d) LIMIT %d", sad, BANKA_DAN, sad, MAX_PLAYERS);
+    for (new r = DB_GetRowCount(res); n < r; n++, DB_SelectNextRow(res)) for (new k = 0; k < 7; k++) racuni[n][k] = DB_GetFieldInt(res, k);
+    DB_FreeResultSet(res);
+    for (new r = 0; r < n; r++)
     {
-        if (!gUlogiran[i]) continue;
-        new DBResult:res = DB_ExecuteQuery(gDB, "SELECT balance, savings, loan, loan_rate, loan_due, savings_tick FROM bank_accounts WHERE account = %d", gAccountId[i]);
-        if (!DB_GetRowCount(res))
-        {
-            DB_FreeResultSet(res);
-            continue;
-        }
-        new stanje = DB_GetFieldInt(res, 0), stednja = DB_GetFieldInt(res, 1), kredit = DB_GetFieldInt(res, 2), rata = DB_GetFieldInt(res, 3), rok = DB_GetFieldInt(res, 4), tick = DB_GetFieldInt(res, 5), poruka[144];
-        DB_FreeResultSet(res);
+        new i = BankaIgracRacuna(racuni[r][0]);
+        if (i == INVALID_PLAYER_ID) continue;
+        new stanje = racuni[r][1], stednja = racuni[r][2], kredit = racuni[r][3], rata = racuni[r][4], rok = racuni[r][5], tick = racuni[r][6], poruka[144];
         if (stednja > 0 && sad - tick >= BANKA_DAN)
         {
             new kamata = BankaKamata(stednja);

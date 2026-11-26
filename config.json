@@ -103,7 +103,8 @@
     "password": "",
     "pawn": {
         "legacy_plugins": ["streamer",
-            "samp_bcrypt"],
+            "samp_bcrypt",
+            "tekst"],
         "main_scripts": [
             "monterey"
         ],

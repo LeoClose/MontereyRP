@@ -24,7 +24,7 @@ static gApTrgovina[MAX_PLAYERS], gTrgPoruka[MAX_PLAYERS];
 enum { TGTD_LIJEVO, TGTD_DESNO, TGTD_INFO, TGTD_KUPI, TGTD_IZADI, TGTD_BROJ }
 static PlayerText:gTrgTd[MAX_PLAYERS][TGTD_BROJ], gTrgU[MAX_PLAYERS] = { -1, ... }, gTrgIdx[MAX_PLAYERS], gTrgObjekt[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... };
 
-forward PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true);
+forward PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true, Float:slovo = 0.4, Float:visina = 1.6, Float:kutija = 16.0);
 static const Float:gTrgovinaUlaz[3] = { -25.884, -185.869, 1003.547 };
 static const gTrgovinaRoba[][3] = { { ITEM_CRIJEVO, 25, 1 }, { ITEM_KANISTER, 25, 1 }, { ITEM_MOBITEL, 300, 1 }, { ITEM_CIGARETE, 8, 20 }, { ITEM_SRECKA, 5, 1 } };
 static const gSreckaIznosi[] = { 5, 10, 25, 100, 1000 };
@@ -155,28 +155,19 @@ static TrgovinaOtvori(playerid, s)
     TrgovinaPult(s, x, y);
     gTrgU[playerid] = s;
     gTrgIdx[playerid] = 0;
-    TogglePlayerControllable(playerid, false);
     SetPlayerCameraPos(playerid, x + 1.1 * floatsin(-a, degrees), y + 1.1 * floatcos(-a, degrees), gTrg[s][tgAz] + 0.7);
     SetPlayerCameraLookAt(playerid, x, y, gTrg[s][tgAz] + 0.05);
-    gTrgTd[playerid][TGTD_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
-    gTrgTd[playerid][TGTD_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
-    gTrgTd[playerid][TGTD_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
-    gTrgTd[playerid][TGTD_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
-    gTrgTd[playerid][TGTD_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    KupovinaGumbi(playerid, gTrgTd[playerid]);
     TrgovinaPrikazi(playerid);
-    SelectTextDraw(playerid, 0xD4A017FF);
 }
 
 TrgovinaZatvori(playerid)
 {
     if (gTrgU[playerid] == -1) return;
     gTrgU[playerid] = -1;
-    for (new i = 0; i < TGTD_BROJ; i++) PlayerTextDrawDestroy(playerid, gTrgTd[playerid][i]);
     if (gTrgObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gTrgObjekt[playerid]);
     gTrgObjekt[playerid] = INVALID_OBJECT_ID;
-    CancelSelectTextDraw(playerid);
-    TogglePlayerControllable(playerid, true);
-    SetCameraBehindPlayer(playerid);
+    KupovinaZatvori(playerid, gTrgTd[playerid]);
 }
 
 TrgovinaKlik(playerid, PlayerText:td)

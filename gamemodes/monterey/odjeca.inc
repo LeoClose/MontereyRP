@@ -56,7 +56,6 @@ InitOdjeca()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS clothing_shops (id INTEGER PRIMARY KEY AUTOINCREMENT, type INTEGER NOT NULL DEFAULT 0, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL, \
         Aktor INTEGER NOT NULL DEFAULT 0, ax REAL NOT NULL DEFAULT 0, ay REAL NOT NULL DEFAULT 0, az REAL NOT NULL DEFAULT 0, aa REAL NOT NULL DEFAULT 0, \
         Kabina INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, ka REAL NOT NULL DEFAULT 0)"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS store_items (id INTEGER PRIMARY KEY AUTOINCREMENT, store_type INTEGER NOT NULL, store INTEGER NOT NULL, kind INTEGER NOT NULL DEFAULT 0, model INTEGER NOT NULL, amount INTEGER NOT NULL DEFAULT 1, price INTEGER NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS headwear_fit (account INTEGER NOT NULL, model INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, rx REAL NOT NULL, ry REAL NOT NULL, rz REAL NOT NULL, PRIMARY KEY (account, model))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_style (account INTEGER PRIMARY KEY, skin INTEGER NOT NULL DEFAULT -1, \
         kapa INTEGER NOT NULL DEFAULT 0, kx REAL NOT NULL DEFAULT 0, ky REAL NOT NULL DEFAULT 0, kz REAL NOT NULL DEFAULT 0, krx REAL NOT NULL DEFAULT 0, kry REAL NOT NULL DEFAULT 0, krz REAL NOT NULL DEFAULT 0, \
@@ -357,18 +356,7 @@ OdjecaPredmetNestao(playerid, item)
 
 static PlayerText:OdjecaGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true)
 {
-    new PlayerText:td = CreatePlayerTextDraw(playerid, x, y, tekst);
-    PlayerTextDrawAlignment(playerid, td, TEXT_DRAW_ALIGN_CENTER);
-    PlayerTextDrawFont(playerid, td, TEXT_DRAW_FONT_2);
-    PlayerTextDrawLetterSize(playerid, td, 0.28, 1.3);
-    PlayerTextDrawColour(playerid, td, 0xFFFFFFFF);
-    PlayerTextDrawSetOutline(playerid, td, 1);
-    PlayerTextDrawUseBox(playerid, td, true);
-    PlayerTextDrawBoxColour(playerid, td, boja);
-    PlayerTextDrawTextSize(playerid, td, 14.0, sirina);
-    PlayerTextDrawSetSelectable(playerid, td, gumb);
-    gOdjecaTd[playerid][gOdjecaBroj[playerid]++] = td;
-    return td;
+    return gOdjecaTd[playerid][gOdjecaBroj[playerid]++] = SalonGumb(playerid, x, y, tekst, boja, sirina, gumb, 0.28, 1.3, 14.0);
 }
 
 static OdjecaKamera(playerid)

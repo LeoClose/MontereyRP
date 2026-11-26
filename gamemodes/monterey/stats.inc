@@ -91,6 +91,7 @@ StatsLoad(playerid)
     gStatsPlaytime[playerid] = DB_GetFieldInt(res, 2);
     DB_FreeResultSet(res);
     PlacaUcitaj(playerid);
+    BankaOnline(playerid, true);
 
     if (gStatsLevel[playerid] < 1) gStatsLevel[playerid] = 1;
     if (gStatsRespekti[playerid] < 0) gStatsRespekti[playerid] = 0;

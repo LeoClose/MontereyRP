@@ -156,7 +156,6 @@ OruzarnicaUlaz(playerid)
     return 0;
 }
 
-forward PlayerText:SalonGumb(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina, bool:gumb = true);
 
 static OruzarnicaPrikazi(playerid)
 {
@@ -176,16 +175,10 @@ static OruzarnicaOtvori(playerid, s)
     gOruzarnicaIdx[playerid] = 0;
     gOruzKupac[s] = playerid;
     new Float:a = gOruz[s][orAa], Float:x = gOruz[s][orAx] + ORUZARNICA_PULT * floatsin(-a, degrees), Float:y = gOruz[s][orAy] + ORUZARNICA_PULT * floatcos(-a, degrees);
-    TogglePlayerControllable(playerid, false);
     SetPlayerCameraPos(playerid, x + 1.1 * floatsin(-a, degrees), y + 1.1 * floatcos(-a, degrees), gOruz[s][orAz] + 0.7);
     SetPlayerCameraLookAt(playerid, x, y, gOruz[s][orAz] + 0.05);
-    gOruzarnicaTd[playerid][ORTD_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
-    gOruzarnicaTd[playerid][ORTD_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
-    gOruzarnicaTd[playerid][ORTD_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
-    gOruzarnicaTd[playerid][ORTD_KUPI] = SalonGumb(playerid, 280.0, 412.0, T(playerid, "KUPI"), 0x2E7D32CC, 70.0);
-    gOruzarnicaTd[playerid][ORTD_IZADI] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZADI"), 0x1E5AA8CC, 70.0);
+    KupovinaGumbi(playerid, gOruzarnicaTd[playerid]);
     OruzarnicaPrikazi(playerid);
-    SelectTextDraw(playerid, 0xD4A017FF);
 }
 
 OruzarnicaZatvori(playerid)
@@ -195,12 +188,9 @@ OruzarnicaZatvori(playerid)
     new s = gOruzarnicaU[playerid];
     if (s >= 0 && gOruzKupac[s] == playerid) gOruzKupac[s] = INVALID_PLAYER_ID;
     gOruzarnicaU[playerid] = -1;
-    for (new i = 0; i < ORUZARNICA_TD; i++) PlayerTextDrawDestroy(playerid, gOruzarnicaTd[playerid][i]);
     if (gOruzarnicaObjekt[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gOruzarnicaObjekt[playerid]);
     gOruzarnicaObjekt[playerid] = INVALID_OBJECT_ID;
-    CancelSelectTextDraw(playerid);
-    TogglePlayerControllable(playerid, true);
-    SetCameraBehindPlayer(playerid);
+    KupovinaZatvori(playerid, gOruzarnicaTd[playerid]);
 }
 
 OruzarnicaKlik(playerid, PlayerText:td)

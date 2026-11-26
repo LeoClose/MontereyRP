@@ -287,6 +287,67 @@ PlayerText:TdTekst(playerid, Float:x, Float:y, const tekst[], boja, Float:sirina
     return td;
 }
 
+#define IGRA_TRAKA_X        210.0
+#define IGRA_TRAKA_W        220.0
+
+enum { IGTD_POZADINA, IGTD_NASLOV, IGTD_DIO1, IGTD_DIO2, IGTD_DIO3, IGTD_OZNAKA, IGTD_UPUTA, IGTD_SLOJEVI, IGTD_BROJ }
+new PlayerText:gIgraTd[MAX_PLAYERS][IGTD_BROJ], bool:gIgraTdIma[MAX_PLAYERS];
+
+IgraTdReset(playerid)
+{
+    gIgraTdIma[playerid] = false;
+}
+
+IgraTdMakni(playerid)
+{
+    if (!gIgraTdIma[playerid]) return;
+    gIgraTdIma[playerid] = false;
+    for (new k = 0; k < IGTD_BROJ; k++) if (gIgraTd[playerid][k] != PlayerText:INVALID_TEXT_DRAW) PlayerTextDrawDestroy(playerid, gIgraTd[playerid][k]), gIgraTd[playerid][k] = PlayerText:INVALID_TEXT_DRAW;
+}
+
+IgraPanel(playerid, const naslov[], Float:visina, boja = 0xE74C3CFF)
+{
+    IgraTdMakni(playerid);
+    for (new k = 0; k < IGTD_BROJ; k++) gIgraTd[playerid][k] = PlayerText:INVALID_TEXT_DRAW;
+    gIgraTdIma[playerid] = true;
+    new Float:y = 400.0 - visina;
+    gIgraTd[playerid][IGTD_POZADINA] = TdSlika(playerid, IGRA_TRAKA_X - 10.0, y, IGRA_TRAKA_W + 20.0, visina, 0x101010D0);
+    gIgraTd[playerid][IGTD_NASLOV] = TdTekst(playerid, IGRA_TRAKA_X, y + 4.0, naslov, boja, 0.24, 1.1, TEXT_DRAW_FONT_2);
+    PlayerTextDrawShow(playerid, gIgraTd[playerid][IGTD_POZADINA]);
+    PlayerTextDrawShow(playerid, gIgraTd[playerid][IGTD_NASLOV]);
+}
+
+IgraTraka(playerid, Float:od, Float:zelDo, boja1, boja2, boja3, const uputa[], Float:crvenoOd = 100.0, crvenaBoja = 0xC0392BFF)
+{
+    new Float:y = 372.0;
+    gIgraTd[playerid][IGTD_DIO1] = TdSlika(playerid, IGRA_TRAKA_X, y, IGRA_TRAKA_W * od / 100.0, 12.0, boja1);
+    gIgraTd[playerid][IGTD_DIO2] = TdSlika(playerid, IGRA_TRAKA_X + IGRA_TRAKA_W * od / 100.0, y, IGRA_TRAKA_W * (zelDo - od) / 100.0, 12.0, boja2);
+    gIgraTd[playerid][IGTD_DIO3] = TdSlika(playerid, IGRA_TRAKA_X + IGRA_TRAKA_W * zelDo / 100.0, y, IGRA_TRAKA_W * (crvenoOd - zelDo) / 100.0, 12.0, boja3);
+    if (crvenoOd < 100.0)
+    {
+        gIgraTd[playerid][IGTD_SLOJEVI] = TdSlika(playerid, IGRA_TRAKA_X + IGRA_TRAKA_W * crvenoOd / 100.0, y, IGRA_TRAKA_W * (100.0 - crvenoOd) / 100.0, 12.0, crvenaBoja);
+        PlayerTextDrawShow(playerid, gIgraTd[playerid][IGTD_SLOJEVI]);
+    }
+    gIgraTd[playerid][IGTD_OZNAKA] = TdSlika(playerid, IGRA_TRAKA_X, y - 3.0, 2.0, 18.0, 0xFFFFFFFF);
+    gIgraTd[playerid][IGTD_UPUTA] = TdTekst(playerid, IGRA_TRAKA_X, y + 16.0, uputa, 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1);
+    for (new k = IGTD_DIO1; k <= IGTD_UPUTA; k++) PlayerTextDrawShow(playerid, gIgraTd[playerid][k]);
+}
+
+IgraTekst(playerid, const tekst[])
+{
+    gIgraTd[playerid][IGTD_UPUTA] = TdTekst(playerid, IGRA_TRAKA_X, 364.0, tekst, 0xFFFFFFFF, 0.26, 1.2, TEXT_DRAW_FONT_1);
+    PlayerTextDrawShow(playerid, gIgraTd[playerid][IGTD_UPUTA]);
+}
+
+IgraOznakaPomakni(playerid, Float:poz)
+{
+    new PlayerText:td = gIgraTd[playerid][IGTD_OZNAKA];
+    if (!gIgraTdIma[playerid] || td == PlayerText:INVALID_TEXT_DRAW) return;
+    PlayerTextDrawHide(playerid, td);
+    PlayerTextDrawSetPos(playerid, td, IGRA_TRAKA_X + poz / 100.0 * IGRA_TRAKA_W - 1.0, 369.0);
+    PlayerTextDrawShow(playerid, td);
+}
+
 #define SNAGA_BAR_X         240.0
 #define SNAGA_BAR_Y         408.0
 #define SNAGA_BAR_W         160.0
