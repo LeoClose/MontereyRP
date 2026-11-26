@@ -107,6 +107,7 @@ IPacket:SYNC_VOZAC(playerid, BitStream:bs)
     new d[PR_InCarSync];
     BS_IgnoreBits(bs, 8);
     BS_ReadInCarSync(bs, d);
+    SkladisteSyncVilice(playerid, d[PR_vehicleId], _:d[PR_trainSpeed]);
     if (!SyncBrzinaOk(d[PR_velocity][0], d[PR_velocity][1], d[PR_velocity][2], SYNC_VOZILO_BRZINA))
     {
         OnCheatDetected(playerid, "", 0, AC_RVANKA);

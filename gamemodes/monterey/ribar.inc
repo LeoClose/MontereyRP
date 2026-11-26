@@ -249,7 +249,7 @@ public RibarVratiKraj(playerid, racun)
     if (b == -1) return 0;
     new bool:uBrodu = GetPlayerVehicleID(playerid) == gRibarBrod[b][rbVozilo];
     RibarBrodOslobodi(b);
-    if (uBrodu || !RibarUMarini(playerid, 3.0)) SetPlayerPos(playerid, gRibarMjesto[0], gRibarMjesto[1], gRibarMjesto[2]);
+    if (uBrodu) SetPlayerPos(playerid, gRibarMjesto[0], gRibarMjesto[1], gRibarMjesto[2]);
     if (!RibarUlov(playerid)) return ObavijestInfo(playerid, T(playerid, "Ribar"), T(playerid, "Vratili ste brod.")), 1;
     new najblizi = -1, Float:najblize = 1.0e9;
     for (new k = 0; k < RIBAR_OTKUPA; k++)
@@ -293,11 +293,10 @@ RibarUpit(playerid, opcija, bool:da)
 
 RibarPosao(playerid)
 {
+    if (RibarBrodIgraca(playerid) != -1) return RibarVrati(playerid);
     if (GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && RibarUMarini(playerid)) return RibarIzbornik(playerid), 1;
     if (PosaoIgraca(playerid) != POSAO_RIBAR) return 0;
-    if (RibarBrodIgraca(playerid) == -1) return ObavijestGreska(playerid, T(playerid, "Brod uzimate kod ribara u marini (oznaceno na karti).")), 1;
-    if (!RibarUMarini(playerid, RIBAR_MARINA_DOMET)) return ObavijestGreska(playerid, T(playerid, "Brod vratite u marinu.")), 1;
-    return RibarVrati(playerid);
+    return ObavijestGreska(playerid, T(playerid, "Brod uzimate kod ribara u marini (oznaceno na karti).")), 1;
 }
 
 RibarAlt(playerid)

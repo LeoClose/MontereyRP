@@ -298,6 +298,17 @@ RepoUpit(playerid, opcija, bool:da)
     return 1;
 }
 
+RepoPosao(playerid)
+{
+    if (gRepoFaza[playerid])
+    {
+        RepoKraj(playerid);
+        return ObavijestInfo(playerid, T(playerid, "Repo"), T(playerid, "Smjena je zavrsena.")), 1;
+    }
+    if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !RepoNaMjestu(playerid)) return 0;
+    return RepoIzbornik(playerid), 1;
+}
+
 RepoAlt(playerid)
 {
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;

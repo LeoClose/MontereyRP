@@ -1,7 +1,7 @@
 #define UPIT_DOMET          4.0
 #define UPIT_BOJA           0xF39C12FF
 
-enum { UPIT_NEMA, UPIT_DILER, UPIT_DOB, UPIT_PREPRODAVAC, UPIT_PIJACA, UPIT_TAKSI, UPIT_RANJEN, UPIT_RIBAR, UPIT_RESTORAN, UPIT_SKLADISTE, UPIT_PRAONICA, UPIT_REPO }
+enum { UPIT_NEMA, UPIT_DILER, UPIT_DOB, UPIT_PREPRODAVAC, UPIT_PIJACA, UPIT_TAKSI, UPIT_RANJEN, UPIT_RIBAR, UPIT_RESTORAN, UPIT_SKLADISTE, UPIT_REPO }
 
 static gUpit[MAX_PLAYERS], gUpitMeta[MAX_PLAYERS], gUpitOpcija[MAX_PLAYERS], Float:gUpitPos[MAX_PLAYERS][3];
 
@@ -61,7 +61,7 @@ UpitKey(playerid, KEY:newkeys, KEY:oldkeys)
     new tip = gUpit[playerid];
     if (tip == UPIT_NEMA) return 0;
     new bool:da = (newkeys & KEY_YES) && !(oldkeys & KEY_YES), bool:ne = (newkeys & KEY_NO) && !(oldkeys & KEY_NO);
-    if (!ne && !(da && (tip == UPIT_PIJACA || tip == UPIT_TAKSI || tip == UPIT_RANJEN || tip == UPIT_RIBAR || tip == UPIT_RESTORAN || tip == UPIT_SKLADISTE || tip == UPIT_PRAONICA || tip == UPIT_REPO))) return 0;
+    if (!ne && !(da && (tip == UPIT_PIJACA || tip == UPIT_TAKSI || tip == UPIT_RANJEN || tip == UPIT_RIBAR || tip == UPIT_RESTORAN || tip == UPIT_SKLADISTE || tip == UPIT_REPO))) return 0;
     new meta = gUpitMeta[playerid], opcija = gUpitOpcija[playerid];
     UpitPrekini(playerid);
     switch (tip)
@@ -72,7 +72,6 @@ UpitKey(playerid, KEY:newkeys, KEY:oldkeys)
         case UPIT_RIBAR: RibarUpit(playerid, opcija, da);
         case UPIT_RESTORAN: RestoranUpit(playerid, meta, opcija, da);
         case UPIT_SKLADISTE: SkladisteUpit(playerid, opcija, da);
-        case UPIT_PRAONICA: PraonicaUpit(playerid, opcija, da);
         case UPIT_REPO: RepoUpit(playerid, opcija, da);
         default: Govor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
     }
