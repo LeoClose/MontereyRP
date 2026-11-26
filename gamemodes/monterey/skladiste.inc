@@ -63,10 +63,12 @@
 #define SK_ZAOBIDJI         1.4
 #define SK_VILICE_NOSI      0.45
 #define SK_VILICE_DOLJE     0.08
-#define SK_BRZO             5.0
-#define SK_SPORO            1.3
+#define SK_BRZO             8.0
+#define SK_UNUTRA           4.0
+#define SK_SPORO            1.8
+#define SK_TOCNO_PUT        2.0
 
-enum { SKU_NEMA, SKU_DO_POLICE, SKU_ULAZ_POLICA, SKU_PODIZE, SKU_IZLAZ_POLICA, SKU_DO_KAMIONA, SKU_ULAZ_KAMION, SKU_SPUSTA, SKU_IZLAZ_KAMION, SKU_KUCI }
+enum { SKU_NEMA, SKU_DO_POLICE, SKU_ULAZ_POLICA, SKU_PODIZE, SKU_IZLAZ_POLICA, SKU_DO_KAMIONA, SKU_ULAZ_KAMION, SKU_SPUSTA, SKU_IZLAZ_KAMION, SKU_KUCI, SKU_DO_ULAZA, SKU_IZ_ZGRADE }
 
 enum { SKT_OBICNO, SKT_LOMLJIVO, SKT_TESKO, SKT_HITNO }
 enum { SKC_SLOT, SKC_PALETA, SKC_RAMPA }
@@ -1299,11 +1301,18 @@ static SkladisteDoPolice()
     SkladistePutPocni();
     SkladistePutIzlaz();
     SkladistePutDodaj(gSkladisteUtovarE[0], gSkladisteUtovarE[1]);
+    gSkladisteUtovarFaza = SKU_DO_ULAZA;
+    SkladisteVilice(SK_VILICE_DOLJE);
+    SkladistePutVozi(SK_BRZO, false, SK_TOCNO_PUT);
+}
+
+static SkladisteUZgradu()
+{
+    SkladistePutPocni();
     SkladistePutDodaj(gSkladisteUtovarC[0], gSkladisteUtovarC[1]);
     SkladistePutDodaj(gSkladisteUtovarA[0], gSkladisteUtovarA[1]);
     gSkladisteUtovarFaza = SKU_DO_POLICE;
-    SkladisteVilice(SK_VILICE_DOLJE);
-    SkladistePutVozi(SK_BRZO);
+    SkladistePutVozi(SK_UNUTRA);
 }
 
 static SkladisteDoKamiona(bool:izPolice)
@@ -1318,14 +1327,27 @@ static SkladisteDoKamiona(bool:izPolice)
     {
         SkladistePutDodaj(gSkladisteUtovarC[0], gSkladisteUtovarC[1]);
         SkladistePutDodaj(gSkladisteUtovarE[0], gSkladisteUtovarE[1]);
+        gSkladisteUtovarFaza = SKU_IZ_ZGRADE;
+        SkladistePutVozi(SK_UNUTRA);
+        return;
     }
-    else SkladistePutIzlaz();
+    SkladistePutIzlaz();
+    SkladisteDoKamionaVani();
+}
+
+static SkladisteDoKamionaVani()
+{
+    if (!SkladisteKamionTocke())
+    {
+        SkladisteUtovarStani();
+        return;
+    }
+    if (!gSkladisteUtovarBroj) SkladistePutPocni();
     new i = (gSkladisteUtovarBroj - 1) * 3;
     SkladisteZaobidji(gSkladisteUtovarPut[i], gSkladisteUtovarPut[i + 1], gSkladisteUtovarPq[0], gSkladisteUtovarPq[1]);
     SkladistePutDodaj(gSkladisteUtovarPq[0], gSkladisteUtovarPq[1]);
-    SkladistePutDodaj(gSkladisteUtovarPp[0], gSkladisteUtovarPp[1]);
     gSkladisteUtovarFaza = SKU_DO_KAMIONA;
-    SkladistePutVozi(SK_BRZO);
+    SkladistePutVozi(SK_BRZO, false, SK_TOCNO_PUT);
 }
 
 static SkladisteKuci()
@@ -1337,7 +1359,7 @@ static SkladisteKuci()
     SkladistePutDodaj(gSkladisteVilj[b][svX], gSkladisteVilj[b][svY]);
     gSkladisteUtovarFaza = SKU_KUCI;
     SkladisteVilice(SK_VILICE_DOLJE);
-    SkladistePutVozi(SK_BRZO);
+    SkladistePutVozi(SK_BRZO, false, SK_TOCNO_PUT);
 }
 
 forward SkladisteUtovarDalje(token);
@@ -1357,6 +1379,7 @@ public SkladisteUtovarDalje(token)
         {
             gSkladisteUtovarFaza = SKU_ULAZ_KAMION;
             SkladistePutPocni();
+            SkladistePutDodaj(gSkladisteUtovarPp[0], gSkladisteUtovarPp[1]);
             SkladistePutDodaj(gSkladisteUtovarPd[0], gSkladisteUtovarPd[1]);
             SkladistePutVozi(SK_SPORO, false, 0.5);
         }
@@ -1397,6 +1420,12 @@ static SkladisteUtovarStigao()
             SetTimerEx("SkladisteUtovarDalje", 1100, false, "i", token);
         }
         case SKU_IZLAZ_POLICA: SkladisteDoKamiona(true);
+        case SKU_DO_ULAZA: SkladisteUZgradu();
+        case SKU_IZ_ZGRADE:
+        {
+            SkladistePutPocni();
+            SkladisteDoKamionaVani();
+        }
         case SKU_DO_KAMIONA:
         {
             if (!SkladisteKamionTocke())
