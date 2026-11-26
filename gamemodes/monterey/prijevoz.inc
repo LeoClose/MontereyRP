@@ -49,7 +49,9 @@ static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
 static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 20.6719, 46.2314 }, { 2193.1111, -2268.1230, 12.53, 227.4294 }, { 2214.293, -2236.873, 13.2, 315.0 } };
 static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 12.30, 225.0 };
 static const Float:gPrijevozRezerva[4] = { 2223.130, -2228.035, 12.55, 315.0 };
-static const Float:gPrijevozKamera[6] = { 2195.570, -2249.260, 18.0, 2177.968, -2254.134, 15.5 };
+static const Float:gPrijevozKamera[6] = { 2195.575, -2249.255, 18.0, 2177.968, -2254.134, 15.5 };
+static const Float:gPrijevozKameraPut[2][3] = { { 2195.575, -2253.498, 17.0 }, { 2204.767, -2266.933, 16.0 } };
+static const Float:gPrijevozKameraKraj[3] = { 2193.111, -2268.123, 14.0 };
 static const Float:gPrijevozRuta[] = {
     2164.533, -2240.699, 12.300, 2169.191, -2245.357, 12.300, 2173.584, -2249.750, 13.035, 2177.968, -2254.134, 13.770,
     2180.796, -2256.963, 13.770, 2185.181, -2261.347, 13.145, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
@@ -298,7 +300,7 @@ public PrijevozScenaPocni(playerid, racun)
     Lik_UVozilo(lik, k, 0);
     SetPlayerCameraPos(playerid, gPrijevozKamera[0], gPrijevozKamera[1], gPrijevozKamera[2]);
     SetPlayerCameraLookAt(playerid, gPrijevozKamera[3], gPrijevozKamera[4], gPrijevozKamera[5], CAMERA_CUT);
-    Fade(playerid, FADE_SLOJEVA + 1);
+    SetTimerEx("PrijevozOtkrij", 350, false, "ii", playerid, racun);
     MapaKamionDepoVrata(true);
     SetTimerEx("PrijevozScenaKreni", 2600, false, "ii", playerid, racun);
 }
@@ -312,15 +314,18 @@ public PrijevozScenaKreni(playerid, racun)
         PrijevozScenaStigao();
         return;
     }
-    gPrijevozScenaTimer = SetTimerEx("PrijevozScenaKamera", 250, true, "i", playerid);
+    InterpolateCameraPos(playerid, gPrijevozKamera[0], gPrijevozKamera[1], gPrijevozKamera[2], gPrijevozKameraPut[0][0], gPrijevozKameraPut[0][1], gPrijevozKameraPut[0][2], 3600, CAMERA_MOVE);
+    InterpolateCameraLookAt(playerid, gPrijevozKamera[3], gPrijevozKamera[4], gPrijevozKamera[5], gPrijevozKamera[3], gPrijevozKamera[4], gPrijevozKamera[5], 3600, CAMERA_MOVE);
+    gPrijevozScenaTimer = SetTimerEx("PrijevozScenaKamera", 3600, false, "i", playerid);
 }
 
 forward PrijevozScenaKamera(playerid);
 public PrijevozScenaKamera(playerid)
 {
-    new Float:x, Float:y, Float:z;
-    if (gPrijevozScenaIgrac != playerid || gPrijevozScenaLik == INVALID_LIK || !Lik_Pozicija(gPrijevozScenaLik, x, y, z)) return;
-    SetPlayerCameraLookAt(playerid, x, y, z, CAMERA_MOVE);
+    gPrijevozScenaTimer = 0;
+    if (gPrijevozScenaIgrac != playerid) return;
+    InterpolateCameraPos(playerid, gPrijevozKameraPut[0][0], gPrijevozKameraPut[0][1], gPrijevozKameraPut[0][2], gPrijevozKameraPut[1][0], gPrijevozKameraPut[1][1], gPrijevozKameraPut[1][2], 3800, CAMERA_MOVE);
+    InterpolateCameraLookAt(playerid, gPrijevozKamera[3], gPrijevozKamera[4], gPrijevozKamera[5], gPrijevozKameraKraj[0], gPrijevozKameraKraj[1], gPrijevozKameraKraj[2], 3800, CAMERA_MOVE);
 }
 
 static PrijevozScenaStigao()
@@ -353,11 +358,33 @@ public PrijevozScenaPredaj(playerid, racun)
         SetVehicleZAngle(k, gPrijevozPoz[1][3]);
     }
     VoziloSet(k, VP_MOTOR, 1);
-    PutPlayerInVehicle(playerid, k, 0);
+    SetTimerEx("PrijevozScenaSjedni", 500, false, "iii", playerid, racun, 0);
+}
+
+forward PrijevozScenaSjedni(playerid, racun, pokusaj);
+public PrijevozScenaSjedni(playerid, racun, pokusaj)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPrijevozFaza[playerid] != PZF_SCENA) return;
+    new k = gPrijevozKamion[playerid];
+    if (GetPlayerVehicleID(playerid) != k || GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+    {
+        PutPlayerInVehicle(playerid, k, 0);
+        if (pokusaj < 4)
+        {
+            SetTimerEx("PrijevozScenaSjedni", 400, false, "iii", playerid, racun, pokusaj + 1);
+            return;
+        }
+    }
     TogglePlayerControllable(playerid, true);
     SetCameraBehindPlayer(playerid);
-    Fade(playerid, FADE_SLOJEVA + 1);
+    SetTimerEx("PrijevozOtkrij", 300, false, "ii", playerid, racun);
     PrijevozNakonKamiona(playerid);
+}
+
+forward PrijevozOtkrij(playerid, racun);
+public PrijevozOtkrij(playerid, racun)
+{
+    if (IsPlayerConnected(playerid) && gAccountId[playerid] == racun) Fade(playerid, FADE_SLOJEVA + 1);
 }
 
 static bool:PrijevozStoji(v)
