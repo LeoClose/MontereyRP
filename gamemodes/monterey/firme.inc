@@ -15,7 +15,7 @@
 #define FIRMA_SISANJE_RASPON    31
 #define POSAO_NAPOJNICA_POSTO   30
 #define POSAO_TRAKA_MS          40
-#define POSAO_TRAKA_ZELENO      18.0
+#define POSAO_TRAKA_ZELENO      12.0
 #define POSAO_SKARE_REZOVA      3
 #define POSAO_BOJA              0xE67E22FF
 

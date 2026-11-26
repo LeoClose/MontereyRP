@@ -7,7 +7,7 @@
 #define RIBAR_CILJ_DOMET    15.0
 #define RIBAR_RUNDI         3
 #define RIBAR_TRAKA_MS      40
-#define RIBAR_TRAKA_ZELENO  24.0
+#define RIBAR_TRAKA_ZELENO  16.0
 #define RIBAR_SKIN          34
 #define RIBAR_BOJA          0x2980B9FF
 #define RIBAR_SKIN_RADNI    35

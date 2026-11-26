@@ -738,13 +738,13 @@ static RestoranPeci(playerid, igra, s, n)
 {
     new uputa[128], Float:od = float(30 + random(45));
     RestoranPecenjeUputa(playerid, s, n, uputa);
-    RestoranTrakaPocni(playerid, igra, igra == PI_PEC ? ("Pec za pizzu") : ("Rostilj"), s, n, od, od + 18.0, 0xC0392BFF, 0x2C2C2CFF, uputa, 1.3 + float(random(5)) * 0.1 + float(gRsStrana[playerid]) * 0.3);
+    RestoranTrakaPocni(playerid, igra, igra == PI_PEC ? ("Pec za pizzu") : ("Rostilj"), s, n, od, od + 12.0, 0xC0392BFF, 0x2C2C2CFF, uputa, 1.3 + float(random(5)) * 0.1 + float(gRsStrana[playerid]) * 0.3);
 }
 
 static RestoranPrzi(playerid, s, n)
 {
     new Float:od = float(30 + random(45)), bool:piletina = gRsStavkaVrsta[gRsNar[s][n][pnStavka]] == PV_PILETINA;
-    RestoranTrakaPocni(playerid, PI_POMFRIT, "Friteza", s, n, od, od + 18.0, 0xF4D03FFF, 0x6E2C00FF, piletina ? T(playerid, "Izvadite piletinu: ~y~SPACE~w~ kad je zlatna (zeleno).") : T(playerid, "Izvadite pomfrit: ~y~SPACE~w~ kad je zlatan (zeleno)."), 1.4 + float(random(5)) * 0.1 + float(gRsStrana[playerid]) * 0.3);
+    RestoranTrakaPocni(playerid, PI_POMFRIT, "Friteza", s, n, od, od + 12.0, 0xF4D03FFF, 0x6E2C00FF, piletina ? T(playerid, "Izvadite piletinu: ~y~SPACE~w~ kad je zlatna (zeleno).") : T(playerid, "Izvadite pomfrit: ~y~SPACE~w~ kad je zlatan (zeleno)."), 1.4 + float(random(5)) * 0.1 + float(gRsStrana[playerid]) * 0.3);
 }
 
 static RestoranRostiljPocni(playerid, s)
@@ -796,7 +796,7 @@ static RestoranSlojevi(playerid, s, n)
 static RestoranPakiranjePocni(playerid, s, n)
 {
     new Float:od = float(15 + random(60));
-    RestoranTrakaPocni(playerid, PI_PAKIRANJE, "Pakiranje", s, n, od, od + 16.0, 0x3A3A3AFF, 0x3A3A3AFF, T(playerid, "Zatvorite vrecicu: ~y~SPACE~w~ kad je oznaka u zelenom."), 2.6);
+    RestoranTrakaPocni(playerid, PI_PAKIRANJE, "Pakiranje", s, n, od, od + 11.0, 0x3A3A3AFF, 0x3A3A3AFF, T(playerid, "Zatvorite vrecicu: ~y~SPACE~w~ kad je oznaka u zelenom."), 2.6);
 }
 
 forward RestoranTrakaKorak(playerid);

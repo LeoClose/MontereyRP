@@ -5,18 +5,26 @@
 #define SK_DOMET            2.5
 #define SK_POVRAT_DOMET     20.0
 #define SK_MIRUJE_S         900
-#define SK_TRAKA_MS         40
-#define SK_ZELENO           18.0
-#define SK_ZELENO_TESKO     12.0
 #define SK_CILJ_DOMET       4.0
 #define SK_PRILAZ           2.6
 #define SK_PRIJENOS         80
 #define SK_RAMPA_BONUS      25
 #define SK_ROK              200
-#define SK_ROK_HITNO        100
+#define SK_ROK_HITNO        180
 #define SK_ROK_PRIJENOS     120
 #define SK_NIZ_MAX          5
+#define SK_STETA            80.0
 #define SK_LOMLJIVO_STETA   25.0
+#define SK_TERET_MODEL      2912
+#define SK_STRELICA_MODEL   1318
+#define SK_ZALIHA_POSTO     55
+#define SK_VILJ_TIK_MS      100
+#define SK_VILJ_BRZINA      0.5
+#define SK_VILJ_TESKO       0.6
+#define SK_VILJ_MIN         0.08
+#define SK_VILJ_MAX         1.6
+#define SK_VILJ_NAPRIJED    1.55
+#define SK_VILJ_TERET_Z     -0.56
 #define SK_BOJA             0xE67E22FF
 #define SK_POLICA_MODEL     3761
 #define SK_POLICA_A         15
@@ -35,9 +43,7 @@ static const Float:gSkladistePolicaA[SK_POLICA_A][3] = {
     { 2797.52, -2448.34, 14.63 }, { 2791.95, -2448.48, 14.63 }, { 2791.95, -2425.35, 14.67 }, { 2791.95, -2410.21, 14.66 }, { 2797.52, -2410.08, 14.63 }
 };
 static const gSkladisteKopija[SK_POLICA_B] = { 2, 3, 9, 10, 11 };
-static const Float:gSkladisteMjesto[][2] = { { -2.3, -1.92 }, { -0.9, -1.92 }, { 0.6, -1.92 }, { -0.9, -1.16 }, { 2.2, -1.16 }, { -2.3, 0.42 }, { 0.6, 0.42 } };
-static const gSkladisteTipModel[] = { 2912, 1220, 1271, 2912 };
-static const Float:gSkladisteTipZ[] = { 0.0, 0.35, 0.35, 0.0 };
+static const Float:gSkladisteMjesto[][2] = { { -2.3, -1.92 }, { -0.9, -1.92 }, { 0.6, -1.92 }, { -0.9, -1.16 }, { 2.2, -1.16 } };
 static const gSkladisteTipCijena[] = { 40, 60, 55, 70 };
 static const gSkladisteTipSansa[] = { 50, 20, 15, 15 };
 static const gSkladisteTipIme[][] = { "Obicno", "Lomljivo", "Tesko", "Hitno" };
@@ -47,12 +53,12 @@ static gSkladisteVilj[SK_VILJUSKARA][E_SK_VILJ];
 enum E_SK_RAMPA { bool:srIma, srDb, Float:srX, Float:srY, Float:srZ, Float:srA, STREAMER_TAG_3D_TEXT_LABEL:srTekst }
 static gSkladisteRampa[SK_RAMPI][E_SK_RAMPA];
 static Float:gSkladistePolica[SK_POLICA][4];
+static STREAMER_TAG_OBJECT:gSkladisteZaliha[SK_SLOTOVA], gSkladisteRezerva[SK_SLOTOVA];
 static Float:gSkladisteMjestoPosla[3], gSkladisteIkona, STREAMER_TAG_3D_TEXT_LABEL:gSkladisteTekst, bool:gSkladisteImaMjesto;
-static gSkladisteFaza[MAX_PLAYERS], gSkladisteOd[MAX_PLAYERS], gSkladisteDo[MAX_PLAYERS], gSkladisteTip[MAX_PLAYERS], gSkladisteRok[MAX_PLAYERS], gSkladisteNiz[MAX_PLAYERS], gSkladistePromasaj[MAX_PLAYERS];
-static Float:gSkladisteCilj[MAX_PLAYERS][3], Float:gSkladisteZdravlje[MAX_PLAYERS];
-static STREAMER_TAG_OBJECT:gSkladisteTeret[MAX_PLAYERS], STREAMER_TAG_OBJECT:gSkladisteOstavljen[MAX_PLAYERS];
-static PlayerText:gSkladisteHud[MAX_PLAYERS], bool:gSkladisteHudIma[MAX_PLAYERS];
-static bool:gSkladisteIgra[MAX_PLAYERS], gSkladisteTimer[MAX_PLAYERS], Float:gSkladisteTraka[MAX_PLAYERS], Float:gSkladisteSmjer[MAX_PLAYERS], Float:gSkladisteZel[MAX_PLAYERS];
+static gSkladisteFaza[MAX_PLAYERS], gSkladisteOd[MAX_PLAYERS], gSkladisteDo[MAX_PLAYERS], gSkladisteTip[MAX_PLAYERS], gSkladisteRok[MAX_PLAYERS], gSkladisteNiz[MAX_PLAYERS];
+static Float:gSkladisteCilj[MAX_PLAYERS][3], Float:gSkladisteZdravlje[MAX_PLAYERS], Float:gSkladisteVisina[MAX_PLAYERS];
+static STREAMER_TAG_OBJECT:gSkladisteTeret[MAX_PLAYERS], STREAMER_TAG_OBJECT:gSkladisteStrelica[MAX_PLAYERS];
+static PlayerText:gSkladisteHud[MAX_PLAYERS], bool:gSkladisteHudIma[MAX_PLAYERS], gSkladisteKontrola[MAX_PLAYERS], gSkladisteKorak[MAX_PLAYERS];
 static gSkladisteApPopis[MAX_PLAYERS][SK_VILJUSKARA + SK_RAMPI];
 
 InitSkladiste()
@@ -94,6 +100,7 @@ InitSkladiste()
         format(oznaka, sizeof oznaka, "%c%d", p < SK_POLICA_A ? 'A' : 'B', SkladisteBroj(p));
         CreateDynamic3DTextLabel(oznaka, SK_BOJA, gSkladistePolica[p][0], gSkladistePolica[p][1], gSkladistePolica[p][2] + 2.4, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     }
+    for (new k = 0; k < SK_SLOTOVA; k++) if (random(100) < SK_ZALIHA_POSTO) SkladisteZalihaStvori(k);
 }
 
 static SkladisteBroj(p)
@@ -154,9 +161,20 @@ static bool:SkladisteKodPosla(playerid, Float:r = SK_DOMET)
     return !GetPlayerInterior(playerid) && !GetPlayerVirtualWorld(playerid) && IsPlayerInRangeOfPoint(playerid, r, gSkladisteMjestoPosla[0], gSkladisteMjestoPosla[1], gSkladisteMjestoPosla[2]);
 }
 
+static bool:SkladisteVozi(playerid)
+{
+    new b = SkladisteViljIgraca(playerid);
+    return b != -1 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(playerid) == gSkladisteVilj[b][svVozilo];
+}
+
 static SkladisteHangarBlizu(Float:x, Float:y)
 {
     return VectorSize(x - gSkladisteHangar[0][0], y - gSkladisteHangar[0][1], 0.0) <= VectorSize(x - gSkladisteHangar[1][0], y - gSkladisteHangar[1][1], 0.0) ? 0 : 1;
+}
+
+static SkladisteHangarSlota(k)
+{
+    return k / sizeof gSkladisteMjesto < SK_POLICA_A ? 0 : 1;
 }
 
 static SkladisteLokalno(p, Float:lx, Float:ly, &Float:x, &Float:y)
@@ -176,22 +194,33 @@ static bool:SkladisteCiljPostoji(cilj)
     return !SkladisteJeRampa(cilj) || gSkladisteRampa[cilj - SK_SLOTOVA][srIma];
 }
 
-static Float:SkladisteRazinaZ(cilj)
+static Float:SkladistePolozaj(cilj)
 {
-    return SkladisteJeRampa(cilj) ? -2.0 : gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1];
+    return SkladisteJeRampa(cilj) ? 0.0 : gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1] + 2.0;
 }
 
-static STREAMER_TAG_OBJECT:SkladisteTeretStvori(playerid, cilj)
+static SkladisteTeretPoz(cilj, &Float:x, &Float:y, &Float:z, &Float:a)
 {
-    new t = gSkladisteTip[playerid], Float:x, Float:y;
     if (SkladisteJeRampa(cilj))
     {
         new r = cilj - SK_SLOTOVA;
-        return CreateDynamicObject(gSkladisteTipModel[t], gSkladisteRampa[r][srX], gSkladisteRampa[r][srY], gSkladisteRampa[r][srZ] - 0.95 + gSkladisteTipZ[t], 0.0, 0.0, gSkladisteRampa[r][srA], 0, 0);
+        x = gSkladisteRampa[r][srX];
+        y = gSkladisteRampa[r][srY];
+        z = gSkladisteRampa[r][srZ] - 0.95;
+        a = gSkladisteRampa[r][srA];
+        return;
     }
     new p = cilj / sizeof gSkladisteMjesto, m = cilj % sizeof gSkladisteMjesto;
     SkladisteLokalno(p, 0.0, gSkladisteMjesto[m][0], x, y);
-    return CreateDynamicObject(gSkladisteTipModel[t], x, y, gSkladistePolica[p][2] + gSkladisteMjesto[m][1] + gSkladisteTipZ[t], 0.0, 0.0, gSkladistePolica[p][3], 0, 0);
+    z = gSkladistePolica[p][2] + gSkladisteMjesto[m][1];
+    a = gSkladistePolica[p][3];
+}
+
+static STREAMER_TAG_OBJECT:SkladisteTeretStvori(cilj)
+{
+    new Float:x, Float:y, Float:z, Float:a;
+    SkladisteTeretPoz(cilj, x, y, z, a);
+    return CreateDynamicObject(SK_TERET_MODEL, x, y, z, 0.0, 0.0, a, 0, 0);
 }
 
 static SkladisteObjektMakni(&STREAMER_TAG_OBJECT:o)
@@ -200,43 +229,88 @@ static SkladisteObjektMakni(&STREAMER_TAG_OBJECT:o)
     o = STREAMER_TAG_OBJECT:0;
 }
 
+static SkladisteZalihaStvori(k)
+{
+    if (!_:gSkladisteZaliha[k]) gSkladisteZaliha[k] = SkladisteTeretStvori(k);
+}
+
+static SkladisteUzmiPuno(h)
+{
+    new popis[SK_SLOTOVA], n = 0;
+    for (new k = 0; k < SK_SLOTOVA; k++) if (_:gSkladisteZaliha[k] && !gSkladisteRezerva[k] && SkladisteHangarSlota(k) == h) popis[n++] = k;
+    if (n) return popis[random(n)];
+    for (new k = 0; k < SK_SLOTOVA; k++) if (!_:gSkladisteZaliha[k] && !gSkladisteRezerva[k] && SkladisteHangarSlota(k) == h) popis[n++] = k;
+    if (!n) return -1;
+    new k = popis[random(n)];
+    SkladisteZalihaStvori(k);
+    return k;
+}
+
+static SkladisteUzmiPrazno(h, od)
+{
+    new popis[SK_SLOTOVA], n = 0, p = SkladisteJeRampa(od) ? -1 : od / sizeof gSkladisteMjesto;
+    for (new k = 0; k < SK_SLOTOVA; k++) if (!_:gSkladisteZaliha[k] && !gSkladisteRezerva[k] && SkladisteHangarSlota(k) == h && k / sizeof gSkladisteMjesto != p) popis[n++] = k;
+    if (n) return popis[random(n)];
+    for (new k = 0; k < SK_SLOTOVA; k++) if (_:gSkladisteZaliha[k] && !gSkladisteRezerva[k] && SkladisteHangarSlota(k) == h && k / sizeof gSkladisteMjesto != p) popis[n++] = k;
+    if (!n) return -1;
+    new k = popis[random(n)];
+    SkladisteObjektMakni(gSkladisteZaliha[k]);
+    return k;
+}
+
+static SkladisteRampaZa(h)
+{
+    new popis[SK_RAMPI], n = 0;
+    for (new r = 0; r < SK_RAMPI; r++) if (gSkladisteRampa[r][srIma] && SkladisteHangarBlizu(gSkladisteRampa[r][srX], gSkladisteRampa[r][srY]) == h) popis[n++] = r;
+    if (!n) for (new r = 0; r < SK_RAMPI; r++) if (gSkladisteRampa[r][srIma]) popis[n++] = r;
+    return n ? SK_SLOTOVA + popis[random(n)] : -1;
+}
+
+static SkladisteRezerviraj(cilj, vrijednost)
+{
+    if (cilj >= 0 && !SkladisteJeRampa(cilj)) gSkladisteRezerva[cilj] = vrijednost;
+}
+
 static SkladisteCiljPostavi(playerid, cilj)
 {
+    new Float:x, Float:y, Float:z, Float:a;
+    SkladisteTeretPoz(cilj, x, y, z, a);
+    SkladisteObjektMakni(gSkladisteStrelica[playerid]);
+    gSkladisteStrelica[playerid] = CreateDynamicObject(SK_STRELICA_MODEL, x, y, z + 1.4, 0.0, 0.0, 0.0, 0, 0, playerid);
     if (SkladisteJeRampa(cilj))
     {
-        new r = cilj - SK_SLOTOVA;
-        gSkladisteCilj[playerid][0] = gSkladisteRampa[r][srX];
-        gSkladisteCilj[playerid][1] = gSkladisteRampa[r][srY];
-        gSkladisteCilj[playerid][2] = gSkladisteRampa[r][srZ] - 0.95;
+        gSkladisteCilj[playerid][0] = x;
+        gSkladisteCilj[playerid][1] = y;
+        gSkladisteCilj[playerid][2] = z;
     }
     else
     {
-        new p = cilj / sizeof gSkladisteMjesto, m = cilj % sizeof gSkladisteMjesto;
-        SkladisteLokalno(p, random(2) ? SK_PRILAZ : -SK_PRILAZ, gSkladisteMjesto[m][0], gSkladisteCilj[playerid][0], gSkladisteCilj[playerid][1]);
+        new p = cilj / sizeof gSkladisteMjesto;
+        SkladisteLokalno(p, random(2) ? SK_PRILAZ : -SK_PRILAZ, gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][0], gSkladisteCilj[playerid][0], gSkladisteCilj[playerid][1]);
         gSkladisteCilj[playerid][2] = gSkladistePolica[p][2] - 1.9;
     }
-    SetPlayerCheckpoint(playerid, gSkladisteCilj[playerid][0], gSkladisteCilj[playerid][1], gSkladisteCilj[playerid][2], 2.0);
+    SetPlayerCheckpoint(playerid, gSkladisteCilj[playerid][0], gSkladisteCilj[playerid][1], gSkladisteCilj[playerid][2], 1.2);
 }
 
 static SkladisteOznaka(cilj, oznaka[], len = sizeof oznaka)
 {
     if (SkladisteJeRampa(cilj)) return format(oznaka, len, "R%d", cilj - SK_SLOTOVA + 1);
-    new p = cilj / sizeof gSkladisteMjesto, Float:z = gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1];
-    return format(oznaka, len, "%c%d (%d)", p < SK_POLICA_A ? 'A' : 'B', SkladisteBroj(p), z < -1.5 ? 1 : z < 0.0 ? 2 : 3);
+    new p = cilj / sizeof gSkladisteMjesto;
+    return format(oznaka, len, "%c%d (%d)", p < SK_POLICA_A ? 'A' : 'B', SkladisteBroj(p), gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1] < -1.5 ? 1 : 2);
 }
 
 static SkladisteOpis(playerid, bool:preuzmi, cilj, poruka[], len = sizeof poruka)
 {
     if (SkladisteJeRampa(cilj)) return format(poruka, len, preuzmi ? T(playerid, "Preuzmite teret: utovarna rampa %d.") : T(playerid, "Odvezite teret: utovarna rampa %d."), cilj - SK_SLOTOVA + 1);
-    new p = cilj / sizeof gSkladisteMjesto, Float:z = gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1];
-    return format(poruka, len, preuzmi ? T(playerid, "Preuzmite teret: skladiste %c, polica %d, razina %d.") : T(playerid, "Odvezite teret: skladiste %c, polica %d, razina %d."), p < SK_POLICA_A ? 'A' : 'B', SkladisteBroj(p), z < -1.5 ? 1 : z < 0.0 ? 2 : 3);
+    new p = cilj / sizeof gSkladisteMjesto;
+    return format(poruka, len, preuzmi ? T(playerid, "Preuzmite teret: skladiste %c, polica %d, razina %d.") : T(playerid, "Odvezite teret: skladiste %c, polica %d, razina %d."), p < SK_POLICA_A ? 'A' : 'B', SkladisteBroj(p), gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][1] < -1.5 ? 1 : 2);
 }
 
 static SkladisteHudOsvjezi(playerid)
 {
-    new tekst[160], oznaka[16], ostalo = max(0, gSkladisteRok[playerid] - gettime());
-    SkladisteOznaka(gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid], oznaka);
-    format(tekst, sizeof tekst, T(playerid, "~y~Skladiste~n~~w~Teret: %s~n~Cilj: %s~n~Rok: %s%d:%02d~n~~w~Niz: x%d"), T(playerid, gSkladisteTipIme[gSkladisteTip[playerid]]), oznaka, ostalo ? ("") : ("~r~"), ostalo / 60, ostalo % 60, gSkladisteNiz[playerid]);
+    new tekst[192], oznaka[16], ostalo = max(0, gSkladisteRok[playerid] - gettime()), cilj = gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid];
+    SkladisteOznaka(cilj, oznaka);
+    format(tekst, sizeof tekst, T(playerid, "~y~Skladiste~n~~w~Teret: %s~n~Cilj: %s~n~Viljuske: %.1f / %.1f m~n~Rok: %s%d:%02d~n~~w~Niz: x%d"), T(playerid, gSkladisteTipIme[gSkladisteTip[playerid]]), oznaka, gSkladisteVisina[playerid], SkladistePolozaj(cilj), ostalo ? ("") : ("~r~"), ostalo / 60, ostalo % 60, gSkladisteNiz[playerid]);
     if (!gSkladisteHudIma[playerid])
     {
         gSkladisteHud[playerid] = TdTekst(playerid, 500.0, 150.0, tekst, 0xFFFFFFFF, 0.22, 1.0, TEXT_DRAW_FONT_1);
@@ -252,17 +326,11 @@ static SkladisteHudMakni(playerid)
     gSkladisteHudIma[playerid] = false;
 }
 
-static SkladisteRampaZa(h)
+static bool:SkladistePrijenos(playerid)
 {
-    new popis[SK_RAMPI], n = 0;
-    for (new r = 0; r < SK_RAMPI; r++) if (gSkladisteRampa[r][srIma] && SkladisteHangarBlizu(gSkladisteRampa[r][srX], gSkladisteRampa[r][srY]) == h) popis[n++] = r;
-    if (!n) for (new r = 0; r < SK_RAMPI; r++) if (gSkladisteRampa[r][srIma]) popis[n++] = r;
-    return n ? SK_SLOTOVA + popis[random(n)] : -1;
-}
-
-static SkladisteSlot(h)
-{
-    return (h == 0 ? random(SK_POLICA_A) : SK_POLICA_A + random(SK_POLICA_B)) * sizeof gSkladisteMjesto + random(sizeof gSkladisteMjesto);
+    new a = gSkladisteOd[playerid], b = gSkladisteDo[playerid];
+    if (SkladisteJeRampa(a) || SkladisteJeRampa(b)) return false;
+    return SkladisteHangarSlota(a) != SkladisteHangarSlota(b);
 }
 
 static SkladisteTipNasumicno()
@@ -276,37 +344,45 @@ static SkladisteTipNasumicno()
     return SKT_OBICNO;
 }
 
-static bool:SkladistePrijenos(playerid)
+static SkladisteOtpusti(playerid)
 {
-    new a = gSkladisteOd[playerid], b = gSkladisteDo[playerid];
-    if (SkladisteJeRampa(a) || SkladisteJeRampa(b)) return false;
-    return (a / sizeof gSkladisteMjesto < SK_POLICA_A) != (b / sizeof gSkladisteMjesto < SK_POLICA_A);
+    if (gSkladisteFaza[playerid])
+    {
+        DisablePlayerCheckpoint(playerid);
+        SkladisteRezerviraj(gSkladisteOd[playerid], 0);
+        SkladisteRezerviraj(gSkladisteDo[playerid], 0);
+        if (gSkladisteFaza[playerid] == 2 || SkladisteJeRampa(gSkladisteOd[playerid])) SkladisteObjektMakni(gSkladisteTeret[playerid]);
+    }
+    gSkladisteFaza[playerid] = 0;
+    gSkladisteTeret[playerid] = STREAMER_TAG_OBJECT:0;
+    SkladisteObjektMakni(gSkladisteStrelica[playerid]);
 }
 
 static SkladisteZadatak(playerid)
 {
+    SkladisteOtpusti(playerid);
     new Float:x, Float:y, Float:z;
     GetPlayerPos(playerid, x, y, z);
     new h = SkladisteHangarBlizu(x, y), vrsta = random(100), od = -1, doo = -1;
     if (vrsta < 25) od = SkladisteRampaZa(h);
     else if (vrsta < 50) doo = SkladisteRampaZa(h);
-    if (od == -1) od = SkladisteSlot(h);
-    if (doo == -1 && od >= SK_SLOTOVA) doo = SkladisteSlot(h);
-    if (doo == -1 && vrsta >= 50)
+    if (od == -1) od = SkladisteUzmiPuno(h);
+    if (od == -1) od = SkladisteUzmiPuno(1 - h);
+    if (od == -1) return;
+    SkladisteRezerviraj(od, playerid + 1);
+    if (doo == -1) doo = SkladisteUzmiPrazno(!SkladisteJeRampa(od) && vrsta >= 50 && vrsta < 70 ? 1 - h : h, od);
+    if (doo == -1) doo = SkladisteUzmiPrazno(1 - h, od);
+    if (doo == -1)
     {
-        new dh = vrsta < 70 ? 1 - h : h;
-        do doo = SkladisteSlot(dh);
-        while (doo / sizeof gSkladisteMjesto == od / sizeof gSkladisteMjesto);
+        SkladisteRezerviraj(od, 0);
+        return;
     }
-    if (doo == -1) do doo = SkladisteSlot(h);
-    while (doo / sizeof gSkladisteMjesto == od / sizeof gSkladisteMjesto);
+    SkladisteRezerviraj(doo, playerid + 1);
     gSkladisteOd[playerid] = od;
     gSkladisteDo[playerid] = doo;
     gSkladisteTip[playerid] = SkladisteTipNasumicno();
-    gSkladistePromasaj[playerid] = 0;
-    gSkladisteRok[playerid] = gettime() + (gSkladisteTip[playerid] == SKT_HITNO ? SK_ROK_HITNO : SK_ROK) + (SkladistePrijenos(playerid) ? SK_ROK_PRIJENOS : 0);
-    SkladisteObjektMakni(gSkladisteTeret[playerid]);
-    gSkladisteTeret[playerid] = SkladisteTeretStvori(playerid, od);
+    gSkladisteRok[playerid] = gettime() + (gSkladisteTip[playerid] == SKT_HITNO ? SK_ROK_HITNO : SK_ROK + (SkladistePrijenos(playerid) ? SK_ROK_PRIJENOS : 0));
+    gSkladisteTeret[playerid] = SkladisteJeRampa(od) ? SkladisteTeretStvori(od) : STREAMER_TAG_OBJECT:0;
     gSkladisteFaza[playerid] = 1;
     SkladisteCiljPostavi(playerid, od);
     SkladisteHudOsvjezi(playerid);
@@ -316,28 +392,17 @@ static SkladisteZadatak(playerid)
     switch (gSkladisteTip[playerid])
     {
         case SKT_LOMLJIVO: Savjet(playerid, T(playerid, "~r~Lomljivo!~w~ Ne udarajte viljuskarom dok nosite teret."), 5000);
-        case SKT_TESKO: Savjet(playerid, T(playerid, "~y~Tesko!~w~ Viljuske se teze namjestaju."), 5000);
+        case SKT_TESKO: Savjet(playerid, T(playerid, "~y~Tesko!~w~ Viljuske se s teretom sporije dizu."), 5000);
         case SKT_HITNO: Savjet(playerid, T(playerid, "~y~Hitno!~w~ Kraci rok, veca zarada."), 5000);
     }
 }
 
-static SkladisteIgraKraj(playerid)
-{
-    if (!gSkladisteIgra[playerid]) return;
-    gSkladisteIgra[playerid] = false;
-    if (gSkladisteTimer[playerid]) KillTimer(gSkladisteTimer[playerid]);
-    gSkladisteTimer[playerid] = 0;
-    IgraTdMakni(playerid);
-}
-
 static SkladisteZadatakMakni(playerid)
 {
-    SkladisteIgraKraj(playerid);
-    if (gSkladisteFaza[playerid]) DisablePlayerCheckpoint(playerid);
-    gSkladisteFaza[playerid] = 0;
-    SkladisteObjektMakni(gSkladisteTeret[playerid]);
-    SkladisteObjektMakni(gSkladisteOstavljen[playerid]);
+    SkladisteOtpusti(playerid);
     SkladisteHudMakni(playerid);
+    if (gSkladisteKontrola[playerid]) KillTimer(gSkladisteKontrola[playerid]);
+    gSkladisteKontrola[playerid] = 0;
 }
 
 static SkladisteViljOslobodi(b)
@@ -383,10 +448,13 @@ public SkladisteViljDan(playerid, racun, b)
     if (gSkladisteVilj[b][svIgrac] != playerid) return;
     gSkladisteVilj[b][svZadnje] = gettime();
     gSkladisteNiz[playerid] = 0;
+    gSkladisteVisina[playerid] = SK_VILJ_MIN;
     SetPlayerSkin(playerid, SK_SKIN);
     PutPlayerInVehicle(playerid, gSkladisteVilj[b][svVozilo], 0);
+    if (gSkladisteKontrola[playerid]) KillTimer(gSkladisteKontrola[playerid]);
+    gSkladisteKontrola[playerid] = SetTimerEx("SkladisteKontrola", SK_VILJ_TIK_MS, true, "i", playerid);
     SkladisteZadatak(playerid);
-    Savjet(playerid, T(playerid, "~y~SPACE~w~ - podigni ili spusti teret u oznaci~n~~y~/posao~w~ - vrati viljuskar"), 6000);
+    Savjet(playerid, T(playerid, "~y~~k~~VEHICLE_TURRETUP~/~k~~VEHICLE_TURRETDOWN~~w~ - viljuske gore/dolje~n~Poravnajte viljuske s teretom ispod strelice~n~~y~/posao~w~ - vrati viljuskar"), 8000);
 }
 
 static SkladisteVrati(playerid)
@@ -447,113 +515,107 @@ SkladisteAlt(playerid)
     return SkladisteIzbornik(playerid), 1;
 }
 
-static bool:SkladisteVozi(playerid)
-{
-    new b = SkladisteViljIgraca(playerid);
-    return b != -1 && GetPlayerState(playerid) == PLAYER_STATE_DRIVER && GetPlayerVehicleID(playerid) == gSkladisteVilj[b][svVozilo];
-}
-
 SkladisteCheckpoint(playerid)
 {
     if (!gSkladisteFaza[playerid] || !IsPlayerInRangeOfPoint(playerid, SK_CILJ_DOMET, gSkladisteCilj[playerid][0], gSkladisteCilj[playerid][1], gSkladisteCilj[playerid][2])) return 0;
-    if (gSkladisteIgra[playerid]) return 1;
-    if (!SkladisteVozi(playerid)) return ObavijestGreska(playerid, T(playerid, "Teret preuzimate i odlazete svojim viljuskarom.")), 1;
-    new Float:z = SkladisteRazinaZ(gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid]);
-    gSkladisteIgra[playerid] = true;
-    gSkladisteTraka[playerid] = 0.0;
-    gSkladisteSmjer[playerid] = z < -1.5 ? 1.6 : z < 0.0 ? 2.0 : 2.4;
-    if (gSkladisteTip[playerid] == SKT_TESKO) gSkladisteSmjer[playerid] *= 1.35;
-    gSkladisteZel[playerid] = float(10 + random(72));
-    SkladistePanel(playerid);
-    gSkladisteTimer[playerid] = SetTimerEx("SkladisteTrakaKorak", SK_TRAKA_MS, true, "i", playerid);
+    if (!SkladisteVozi(playerid)) ObavijestGreska(playerid, T(playerid, "Teret preuzimate i odlazete svojim viljuskarom."));
     return 1;
 }
 
-static Float:SkladisteZelenoSirina(playerid)
+static bool:SkladistePoravnat(playerid, cilj)
 {
-    return gSkladisteTip[playerid] == SKT_TESKO ? SK_ZELENO_TESKO : SK_ZELENO;
+    new v = GetPlayerVehicleID(playerid), Float:x, Float:y, Float:z, Float:a, Float:tx, Float:ty, Float:tz, Float:ta;
+    GetVehiclePos(v, x, y, z);
+    GetVehicleZAngle(v, a);
+    new Float:fx = -floatsin(a, degrees), Float:fy = floatcos(a, degrees);
+    x += fx * SK_VILJ_NAPRIJED;
+    y += fy * SK_VILJ_NAPRIJED;
+    SkladisteTeretPoz(cilj, tx, ty, tz, ta);
+    if (SkladisteJeRampa(cilj)) return VectorSize(x - tx, y - ty, 0.0) < 0.7;
+    new p = cilj / sizeof gSkladisteMjesto, Float:c = floatcos(gSkladistePolica[p][3], degrees), Float:s = floatsin(gSkladistePolica[p][3], degrees);
+    new Float:dx = x - gSkladistePolica[p][0], Float:dy = y - gSkladistePolica[p][1];
+    new Float:lx = dx * c + dy * s, Float:ly = -dx * s + dy * c, Float:smx = fx * c + fy * s, Float:smy = -fx * s + fy * c;
+    return floatabs(ly - gSkladisteMjesto[cilj % sizeof gSkladisteMjesto][0]) < 0.4 && floatabs(lx) > 0.9 && floatabs(lx) < 2.0 && floatabs(smy) < 0.26 && smx * lx < 0.0;
 }
 
-static SkladistePanel(playerid)
+static SkladisteIznos(playerid)
 {
-    IgraPanel(playerid, gSkladisteFaza[playerid] == 1 ? T(playerid, "Podizanje tereta") : T(playerid, "Odlaganje tereta"), 60.0, SK_BOJA);
-    IgraTraka(playerid, gSkladisteZel[playerid], gSkladisteZel[playerid] + SkladisteZelenoSirina(playerid), 0x3A2A1AFF, 0x27AE60FF, 0x3A2A1AFF, T(playerid, "Namjestite viljuske: ~y~SPACE~w~ kad je oznaka u zelenom."));
-    IgraOznakaPomakni(playerid, gSkladisteTraka[playerid]);
-}
-
-forward SkladisteTrakaKorak(playerid);
-public SkladisteTrakaKorak(playerid)
-{
-    if (!gSkladisteIgra[playerid]) return;
-    gSkladisteTraka[playerid] += gSkladisteSmjer[playerid];
-    if (gSkladisteTraka[playerid] >= 100.0 || gSkladisteTraka[playerid] <= 0.0) gSkladisteSmjer[playerid] = -gSkladisteSmjer[playerid];
-    IgraOznakaPomakni(playerid, gSkladisteTraka[playerid]);
-}
-
-static SkladistePredaj(playerid)
-{
-    new poruka[144], iznos = gSkladisteTipCijena[gSkladisteTip[playerid]], bool:kasni = gettime() > gSkladisteRok[playerid];
+    new iznos = gSkladisteTipCijena[gSkladisteTip[playerid]];
     if (SkladistePrijenos(playerid)) iznos += SK_PRIJENOS;
     if (SkladisteJeRampa(gSkladisteOd[playerid]) || SkladisteJeRampa(gSkladisteDo[playerid])) iznos += SK_RAMPA_BONUS;
     iznos += iznos * min(gSkladisteNiz[playerid], SK_NIZ_MAX) * 10 / 100;
-    iznos -= iznos * min(gSkladistePromasaj[playerid], 5) * 10 / 100;
+    return gettime() > gSkladisteRok[playerid] ? iznos / 2 : iznos;
+}
+
+static SkladistePodigni(playerid)
+{
+    new od = gSkladisteOd[playerid], v = GetPlayerVehicleID(playerid), poruka[144];
+    if (SkladisteJeRampa(od)) SkladisteObjektMakni(gSkladisteTeret[playerid]);
+    else SkladisteObjektMakni(gSkladisteZaliha[od]);
+    SkladisteRezerviraj(od, 0);
+    gSkladisteTeret[playerid] = CreateDynamicObject(SK_TERET_MODEL, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 0, 0);
+    AttachDynamicObjectToVehicle(gSkladisteTeret[playerid], v, 0.0, SK_VILJ_NAPRIJED, gSkladisteVisina[playerid] + SK_VILJ_TERET_Z, 0.0, 0.0, 0.0);
+    GetVehicleHealth(v, gSkladisteZdravlje[playerid]);
+    PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
+    gSkladisteFaza[playerid] = 2;
+    SkladisteCiljPostavi(playerid, gSkladisteDo[playerid]);
+    SkladisteHudOsvjezi(playerid);
+    SkladisteOpis(playerid, false, gSkladisteDo[playerid], poruka);
+    ObavijestInfo(playerid, T(playerid, "Skladistar"), poruka);
+}
+
+static SkladisteSpusti(playerid)
+{
+    new doo = gSkladisteDo[playerid], poruka[144], iznos = SkladisteIznos(playerid), bool:kasni = gettime() > gSkladisteRok[playerid];
+    SkladisteObjektMakni(gSkladisteTeret[playerid]);
+    if (!SkladisteJeRampa(doo)) SkladisteZalihaStvori(doo);
+    PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
     if (kasni)
     {
-        iznos /= 2;
         gSkladisteNiz[playerid] = 0;
         format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen sa zakasnjenjem. +$%d na placi."), iznos);
     }
     else
     {
-        if (!gSkladistePromasaj[playerid]) gSkladisteNiz[playerid]++;
+        gSkladisteNiz[playerid]++;
         format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen. +$%d na placi (niz x%d)."), iznos, gSkladisteNiz[playerid]);
     }
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = payday_earn + %d WHERE id = %d", iznos, gAccountId[playerid]));
     IgraObavijest(playerid, T(playerid, "Skladiste"), kasni ? OBAVIJEST_GRESKA : SK_BOJA, poruka);
+    SkladisteZadatak(playerid);
 }
 
-bool:SkladisteKey(playerid, KEY:newkeys, KEY:oldkeys)
+static SkladisteRazbij(playerid)
 {
-    if (!gSkladisteIgra[playerid]) return false;
-    if (!(newkeys & KEY_HANDBRAKE) || (oldkeys & KEY_HANDBRAKE)) return true;
-    if (gSkladisteTraka[playerid] < gSkladisteZel[playerid] || gSkladisteTraka[playerid] > gSkladisteZel[playerid] + SkladisteZelenoSirina(playerid))
-    {
-        PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
-        gSkladistePromasaj[playerid]++;
-        gSkladisteZel[playerid] = float(10 + random(72));
-        SkladistePanel(playerid);
-        return true;
-    }
-    PlayerPlaySound(playerid, 1056, 0.0, 0.0, 0.0);
-    SkladisteIgraKraj(playerid);
-    if (!SkladisteCiljPostoji(gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid]))
-    {
-        SkladisteZadatak(playerid);
-        return true;
-    }
-    new t = gSkladisteTip[playerid], v = GetPlayerVehicleID(playerid);
-    if (gSkladisteFaza[playerid] == 1)
-    {
-        new poruka[144];
-        SkladisteObjektMakni(gSkladisteTeret[playerid]);
-        gSkladisteTeret[playerid] = CreateDynamicObject(gSkladisteTipModel[t], 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 0, 0);
-        AttachDynamicObjectToVehicle(gSkladisteTeret[playerid], v, 0.0, 1.1, -0.4 + gSkladisteTipZ[t], 0.0, 0.0, 0.0);
-        GetVehicleHealth(v, gSkladisteZdravlje[playerid]);
-        gSkladisteFaza[playerid] = 2;
-        SkladisteCiljPostavi(playerid, gSkladisteDo[playerid]);
-        SkladisteHudOsvjezi(playerid);
-        SkladisteOpis(playerid, false, gSkladisteDo[playerid], poruka);
-        ObavijestInfo(playerid, T(playerid, "Skladistar"), poruka);
-        return true;
-    }
-    DisablePlayerCheckpoint(playerid);
-    gSkladisteFaza[playerid] = 0;
-    SkladisteObjektMakni(gSkladisteTeret[playerid]);
-    SkladisteObjektMakni(gSkladisteOstavljen[playerid]);
-    gSkladisteOstavljen[playerid] = SkladisteTeretStvori(playerid, gSkladisteDo[playerid]);
-    SkladistePredaj(playerid);
+    new poruka[144], kazna = SkladisteIznos(playerid) / 2;
+    gSkladisteNiz[playerid] = 0;
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = MAX(0, payday_earn - %d) WHERE id = %d", kazna, gAccountId[playerid]));
+    format(poruka, sizeof poruka, T(playerid, "Ostetili ste teret. -$%d s place, niz je prekinut."), kazna);
+    IgraObavijest(playerid, T(playerid, "Skladiste"), OBAVIJEST_GRESKA, poruka);
     SkladisteZadatak(playerid);
-    return true;
+}
+
+forward SkladisteKontrola(playerid);
+public SkladisteKontrola(playerid)
+{
+    if (!gSkladisteFaza[playerid] || !SkladisteVozi(playerid)) return;
+    new KEY:tipke, gd, lr;
+    GetPlayerKeys(playerid, tipke, gd, lr);
+    new smjer = (tipke & KEY_ANALOG_UP) ? 1 : (tipke & KEY_ANALOG_DOWN) ? -1 : 0;
+    if (!smjer) return;
+    new Float:korak = SK_VILJ_BRZINA * float(SK_VILJ_TIK_MS) / 1000.0;
+    if (gSkladisteFaza[playerid] == 2 && gSkladisteTip[playerid] == SKT_TESKO && smjer > 0) korak *= SK_VILJ_TESKO;
+    new Float:h = gSkladisteVisina[playerid] + korak * float(smjer);
+    if (h < SK_VILJ_MIN) h = SK_VILJ_MIN;
+    if (h > SK_VILJ_MAX) h = SK_VILJ_MAX;
+    if (h == gSkladisteVisina[playerid]) return;
+    gSkladisteVisina[playerid] = h;
+    if (gSkladisteFaza[playerid] == 2) AttachDynamicObjectToVehicle(gSkladisteTeret[playerid], GetPlayerVehicleID(playerid), 0.0, SK_VILJ_NAPRIJED, h + SK_VILJ_TERET_Z, 0.0, 0.0, 0.0);
+    if (++gSkladisteKorak[playerid] % 2 == 0) SkladisteHudOsvjezi(playerid);
+    new cilj = gSkladisteFaza[playerid] == 1 ? gSkladisteOd[playerid] : gSkladisteDo[playerid], Float:razina = SkladistePolozaj(cilj);
+    if (!SkladisteCiljPostoji(cilj)) SkladisteZadatak(playerid);
+    else if (gSkladisteFaza[playerid] == 1 && smjer > 0 && h >= razina - 0.2 && h <= razina + 0.35 && SkladistePoravnat(playerid, cilj)) SkladistePodigni(playerid);
+    else if (gSkladisteFaza[playerid] == 2 && smjer < 0 && h >= razina - 0.15 && h <= razina + 0.4 && SkladistePoravnat(playerid, cilj)) SkladisteSpusti(playerid);
 }
 
 SkladisteStateChange(playerid, PLAYER_STATE:newstate)
@@ -570,17 +632,6 @@ SkladisteStateChange(playerid, PLAYER_STATE:newstate)
     ObavijestGreska(playerid, gSkladisteVilj[b][svIgrac] == INVALID_PLAYER_ID ? T(playerid, "Viljuskar uzimate na mjestu za posao u luci (oznaceno na karti).") : T(playerid, "Ovaj viljuskar koristi drugi skladistar."));
 }
 
-static SkladisteRazbij(playerid)
-{
-    SkladisteIgraKraj(playerid);
-    DisablePlayerCheckpoint(playerid);
-    gSkladisteFaza[playerid] = 0;
-    SkladisteObjektMakni(gSkladisteTeret[playerid]);
-    gSkladisteNiz[playerid] = 0;
-    IgraObavijest(playerid, T(playerid, "Skladiste"), OBAVIJEST_GRESKA, T(playerid, "Lomljivi teret se razbio. Niz je prekinut."));
-    SkladisteZadatak(playerid);
-}
-
 SkladisteTick()
 {
     new sad = gettime();
@@ -594,14 +645,18 @@ SkladisteTick()
             if (IsPlayerConnected(i)) ObavijestGreska(i, T(i, "Smjena je zavrsena. Viljuskar je vracen."));
             continue;
         }
-        if (gSkladisteIgra[i] && (!SkladisteVozi(i) || !IsPlayerInRangeOfPoint(i, SK_CILJ_DOMET + 2.0, gSkladisteCilj[i][0], gSkladisteCilj[i][1], gSkladisteCilj[i][2]))) SkladisteIgraKraj(i);
-        if (gSkladisteFaza[i] == 2 && gSkladisteTip[i] == SKT_LOMLJIVO)
+        if (gSkladisteFaza[i] == 2)
         {
             new Float:hp;
             GetVehicleHealth(gSkladisteVilj[b][svVozilo], hp);
-            if (hp < gSkladisteZdravlje[i] - SK_LOMLJIVO_STETA) SkladisteRazbij(i);
+            if (hp < gSkladisteZdravlje[i] - (gSkladisteTip[i] == SKT_LOMLJIVO ? SK_LOMLJIVO_STETA : SK_STETA))
+            {
+                SkladisteRazbij(i);
+                continue;
+            }
         }
         if (gSkladisteFaza[i] && gSkladisteHudIma[i]) SkladisteHudOsvjezi(i);
+        if (!gSkladisteFaza[i] && sad % 10 == 0) SkladisteZadatak(i);
         if (GetPlayerVehicleID(i) == gSkladisteVilj[b][svVozilo])
         {
             gSkladisteVilj[b][svZadnje] = sad;
