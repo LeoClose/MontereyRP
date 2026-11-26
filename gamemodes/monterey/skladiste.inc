@@ -18,7 +18,8 @@
 #define SK_NIZ_MAX          5
 #define SK_STETA            80.0
 #define SK_LOMLJIVO_STETA   25.0
-#define SK_TERET_MODEL      2912
+#define SK_TERET_MODEL      19613
+#define SK_TERET_IZGLED     2912
 #define SK_STRELICA_MODEL   1318
 #define SK_PALETA_MODEL     3577
 #define SK_PALETA_VISINA    0.12
@@ -179,6 +180,12 @@ static SkladisteMjestoStvori()
     InterakcijaOznaka(gSkladisteTekst, SK_DOMET);
 }
 
+static STREAMER_TAG_OBJECT:SkladisteTeretIzgled(STREAMER_TAG_OBJECT:o)
+{
+    SetDynamicObjectMaterial(o, 0, SK_TERET_IZGLED, "kmb_cratex", "cheerybox03", 0);
+    return o;
+}
+
 static SkladisteTeretSakrij(b)
 {
     AttachObjectToVehicle(gSkladisteVilj[b][svTeret], gSkladisteVilj[b][svVozilo], 0.0, 0.0, -30.0, 0.0, 0.0, 0.0);
@@ -195,6 +202,7 @@ static SkladisteViljStvori(b, db, Float:x, Float:y, Float:z, Float:a)
     gSkladisteVilj[b][svLik] = INVALID_LIK;
     gSkladisteVilj[b][svVozilo] = CreateVehicle(SK_MODEL, x, y, z, a, 1, 1, -1);
     gSkladisteVilj[b][svTeret] = CreateObject(SK_TERET_MODEL, x, y, z - 30.0, 0.0, 0.0, 0.0);
+    SetObjectMaterial(gSkladisteVilj[b][svTeret], 0, SK_TERET_IZGLED, "kmb_cratex", "cheerybox03", 0);
     SkladisteTeretSakrij(b);
     VoziloSet(gSkladisteVilj[b][svVozilo], VP_MOTOR, 1);
     SetTimerEx("SkladisteViljNpc", 2000, false, "i", b);
@@ -407,7 +415,7 @@ static STREAMER_TAG_OBJECT:SkladisteTeretStvori(cilj)
 {
     new Float:x, Float:y, Float:z, Float:a;
     SkladisteTeretPoz(cilj, x, y, z, a);
-    return CreateDynamicObject(SK_TERET_MODEL, x, y, z, 0.0, 0.0, a, 0, 0);
+    return SkladisteTeretIzgled(CreateDynamicObject(SK_TERET_MODEL, x, y, z, 0.0, 0.0, a, 0, 0));
 }
 
 static SkladisteObjektMakni(&STREAMER_TAG_OBJECT:o)
@@ -908,7 +916,7 @@ static SkladisteUtovari(r)
 {
     new n = gSkladisteRampa[r][srUtovareno];
     if (n >= SK_KAMION_MJESTA) return;
-    new STREAMER_TAG_OBJECT:o = CreateDynamicObject(SK_TERET_MODEL, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 0, 0);
+    new STREAMER_TAG_OBJECT:o = SkladisteTeretIzgled(CreateDynamicObject(SK_TERET_MODEL, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 0, 0));
     AttachDynamicObjectToVehicle(o, gSkladisteRampa[r][srVozilo], gSkladisteKamionTeret[n][0], gSkladisteKamionTeret[n][1], SK_KAMION_POD, 0.0, 0.0, 0.0);
     gSkladisteRampaTeret[r][n] = o;
     if (++gSkladisteRampa[r][srUtovareno] >= SK_KAMION_MJESTA) SkladisteDolazakOdlazi(r);
