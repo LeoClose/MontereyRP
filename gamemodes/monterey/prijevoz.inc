@@ -47,14 +47,14 @@ static const gPrijevozTeret[][E_PZ_TERET] = {
 };
 static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
 static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 19.3219, 46.2314 }, { 2193.1111, -2268.1230, 12.53, 227.4294 }, { 2214.293, -2236.873, 13.2, 315.0 } };
-static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 10.95, 225.0 };
+static const Float:gPrijevozHangar[4] = { 2164.745, -2240.487, 12.43, 225.0 };
 static const Float:gPrijevozRezerva[4] = { 2223.130, -2228.035, 12.55, 315.0 };
 static const Float:gPrijevozKamera[6] = { 2195.575, -2249.255, 18.0, 2177.968, -2254.134, 14.15 };
 static const Float:gPrijevozKameraPut[2][3] = { { 2195.575, -2253.498, 17.0 }, { 2204.767, -2266.933, 16.0 } };
 static const Float:gPrijevozKameraKraj[3] = { 2193.111, -2268.123, 14.0 };
 static const Float:gPrijevozRuta[] = {
-    2164.533, -2240.699, 10.950, 2169.191, -2245.357, 10.950, 2173.584, -2249.750, 11.685, 2177.968, -2254.134, 12.420,
-    2180.796, -2256.963, 12.420, 2185.181, -2261.347, 12.450, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
+    2164.745, -2240.487, 12.430, 2169.412, -2245.154, 12.430, 2178.180, -2253.922, 12.430, 2181.009, -2256.751, 12.420,
+    2185.181, -2261.347, 12.450, 2189.591, -2265.757, 12.520, 2193.111, -2268.123, 12.530
 };
 static bool:gPrijevozOdustaje[MAX_PLAYERS];
 static gPrijevozScenaIgrac = INVALID_PLAYER_ID, gPrijevozScenaLik = INVALID_LIK, gPrijevozScenaTimer, gPrijevozScenaOd;
