@@ -310,6 +310,8 @@ public OnGameModeInit()
     MapaSurenosi();
     MapaRuskaMafijaUkloni(INVALID_PLAYER_ID);
     MapaRuskaMafija();
+    MapaGettelSalonUkloni(INVALID_PLAYER_ID);
+    MapaGettelSalon();
     Lik_OsvjeziMapu();
     InitNpcGustoca();
     InitKapije();
@@ -562,6 +564,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mape/mapa_glen_park.inc"
 #include "monterey/mape/mapa_surenosi.inc"
 #include "monterey/mape/mapa_ruska_mafija.inc"
+#include "monterey/mape/mapa_gettel_salon.inc"
 #include "monterey/brod.inc"
 #include "monterey/lab.inc"
 #include "monterey/teritorij.inc"

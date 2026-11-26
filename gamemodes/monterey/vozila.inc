@@ -148,6 +148,7 @@ static bool:HasGepek(v)
 {
     new model = GetVehicleModel(v);
     if (BezKrova(model) || Leti(model)) return false;
+    if (RepoVozilo(v)) return false;
     switch (model)
     {
         case 430, 446, 452, 453, 454, 472, 473, 484, 493, 595, 611: return false;

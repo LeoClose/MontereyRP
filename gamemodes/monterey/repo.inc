@@ -4,12 +4,13 @@
 #define RP_STRANA_DOMET     1.6
 #define RP_STRANA_RAZMAK    0.6
 #define RP_KUKA             3.2
+#define RP_RUB              1.0
 #define RP_KUKA_DOMET       1.8
 #define RP_UDALJENOST_MIN   400.0
 #define RP_UDALJENOST_MAX   1400.0
-#define RP_POSTO            5
-#define RP_ISPLATA_MIN      300
-#define RP_ISPLATA_MAX      3000
+#define RP_POSTO            1
+#define RP_ISPLATA_MIN      80
+#define RP_ISPLATA_MAX      500
 #define RP_CIJENA_ZADANO    20000
 #define RP_DIJELOVA         8
 #define RP_RAD_MS           2500
@@ -19,7 +20,6 @@
 
 enum { RPF_NEMA, RPF_TRAZI, RPF_VUCE, RPF_RASTAVLJA }
 
-static const Float:gRepoZadano[4] = { 2183.0, -2253.0, 13.4, 225.0 };
 static const gRepoZabranjeni[] = {
     403, 406, 407, 408, 416, 417, 425, 427, 428, 430, 431, 432, 433, 435, 437, 441, 443, 444, 446, 447, 448, 449, 450, 452, 453, 454, 455, 456,
     460, 461, 462, 463, 464, 465, 468, 469, 471, 472, 473, 476, 481, 484, 486, 487, 488, 493, 497, 501, 509, 510, 511, 512, 513, 514, 515, 519,
@@ -28,40 +28,53 @@ static const gRepoZabranjeni[] = {
 };
 static const gRepoRezerva[] = { 400, 401, 404, 405, 410, 412, 419, 421, 426, 436, 445, 466, 467, 474, 475, 479, 491, 492, 496, 507, 516, 517, 518, 526, 527, 529, 540, 542, 546, 547, 549, 550, 551, 560, 562, 565, 566, 567, 575, 576, 580, 585, 587, 589, 600, 602, 603 };
 
-static Float:gRepoMjesto[4], Float:gRepoKamionPoz[4], STREAMER_TAG_3D_TEXT_LABEL:gRepoTekst, bool:gRepoImaMjesto, bool:gRepoDozvoljen[212];
+static Float:gRepoMjesto[4], Float:gRepoKamionPoz[4], Float:gRepoCilj[4], STREAMER_TAG_3D_TEXT_LABEL:gRepoTekst, bool:gRepoImaMjesto, bool:gRepoImaKamion, bool:gRepoImaCilj, bool:gRepoDozvoljen[212];
 static gRepoFaza[MAX_PLAYERS], gRepoKamion[MAX_PLAYERS], gRepoAuto[MAX_PLAYERS], gRepoIsplata[MAX_PLAYERS], gRepoGotovo[MAX_PLAYERS], gRepoDijelovi[MAX_PLAYERS], bool:gRepoRadi[MAX_PLAYERS];
 static STREAMER_TAG_OBJECT:gRepoOznaka[MAX_PLAYERS][4];
 
 InitRepo()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS job_repo (id INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
-    for (new k = 0; k < 4; k++) gRepoMjesto[k] = gRepoKamionPoz[k] = gRepoZadano[k];
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_repo WHERE id IN (1, 2)");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_repo WHERE id IN (1, 2, 3)");
     for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
     {
+        new id = DB_GetFieldInt(res, 0);
         for (new k = 0; k < 4; k++)
         {
-            if (DB_GetFieldInt(res, 0) == 1) gRepoMjesto[k] = DB_GetFieldFloat(res, k + 1);
-            else gRepoKamionPoz[k] = DB_GetFieldFloat(res, k + 1);
+            new Float:f = DB_GetFieldFloat(res, k + 1);
+            if (id == 1) gRepoMjesto[k] = f;
+            else if (id == 2) gRepoKamionPoz[k] = f;
+            else gRepoCilj[k] = f;
         }
+        if (id == 1) gRepoImaMjesto = true;
+        else if (id == 2) gRepoImaKamion = true;
+        else gRepoImaCilj = true;
     }
     DB_FreeResultSet(res);
     for (new m = 0; m < sizeof gRepoDozvoljen; m++) gRepoDozvoljen[m] = true;
     for (new k = 0; k < sizeof gRepoZabranjeni; k++) gRepoDozvoljen[gRepoZabranjeni[k] - 400] = false;
     for (new i = 0; i < MAX_PLAYERS; i++) gRepoKamion[i] = gRepoAuto[i] = INVALID_VEHICLE_ID;
-    RepoMjestoStvori();
+    if (gRepoImaMjesto) RepoMjestoStvori();
 }
 
 static RepoMjestoStvori()
 {
-    if (gRepoImaMjesto) DestroyDynamic3DTextLabel(gRepoTekst);
+    if (IsValidDynamic3DTextLabel(gRepoTekst)) DestroyDynamic3DTextLabel(gRepoTekst);
     gRepoImaMjesto = true;
     gRepoTekst = CreateDynamic3DTextLabel("Repo\nALT", RP_BOJA, gRepoMjesto[0], gRepoMjesto[1], gRepoMjesto[2] + 0.5, 10.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
     InterakcijaOznaka(gRepoTekst, RP_DOMET);
 }
 
+RepoVozilo(v)
+{
+    if (v == INVALID_VEHICLE_ID) return 0;
+    for (new i = 0; i < MAX_PLAYERS; i++) if (gRepoFaza[i] && gRepoAuto[i] == v) return 1;
+    return 0;
+}
+
 RepoLokacija(&Float:x, &Float:y, &Float:z)
 {
+    if (!gRepoImaMjesto) return 0;
     x = gRepoMjesto[0];
     y = gRepoMjesto[1];
     z = gRepoMjesto[2];
@@ -70,7 +83,7 @@ RepoLokacija(&Float:x, &Float:y, &Float:z)
 
 static bool:RepoNaMjestu(playerid, Float:r = RP_DOMET)
 {
-    return !GetPlayerInterior(playerid) && !GetPlayerVirtualWorld(playerid) && IsPlayerInRangeOfPoint(playerid, r, gRepoMjesto[0], gRepoMjesto[1], gRepoMjesto[2]);
+    return gRepoImaMjesto && !GetPlayerInterior(playerid) && !GetPlayerVirtualWorld(playerid) && IsPlayerInRangeOfPoint(playerid, r, gRepoMjesto[0], gRepoMjesto[1], gRepoMjesto[2]);
 }
 
 static RepoStrana(v, s, &Float:ox, &Float:oy)
@@ -97,28 +110,41 @@ static RepoAutoMakni(playerid)
     gRepoAuto[playerid] = INVALID_VEHICLE_ID;
 }
 
+static bool:RepoRub(&Float:x, &Float:y, Float:z, &Float:a)
+{
+    for (new k = 0; k < 4; k++)
+    {
+        new Float:h = float(k * 45), Float:fx = -floatsin(h, degrees), Float:fy = floatcos(h, degrees);
+        if (!Lik_NaCesti(x + fx * 10.0, y + fy * 10.0, z) || !Lik_NaCesti(x - fx * 10.0, y - fy * 10.0, z)) continue;
+        new Float:strana = random(2) ? 1.0 : -1.0, Float:rx = fy * strana, Float:ry = -fx * strana;
+        for (new Float:o = 1.0; o <= 14.0; o += 0.5)
+        {
+            if (Lik_NaCesti(x + rx * o, y + ry * o, z)) continue;
+            x += rx * (o + RP_RUB);
+            y += ry * (o + RP_RUB);
+            a = strana > 0.0 ? h : h + 180.0;
+            return true;
+        }
+    }
+    return false;
+}
+
 static RepoNovoAuto(playerid)
 {
     RepoAutoMakni(playerid);
     new cijena = RP_CIJENA_ZADANO, model = SalonNasumicnoVozilo(cijena, gRepoDozvoljen);
     if (!model) model = gRepoRezerva[random(sizeof gRepoRezerva)], cijena = RP_CIJENA_ZADANO;
-    new Float:x, Float:y, Float:z, Float:a = float(random(360)), bool:nasao = false;
-    for (new k = 0; k < 15 && !nasao; k++)
+    new Float:x, Float:y, Float:z, Float:a = float(random(360)), Float:hx, Float:hy, Float:hz;
+    for (new k = 0; k < 20; k++)
     {
         new Float:kut = float(random(360)), Float:d = RP_UDALJENOST_MIN + float(random(floatround(RP_UDALJENOST_MAX - RP_UDALJENOST_MIN)));
         Lik_Cesta(gRepoMjesto[0] + d * floatcos(kut, degrees), gRepoMjesto[1] + d * floatsin(kut, degrees), gRepoMjesto[2], x, y, z);
-        nasao = VectorSize(x - gRepoMjesto[0], y - gRepoMjesto[1], 0.0) > RP_UDALJENOST_MIN * 0.75;
+        if (VectorSize(x - gRepoMjesto[0], y - gRepoMjesto[1], 0.0) > RP_UDALJENOST_MIN * 0.75 && RepoRub(x, y, z, a)) break;
     }
-    for (new k = 0; k < 8; k++)
-    {
-        if (!Lik_NaCesti(x - 6.0 * floatsin(float(k * 45), degrees), y + 6.0 * floatcos(float(k * 45), degrees), z)) continue;
-        a = float(k * 45);
-        x += 2.0 * floatcos(a, degrees);
-        y += 2.0 * floatsin(a, degrees);
-        break;
-    }
-    gRepoAuto[playerid] = CreateVehicle(model, x, y, z + 0.6, a, -1, -1, -1);
+    if (Kolizija_Zraka(x, y, z + 4.0, x, y, z - 6.0, hx, hy, hz)) z = hz;
+    gRepoAuto[playerid] = CreateVehicle(model, x, y, z + 0.8, a, -1, -1, -1);
     if (gRepoAuto[playerid] == INVALID_VEHICLE_ID) return 0;
+    GepekZonaMakni(gRepoAuto[playerid]);
     VoziloSet(gRepoAuto[playerid], VP_MOTOR, 0);
     VoziloSet(gRepoAuto[playerid], VP_VRATA, 1);
     gRepoIsplata[playerid] = clamp(cijena / 100 * RP_POSTO, RP_ISPLATA_MIN, RP_ISPLATA_MAX);
@@ -134,13 +160,14 @@ static RepoNovoAuto(playerid)
 
 static RepoPocni(playerid)
 {
+    if (!gRepoImaKamion || !gRepoImaCilj) return ObavijestGreska(playerid, T(playerid, "Repo posao jos nije postavljen.")), 1;
     new v = CreateVehicle(RP_KAMION_MODEL, gRepoKamionPoz[0], gRepoKamionPoz[1], gRepoKamionPoz[2] + 0.5, gRepoKamionPoz[3], 0, 0, -1);
     if (v == INVALID_VEHICLE_ID) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kamiona.")), 1;
     gRepoKamion[playerid] = v;
     PutPlayerInVehicle(playerid, v, 0);
     VoziloSet(v, VP_MOTOR, 1);
     RepoNovoAuto(playerid);
-    Savjet(playerid, T(playerid, "Dovezite se unatrag do auta da ga prikacite~n~Odvezite ga na repo mjesto~n~Obidite auto i pritisnite ~y~ALT~w~ kod strelica"), 8000);
+    Savjet(playerid, T(playerid, "Dovezite se unatrag do auta da ga prikacite~n~Odvezite ga na mjesto za dovoz~n~Obidite auto i pritisnite ~y~ALT~w~ kod strelica"), 8000);
     return 1;
 }
 
@@ -195,6 +222,10 @@ static RepoRastavi(playerid)
     if (gRepoRadi[playerid]) return 1;
     new s = RepoBlizuStrane(playerid);
     if (s == -1) return ObavijestGreska(playerid, T(playerid, "Pridite strelici kraj auta.")), 1;
+    new Float:px, Float:py, Float:pz, Float:vx, Float:vy, Float:vz;
+    GetPlayerPos(playerid, px, py, pz);
+    GetVehiclePos(gRepoAuto[playerid], vx, vy, vz);
+    SetPlayerFacingAngle(playerid, atan2(-(vx - px), vy - py));
     gRepoRadi[playerid] = true;
     ApplyAnimation(playerid, "CAR", "Fixn_Car_Loop", 4.1, true, false, false, false, 0, SYNC_ALL);
     SetTimerEx("RepoDioGotov", RP_RAD_MS, false, "iii", playerid, gAccountId[playerid], s);
@@ -316,7 +347,7 @@ RepoTick()
                 SetPlayerCheckpoint(i, x, y, z, 4.0);
                 ObavijestGreska(i, T(i, "Auto se otkacio. Ponovo ga prikacite."));
             }
-            else if (VectorSize(x - gRepoMjesto[0], y - gRepoMjesto[1], z - gRepoMjesto[2]) < RP_ISTOVAR_DOMET) RepoIstovari(i);
+            else if (VectorSize(x - gRepoCilj[0], y - gRepoCilj[1], z - gRepoCilj[2]) < RP_ISTOVAR_DOMET) RepoIstovari(i);
             continue;
         }
         if (!vuce && GetPlayerVehicleID(i) == k)
@@ -334,23 +365,24 @@ RepoTick()
         }
         if (!vuce) continue;
         gRepoFaza[i] = RPF_VUCE;
-        SetPlayerCheckpoint(i, gRepoMjesto[0], gRepoMjesto[1], gRepoMjesto[2], RP_ISTOVAR_DOMET / 2.0);
-        ObavijestInfo(i, T(i, "Repo"), T(i, "Auto je prikacen. Odvezite ga na repo mjesto (oznaceno na karti)."));
+        SetPlayerCheckpoint(i, gRepoCilj[0], gRepoCilj[1], gRepoCilj[2], RP_ISTOVAR_DOMET / 2.0);
+        ObavijestInfo(i, T(i, "Repo"), T(i, "Auto je prikacen. Odvezite ga na mjesto za dovoz (oznaceno na karti)."));
     }
 }
 
 ShowRepoAdmin(playerid)
 {
-    new list[256], len = 0;
+    new list[384], len = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Repo mjesto na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Repo kamion na mojoj poziciji"));
+    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Mjesto za dovoz repo auta na mojoj poziciji"));
     return PrikaziDialog(playerid, DLG_APANEL_REPO, DIALOG_STYLE_LIST, T(playerid, "Repo posao"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 DLG:apanel_repo(playerid, response, listitem)
 {
     if (!response) return ShowKategoriju(playerid);
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem < 0 || listitem > 1) return 1;
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem < 0 || listitem > 2) return 1;
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return ObavijestGreska(playerid, T(playerid, "Ovo se postavlja samo izvana.")), ShowRepoAdmin(playerid);
     new Float:x, Float:y, Float:z, Float:a, v = GetPlayerVehicleID(playerid);
     if (v) GetVehiclePos(v, x, y, z), GetVehicleZAngle(v, a);
@@ -362,10 +394,17 @@ DLG:apanel_repo(playerid, response, listitem)
         RepoMjestoStvori();
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Repo mjesto postavljeno."));
     }
-    else
+    else if (listitem == 1)
     {
         gRepoKamionPoz[0] = x, gRepoKamionPoz[1] = y, gRepoKamionPoz[2] = z, gRepoKamionPoz[3] = a;
+        gRepoImaKamion = true;
         SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Repo kamion postavljen."));
+    }
+    else
+    {
+        gRepoCilj[0] = x, gRepoCilj[1] = y, gRepoCilj[2] = z, gRepoCilj[3] = a;
+        gRepoImaCilj = true;
+        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Mjesto za dovoz repo auta postavljeno."));
     }
     return ShowRepoAdmin(playerid);
 }
