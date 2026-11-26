@@ -26,8 +26,11 @@
 #define PZ_GORIVO_S         30
 #define PZ_UTOVAR_MAX       240
 #define PZ_TURA             3
+#define PZ_SCENA_MAX        40
+#define PZ_SCENA_BRZINA     5.0
+#define PZ_VOZILO_Z         1.6
 
-enum { PZF_NEMA, PZF_KACI, PZF_LUKA, PZF_UTOVAR, PZF_VOZI, PZF_POVRATAK }
+enum { PZF_NEMA, PZF_KACI, PZF_LUKA, PZF_UTOVAR, PZF_VOZI, PZF_POVRATAK, PZF_SCENA }
 enum { PZM_ODJECA, PZM_TRGOVINA, PZM_RESTORAN, PZM_NAMJESTAJ, PZM_ZLATARA, PZM_ORUZARNICA, PZM_TUNING, PZM_PUMPA, PZM_BROJ }
 enum E_PZ_TERET { ptIme[32], ptNivo, ptKamion, ptPrikolica, ptBaza, ptMjesto, Float:ptDomet, ptXp }
 
@@ -43,7 +46,17 @@ static const gPrijevozTeret[][E_PZ_TERET] = {
     { "Krijumcarena roba", PZ_NIVOA, 515, 435, 1400, -1, 0.0, 5 }
 };
 static const gPrijevozXp[PZ_NIVOA] = { 0, 15, 45, 100, 180 };
-static const Float:gPrijevozZadano[3][4] = { { 2217.828, -2225.561, 13.55, 315.0 }, { 2223.130, -2228.035, 13.2, 315.0 }, { 2214.293, -2236.873, 13.2, 315.0 } };
+static const Float:gPrijevozZadano[3][4] = { { 2123.0557, -2274.9922, 20.6719, 46.2314 }, { 2161.3994, -2282.1294, 12.40, 223.9835 }, { 2214.293, -2236.873, 13.2, 315.0 } };
+static const Float:gPrijevozHangar[4] = { 2164.533, -2240.699, 12.30, 225.0 };
+static const Float:gPrijevozRezerva[4] = { 2223.130, -2228.035, 12.55, 315.0 };
+static const Float:gPrijevozKamera[6] = { 2204.060, -2263.397, 17.5, 2177.968, -2254.134, 15.5 };
+static const Float:gPrijevozRuta[] = {
+    2164.533, -2240.699, 12.300, 2169.191, -2245.357, 12.300, 2173.584, -2249.750, 13.035, 2177.968, -2254.134, 13.770,
+    2180.796, -2256.963, 13.770, 2185.181, -2261.347, 13.145, 2189.591, -2265.757, 12.520, 2187.443, -2270.822, 12.520,
+    2182.847, -2276.125, 12.530, 2176.130, -2280.721, 12.510, 2168.351, -2282.843, 12.460, 2164.109, -2282.843, 12.430,
+    2161.401, -2282.129, 12.400
+};
+static gPrijevozScenaIgrac = INVALID_PLAYER_ID, gPrijevozScenaLik = INVALID_LIK, gPrijevozScenaTimer, gPrijevozScenaOd;
 
 static Float:gPrijevozPoz[4][4], bool:gPrijevozIma[4], STREAMER_TAG_3D_TEXT_LABEL:gPrijevozTekst;
 static gPrijevozFaza[MAX_PLAYERS], gPrijevozVrsta[MAX_PLAYERS], gPrijevozKamion[MAX_PLAYERS], gPrijevozPrikolica[MAX_PLAYERS], gPrijevozRok[MAX_PLAYERS], gPrijevozOtkaceno[MAX_PLAYERS];
@@ -60,7 +73,7 @@ InitPrijevoz()
         for (new k = 0; k < 4; k++) gPrijevozPoz[id][k] = gPrijevozZadano[id][k];
         gPrijevozIma[id] = true;
     }
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_trucker WHERE id IN (1, 2, 3, 4)");
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_trucker WHERE id IN (3, 4)");
     for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
     {
         new id = DB_GetFieldInt(res, 0) - 1;
@@ -203,7 +216,9 @@ static PrijevozPocni(playerid, p)
     gPrijevozPonudaBroj[playerid] = 0;
     if (model && !gPrijevozIma[2]) return ObavijestGreska(playerid, T(playerid, "Mjesto za prikolice jos nije postavljeno.")), 1;
     if (PrijevozZauzeto(1) || (model && PrijevozZauzeto(2))) return ObavijestGreska(playerid, T(playerid, "Mjesto za kamion je zauzeto, pricekajte malo.")), 1;
-    k = CreateVehicle(gPrijevozTeret[t][ptKamion], gPrijevozPoz[1][0], gPrijevozPoz[1][1], gPrijevozPoz[1][2] + 0.5, gPrijevozPoz[1][3], 1, 1, -1);
+    new bool:scena = gPrijevozScenaIgrac == INVALID_PLAYER_ID;
+    k = scena ? CreateVehicle(gPrijevozTeret[t][ptKamion], gPrijevozHangar[0], gPrijevozHangar[1], gPrijevozHangar[2] + PZ_VOZILO_Z, gPrijevozHangar[3], 1, 1, -1)
+        : CreateVehicle(gPrijevozTeret[t][ptKamion], gPrijevozRezerva[0], gPrijevozRezerva[1], gPrijevozRezerva[2] + PZ_VOZILO_Z, gPrijevozRezerva[3], 1, 1, -1);
     if (k == INVALID_VEHICLE_ID) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kamiona.")), 1;
     if (model)
     {
@@ -226,17 +241,125 @@ static PrijevozPocni(playerid, p)
     strcat(gPrijevozZona[playerid], CestaZona(gPrijevozCilj[playerid][0], gPrijevozCilj[playerid][1]));
     gPrijevozDojava[playerid] = false;
     gPrijevozOtkaceno[playerid] = gPrijevozPrevrnut[playerid] = gPrijevozSavjet[playerid] = gPrijevozPauza[playerid] = 0;
-    PutPlayerInVehicle(playerid, k, 0);
-    VoziloSet(k, VP_MOTOR, 1);
-    if (!model)
+    gPrijevozFaza[playerid] = PZF_SCENA;
+    gPrijevozScenaOd = gettime();
+    if (scena) gPrijevozScenaIgrac = playerid;
+    TogglePlayerControllable(playerid, false);
+    Fade(playerid, 0);
+    if (scena) SetTimerEx("PrijevozScenaPocni", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
+    else SetTimerEx("PrijevozScenaPredaj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
+    return 1;
+}
+
+static PrijevozNakonKamiona(playerid)
+{
+    if (gPrijevozPrikolica[playerid] == INVALID_VEHICLE_ID)
     {
         PrijevozLuka(playerid);
-        return 1;
+        return;
     }
     gPrijevozFaza[playerid] = PZF_KACI;
     SetPlayerCheckpoint(playerid, gPrijevozPoz[2][0], gPrijevozPoz[2][1], gPrijevozPoz[2][2], 3.0);
     PrijevozPanel(playerid);
+}
+
+static PrijevozScenaKraj(playerid)
+{
+    if (gPrijevozScenaIgrac != playerid) return;
+    if (gPrijevozScenaTimer) KillTimer(gPrijevozScenaTimer);
+    gPrijevozScenaTimer = 0;
+    if (gPrijevozScenaLik != INVALID_LIK) Lik_Ukloni(gPrijevozScenaLik);
+    gPrijevozScenaLik = INVALID_LIK;
+    gPrijevozScenaIgrac = INVALID_PLAYER_ID;
+    MapaKamionDepoVrata(false, true);
+}
+
+static PrijevozScenaPrekini(playerid)
+{
+    PrijevozScenaKraj(playerid);
+    if (!IsPlayerConnected(playerid)) return;
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+    Fade(playerid, FADE_SLOJEVA + 1);
+}
+
+forward PrijevozScenaPocni(playerid, racun);
+public PrijevozScenaPocni(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPrijevozFaza[playerid] != PZF_SCENA || gPrijevozScenaIgrac != playerid) return;
+    new k = gPrijevozKamion[playerid];
+    new lik = Lik_Stvori(GetPlayerSkin(playerid), gPrijevozHangar[0], gPrijevozHangar[1], gPrijevozHangar[2] + 1.0, gPrijevozHangar[3]);
+    if (lik == INVALID_LIK)
+    {
+        PrijevozScenaPredaj(playerid, racun);
+        return;
+    }
+    gPrijevozScenaLik = lik;
+    Lik_Neranjiv(lik, true);
+    VoziloSet(k, VP_MOTOR, 1);
+    Lik_UVozilo(lik, k, 0);
+    SetPlayerCameraPos(playerid, gPrijevozKamera[0], gPrijevozKamera[1], gPrijevozKamera[2]);
+    SetPlayerCameraLookAt(playerid, gPrijevozKamera[3], gPrijevozKamera[4], gPrijevozKamera[5], CAMERA_CUT);
+    Fade(playerid, FADE_SLOJEVA + 1);
+    MapaKamionDepoVrata(true);
+    SetTimerEx("PrijevozScenaKreni", 2600, false, "ii", playerid, racun);
+}
+
+forward PrijevozScenaKreni(playerid, racun);
+public PrijevozScenaKreni(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPrijevozScenaIgrac != playerid || gPrijevozScenaLik == INVALID_LIK) return;
+    if (!Lik_VoziPutem(gPrijevozScenaLik, gPrijevozRuta, sizeof gPrijevozRuta / 3, PZ_SCENA_BRZINA))
+    {
+        PrijevozScenaStigao();
+        return;
+    }
+    gPrijevozScenaTimer = SetTimerEx("PrijevozScenaKamera", 250, true, "i", playerid);
+}
+
+forward PrijevozScenaKamera(playerid);
+public PrijevozScenaKamera(playerid)
+{
+    new Float:x, Float:y, Float:z;
+    if (gPrijevozScenaIgrac != playerid || gPrijevozScenaLik == INVALID_LIK || !Lik_Pozicija(gPrijevozScenaLik, x, y, z)) return;
+    SetPlayerCameraLookAt(playerid, x, y, z, CAMERA_MOVE);
+}
+
+static PrijevozScenaStigao()
+{
+    new playerid = gPrijevozScenaIgrac;
+    if (playerid == INVALID_PLAYER_ID) return;
+    if (gPrijevozScenaTimer) KillTimer(gPrijevozScenaTimer);
+    gPrijevozScenaTimer = 0;
+    MapaKamionDepoVrata(false, true);
+    Fade(playerid, 0);
+    SetTimerEx("PrijevozScenaPredaj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
+}
+
+PrijevozStigao(lik)
+{
+    if (lik == INVALID_LIK || lik != gPrijevozScenaLik) return 0;
+    PrijevozScenaStigao();
     return 1;
+}
+
+forward PrijevozScenaPredaj(playerid, racun);
+public PrijevozScenaPredaj(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPrijevozFaza[playerid] != PZF_SCENA) return;
+    new bool:scena = gPrijevozScenaIgrac == playerid, k = gPrijevozKamion[playerid];
+    PrijevozScenaKraj(playerid);
+    if (scena)
+    {
+        SetVehiclePos(k, gPrijevozPoz[1][0], gPrijevozPoz[1][1], gPrijevozPoz[1][2] + PZ_VOZILO_Z);
+        SetVehicleZAngle(k, gPrijevozPoz[1][3]);
+    }
+    VoziloSet(k, VP_MOTOR, 1);
+    PutPlayerInVehicle(playerid, k, 0);
+    TogglePlayerControllable(playerid, true);
+    SetCameraBehindPlayer(playerid);
+    Fade(playerid, FADE_SLOJEVA + 1);
+    PrijevozNakonKamiona(playerid);
 }
 
 static bool:PrijevozStoji(v)
@@ -346,6 +469,7 @@ PrijevozKraj(playerid)
 {
     gPrijevozPonudaBroj[playerid] = 0;
     if (!gPrijevozFaza[playerid]) return;
+    if (gPrijevozFaza[playerid] == PZF_SCENA) PrijevozScenaPrekini(playerid);
     gPrijevozFaza[playerid] = PZF_NEMA;
     PrijevozUtovarOslobodi(playerid);
     PrijevozTeretMakni(playerid);
@@ -551,6 +675,11 @@ PrijevozTick()
             if (IsPlayerConnected(i)) ObavijestGreska(i, T(i, "Kamion je unisten, tura je propala."));
             continue;
         }
+        if (gPrijevozFaza[i] == PZF_SCENA)
+        {
+            if (gettime() - gPrijevozScenaOd > PZ_SCENA_MAX && gPrijevozScenaIgrac == i) PrijevozScenaPredaj(i, gAccountId[i]);
+            continue;
+        }
         new savjet = 0, bool:vozi = GetPlayerVehicleID(i) == k && GetPlayerState(i) == PLAYER_STATE_DRIVER;
         if (gPrijevozFaza[i] == PZF_POVRATAK)
         {
@@ -616,8 +745,6 @@ PrijevozTick()
 ShowPrijevozAdmin(playerid)
 {
     new list[384], len = 0;
-    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Depo prijevoza na mojoj poziciji"));
-    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Mjesto za kamion na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Mjesto za prikolicu na mojoj poziciji"));
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Utovarno mjesto u luci na mojoj poziciji"));
     return PrikaziDialog(playerid, DLG_APANEL_PRIJEVOZ, DIALOG_STYLE_LIST, T(playerid, "Prijevoz tereta"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
@@ -626,7 +753,8 @@ ShowPrijevozAdmin(playerid)
 DLG:apanel_prijevoz(playerid, response, listitem)
 {
     if (!response) return ShowKategoriju(playerid);
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem < 0 || listitem > 3) return 1;
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem < 0 || listitem > 1) return 1;
+    listitem += 2;
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return ObavijestGreska(playerid, T(playerid, "Ovo se postavlja samo izvana.")), ShowPrijevozAdmin(playerid);
     new Float:x, Float:y, Float:z, Float:a, v = GetPlayerVehicleID(playerid);
     if (v) GetVehiclePos(v, x, y, z), GetVehicleZAngle(v, a);
@@ -634,7 +762,6 @@ DLG:apanel_prijevoz(playerid, response, listitem)
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO job_trucker (id, x, y, z, a) VALUES (%d, %f, %f, %f, %f)", listitem + 1, x, y, z, a));
     gPrijevozPoz[listitem][0] = x, gPrijevozPoz[listitem][1] = y, gPrijevozPoz[listitem][2] = z, gPrijevozPoz[listitem][3] = a;
     gPrijevozIma[listitem] = true;
-    if (listitem == 0) PrijevozDepoStvori();
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Pozicija za prijevoz tereta postavljena."));
     return ShowPrijevozAdmin(playerid);
 }
