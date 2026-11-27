@@ -47,7 +47,7 @@ RestoranPozicija(i, &Float:x, &Float:y, &Float:z)
     z = gRestoran[i][2];
     return 1;
 }
-static Float:gDepo[4], bool:gImaDepo, gDepoIkona, STREAMER_TAG_3D_TEXT_LABEL:gDepoTekst;
+static Float:gDepo[4], bool:gImaDepo, gDepoIkona, STREAMER_TAG_3D_TEXT_LABEL:gDepoTekst, STREAMER_TAG_3D_TEXT_LABEL:gToranjTekst;
 
 InitPlaca()
 {
@@ -59,6 +59,62 @@ InitPlaca()
         DepoStvori();
     }
     DB_FreeResultSet(res);
+    gToranjTekst = CreateDynamic3DTextLabel("Kontrolni toranj\nALT", 0x5B8DBFFF, gToranj[0], gToranj[1], gToranj[2] + 0.5, 15.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, 0, 0);
+    InterakcijaOznaka(gToranjTekst, ATC_DOMET);
+}
+
+static bool:AtcUTornju(playerid, Float:r = ATC_DOMET)
+{
+    return !GetPlayerInterior(playerid) && GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && IsPlayerInRangeOfPoint(playerid, r, gToranj[0], gToranj[1], gToranj[2]);
+}
+
+static AtcIzbornik(playerid)
+{
+    if (gPosao[playerid] != POSAO_KONTROLOR) return UpitDaNe(playerid, UPIT_TORANJ, 0, 0, T(playerid, "Kontrolni toranj"), T(playerid, "Zelite li se zaposliti kao kontrolor leta?"));
+    if (AtcNaSmjeni(playerid)) return UpitDaNe(playerid, UPIT_TORANJ, 0, 2, T(playerid, "Kontrolni toranj"), T(playerid, "Zelite li zavrsiti smjenu?"));
+    return UpitDaNe(playerid, UPIT_TORANJ, 0, 1, T(playerid, "Kontrolni toranj"), T(playerid, "Zelite li zapoceti smjenu?"));
+}
+
+static AtcSmjenaPocni(playerid)
+{
+    if (!AtcPocni(playerid)) return ObavijestGreska(playerid, T(playerid, "Svi kontrolni tornjevi su trenutno zauzeti."));
+    return ObavijestInfo(playerid, T(playerid, "Kontrolni toranj"), T(playerid, "Smjena u tornju je pocela. Pazite na pistu i rulnu stazu prije svakog odobrenja. Kraj smjene s /posao."));
+}
+
+AtcAlt(playerid)
+{
+    if (!gUlogiran[playerid] || IsRanjen(playerid) || !AtcUTornju(playerid)) return 0;
+    return AtcIzbornik(playerid), 1;
+}
+
+AtcUpit(playerid, opcija, bool:da)
+{
+    if (!da) return 1;
+    if (opcija == 2)
+    {
+        AtcKraj(playerid);
+        return ObavijestInfo(playerid, T(playerid, "Kontrolni toranj"), T(playerid, "Zavrsili ste smjenu."));
+    }
+    if (!AtcUTornju(playerid, ATC_DOMET + 2.0)) return 1;
+    if (opcija == 0 && gPosao[playerid] != POSAO_KONTROLOR)
+    {
+        RibarKraj(playerid);
+        PosaoPostavi(playerid, POSAO_KONTROLOR);
+        return ObavijestInfo(playerid, T(playerid, "Kontrolni toranj"), T(playerid, "Zaposleni ste kao kontrolor leta. Pritisnite ALT ovdje (ili /posao) da zapocnete smjenu."));
+    }
+    if (opcija == 1 && gPosao[playerid] == POSAO_KONTROLOR && !AtcNaSmjeni(playerid)) return AtcSmjenaPocni(playerid);
+    return 1;
+}
+
+static AtcPosao(playerid)
+{
+    if (AtcNaSmjeni(playerid))
+    {
+        AtcKraj(playerid);
+        return ObavijestInfo(playerid, T(playerid, "Kontrolni toranj"), T(playerid, "Zavrsili ste smjenu.")), 1;
+    }
+    if (!AtcUTornju(playerid)) return 0;
+    return AtcIzbornik(playerid), 1;
 }
 
 static DepoStvori()
@@ -318,19 +374,8 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid] || PrijevozPosao(playerid) || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid)) return 1;
-    if (gPosao[playerid] == POSAO_KONTROLOR)
-    {
-        if (AtcNaSmjeni(playerid))
-        {
-            AtcKraj(playerid);
-            return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Zavrsili ste smjenu."));
-        }
-        if (!IsPlayerInRangeOfPoint(playerid, ATC_DOMET, gToranj[0], gToranj[1], gToranj[2])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
-        if (IsPlayerInAnyVehicle(playerid) || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
-        if (!AtcPocni(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi kontrolni tornjevi su trenutno zauzeti."));
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Smjena u tornju je pocela. Pazite na pistu i rulnu stazu prije svakog odobrenja. Kraj smjene s /posao."));
-    }
+    if (!gUlogiran[playerid] || AtcPosao(playerid) || PrijevozPosao(playerid) || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid)) return 1;
+    if (gPosao[playerid] == POSAO_KONTROLOR) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
     if (gPosao[playerid] != POSAO_DOSTAVLJAC) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate posao. Zaposlite se u opstini."));
     if (gDostavaVozilo[playerid])
     {

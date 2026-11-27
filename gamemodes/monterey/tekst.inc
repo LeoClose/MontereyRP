@@ -2090,6 +2090,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Zelite li se zaposliti kao kontrolor leta?", "Do you want to work as an air traffic controller?", "Khotite rabotat dispetcherom?", "Quieres trabajar como controlador aereo?", "Hava trafik kontrolor olarak calismak ister misiniz?" },
+    { "Zaposleni ste kao kontrolor leta. Pritisnite ALT ovdje (ili /posao) da zapocnete smjenu.", "You're now an air traffic controller. Press ALT here (or /posao) to start your shift.", "Вы устроились авиадиспетчером. Нажмите ALT здесь (или /posao), чтобы начать смену.", "Ahora eres controlador aereo. Pulsa ALT aqui (o /posao) para empezar el turno.", "Artik hava trafik kontrolorusunuz. Vardiyaya baslamak icin burada ALT'a (veya /posao) basin." },
     { "trazi rulanje do parkinga", "requests taxi to parking", "zaprashivaet rulenie k stoyanke", "solicita rodaje al aparcamiento", "parka taksi istiyor" },
     { "trazi guranje i rulanje", "requests pushback and taxi", "zaprashivaet buksirovku i rulenie", "solicita remolque y rodaje", "itme ve taksi istiyor" },
     { "trazi polijetanje", "requests takeoff", "zaprashivaet vzlet", "solicita despegue", "kalkis istiyor" },
