@@ -750,6 +750,7 @@ static VrtNoviPosao(playerid)
         default: format(poruka, sizeof poruka, T(playerid, "Pozdrav, ograda mi se raspala, mozete li postaviti novu? Adresa: %s."), CestaZona(gVrtKuca[k][vkX], gVrtKuca[k][vkY]));
     }
     MobitelPrimiPoruku(gAccountId[playerid], broj, poruka);
+    format(poruka, sizeof poruka, T(playerid, "Lokacija: %s~n~Posao: %s"), CestaZona(gVrtKuca[k][vkX], gVrtKuca[k][vkY]), T(playerid, gVrtPosaoIme[tip]));
     IgraObavijest(playerid, T(playerid, "Novi poziv"), VRT_BOJA, poruka, 6000);
     PlayerPlaySound(playerid, 1149, 0.0, 0.0, 0.0);
 }
