@@ -2090,6 +2090,8 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Hangar je trenutno zauzet, pricekajte malo.", "The hangar is busy right now, please wait a moment.", "Ангар сейчас занят, подождите немного.", "El hangar esta ocupado ahora, espera un momento.", "Hangar su anda dolu, lutfen biraz bekleyin." },
+    { "Nivo %d (%d XP)", "Level %d (%d XP)", "Uroven %d (%d XP)", "Nivel %d (%d XP)", "Seviye %d (%d XP)" },
     { "Istovar goriva je u tijeku, pricekajte.", "Fuel is being unloaded, please wait.", "Идёт слив топлива, подождите.", "Se esta descargando el combustible, espera.", "Yakit bosaltiliyor, lutfen bekleyin." },
     { "Izadjite iz kamiona i odnesite sanduke u trgovinu (oznaceno na karti).", "Get out of the truck and carry the crates into the store (marked on the map).", "Выйдите из грузовика и отнесите ящики в магазин (отмечено на карте).", "Baja del camion y lleva las cajas a la tienda (marcada en el mapa).", "Kamyondan inin ve kasalari dukkana tasiyin (haritada isaretli)." },
     { "Radnici iz trgovine istovaruju teret, pricekajte.", "Store workers are unloading the cargo, please wait.", "Работники магазина разгружают груз, подождите.", "Los trabajadores de la tienda descargan la carga, espera.", "Dukkan calisanlari yuku bosaltiyor, lutfen bekleyin." },

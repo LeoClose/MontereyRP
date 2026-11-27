@@ -226,7 +226,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (KaznaKey(playerid, newkeys, oldkeys)) return 1;
     if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
-    if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
+    if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || PrijevozMeniKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
     if (RestoranKey(playerid, newkeys, oldkeys) || RibarKey(playerid, newkeys, oldkeys) || RepoKey(playerid, newkeys, oldkeys) || PrijevozKey(playerid, newkeys, oldkeys) || PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
     if (KradjaKey(playerid, newkeys, oldkeys)) return 1;
     if (KapijaKey(playerid, newkeys, oldkeys)) return 1;
@@ -296,6 +296,7 @@ public OnPlayerUpdate(playerid)
     MobitelUpdate(playerid);
     VoziloUpdate(playerid);
     TuningUpdate(playerid);
+    PrijevozMeniUpdate(playerid);
     TrgovinaUpdate(playerid);
     BankaUpdate(playerid);
     ZlataraUpdate(playerid);
