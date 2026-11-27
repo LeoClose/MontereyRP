@@ -10,7 +10,7 @@
 #define POSAO_RIBAR         3
 #define POSAO_RESTORAN         4
 #define POSAO_SKLADISTAR    5
-#define ATC_DOMET           80.0
+#define ATC_DOMET           4.0
 #define DOSTAVA_VOZILO      499
 #define DOSTAVA_BAZA        30
 #define DOSTAVA_PO_KM       25
@@ -22,7 +22,7 @@
 #define HRANA_DOMET         4.0
 #define HRANA_CIJENA        15
 
-static const Float:gToranj[3] = { 1610.0, -2285.0, 13.5 };
+static const Float:gToranj[3] = { 1627.5042, -2286.1748, 94.1328 };
 static gPosao[MAX_PLAYERS], gPlacaDuty[MAX_PLAYERS], gDostavaVozilo[MAX_PLAYERS], bool:gDostavaCilj[MAX_PLAYERS], Float:gDostavaOd[MAX_PLAYERS][2];
 static const Float:gRestoran[][3] = {
     { 811.98, -1616.02, 13.62 },
