@@ -82,9 +82,30 @@ static gPrijevozPonuda[MAX_PLAYERS][PZ_PONUDA], Float:gPrijevozPonudaPoz[MAX_PLA
 #define PZ_MENI_RED         14.0
 #define PZ_MENI_CEKAJ_MS    350
 #define PZ_MENI_PONOVI_MS   120
+#define PZ_MENI_REDOVA      8
+#define PZ_KONVOJA          16
+#define PZ_KONVOJ_MAX       5
+#define PZ_KONVOJ_XP        2
+#define PZ_KONVOJ_BONUS     15
+#define PZ_KONVOJ_KAZNA     5
+#define PZ_KONVOJ_DOMET     25.0
+#define PZ_KONVOJ_DALEKO    300.0
+#define PZ_KONVOJ_POVRATAK_S 60
+#define PZR_KONVOJ          100
+#define PZR_POZOVI          101
+#define PZR_KRENI           102
+#define PZR_ODBACI          103
+#define PZR_NAPUSTI         104
+#define PZR_IGRAC           1000
 enum { PZT_POZADINA, PZT_NASLOV, PZT_TRAKA, PZT_PODNASLOV, PZT_DNO, PZT_POMOC, PZT_ODABERI, PZT_NATRAG, PZT_RED }
-static PlayerText:gPrijevozMeniTd[MAX_PLAYERS][PZT_RED + PZ_PONUDA * 3], gPrijevozMeniBroj[MAX_PLAYERS], bool:gPrijevozMeniMis[MAX_PLAYERS], gPrijevozMeniIdx[MAX_PLAYERS];
-static gPrijevozMeniStrana[MAX_PLAYERS], gPrijevozMeniSmjer[MAX_PLAYERS], gPrijevozMeniPonovi[MAX_PLAYERS];
+enum { PZV_RUTE, PZV_KONVOJ, PZV_LOBI }
+enum { KVF_NEMA, KVF_OKUPLJA, KVF_KRECE, KVF_VOZI }
+enum { KVR_IZLAZ, KVR_PROPAO, KVR_DALEKO, KVR_GOTOV }
+static PlayerText:gPrijevozMeniTd[MAX_PLAYERS][PZT_RED + PZ_MENI_REDOVA * 3], gPrijevozMeniBroj[MAX_PLAYERS], bool:gPrijevozMeniMis[MAX_PLAYERS], gPrijevozMeniIdx[MAX_PLAYERS];
+static gPrijevozMeniStrana[MAX_PLAYERS], gPrijevozMeniSmjer[MAX_PLAYERS], gPrijevozMeniPonovi[MAX_PLAYERS], gPrijevozMeniVrsta[MAX_PLAYERS];
+static gPrijevozMeniAkcija[MAX_PLAYERS][PZ_MENI_REDOVA], gPrijevozMeniBoja[MAX_PLAYERS][PZ_MENI_REDOVA];
+static gPrijevozKvFaza[PZ_KONVOJA], gPrijevozKvVodja[PZ_KONVOJA], gPrijevozKvTeret[PZ_KONVOJA], gPrijevozKvBonus[PZ_KONVOJA], Float:gPrijevozKvCilj[PZ_KONVOJA][3], Float:gPrijevozKvDucan[PZ_KONVOJA][3];
+static gPrijevozKonvoj[MAX_PLAYERS] = { -1, ... }, gPrijevozKvPoziv[MAX_PLAYERS] = { -1, ... }, gPrijevozKvDaleko[MAX_PLAYERS], bool:gPrijevozKvCeka[MAX_PLAYERS], bool:gPrijevozKvUnos[MAX_PLAYERS], bool:gPrijevozKvImaBonus[MAX_PLAYERS];
 
 InitPrijevoz()
 {
@@ -217,30 +238,73 @@ static PrijevozPonude(playerid)
     }
     gPrijevozPonudaBroj[playerid] = p;
     if (!p) return ObavijestGreska(playerid, T(playerid, "Trenutno nema dostupnih tura.")), 1;
-    PrijevozMeniOtvori(playerid, nivo, xp);
+    PrijevozMeniRute(playerid, PZV_RUTE);
     return 1;
 }
 
-static PrijevozMeniOtvori(playerid, nivo, xp)
+static PrijevozMeniRute(playerid, vrsta)
 {
+    new akcije[PZ_MENI_REDOVA], n = 0, podnaslov[64], xp = PrijevozXp(playerid);
+    for (new p = 0; p < gPrijevozPonudaBroj[playerid]; p++) akcije[n++] = p;
+    if (vrsta == PZV_RUTE && xp >= PZ_KONVOJ_XP) akcije[n++] = PZR_KONVOJ;
+    if (vrsta == PZV_RUTE) format(podnaslov, sizeof podnaslov, T(playerid, "Nivo %d (%d XP)"), PrijevozNivo(xp), xp);
+    else format(podnaslov, sizeof podnaslov, T(playerid, "Konvoj: odaberite rutu"));
+    PrijevozMeniOtvori(playerid, vrsta, T(playerid, "Prijevoz tereta"), podnaslov, akcije, n);
+}
+
+static PrijevozMeniRed(playerid, a, lijevo[], desno[], &boja)
+{
+    lijevo[0] = desno[0] = EOS;
+    boja = 0xFFFFFFFF;
+    if (a < PZ_PONUDA)
+    {
+        new t = gPrijevozPonuda[playerid][a], Float:d = VectorSize(gPrijevozPonudaPoz[playerid][a][0] - gPrijevozPoz[3][0], gPrijevozPonudaPoz[playerid][a][1] - gPrijevozPoz[3][1], 0.0);
+        format(lijevo, 96, "%s - %s", T(playerid, gPrijevozTeret[t][ptIme]), CestaZona(gPrijevozPonudaPoz[playerid][a][0], gPrijevozPonudaPoz[playerid][a][1]));
+        format(desno, 32, "%.1f km  $%d", d / 1000.0, PrijevozOsnova(t, d));
+        if (t == PZ_ILEGALNO) boja = 0xE74C3CFF;
+        return;
+    }
+    if (a >= PZR_IGRAC)
+    {
+        new i = a - PZR_IGRAC, k = gPrijevozKonvoj[i];
+        format(lijevo, 96, "%s", GetRPIme(i));
+        if (k != -1 && gPrijevozKvVodja[k] == i) format(desno, 32, T(playerid, "Vodja"));
+        boja = 0xBDC3C7FF;
+        return;
+    }
+    switch (a)
+    {
+        case PZR_KONVOJ: format(lijevo, 96, T(playerid, "Pokreni konvoj")), boja = 0xF1C40FFF;
+        case PZR_POZOVI: format(lijevo, 96, T(playerid, "Pozovi igraca")), boja = 0x8AB4F8FF;
+        case PZR_KRENI: format(lijevo, 96, T(playerid, "Kreni s konvojem")), boja = 0x2ECC71FF;
+        case PZR_ODBACI: format(lijevo, 96, T(playerid, "Odbaci konvoj")), boja = 0xE74C3CFF;
+        case PZR_NAPUSTI: format(lijevo, 96, T(playerid, "Napusti konvoj")), boja = 0xE74C3CFF;
+    }
+    if (a != PZR_POZOVI) format(desno, 32, ">");
+}
+
+static PrijevozMeniOtvori(playerid, vrsta, const naslov[], const podnaslov[], const akcije[], n)
+{
+    new staro = gPrijevozMeniBroj[playerid] && gPrijevozMeniVrsta[playerid] == vrsta ? gPrijevozMeniIdx[playerid] : 0, bool:mis = gPrijevozMeniBroj[playerid] > 0 && gPrijevozMeniMis[playerid];
     PrijevozMeniZatvori(playerid);
-    new n = gPrijevozPonudaBroj[playerid], tekst[96], KEY:tipke, gore, strana;
+    if (n < 1) return;
+    new lijevo[96], desno[32], boja, KEY:tipke, gore, strana;
     gPrijevozMeniTd[playerid][PZT_POZADINA] = TdSlika(playerid, PZ_MENI_X, PZ_MENI_Y, PZ_MENI_W, 40.0, 0x1E5AA8F0);
-    gPrijevozMeniTd[playerid][PZT_NASLOV] = TdTekst(playerid, PZ_MENI_X + PZ_MENI_W / 2.0, PZ_MENI_Y + 6.0, T(playerid, "Prijevoz tereta"), 0xFFFFFFFF, 0.6, 2.6, TEXT_DRAW_FONT_3, TEXT_DRAW_ALIGN_CENTER);
+    gPrijevozMeniTd[playerid][PZT_NASLOV] = TdTekst(playerid, PZ_MENI_X + PZ_MENI_W / 2.0, PZ_MENI_Y + 6.0, naslov, 0xFFFFFFFF, 0.6, 2.6, TEXT_DRAW_FONT_3, TEXT_DRAW_ALIGN_CENTER);
     gPrijevozMeniTd[playerid][PZT_TRAKA] = TdSlika(playerid, PZ_MENI_X, PZ_MENI_Y + 40.0, PZ_MENI_W, PZ_MENI_RED, 0x000000F0);
-    format(tekst, sizeof tekst, T(playerid, "Nivo %d (%d XP)"), nivo, xp);
-    gPrijevozMeniTd[playerid][PZT_PODNASLOV] = TdTekst(playerid, PZ_MENI_X + 4.0, PZ_MENI_Y + 42.0, tekst, 0x5B8DBFFF, 0.2, 1.0, TEXT_DRAW_FONT_2);
+    gPrijevozMeniTd[playerid][PZT_PODNASLOV] = TdTekst(playerid, PZ_MENI_X + 4.0, PZ_MENI_Y + 42.0, podnaslov, 0x5B8DBFFF, 0.2, 1.0, TEXT_DRAW_FONT_2);
     for (new r = 0; r < n; r++)
     {
-        new t = gPrijevozPonuda[playerid][r], Float:y = PZ_MENI_Y + 40.0 + PZ_MENI_RED * float(r + 1), Float:d = VectorSize(gPrijevozPonudaPoz[playerid][r][0] - gPrijevozPoz[3][0], gPrijevozPonudaPoz[playerid][r][1] - gPrijevozPoz[3][1], 0.0);
+        new Float:y = PZ_MENI_Y + 40.0 + PZ_MENI_RED * float(r + 1);
+        gPrijevozMeniAkcija[playerid][r] = akcije[r];
+        PrijevozMeniRed(playerid, akcije[r], lijevo, desno, boja);
+        gPrijevozMeniBoja[playerid][r] = boja;
         gPrijevozMeniTd[playerid][PZT_RED + r * 3] = TdSlika(playerid, PZ_MENI_X, y, PZ_MENI_W, PZ_MENI_RED, 0x000000B4);
-        format(tekst, sizeof tekst, "%s - %s", T(playerid, gPrijevozTeret[t][ptIme]), CestaZona(gPrijevozPonudaPoz[playerid][r][0], gPrijevozPonudaPoz[playerid][r][1]));
-        new PlayerText:naziv = TdTekst(playerid, PZ_MENI_X + 5.0, y + 2.0, tekst, 0xFFFFFFFF, 0.22, 1.05, TEXT_DRAW_FONT_1);
+        new PlayerText:naziv = TdTekst(playerid, PZ_MENI_X + 5.0, y + 2.0, lijevo, boja, 0.22, 1.05, TEXT_DRAW_FONT_1);
         PlayerTextDrawTextSize(playerid, naziv, PZ_MENI_X + PZ_MENI_W - 2.0, PZ_MENI_RED - 2.0);
         PlayerTextDrawSetSelectable(playerid, naziv, true);
         gPrijevozMeniTd[playerid][PZT_RED + r * 3 + 1] = naziv;
-        format(tekst, sizeof tekst, "%.1f km  $%d", d / 1000.0, PrijevozOsnova(t, d));
-        gPrijevozMeniTd[playerid][PZT_RED + r * 3 + 2] = TdTekst(playerid, PZ_MENI_X + PZ_MENI_W - 5.0, y + 2.0, tekst, 0xFFFFFFFF, 0.22, 1.05, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
+        gPrijevozMeniTd[playerid][PZT_RED + r * 3 + 2] = TdTekst(playerid, PZ_MENI_X + PZ_MENI_W - 5.0, y + 2.0, desno[0] ? desno : "_", boja, 0.22, 1.05, TEXT_DRAW_FONT_1, TEXT_DRAW_ALIGN_RIGHT);
     }
     new Float:dno = PZ_MENI_Y + 40.0 + PZ_MENI_RED * float(n + 1) + 4.0;
     gPrijevozMeniTd[playerid][PZT_DNO] = TdSlika(playerid, PZ_MENI_X, dno, PZ_MENI_W, 34.0, 0x000000D2);
@@ -260,10 +324,12 @@ static PrijevozMeniOtvori(playerid, nivo, xp)
     for (new i = 0; i < PZT_RED; i++) PlayerTextDrawShow(playerid, gPrijevozMeniTd[playerid][i]);
     GetPlayerKeys(playerid, tipke, gore, strana);
     gPrijevozMeniBroj[playerid] = n;
-    gPrijevozMeniIdx[playerid] = 0;
-    gPrijevozMeniMis[playerid] = false;
+    gPrijevozMeniVrsta[playerid] = vrsta;
+    gPrijevozMeniIdx[playerid] = staro < n ? staro : n - 1;
     gPrijevozMeniStrana[playerid] = strana;
     gPrijevozMeniSmjer[playerid] = 0;
+    gPrijevozMeniMis[playerid] = mis;
+    if (mis) SelectTextDraw(playerid, 0x5B8DBFFF);
     TogglePlayerControllable(playerid, false);
     PrijevozMeniPrikazi(playerid);
 }
@@ -272,7 +338,7 @@ static PrijevozMeniPrikazi(playerid)
 {
     for (new r = 0; r < gPrijevozMeniBroj[playerid]; r++)
     {
-        new bool:odabran = r == gPrijevozMeniIdx[playerid], boja = odabran ? 0x000000FF : (gPrijevozPonuda[playerid][r] == PZ_ILEGALNO ? 0xE74C3CFF : 0xFFFFFFFF);
+        new bool:odabran = r == gPrijevozMeniIdx[playerid], boja = odabran ? 0x000000FF : gPrijevozMeniBoja[playerid][r];
         PlayerTextDrawColour(playerid, gPrijevozMeniTd[playerid][PZT_RED + r * 3], odabran ? 0xF0F0F0EE : 0x000000B4);
         PlayerTextDrawColour(playerid, gPrijevozMeniTd[playerid][PZT_RED + r * 3 + 1], boja);
         PlayerTextDrawColour(playerid, gPrijevozMeniTd[playerid][PZT_RED + r * 3 + 2], boja);
@@ -291,17 +357,47 @@ static PrijevozMeniZatvori(playerid)
     TogglePlayerControllable(playerid, true);
 }
 
+static PrijevozMeniNatrag(playerid)
+{
+    switch (gPrijevozMeniVrsta[playerid])
+    {
+        case PZV_KONVOJ: PrijevozMeniRute(playerid, PZV_RUTE);
+        case PZV_LOBI: PrijevozKonvojNapusti(playerid, KVR_IZLAZ);
+        default: PrijevozMeniZatvori(playerid);
+    }
+}
+
 static PrijevozMeniOdaberi(playerid)
 {
-    new p = gPrijevozMeniIdx[playerid];
-    PrijevozMeniZatvori(playerid);
-    if (p >= gPrijevozPonudaBroj[playerid] || gPrijevozFaza[playerid])
+    new a = gPrijevozMeniAkcija[playerid][gPrijevozMeniIdx[playerid]], k = gPrijevozKonvoj[playerid];
+    if (a < PZ_PONUDA)
     {
-        gPrijevozPonudaBroj[playerid] = 0;
+        if (a >= gPrijevozPonudaBroj[playerid] || gPrijevozFaza[playerid] || k != -1)
+        {
+            PrijevozMeniZatvori(playerid);
+            return;
+        }
+        if (gPrijevozMeniVrsta[playerid] == PZV_KONVOJ)
+        {
+            PrijevozKonvojStvori(playerid, a);
+            return;
+        }
+        PrijevozMeniZatvori(playerid);
+        if (IsPlayerInAnyVehicle(playerid)) RemovePlayerFromVehicle(playerid);
+        PrijevozPocni(playerid, a);
         return;
     }
-    if (IsPlayerInAnyVehicle(playerid)) RemovePlayerFromVehicle(playerid);
-    PrijevozPocni(playerid, p);
+    switch (a)
+    {
+        case PZR_KONVOJ: PrijevozMeniRute(playerid, PZV_KONVOJ);
+        case PZR_POZOVI:
+        {
+            gPrijevozKvUnos[playerid] = true;
+            ObavijestInfo(playerid, T(playerid, "Konvoj"), T(playerid, "Upisite ID ili ime igraca u chat da ga pozovete u konvoj."));
+        }
+        case PZR_KRENI: if (k != -1) PrijevozKonvojKreni(k);
+        case PZR_ODBACI, PZR_NAPUSTI: PrijevozKonvojNapusti(playerid, KVR_IZLAZ);
+    }
 }
 
 PrijevozMeniAktivan(playerid)
@@ -341,7 +437,7 @@ PrijevozMeniUpdate(playerid)
         }
         if (strana == KEY_LEFT)
         {
-            PrijevozMeniZatvori(playerid);
+            PrijevozMeniNatrag(playerid);
             return;
         }
     }
@@ -369,7 +465,7 @@ PrijevozKlik(playerid, PlayerText:td)
         gPrijevozMeniMis[playerid] = false;
         CancelSelectTextDraw(playerid);
     }
-    else if (td == gPrijevozMeniTd[playerid][PZT_NATRAG]) PrijevozMeniZatvori(playerid);
+    else if (td == gPrijevozMeniTd[playerid][PZT_NATRAG]) PrijevozMeniNatrag(playerid);
     else if (td == gPrijevozMeniTd[playerid][PZT_ODABERI]) PrijevozMeniOdaberi(playerid);
     else for (new r = 0; r < n; r++)
     {
@@ -385,15 +481,331 @@ PrijevozKlik(playerid, PlayerText:td)
     return 1;
 }
 
-static bool:PrijevozZauzeto(s)
+static PrijevozKvBroj(k)
+{
+    new n = 0;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gPrijevozKonvoj[i] == k) n++;
+    return n;
+}
+
+static PrijevozKonvojMeni(playerid)
+{
+    new k = gPrijevozKonvoj[playerid];
+    if (k == -1) return;
+    new akcije[PZ_MENI_REDOVA], n = 0, podnaslov[96], t = gPrijevozKvTeret[k];
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji && n < PZ_KONVOJ_MAX; i++) if (gPrijevozKonvoj[i] == k) akcije[n++] = PZR_IGRAC + i;
+    if (gPrijevozKvVodja[k] == playerid)
+    {
+        akcije[n++] = PZR_POZOVI;
+        akcije[n++] = PZR_KRENI;
+        akcije[n++] = PZR_ODBACI;
+    }
+    else akcije[n++] = PZR_NAPUSTI;
+    format(podnaslov, sizeof podnaslov, "%s - %s", T(playerid, gPrijevozTeret[t][ptIme]), CestaZona(gPrijevozKvCilj[k][0], gPrijevozKvCilj[k][1]));
+    PrijevozMeniOtvori(playerid, PZV_LOBI, T(playerid, "Konvoj"), podnaslov, akcije, n);
+}
+
+static PrijevozKonvojOsvjezi(k)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        if (gPrijevozKonvoj[i] == k && IsPlayerConnected(i) && !gPrijevozFaza[i]) PrijevozKonvojMeni(i);
+}
+
+static PrijevozKonvojStvori(playerid, p)
+{
+    new k = -1;
+    for (new s = 0; s < PZ_KONVOJA && k == -1; s++) if (gPrijevozKvFaza[s] == KVF_NEMA) k = s;
+    if (k == -1)
+    {
+        PrijevozMeniZatvori(playerid);
+        ObavijestGreska(playerid, T(playerid, "Trenutno se ne moze pokrenuti novi konvoj."));
+        return;
+    }
+    gPrijevozKvFaza[k] = KVF_OKUPLJA;
+    gPrijevozKvVodja[k] = playerid;
+    gPrijevozKvTeret[k] = gPrijevozPonuda[playerid][p];
+    gPrijevozKvBonus[k] = PZ_KONVOJ_BONUS;
+    for (new d = 0; d < 3; d++)
+    {
+        gPrijevozKvCilj[k][d] = gPrijevozPonudaPoz[playerid][p][d];
+        gPrijevozKvDucan[k][d] = gPrijevozPonudaDucan[playerid][p][d];
+    }
+    gPrijevozKonvoj[playerid] = k;
+    gPrijevozKvUnos[playerid] = true;
+    gPrijevozKvImaBonus[playerid] = false;
+    PrijevozKonvojMeni(playerid);
+    ObavijestInfo(playerid, T(playerid, "Konvoj"), T(playerid, "Upisite ID ili ime igraca u chat da ga pozovete u konvoj."));
+}
+
+static PrijevozKonvojRaspusti(k, iznimka)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gPrijevozKonvoj[i] != k) continue;
+        gPrijevozKonvoj[i] = -1;
+        gPrijevozKvUnos[i] = gPrijevozKvCeka[i] = false;
+        if (!IsPlayerConnected(i)) continue;
+        if (gPrijevozMeniBroj[i] && gPrijevozMeniVrsta[i] == PZV_LOBI) PrijevozMeniZatvori(i);
+        if (i != iznimka) ObavijestInfo(i, T(i, "Konvoj"), T(i, "Vodja je raspustio konvoj."));
+    }
+    gPrijevozKvFaza[k] = KVF_NEMA;
+}
+
+static PrijevozKonvojNapusti(playerid, razlog)
+{
+    new k = gPrijevozKonvoj[playerid];
+    if (k == -1) return;
+    if (gPrijevozKvFaza[k] == KVF_OKUPLJA && gPrijevozKvVodja[k] == playerid)
+    {
+        PrijevozKonvojRaspusti(k, playerid);
+        return;
+    }
+    gPrijevozKonvoj[playerid] = -1;
+    gPrijevozKvUnos[playerid] = gPrijevozKvCeka[playerid] = false;
+    gPrijevozKvDaleko[playerid] = 0;
+    if (razlog != KVR_GOTOV) gPrijevozKvImaBonus[playerid] = false;
+    if (IsPlayerConnected(playerid) && gPrijevozMeniBroj[playerid] && gPrijevozMeniVrsta[playerid] == PZV_LOBI) PrijevozMeniZatvori(playerid);
+    new poruka[160];
+    if (gPrijevozKvFaza[k] == KVF_OKUPLJA)
+    {
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        {
+            if (gPrijevozKonvoj[i] != k || !IsPlayerConnected(i)) continue;
+            format(poruka, sizeof poruka, T(i, "%s je napustio konvoj."), GetRPIme(playerid));
+            ObavijestInfo(i, T(i, "Konvoj"), poruka);
+        }
+        PrijevozKonvojOsvjezi(k);
+        return;
+    }
+    if (gPrijevozKvVodja[k] == playerid)
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (gPrijevozKonvoj[i] == k) gPrijevozKvVodja[k] = i;
+    if (!PrijevozKvBroj(k))
+    {
+        gPrijevozKvFaza[k] = KVF_NEMA;
+        return;
+    }
+    if (razlog == KVR_GOTOV) return;
+    gPrijevozKvBonus[k] = max(0, gPrijevozKvBonus[k] - PZ_KONVOJ_KAZNA);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gPrijevozKonvoj[i] != k || !IsPlayerConnected(i)) continue;
+        switch (razlog)
+        {
+            case KVR_PROPAO: format(poruka, sizeof poruka, T(i, "%s nije uspio dostaviti teret. Bonus konvoja je sada %d%%."), GetRPIme(playerid), gPrijevozKvBonus[k]);
+            case KVR_DALEKO: format(poruka, sizeof poruka, T(i, "%s je ostao iza i izbacen je iz konvoja. Bonus konvoja je sada %d%%."), GetRPIme(playerid), gPrijevozKvBonus[k]);
+            default: format(poruka, sizeof poruka, T(i, "%s je napustio konvoj. Bonus konvoja je sada %d%%."), GetRPIme(playerid), gPrijevozKvBonus[k]);
+        }
+        IgraObavijest(i, T(i, "Konvoj"), OBAVIJEST_GRESKA, poruka);
+    }
+}
+
+static PrijevozKonvojKreni(k)
+{
+    if (gPrijevozKvFaza[k] != KVF_OKUPLJA) return;
+    new vodja = gPrijevozKvVodja[k];
+    if (PrijevozKvBroj(k) < 2)
+    {
+        ObavijestGreska(vodja, T(vodja, "Za konvoj su potrebna barem dva vozaca."));
+        return;
+    }
+    gPrijevozKvFaza[k] = KVF_KRECE;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gPrijevozKonvoj[i] != k) continue;
+        gPrijevozKvCeka[i] = true;
+        gPrijevozKvUnos[i] = false;
+        gPrijevozKvDaleko[i] = 0;
+        PrijevozMeniZatvori(i);
+        ObavijestInfo(i, T(i, "Konvoj"), T(i, "Konvoj krece! Svaki vozac redom dobiva svoj kamion, pricekajte."));
+    }
+}
+
+PrijevozKonvojTekst(playerid, const text[])
+{
+    new k = gPrijevozKonvoj[playerid];
+    if (!gPrijevozKvUnos[playerid] || k == -1 || gPrijevozKvFaza[k] != KVF_OKUPLJA || gPrijevozKvVodja[k] != playerid) return 0;
+    new cilj = FindPlayer(text), poruka[160];
+    if (cilj == INVALID_PLAYER_ID || !gUlogiran[cilj]) return ObavijestGreska(playerid, T(playerid, "Igrac nije pronaden.")), 1;
+    if (cilj == playerid) return ObavijestGreska(playerid, T(playerid, "Ne mozete pozvati sami sebe.")), 1;
+    if (gPrijevozKonvoj[cilj] != -1 || gPrijevozFaza[cilj]) return ObavijestGreska(playerid, T(playerid, "Taj igrac je vec na turi ili u konvoju.")), 1;
+    if (!PrijevozNaDepou(cilj, PZ_KONVOJ_DOMET)) return ObavijestGreska(playerid, T(playerid, "Taj igrac nije u depou.")), 1;
+    if (PrijevozKvBroj(k) >= PZ_KONVOJ_MAX) return ObavijestGreska(playerid, T(playerid, "Konvoj je pun.")), 1;
+    gPrijevozKvPoziv[cilj] = k;
+    format(poruka, sizeof poruka, T(cilj, "%s vas poziva u konvoj (%s - %s)."), GetRPIme(playerid), T(cilj, gPrijevozTeret[gPrijevozKvTeret[k]][ptIme]), CestaZona(gPrijevozKvCilj[k][0], gPrijevozKvCilj[k][1]));
+    UpitDaNe(cilj, UPIT_PRIJEVOZ, k, 2, T(cilj, "Konvoj"), poruka);
+    format(poruka, sizeof poruka, T(playerid, "Poziv je poslan igracu %s."), GetRPIme(cilj));
+    ObavijestInfo(playerid, T(playerid, "Konvoj"), poruka);
+    return 1;
+}
+
+static PrijevozKonvojOdgovor(playerid, k, bool:da)
+{
+    new bool:vrijedi = k >= 0 && k < PZ_KONVOJA && gPrijevozKvPoziv[playerid] == k && gPrijevozKvFaza[k] == KVF_OKUPLJA, poruka[160];
+    gPrijevozKvPoziv[playerid] = -1;
+    if (!vrijedi)
+    {
+        if (da) ObavijestGreska(playerid, T(playerid, "Taj konvoj vise ne postoji."));
+        return;
+    }
+    new vodja = gPrijevozKvVodja[k];
+    if (!da)
+    {
+        format(poruka, sizeof poruka, T(vodja, "%s je odbio poziv u konvoj."), GetRPIme(playerid));
+        ObavijestInfo(vodja, T(vodja, "Konvoj"), poruka);
+        return;
+    }
+    if (gPrijevozKonvoj[playerid] != -1 || gPrijevozFaza[playerid]) return;
+    if (!PrijevozNaDepou(playerid, PZ_KONVOJ_DOMET))
+    {
+        ObavijestGreska(playerid, T(playerid, "Morate biti u depou da se pridruzite konvoju."));
+        return;
+    }
+    if (PrijevozKvBroj(k) >= PZ_KONVOJ_MAX)
+    {
+        ObavijestGreska(playerid, T(playerid, "Konvoj je pun."));
+        return;
+    }
+    gPrijevozKonvoj[playerid] = k;
+    gPrijevozKvImaBonus[playerid] = false;
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gPrijevozKonvoj[i] != k || i == playerid || !IsPlayerConnected(i)) continue;
+        format(poruka, sizeof poruka, T(i, "%s se pridruzio konvoju."), GetRPIme(playerid));
+        ObavijestInfo(i, T(i, "Konvoj"), poruka);
+    }
+    PrijevozKonvojOsvjezi(k);
+}
+
+static PrijevozKvVoziFaza(i)
+{
+    new f = gPrijevozFaza[i];
+    return f == PZF_KACI || f == PZF_LUKA || f == PZF_UTOVAR || f == PZF_VOZI || f == PZF_ISTOVAR;
+}
+
+static PrijevozKvBlizu(i)
+{
+    new k = gPrijevozKonvoj[i], Float:x, Float:y, Float:z;
+    GetVehiclePos(gPrijevozKamion[i], x, y, z);
+    for (new o = 0, iZadnji = gIgracZadnji; o <= iZadnji; o++)
+        if (o != i && gPrijevozKonvoj[o] == k && PrijevozKvVoziFaza(o) && GetVehicleDistanceFromPoint(gPrijevozKamion[o], x, y, z) < PZ_KONVOJ_DALEKO) return 1;
+    return 0;
+}
+
+static PrijevozKonvojTick()
+{
+    for (new k = 0; k < PZ_KONVOJA; k++)
+    {
+        if (gPrijevozKvFaza[k] == KVF_KRECE)
+        {
+            new bool:ceka = false, bool:scena = false;
+            for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+            {
+                if (gPrijevozKonvoj[i] != k) continue;
+                if (gPrijevozFaza[i] == PZF_SCENA) scena = true;
+                if (!gPrijevozKvCeka[i]) continue;
+                ceka = true;
+                new t = gPrijevozKvTeret[k];
+                if (gPrijevozScenaIgrac != INVALID_PLAYER_ID || PrijevozZauzeto(1) || (gPrijevozTeret[t][ptPrikolica] && PrijevozZauzeto(2))) continue;
+                gPrijevozKvCeka[i] = false;
+                gPrijevozPonuda[i][0] = t;
+                for (new d = 0; d < 3; d++)
+                {
+                    gPrijevozPonudaPoz[i][0][d] = gPrijevozKvCilj[k][d];
+                    gPrijevozPonudaDucan[i][0][d] = gPrijevozKvDucan[k][d];
+                }
+                gPrijevozPonudaBroj[i] = 1;
+                PrijevozMeniZatvori(i);
+                if (IsPlayerInAnyVehicle(i)) RemovePlayerFromVehicle(i);
+                PrijevozPocni(i, 0);
+                if (gPrijevozFaza[i] != PZF_SCENA)
+                {
+                    PrijevozKonvojNapusti(i, KVR_IZLAZ);
+                    break;
+                }
+                scena = true;
+                break;
+            }
+            if (gPrijevozKvFaza[k] == KVF_KRECE && !ceka && !scena)
+            {
+                gPrijevozKvFaza[k] = KVF_VOZI;
+                for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+                {
+                    if (gPrijevozKonvoj[i] != k) continue;
+                    gPrijevozKvImaBonus[i] = true;
+                    ObavijestInfo(i, T(i, "Konvoj"), T(i, "Svi vozaci su dobili kamione. Drzite se zajedno do odredista!"));
+                }
+            }
+            continue;
+        }
+        if (gPrijevozKvFaza[k] != KVF_VOZI || PrijevozKvBroj(k) < 2) continue;
+        for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+        {
+            if (gPrijevozKonvoj[i] != k || !PrijevozKvVoziFaza(i)) continue;
+            if (PrijevozKvBlizu(i))
+            {
+                gPrijevozKvDaleko[i] = 0;
+                continue;
+            }
+            if (!gPrijevozKvDaleko[i])
+            {
+                new poruka[160];
+                gPrijevozKvDaleko[i] = gettime();
+                IgraObavijest(i, T(i, "Konvoj"), OBAVIJEST_GRESKA, T(i, "Udaljili ste se od konvoja! Vratite se ili cete biti izbaceni."));
+                for (new o = 0, oZadnji = gIgracZadnji; o <= oZadnji; o++)
+                {
+                    if (o == i || gPrijevozKonvoj[o] != k || !IsPlayerConnected(o)) continue;
+                    format(poruka, sizeof poruka, T(o, "%s se udaljio od konvoja!"), GetRPIme(i));
+                    IgraObavijest(o, T(o, "Konvoj"), OBAVIJEST_GRESKA, poruka);
+                }
+            }
+            else if (gettime() - gPrijevozKvDaleko[i] >= PZ_KONVOJ_POVRATAK_S)
+            {
+                PrijevozKonvojNapusti(i, KVR_DALEKO);
+                IgraObavijest(i, T(i, "Konvoj"), OBAVIJEST_GRESKA, T(i, "Predugo ste bili daleko od konvoja i izbaceni ste iz njega."));
+                if (gPrijevozKvFaza[k] != KVF_VOZI) break;
+            }
+        }
+    }
+}
+
+static PrijevozKonvojPanel(playerid, poruka[], size)
+{
+    new k = gPrijevozKonvoj[playerid], red[96];
+    if (k == -1 || gPrijevozKvFaza[k] == KVF_OKUPLJA) return;
+    if (gPrijevozKvFaza[k] == KVF_KRECE)
+    {
+        format(red, sizeof red, T(playerid, "~n~~y~Konvoj: cekamo ostale vozace."));
+        strcat(poruka, red, size);
+        return;
+    }
+    format(red, sizeof red, T(playerid, "~n~~y~Konvoj: %d vozaca, bonus %d%%"), PrijevozKvBroj(k), gPrijevozKvBonus[k]);
+    strcat(poruka, red, size);
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
+    {
+        if (gPrijevozKonvoj[i] != k || !gPrijevozKvDaleko[i]) continue;
+        format(red, sizeof red, T(playerid, "~n~~r~%s zaostaje: %d s"), GetRPIme(i), max(0, PZ_KONVOJ_POVRATAK_S - (gettime() - gPrijevozKvDaleko[i])));
+        strcat(poruka, red, size);
+    }
+}
+
+static PrijevozKonvojCeka(playerid)
+{
+    new k = gPrijevozKonvoj[playerid];
+    if (k == -1 || gPrijevozFaza[playerid]) return 0;
+    if (gPrijevozKvFaza[k] == KVF_OKUPLJA) PrijevozKonvojMeni(playerid);
+    else ObavijestInfo(playerid, T(playerid, "Konvoj"), T(playerid, "Pricekajte da dobijete svoj kamion."));
+    return 1;
+}
+
+static PrijevozZauzeto(s)
 {
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gPrijevozFaza[i]) continue;
-        if (gPrijevozKamion[i] != INVALID_VEHICLE_ID && GetVehicleDistanceFromPoint(gPrijevozKamion[i], gPrijevozPoz[s][0], gPrijevozPoz[s][1], gPrijevozPoz[s][2]) < PZ_ZAUZETO) return true;
-        if (gPrijevozPrikolica[i] != INVALID_VEHICLE_ID && GetVehicleDistanceFromPoint(gPrijevozPrikolica[i], gPrijevozPoz[s][0], gPrijevozPoz[s][1], gPrijevozPoz[s][2]) < PZ_ZAUZETO) return true;
+        if (gPrijevozKamion[i] != INVALID_VEHICLE_ID && GetVehicleDistanceFromPoint(gPrijevozKamion[i], gPrijevozPoz[s][0], gPrijevozPoz[s][1], gPrijevozPoz[s][2]) < PZ_ZAUZETO) return 1;
+        if (gPrijevozPrikolica[i] != INVALID_VEHICLE_ID && GetVehicleDistanceFromPoint(gPrijevozPrikolica[i], gPrijevozPoz[s][0], gPrijevozPoz[s][1], gPrijevozPoz[s][2]) < PZ_ZAUZETO) return 1;
     }
-    return false;
+    return 0;
 }
 
 static PrijevozPocni(playerid, p)
@@ -923,6 +1335,7 @@ static PrijevozPrikolicaMakni(playerid)
 
 PrijevozKraj(playerid)
 {
+    PrijevozKonvojNapusti(playerid, KVR_IZLAZ);
     PrijevozMeniZatvori(playerid);
     gPrijevozPonudaBroj[playerid] = 0;
     gPrijevozOdustaje[playerid] = false;
@@ -954,6 +1367,7 @@ static PrijevozPovratak(playerid)
 
 static PrijevozPropalo(playerid, const poruka[])
 {
+    PrijevozKonvojNapusti(playerid, KVR_PROPAO);
     PrijevozPovratak(playerid);
     IgraObavijest(playerid, T(playerid, "Prijevoz tereta"), OBAVIJEST_GRESKA, poruka);
 }
@@ -996,6 +1410,9 @@ static PrijevozIstovari(playerid)
     new iznos = PrijevozIsplata(PrijevozOsnova(t, gPrijevozPut[playerid]), kasni, steta), xp = gPrijevozTeret[t][ptXp] + (kasni <= 0 ? 1 : 0), staro = PrijevozXp(playerid);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO trucker_xp (account, xp, runs) VALUES (%d, 0, 0)", gAccountId[playerid]));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE trucker_xp SET xp = xp + %d, runs = runs + 1 WHERE account = %d", xp, gAccountId[playerid]));
+    new kv = gPrijevozKonvoj[playerid] != -1 && gPrijevozKvImaBonus[playerid] ? gPrijevozKvBonus[gPrijevozKonvoj[playerid]] : 0;
+    iznos = iznos * (100 + kv) / 100;
+    PrijevozKonvojNapusti(playerid, KVR_GOTOV);
     PrijevozPovratak(playerid);
     iznos = BlagajnaIsplati(iznos);
     if (!BankaUplati(gAccountId[playerid], iznos, "Prijevoz tereta")) BlagajnaDodaj(iznos), iznos = 0;
@@ -1004,6 +1421,11 @@ static PrijevozIstovari(playerid)
     if (kasni <= 0) format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen na vrijeme! Steta: %d%%.~n~$%d je uplaceno na vas racun. +%d XP~n~Vratite kamion u depo."), steta, iznos, xp);
     else format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen s %d s zakasnjenja. Steta: %d%%.~n~$%d je uplaceno na vas racun. +%d XP~n~Vratite kamion u depo."), kasni, steta, iznos, xp);
     IgraObavijest(playerid, T(playerid, "Prijevoz tereta"), PZ_BOJA, poruka, PZ_PAUZA_S * 1000);
+    if (kv)
+    {
+        format(poruka, sizeof poruka, T(playerid, "Bonus za voznju u konvoju: +%d%%."), kv);
+        SendClientMessage(playerid, COLOR_INFO, poruka);
+    }
     new nivo = PrijevozNivo(staro + xp);
     if (nivo == PrijevozNivo(staro)) return;
     format(poruka, sizeof poruka, T(playerid, "Napredovali ste na nivo %d! Otkljucani su novi tereti."), nivo);
@@ -1063,6 +1485,7 @@ static PrijevozPanel(playerid)
             }
         }
     }
+    PrijevozKonvojPanel(playerid, poruka, sizeof poruka);
     IgraObavijestPanel(playerid, T(playerid, "Prijevoz tereta"), t == PZ_ILEGALNO && gPrijevozFaza[playerid] != PZF_POVRATAK ? PZ_ILEGALNO_BOJA : PZ_BOJA, poruka);
 }
 
@@ -1103,6 +1526,11 @@ PrijevozPosao(playerid)
         SetTimerEx("PrijevozPosaoKraj", FADE_SLOJEVA * FADE_KORAK_MS + 150, false, "ii", playerid, gAccountId[playerid]);
         return 1;
     }
+    if (gPrijevozKonvoj[playerid] != -1)
+    {
+        PrijevozKonvojNapusti(playerid, KVR_IZLAZ);
+        return ObavijestInfo(playerid, T(playerid, "Konvoj"), T(playerid, "Napustili ste konvoj.")), 1;
+    }
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !PrijevozNaDepou(playerid)) return 0;
     return PrijevozPonude(playerid), 1;
 }
@@ -1122,12 +1550,18 @@ PrijevozAlt(playerid)
     if (!gUlogiran[playerid] || GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || IsRanjen(playerid)) return 0;
     if (PrijevozRucnoAlt(playerid)) return 1;
     if (!PrijevozNaDepou(playerid)) return 0;
+    if (PrijevozKonvojCeka(playerid)) return 1;
     if (gPrijevozFaza[playerid]) return UpitDaNe(playerid, UPIT_PRIJEVOZ, 0, 1, T(playerid, "Prijevoz tereta"), T(playerid, "Zelite li prekinuti turu?")), 1;
     return PrijevozPonude(playerid), 1;
 }
 
-PrijevozUpit(playerid, bool:da)
+PrijevozUpit(playerid, meta, opcija, bool:da)
 {
+    if (opcija == 2)
+    {
+        PrijevozKonvojOdgovor(playerid, meta, da);
+        return 1;
+    }
     if (!da || !gPrijevozFaza[playerid]) return 1;
     PrijevozKraj(playerid);
     return ObavijestInfo(playerid, T(playerid, "Prijevoz tereta"), T(playerid, "Tura je prekinuta."));
@@ -1150,6 +1584,7 @@ PrijevozStateChange(playerid, PLAYER_STATE:newstate)
 
 PrijevozTick()
 {
+    PrijevozKonvojTick();
     for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++)
     {
         if (!gPrijevozFaza[i]) continue;
@@ -1157,6 +1592,7 @@ PrijevozTick()
         GetVehicleHealth(k, hp);
         if (!IsPlayerConnected(i) || IsRanjen(i) || !GetVehicleModel(k) || hp < PZ_KAMION_HP)
         {
+            PrijevozKonvojNapusti(i, KVR_PROPAO);
             PrijevozKraj(i);
             if (IsPlayerConnected(i)) ObavijestGreska(i, T(i, "Kamion je unisten, tura je propala."));
             continue;

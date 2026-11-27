@@ -169,7 +169,7 @@ public OnPlayerText(playerid, text[])
     new i = 0;
     while (text[i] == ' ') i++;
     if (!text[i]) return 0;
-    if (PosaoIgraChat(playerid, text) || UtrkaChat(playerid, text) || MobitelText(playerid, text) || UpitChat(playerid, text)) return 0;
+    if (PosaoIgraChat(playerid, text) || UtrkaChat(playerid, text) || MobitelText(playerid, text) || UpitChat(playerid, text) || PrijevozKonvojTekst(playerid, text)) return 0;
     SendChat(playerid, text, CHAT_GOVOR);
     return 0;
 }

@@ -74,7 +74,7 @@ UpitKey(playerid, KEY:newkeys, KEY:oldkeys)
         case UPIT_SKLADISTE: SkladisteUpit(playerid, opcija, da);
         case UPIT_REPO: RepoUpit(playerid, opcija, da);
         case UPIT_PROVALA: ProvalaUpit(playerid, meta, da);
-        case UPIT_PRIJEVOZ: PrijevozUpit(playerid, da);
+        case UPIT_PRIJEVOZ: PrijevozUpit(playerid, meta, opcija, da);
         default: Govor(playerid, "%s kaze: Ne hvala.", GetRPIme(playerid));
     }
     return 1;
