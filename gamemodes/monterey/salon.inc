@@ -523,6 +523,7 @@ public OnPlayerClickTextDraw(playerid, Text:clickedid)
         MdtZatvori(playerid);
         TuningMisIskljuci(playerid);
         PrijevozMeniEsc(playerid);
+        AtcEsc(playerid);
         KazinoZatvori(playerid);
         PcZatvori(playerid);
         ArkadaEsc(playerid, true);

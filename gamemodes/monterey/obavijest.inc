@@ -127,7 +127,7 @@ static ObPrikazi(playerid, const naslov[], boja, const tekst[])
         PlayerTextDrawSetShadow(playerid, gObTd[playerid][1], 0);
         PlayerTextDrawSetOutline(playerid, gObTd[playerid][1], 1);
     }
-    new bool:desno = TuningAktivan(playerid) || PrijevozMeniAktivan(playerid) || MdtOtvoren(playerid) || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || DrogaKuha(playerid);
+    new bool:desno = TuningAktivan(playerid) || PrijevozMeniAktivan(playerid) || AtcNaSmjeni(playerid) || MdtOtvoren(playerid) || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || DrogaKuha(playerid);
     if (desno != gObDesno[playerid])
     {
         gObDesno[playerid] = desno;

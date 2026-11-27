@@ -583,7 +583,7 @@ MobitelZatvori(playerid)
 static bool:MobitelZauzetIgrom(playerid)
 {
     return ArkadaIgra(playerid) || KosOkladaTeren(playerid) != -1 || PikadoOkladaStol(playerid) != -1 || KuglanjeOkladaStaza(playerid) != -1 || BilijarOkladaStol(playerid) != -1
-        || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || MdtOtvoren(playerid) || TuningAktivan(playerid) || PrijevozMeniAktivan(playerid) || DrogaKuha(playerid)
+        || KazinoAktivan(playerid) || PokerAktivan(playerid) || PcOtvoren(playerid) || MdtOtvoren(playerid) || TuningAktivan(playerid) || PrijevozMeniAktivan(playerid) || AtcNaSmjeni(playerid) || DrogaKuha(playerid)
         || GetPlayerState(playerid) == PLAYER_STATE_SPECTATING;
 }
 

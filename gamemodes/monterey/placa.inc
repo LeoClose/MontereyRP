@@ -10,7 +10,6 @@
 #define POSAO_RIBAR         3
 #define POSAO_RESTORAN         4
 #define POSAO_SKLADISTAR    5
-#define ATC_ODOBRENJE       40
 #define ATC_DOMET           80.0
 #define DOSTAVA_VOZILO      499
 #define DOSTAVA_BAZA        30
@@ -184,9 +183,9 @@ static DostavaKraj(playerid)
     gDostavaCilj[playerid] = false;
 }
 
-AtcZarada(playerid)
+AtcZarada(playerid, iznos)
 {
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = payday_earn + %d WHERE id = %d", ATC_ODOBRENJE, gAccountId[playerid]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE accounts SET payday_earn = payday_earn + %d WHERE id = %d", iznos, gAccountId[playerid]));
 }
 
 DostavaDisconnect(playerid)
@@ -330,7 +329,7 @@ CMD:posao(playerid, params[])
         if (!IsPlayerInRangeOfPoint(playerid, ATC_DOMET, gToranj[0], gToranj[1], gToranj[2])) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
         if (IsPlayerInAnyVehicle(playerid) || GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
         if (!AtcPocni(playerid)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Svi kontrolni tornjevi su trenutno zauzeti."));
-        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Smjena u tornju je pocela. Zahtjeve odobravate s /toranj, kraj smjene s /posao."));
+        return SendClientMessage(playerid, COLOR_INFO, T(playerid, "Smjena u tornju je pocela. Pazite na pistu i rulnu stazu prije svakog odobrenja. Kraj smjene s /posao."));
     }
     if (gPosao[playerid] != POSAO_DOSTAVLJAC) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate posao. Zaposlite se u opstini."));
     if (gDostavaVozilo[playerid])
