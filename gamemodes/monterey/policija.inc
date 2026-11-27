@@ -132,7 +132,7 @@ NaDuznosti(playerid)
 bool:SluzbenoOruzje(playerid, WEAPON:w)
 {
     if (w == WEAPON_SILENCED) return gTaser[playerid];
-    return w == WEAPON_FIREEXTINGUISHER && gOnDuty[playerid];
+    return w == WEAPON_FIREEXTINGUISHER && (gOnDuty[playerid] || VrtCrijevo(playerid));
 }
 
 bool:PolicajacNaDuznosti(playerid)

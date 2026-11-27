@@ -112,6 +112,7 @@ public OnPlayerDisconnect(playerid, reason)
     RibarKraj(playerid);
     SkladisteKraj(playerid);
     RepoKraj(playerid);
+    VrtlarKraj(playerid);
     ProvalaKraj(playerid);
     PrijevozKraj(playerid);
     RestoranDisconnect(playerid);
@@ -194,6 +195,7 @@ public OnPlayerDeath(playerid, killerid, WEAPON:reason)
     RibarKraj(playerid);
     SkladisteKraj(playerid);
     RepoKraj(playerid);
+    VrtlarKraj(playerid);
     ProvalaKraj(playerid);
     PrijevozKraj(playerid);
     RestoranSmjenaKraj(playerid);
@@ -213,6 +215,7 @@ public OnPlayerStateChange(playerid, PLAYER_STATE:newstate, PLAYER_STATE:oldstat
     RibarStateChange(playerid, newstate, oldstate);
     SkladisteStateChange(playerid, newstate);
     RepoStateChange(playerid, newstate);
+    VrtlarStateChange(playerid, newstate);
     ProvalaStateChange(playerid, newstate);
     PrijevozStateChange(playerid, newstate);
     VlakStateChange(playerid, newstate);
@@ -227,7 +230,7 @@ public OnPlayerKeyStateChange(playerid, KEY:newkeys, KEY:oldkeys)
     if (KurvaOdgovorKey(playerid, newkeys, oldkeys)) return 1;
     if (UpitKey(playerid, newkeys, oldkeys)) return 1;
     if (ArkadaTipke(playerid, newkeys, oldkeys) || DrogaTipke(playerid, newkeys, oldkeys) || TuningKey(playerid, newkeys, oldkeys) || PrijevozMeniKey(playerid, newkeys, oldkeys) || AtcKey(playerid, newkeys, oldkeys) || MobitelKey(playerid, newkeys, oldkeys) || MdtKey(playerid, newkeys, oldkeys)) return 1;
-    if (RestoranKey(playerid, newkeys, oldkeys) || RibarKey(playerid, newkeys, oldkeys) || RepoKey(playerid, newkeys, oldkeys) || PrijevozKey(playerid, newkeys, oldkeys) || PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
+    if (RestoranKey(playerid, newkeys, oldkeys) || RibarKey(playerid, newkeys, oldkeys) || RepoKey(playerid, newkeys, oldkeys) || VrtlarKey(playerid, newkeys, oldkeys) || PrijevozKey(playerid, newkeys, oldkeys) || PosaoIgraKey(playerid, newkeys, oldkeys)) return 1;
     if (KradjaKey(playerid, newkeys, oldkeys)) return 1;
     if (KapijaKey(playerid, newkeys, oldkeys)) return 1;
     if (UtrkaKey(playerid, newkeys, oldkeys)) return 1;
@@ -261,7 +264,7 @@ static InterakcijaF(playerid)
 static InterakcijaAlt(playerid)
 {
     if (PikadoCilja(playerid) || KuglanjeCilja(playerid) || BilijarCilja(playerid)) return 1;
-    return PrijevozAlt(playerid) || RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || ProvalaAlt(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || AtcAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid);
+    return PrijevozAlt(playerid) || RestoranAlt(playerid) || RacunaloKey(playerid) || StandMeni(playerid) || KurvaUlica(playerid) || TrgovinaKasa(playerid) || OruzarnicaKasa(playerid) || NamjestajKasa(playerid) || OdjecaKasa(playerid) || OpstinaSalter(playerid) || DilerKey(playerid) || KazinoKey(playerid) || BankaKasa(playerid) || ZlataraKasa(playerid) || KaficKasa(playerid) || BilijarKey(playerid) || PikadoKey(playerid) || KuglanjeKey(playerid) || PokerKey(playerid) || ArkadaKey(playerid) || PreprodavacKey(playerid) || DrogaKey(playerid) || KampKey(playerid) || SalonUlaz(playerid) || PijacaKey(playerid) || ProvalaAlt(playerid) || GepekAlt(playerid) || BankaPljackaAlt(playerid) || VrecaAlt(playerid) || ZlataraAlt(playerid) || LabAlt(playerid) || RibarAlt(playerid) || AtcAlt(playerid) || SkladisteAlt(playerid) || RepoAlt(playerid) || VrtlarAlt(playerid);
 }
 
 static Interakcija(playerid)
@@ -298,6 +301,7 @@ public OnPlayerUpdate(playerid)
     TuningUpdate(playerid);
     PrijevozMeniUpdate(playerid);
     AtcUpdate(playerid);
+    VrtlarUpdate(playerid);
     TrgovinaUpdate(playerid);
     BankaUpdate(playerid);
     ZlataraUpdate(playerid);

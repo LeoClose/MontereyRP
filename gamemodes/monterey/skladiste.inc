@@ -652,15 +652,15 @@ static SkladisteZadatak(playerid)
     gSkladisteFaza[playerid] = 1;
     SkladisteCiljPostavi(playerid, od);
     SkladisteHudOsvjezi(playerid);
-    new poruka[144];
+    new poruka[256];
     SkladisteOpis(playerid, true, od, poruka);
-    ObavijestInfo(playerid, T(playerid, "Skladistar"), poruka);
     switch (gSkladisteTip[playerid])
     {
-        case SKT_LOMLJIVO: Savjet(playerid, T(playerid, "~r~Lomljivo!~w~ Ne udarajte viljuskarom dok nosite teret."), 5000);
-        case SKT_TESKO: Savjet(playerid, T(playerid, "~y~Tesko!~w~ Viljuske se s teretom sporije dizu."), 5000);
-        case SKT_HITNO: Savjet(playerid, T(playerid, "~y~Hitno!~w~ Kraci rok, veca zarada."), 5000);
+        case SKT_LOMLJIVO: strcat(poruka, "~n~"), strcat(poruka, T(playerid, "~r~Lomljivo!~w~ Ne udarajte viljuskarom dok nosite teret."));
+        case SKT_TESKO: strcat(poruka, "~n~"), strcat(poruka, T(playerid, "~y~Tesko!~w~ Viljuske se s teretom sporije dizu."));
+        case SKT_HITNO: strcat(poruka, "~n~"), strcat(poruka, T(playerid, "~y~Hitno!~w~ Kraci rok, veca zarada."));
     }
+    ObavijestInfo(playerid, T(playerid, "Skladistar"), poruka);
 }
 
 static SkladisteZadatakMakni(playerid)
