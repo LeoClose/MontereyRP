@@ -97,23 +97,24 @@ static KuceUvezi()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS server_flags (name TEXT PRIMARY KEY)"));
     GarazeTablica();
     StanoviTablice();
-    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'kuce_uvoz2'");
+    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'kuce_uvoz3'");
     new bool:uvezeno = DB_GetRowCount(zastava) > 0;
     DB_FreeResultSet(zastava);
     if (uvezeno) return;
     new DB:izvor = DB_Open("kuce.db");
     if (!izvor) return;
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('kuce_uvoz2')"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('kuce_uvoz3')"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM house_renters WHERE house IN (SELECT id FROM houses WHERE owner = 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_spawn WHERE house IN (SELECT id FROM houses WHERE owner = 0)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM houses WHERE owner = 0"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM garages WHERE house > 0 AND (owner = 0 OR house NOT IN (SELECT id FROM houses))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TEMP TABLE IF NOT EXISTS kuce_map (src INTEGER PRIMARY KEY, dst INTEGER NOT NULL)"));
     new DBResult:res = DB_ExecuteQuery(izvor, "SELECT id, x, y, z, model, price, size, interior, x0, y0, x1, y1 FROM houses ORDER BY id");
     for (new n = res ? DB_GetRowCount(res) : 0, r = 0; r < n; r++, DB_SelectNextRow(res))
     {
         new Float:x = DB_GetFieldFloat(res, 1), Float:y = DB_GetFieldFloat(res, 2), Float:z = DB_GetFieldFloat(res, 3);
-        new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE owner > 0 AND id NOT IN (SELECT dst FROM kuce_map) AND x BETWEEN %f AND %f AND y BETWEEN %f AND %f ORDER BY (x - %f) * (x - %f) + (y - %f) * (y - %f) LIMIT 1", DB_GetFieldFloat(res, 8), DB_GetFieldFloat(res, 10), DB_GetFieldFloat(res, 9), DB_GetFieldFloat(res, 11), x, x, y, y);
+        new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE owner > 0 AND id NOT IN (SELECT dst FROM kuce_map) AND ((x BETWEEN %f AND %f AND y BETWEEN %f AND %f) OR (x - %f) * (x - %f) + (y - %f) * (y - %f) < 16.0) ORDER BY (x - %f) * (x - %f) + (y - %f) * (y - %f) LIMIT 1", DB_GetFieldFloat(res, 8), DB_GetFieldFloat(res, 10), DB_GetFieldFloat(res, 9), DB_GetFieldFloat(res, 11), x, x, y, y, x, x, y, y);
         new id = DB_GetRowCount(ima) ? DB_GetFieldInt(ima, 0) : 0;
         DB_FreeResultSet(ima);
         if (id) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET x = %f, y = %f, z = %f, model = %d, snap = 0 WHERE id = %d", x, y, z, DB_GetFieldInt(res, 4), id));
