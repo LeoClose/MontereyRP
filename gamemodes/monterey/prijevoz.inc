@@ -63,7 +63,7 @@ static const Float:gPrijevozRuta[] = {
     2173.937, -2249.679, 12.230, 2178.180, -2253.922, 12.230, 2181.009, -2256.751, 12.300,
     2186.340, -2261.891, 12.420
 };
-static bool:gPrijevozOdustaje[MAX_PLAYERS];
+static bool:gPrijevozOdustaje[MAX_PLAYERS], gPrijevozZarada[MAX_PLAYERS], gPrijevozZaradaXp[MAX_PLAYERS], gPrijevozZaradaKv[MAX_PLAYERS];
 static Float:gPrijevozPonudaDucan[MAX_PLAYERS][PZ_PONUDA][3], Float:gPrijevozDucan[MAX_PLAYERS][3], gPrijevozIstovarOd[MAX_PLAYERS], gPrijevozPreostalo[MAX_PLAYERS], gPrijevozIsporuceno[MAX_PLAYERS], bool:gPrijevozNosi[MAX_PLAYERS];
 static gPrijevozRadnik[MAX_PLAYERS][PZ_RADNIKA], gPrijevozRadnikStanje[MAX_PLAYERS][PZ_RADNIKA];
 static const gPrijevozRadnikSkin[] = { 16, 27, 260, 153 };
@@ -997,7 +997,10 @@ public PrijevozVracaGotov(playerid, racun)
     if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gPrijevozFaza[playerid] != PZF_VRACA) return;
     PrijevozScenaKraj(playerid);
     gPrijevozFaza[playerid] = PZF_POVRATAK;
+    new iznos = gPrijevozZarada[playerid], xp = gPrijevozZaradaXp[playerid], kv = gPrijevozZaradaKv[playerid];
     PrijevozKraj(playerid);
+    gPrijevozZarada[playerid] = iznos, gPrijevozZaradaXp[playerid] = xp, gPrijevozZaradaKv[playerid] = kv;
+    PrijevozPlati(playerid);
     TogglePlayerControllable(playerid, true);
     SetCameraBehindPlayer(playerid);
     SetTimerEx("PrijevozOtkrij", 300, false, "ii", playerid, racun);
@@ -1337,6 +1340,7 @@ PrijevozKraj(playerid)
 {
     PrijevozKonvojNapusti(playerid, KVR_IZLAZ);
     PrijevozMeniZatvori(playerid);
+    gPrijevozZarada[playerid] = gPrijevozZaradaXp[playerid] = gPrijevozZaradaKv[playerid] = 0;
     gPrijevozPonudaBroj[playerid] = 0;
     gPrijevozOdustaje[playerid] = false;
     if (!gPrijevozFaza[playerid]) return;
@@ -1407,19 +1411,31 @@ static PrijevozSteta(playerid)
 static PrijevozIstovari(playerid)
 {
     new t = gPrijevozVrsta[playerid], kasni = gettime() - gPrijevozRok[playerid], steta = PrijevozSteta(playerid), poruka[200];
-    new iznos = PrijevozIsplata(PrijevozOsnova(t, gPrijevozPut[playerid]), kasni, steta), xp = gPrijevozTeret[t][ptXp] + (kasni <= 0 ? 1 : 0), staro = PrijevozXp(playerid);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO trucker_xp (account, xp, runs) VALUES (%d, 0, 0)", gAccountId[playerid]));
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE trucker_xp SET xp = xp + %d, runs = runs + 1 WHERE account = %d", xp, gAccountId[playerid]));
+    new iznos = PrijevozIsplata(PrijevozOsnova(t, gPrijevozPut[playerid]), kasni, steta), xp = gPrijevozTeret[t][ptXp] + (kasni <= 0 ? 1 : 0);
     new kv = gPrijevozKonvoj[playerid] != -1 && gPrijevozKvImaBonus[playerid] ? gPrijevozKvBonus[gPrijevozKonvoj[playerid]] : 0;
-    iznos = iznos * (100 + kv) / 100;
     PrijevozKonvojNapusti(playerid, KVR_GOTOV);
     PrijevozPovratak(playerid);
+    gPrijevozZarada[playerid] = iznos * (100 + kv) / 100;
+    gPrijevozZaradaXp[playerid] = xp;
+    gPrijevozZaradaKv[playerid] = kv;
+    if (kasni <= 0) format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen na vrijeme! Steta: %d%%.~n~Zarada: $%d, +%d XP~n~Vratite kamion u depo da primite placu."), steta, gPrijevozZarada[playerid], xp);
+    else format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen s %d s zakasnjenja. Steta: %d%%.~n~Zarada: $%d, +%d XP~n~Vratite kamion u depo da primite placu."), kasni, steta, gPrijevozZarada[playerid], xp);
+    IgraObavijest(playerid, T(playerid, "Prijevoz tereta"), PZ_BOJA, poruka, PZ_PAUZA_S * 1000);
+}
+
+static PrijevozPlati(playerid)
+{
+    new iznos = gPrijevozZarada[playerid], xp = gPrijevozZaradaXp[playerid], kv = gPrijevozZaradaKv[playerid], poruka[200];
+    gPrijevozZarada[playerid] = gPrijevozZaradaXp[playerid] = gPrijevozZaradaKv[playerid] = 0;
+    if (!xp) return;
+    new staro = PrijevozXp(playerid);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO trucker_xp (account, xp, runs) VALUES (%d, 0, 0)", gAccountId[playerid]));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE trucker_xp SET xp = xp + %d, runs = runs + 1 WHERE account = %d", xp, gAccountId[playerid]));
     iznos = BlagajnaIsplati(iznos);
     if (!BankaUplati(gAccountId[playerid], iznos, "Prijevoz tereta")) BlagajnaDodaj(iznos), iznos = 0;
     format(poruka, sizeof poruka, T(playerid, "Uplata za prijevoz tereta: $%d."), iznos);
     MobitelPrimiPoruku(gAccountId[playerid], MOBITEL_BANKA_BROJ, poruka);
-    if (kasni <= 0) format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen na vrijeme! Steta: %d%%.~n~$%d je uplaceno na vas racun. +%d XP~n~Vratite kamion u depo."), steta, iznos, xp);
-    else format(poruka, sizeof poruka, T(playerid, "Teret je dostavljen s %d s zakasnjenja. Steta: %d%%.~n~$%d je uplaceno na vas racun. +%d XP~n~Vratite kamion u depo."), kasni, steta, iznos, xp);
+    format(poruka, sizeof poruka, T(playerid, "Kamion je vracen.~n~$%d je uplaceno na vas racun. +%d XP"), iznos, xp);
     IgraObavijest(playerid, T(playerid, "Prijevoz tereta"), PZ_BOJA, poruka, PZ_PAUZA_S * 1000);
     if (kv)
     {
@@ -1464,7 +1480,11 @@ static PrijevozPanel(playerid)
             if (gPrijevozViljuskar) format(poruka, sizeof poruka, T(playerid, "Teret: %s~n~Viljuskar utovaruje teret (%d/%d)."), T(playerid, gPrijevozTeret[t][ptIme]), gPrijevozUtovareno[playerid], PZ_TURA);
             else format(poruka, sizeof poruka, T(playerid, "Teret: %s~n~Utovar u tijeku: %d s."), T(playerid, gPrijevozTeret[t][ptIme]), max(0, PZ_GORIVO_S - (gettime() - gPrijevozUtovarOd)));
         }
-        case PZF_POVRATAK: strcat(poruka, T(playerid, "Vratite kamion u depo (oznaceno na karti) i pritisnite ~y~ALT~w~."));
+        case PZF_POVRATAK:
+        {
+            if (gPrijevozZaradaXp[playerid]) format(poruka, sizeof poruka, T(playerid, "Vratite kamion u depo (oznaceno na karti) i pritisnite ~y~ALT~w~.~n~Placa: $%d"), gPrijevozZarada[playerid]);
+            else strcat(poruka, T(playerid, "Vratite kamion u depo (oznaceno na karti) i pritisnite ~y~ALT~w~."));
+        }
         case PZF_ISTOVAR:
         {
             switch (PrijevozIstovarVrsta(playerid))

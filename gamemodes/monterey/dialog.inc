@@ -226,7 +226,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         case DLG_STAND_KUPI:        return Dlg_stand_kupi(playerid, response);
         case DLG_STAND_IME:         return Dlg_stand_ime(playerid, response, inputtext);
         case DLG_STAND_ROBA:        return Dlg_stand_roba(playerid, response, inputtext);
-        case DLG_STAND_HRANA:       return Dlg_stand_hrana(playerid, response, listitem);
         case DLG_APANEL_STAND:      return Dlg_apanel_stand(playerid, response, listitem);
         case DLG_APANEL_STAND_MODEL: return Dlg_apanel_stand_model(playerid, response, listitem);
         case DLG_APANEL_STAND_MENI: return Dlg_apanel_stand_meni(playerid, response, listitem);

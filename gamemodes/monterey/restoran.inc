@@ -3,7 +3,9 @@
 #define REST_SVIJET         3300
 #define REST_GOSTIJU        4
 #define REST_NARUDZBI       12
-#define REST_STOLOVA        12
+#define REST_STOLOVA        16
+#define REST_PUT_MAX        12
+#define REST_IZMJENA_POSTO  35
 #define REST_MENI           7
 #define REST_DOMET          1.6
 #define REST_KASA_DOMET     2.5
@@ -56,7 +58,53 @@ static Float:gRsTocka[REST_VRSTA][PT_BROJ][4] = {
         { 364.9724, -5.3514, 1001.8516, 1.8800 }, { 370.2030, -3.9102, 1001.8589, 1.7130 }, { 364.98, -11.61, 1001.85, 0.0 }, { 370.8183, -4.4893, 1001.8589, 178.1213 }
     }
 };
-static Float:gRsStol[REST_VRSTA][REST_STOLOVA][4], gRsStolDb[REST_VRSTA][REST_STOLOVA], gRsStolova[REST_VRSTA];
+static Float:gRsStol[REST_VRSTA][REST_STOLOVA][4], gRsStolDb[REST_VRSTA][REST_STOLOVA], gRsStolova[REST_VRSTA], gRsStolPut[REST_VRSTA][REST_STOLOVA];
+static const gRsSjedala[REST_VRSTA] = { 12, 15, 0 };
+static const Float:gRsSjedalo[REST_VRSTA][REST_STOLOVA][3] = {
+    { { 372.945, -130.125, 270.000 }, { 372.945, -129.031, 270.000 }, { 372.945, -126.773, 270.000 }, { 372.945, -125.680, 270.000 }, { 372.945, -123.148, 270.000 }, { 372.945, -122.062, 270.000 }, { 374.961, -130.125, 90.000 }, { 374.961, -129.031, 90.000 }, { 374.961, -126.773, 90.000 }, { 374.961, -125.680, 90.000 }, { 374.961, -123.148, 90.000 }, { 374.961, -122.062, 90.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 } },
+    { { 366.578, -74.977, 181.500 }, { 368.258, -74.977, 179.500 }, { 369.758, -74.977, 179.500 }, { 371.352, -76.656, 274.700 }, { 373.094, -76.719, 77.800 }, { 374.430, -76.602, 272.000 }, { 376.055, -76.523, 93.900 }, { 377.273, -76.633, 274.400 }, { 373.312, -73.453, 359.100 }, { 375.328, -73.453, 357.400 }, { 376.391, -73.453, 359.200 }, { 365.328, -72.094, 5.100 }, { 365.164, -70.391, 186.200 }, { 361.391, -72.133, 353.900 }, { 361.469, -70.156, 182.500 }, { 0.000, 0.000, 0.000 } },
+    { { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 }, { 0.000, 0.000, 0.000 } }
+};
+static const gRsSjedaloPut[REST_VRSTA][REST_STOLOVA][4] = {
+    { { 6, 7, 13, 3 }, { 16, 5, 21, 5 }, { 26, 6, 32, 4 }, { 36, 5, 41, 4 }, { 45, 6, 51, 5 }, { 56, 4, 60, 4 }, { 64, 3, 67, 6 }, { 73, 3, 76, 6 }, { 82, 2, 84, 8 }, { 92, 2, 94, 8 }, { 102, 3, 105, 8 }, { 113, 4, 117, 9 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } },
+    { { 127, 3, 130, 4 }, { 134, 3, 137, 4 }, { 141, 4, 145, 4 }, { 149, 4, 153, 4 }, { 157, 5, 162, 5 }, { 167, 6, 173, 4 }, { 177, 4, 181, 6 }, { 187, 4, 191, 4 }, { 195, 7, 202, 3 }, { 205, 6, 211, 4 }, { 215, 5, 220, 4 }, { 224, 3, 227, 3 }, { 230, 3, 233, 7 }, { 240, 3, 243, 2 }, { 245, 4, 249, 2 }, { 0, 0, 0, 0 } },
+    { { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } }
+};
+static const gRsUlazPut[REST_VRSTA][2] = { { 0, 6 }, { 126, 1 }, { 0, 0 } };
+static const Float:gRsPutXY[] = {
+    372.300, -129.400, 372.300, -125.500, 372.500, -125.200, 375.500, -123.600, 375.600, -123.300, 375.600, -120.200, 375.600, -120.200, 375.600, -123.400,
+    375.400, -123.700, 372.400, -125.300, 372.300, -125.600, 372.300, -129.700, 372.400, -129.800, 372.400, -129.800, 372.300, -129.900, 372.400, -131.700,
+    375.600, -120.200, 375.600, -127.100, 375.400, -127.400, 373.200, -128.200, 372.600, -128.600, 372.600, -128.600, 372.500, -128.600, 372.300, -128.900,
+    372.300, -131.600, 372.400, -131.700, 375.600, -120.200, 375.600, -123.400, 375.400, -123.700, 372.400, -125.300, 372.300, -125.600, 372.400, -126.500,
+    372.400, -126.500, 372.300, -126.600, 372.300, -131.600, 372.400, -131.700, 375.600, -120.200, 375.600, -123.400, 375.400, -123.700, 372.400, -125.300,
+    372.400, -125.400, 372.400, -125.400, 372.300, -125.500, 372.300, -131.600, 372.400, -131.700, 375.600, -120.200, 372.500, -121.600, 372.300, -121.900,
+    372.300, -122.400, 372.500, -122.700, 372.600, -122.700, 372.600, -122.700, 372.500, -122.700, 372.300, -123.000, 372.300, -131.600, 372.400, -131.700,
+    375.600, -120.200, 372.500, -121.600, 372.400, -121.700, 372.400, -121.800, 372.400, -121.800, 372.300, -121.900, 372.300, -131.600, 372.400, -131.700,
+    375.600, -120.200, 375.600, -129.600, 375.500, -129.800, 375.500, -129.800, 375.600, -129.900, 375.600, -130.400, 375.400, -130.700, 374.400, -131.100,
+    372.400, -131.700, 375.600, -120.200, 375.600, -128.500, 375.500, -128.700, 375.500, -128.700, 375.600, -128.800, 375.600, -130.400, 375.400, -130.700,
+    374.400, -131.100, 372.400, -131.700, 375.600, -120.200, 375.600, -126.800, 375.600, -126.800, 375.600, -127.100, 375.400, -127.400, 372.700, -128.400,
+    372.400, -128.700, 372.300, -129.000, 372.300, -130.600, 372.400, -131.700, 375.600, -120.200, 375.600, -125.700, 375.600, -125.700, 375.600, -127.100,
+    375.400, -127.400, 373.200, -128.200, 372.400, -128.700, 372.300, -129.000, 372.300, -131.600, 372.400, -131.700, 375.600, -120.200, 375.600, -122.600,
+    375.500, -122.800, 375.500, -122.800, 375.600, -122.900, 375.600, -123.500, 374.500, -124.400, 372.500, -125.200, 372.300, -125.500, 372.300, -131.600,
+    372.400, -131.700, 375.600, -120.200, 375.600, -122.300, 375.400, -122.600, 375.300, -122.600, 375.300, -122.600, 375.400, -122.600, 375.600, -122.900,
+    375.600, -123.500, 374.600, -124.300, 372.500, -125.200, 372.300, -125.500, 372.300, -131.600, 372.400, -131.700, 376.600, -68.800, 376.600, -68.800,
+    371.700, -71.000, 367.100, -74.700, 367.100, -74.700, 367.100, -74.600, 366.800, -74.400, 364.200, -73.800, 376.600, -68.800, 372.300, -70.700,
+    368.800, -74.700, 368.800, -74.700, 368.800, -74.600, 368.500, -74.400, 364.200, -73.800, 376.600, -68.800, 372.300, -70.700, 370.300, -74.600,
+    370.300, -74.700, 370.300, -74.700, 370.300, -74.600, 370.000, -74.400, 364.200, -73.800, 376.600, -68.800, 372.300, -70.700, 372.100, -71.000,
+    371.400, -76.100, 371.400, -76.100, 370.200, -74.500, 369.900, -74.400, 364.200, -73.800, 376.600, -68.800, 377.600, -71.000, 377.600, -72.700,
+    376.800, -74.000, 373.300, -76.200, 373.300, -76.200, 373.200, -75.900, 372.900, -75.700, 370.000, -74.400, 364.200, -73.800, 376.600, -68.800,
+    377.600, -71.000, 377.600, -72.700, 376.800, -74.000, 373.900, -76.200, 373.900, -76.300, 373.900, -76.300, 372.900, -75.700, 370.000, -74.400,
+    364.200, -73.800, 376.600, -68.800, 377.600, -71.000, 377.600, -73.800, 376.500, -76.200, 376.500, -76.200, 376.500, -76.100, 376.300, -75.900,
+    375.700, -75.700, 369.900, -74.400, 364.200, -73.800, 376.600, -68.800, 377.600, -71.000, 377.500, -75.100, 377.000, -76.100, 377.000, -76.100,
+    375.700, -75.700, 369.900, -74.400, 364.200, -73.800, 376.600, -68.800, 377.600, -71.000, 377.600, -72.700, 376.800, -74.000, 376.500, -74.100,
+    373.700, -74.100, 373.600, -74.000, 373.600, -74.000, 373.500, -74.100, 364.200, -73.800, 376.600, -68.800, 377.600, -71.000, 377.600, -72.700,
+    376.800, -74.000, 376.500, -74.100, 375.600, -74.000, 375.600, -74.000, 375.500, -74.100, 364.300, -73.900, 364.200, -73.800, 376.600, -68.800,
+    377.600, -71.000, 377.600, -72.700, 376.800, -74.000, 376.700, -74.000, 376.700, -74.000, 376.600, -74.100, 364.600, -74.000, 364.200, -73.800,
+    376.600, -68.800, 369.800, -71.300, 365.700, -72.600, 365.700, -72.600, 365.700, -72.700, 364.200, -73.800, 376.600, -68.800, 369.800, -71.300,
+    365.700, -70.200, 365.700, -70.200, 366.000, -70.400, 366.100, -70.700, 366.100, -72.100, 365.900, -72.400, 365.600, -72.800, 364.200, -73.800,
+    376.600, -68.800, 365.400, -72.900, 362.000, -72.100, 362.000, -72.100, 364.200, -73.800, 376.600, -68.800, 365.400, -72.900, 364.100, -72.500,
+    362.000, -69.900, 362.000, -69.900, 364.200, -73.800
+};
 
 static const gRsMeni[][] = { "Moo Kids Meal", "Beef Tower", "Meat Stack", "Buster", "Double D-Luxe", "Full Rack", "Salad Meal", "Pomfrit", "Sok", "Cluckin' Little Meal", "Cluckin' Big Meal", "Cluckin' Huge Meal" };
 static const gRsStavkaVrsta[] = { PV_BURGER, PV_BURGER, PV_BURGER, PV_PIZZA, PV_PIZZA, PV_PIZZA, PV_SALATA, PV_POMFRIT, PV_PICE, PV_PILETINA, PV_PILETINA, PV_PILETINA };
@@ -80,6 +128,7 @@ static const gRsRecept[sizeof gRsMeni][7] = {
     { 0, 11, 2, 3, 4, 5, -1 },
     { 0, 11, 2, 11, 3, 5, -1 }
 };
+static const bool:gRsMozeBez[] = { false, false, true, true, true, false, false, false, true, true, true, false };
 static const KEY:gRsTipka[] = { KEY_YES, KEY_NO, KEY_WALK, KEY_SPRINT };
 static const gRsTipkaIme[][] = { "Y", "N", "ALT", "SPACE" };
 
@@ -88,12 +137,12 @@ enum E_RS { bool:rsIma, rsDb, rsVrsta, Float:rsX, Float:rsY, Float:rsZ, Float:rs
 static gRs[REST_MAX][E_RS];
 enum E_RSG { pgLik, pgFaza, pgStol, pgOd, pgNar }
 static gRsGost[REST_MAX][REST_GOSTIJU][E_RSG];
-enum E_RSN { bool:pnIma, pnStanje, pnGost, pnIgrac, pnStavka, pnRadi, pnOd, pnBroj }
+enum E_RSN { bool:pnIma, pnStanje, pnGost, pnIgrac, pnStavka, pnRadi, pnOd, pnBroj, pnBez }
 static gRsNar[REST_MAX][REST_NARUDZBI][E_RSN];
 
 static gRsSmjena[MAX_PLAYERS], gRsIgra[MAX_PLAYERS], gRsRad[MAX_PLAYERS] = { -1, ... }, gRsKorak[MAX_PLAYERS], gRsStrana[MAX_PLAYERS], gRsIgraOd[MAX_PLAYERS], gRsTimer[MAX_PLAYERS];
 static gRsSlojTipka[MAX_PLAYERS][7], Float:gRsPoz[MAX_PLAYERS], Float:gRsBrzina[MAX_PLAYERS], Float:gRsZelOd[MAX_PLAYERS], Float:gRsZelDo[MAX_PLAYERS];
-static PlayerText:gRsLista[MAX_PLAYERS], bool:gRsListaIma[MAX_PLAYERS], gRsListaTekst[MAX_PLAYERS][256];
+static PlayerText:gRsLista[MAX_PLAYERS], bool:gRsListaIma[MAX_PLAYERS], gRsListaTekst[MAX_PLAYERS][800];
 static gRsSavjet[MAX_PLAYERS] = { -1, ... }, bool:gRsJede[MAX_PLAYERS], gRsApPopis[MAX_PLAYERS][REST_MAX + REST_STOLOVA], gRsApVrsta[MAX_PLAYERS];
 static gRsRadio[MAX_PLAYERS], gRsAkcija[MAX_PLAYERS];
 static gRsShop[MAX_PLAYERS] = { -1, ... }, gRsShopIdx[MAX_PLAYERS], PlayerText:gRsShopTd[MAX_PLAYERS][PZS_BROJ], gRsShopObj[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... };
@@ -136,12 +185,25 @@ InitRestoran()
         for (new k = 0; k < 4; k++) gRsTocka[v][t][k] = DB_GetFieldFloat(res, k + 2);
     }
     DB_FreeResultSet(res);
+    for (new v = 0; v < REST_VRSTA; v++)
+    {
+        for (new t = 0; t < gRsSjedala[v]; t++)
+        {
+            gRsStol[v][t][0] = gRsSjedalo[v][t][0];
+            gRsStol[v][t][1] = gRsSjedalo[v][t][1];
+            gRsStol[v][t][2] = gRsTocka[v][PT_KUPAC][2];
+            gRsStol[v][t][3] = gRsSjedalo[v][t][2];
+            gRsStolPut[v][t] = t;
+        }
+        gRsStolova[v] = gRsSjedala[v];
+    }
     res = DB_ExecuteQuery(gDB, "SELECT id, vrsta, x, y, z, a FROM restaurant_tables ORDER BY id");
     for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
     {
         new v = DB_GetFieldInt(res, 1);
         if (v < 0 || v >= REST_VRSTA || gRsStolova[v] >= REST_STOLOVA) continue;
         gRsStolDb[v][gRsStolova[v]] = DB_GetFieldInt(res, 0);
+        gRsStolPut[v][gRsStolova[v]] = -1;
         for (new k = 0; k < 4; k++) gRsStol[v][gRsStolova[v]][k] = DB_GetFieldFloat(res, k + 2);
         gRsStolova[v]++;
     }
@@ -356,6 +418,23 @@ static RestoranMeniBroj(v)
     return n;
 }
 
+static RestoranIzmjena(stavka)
+{
+    if (random(100) >= REST_IZMJENA_POSTO) return 0;
+    new moze[7], n = 0, maska = 0;
+    for (new k = 1; k < 7 && gRsRecept[stavka][k] != -1; k++)
+    {
+        new sastojak = gRsRecept[stavka][k];
+        if (!gRsMozeBez[sastojak] || (gRsStavkaVrsta[stavka] == PV_PIZZA && sastojak == 2) || (maska & (1 << sastojak))) continue;
+        maska |= 1 << sastojak;
+        moze[n++] = sastojak;
+    }
+    if (!n) return 0;
+    new prvi = random(n), bez = 1 << moze[prvi];
+    if (n > 1 && random(4) == 0) bez |= 1 << moze[(prvi + 1 + random(n - 1)) % n];
+    return bez;
+}
+
 static RestoranNovaNarudzba(s, gost, igrac, stavka)
 {
     for (new n = 0; n < REST_NARUDZBI; n++)
@@ -369,6 +448,7 @@ static RestoranNovaNarudzba(s, gost, igrac, stavka)
         gRsNar[s][n][pnRadi] = INVALID_PLAYER_ID;
         gRsNar[s][n][pnOd] = gettime();
         gRsNar[s][n][pnBroj] = ++gRs[s][rsBroj] % 100;
+        gRsNar[s][n][pnBez] = igrac == INVALID_PLAYER_ID ? RestoranIzmjena(stavka) : 0;
         RestoranRadnicima(s, "Nova narudzba #%d.", gRsNar[s][n][pnBroj]);
         return n;
     }
@@ -485,6 +565,27 @@ static RestoranStolSlobodan(s)
     return n ? slobodni[random(n)] : -1;
 }
 
+static RestoranPutDodaj(s, od, broj, Float:tocke[], &n, bool:obrnuto = false)
+{
+    new Float:z = RsT(s, PT_KUPAC)[2];
+    for (new i = 0; i < broj && n < REST_PUT_MAX; i++, n++)
+    {
+        new k = od + (obrnuto ? broj - 1 - i : i);
+        tocke[n * 3] = gRsPutXY[k * 2];
+        tocke[n * 3 + 1] = gRsPutXY[k * 2 + 1];
+        tocke[n * 3 + 2] = z;
+    }
+}
+
+static RestoranPutTocka(Float:tocke[], &n, Float:x, Float:y, Float:z)
+{
+    if (n >= REST_PUT_MAX) return;
+    tocke[n * 3] = x;
+    tocke[n * 3 + 1] = y;
+    tocke[n * 3 + 2] = z;
+    n++;
+}
+
 static RestoranGostRed(s, g, &Float:x, &Float:y, &Float:z)
 {
     new Float:k = RsT(s, PT_KASA)[3], Float:pomak = (float(g) - 1.5) * 0.9, Float:a = k + 90.0;
@@ -515,9 +616,11 @@ forward RestoranGostKreni(s, g, lik);
 public RestoranGostKreni(s, g, lik)
 {
     if (gRsGost[s][g][pgLik] != lik || gRsGost[s][g][pgFaza] != PG_DOLAZI) return;
-    new Float:x, Float:y, Float:z;
+    new Float:x, Float:y, Float:z, Float:tocke[REST_PUT_MAX * 3], n = 0, v = gRs[s][rsVrsta];
     RestoranGostRed(s, g, x, y, z);
-    Lik_Idi(lik, x, y, z, LIK_HOD);
+    RestoranPutDodaj(s, gRsUlazPut[v][0], gRsUlazPut[v][1], tocke, n);
+    RestoranPutTocka(tocke, n, x, y, z);
+    Lik_IdiPutem(lik, tocke, n, LIK_HOD);
 }
 
 static RestoranGostMakni(s, g)
@@ -529,11 +632,14 @@ static RestoranGostMakni(s, g)
     gRsGost[s][g][pgNar] = -1;
 }
 
-static RestoranGostVrata(s, lik)
+static RestoranGostVrata(s, lik, t = -1)
 {
-    new Float:x, Float:y, Float:z, Float:a;
+    new Float:x, Float:y, Float:z, Float:a, Float:tocke[REST_PUT_MAX * 3], n = 0, v = gRs[s][rsVrsta], b = t >= 0 ? gRsStolPut[v][t] : -1;
     RestoranUnutra(s, x, y, z, a);
-    Lik_Idi(lik, x, y, z, LIK_HOD);
+    if (b != -1) RestoranPutDodaj(s, gRsSjedaloPut[v][b][2], gRsSjedaloPut[v][b][3], tocke, n);
+    else if (t == -1) RestoranPutDodaj(s, gRsUlazPut[v][0], gRsUlazPut[v][1], tocke, n, true);
+    RestoranPutTocka(tocke, n, x, y, z);
+    Lik_IdiPutem(lik, tocke, n, LIK_HOD);
 }
 
 static RestoranGostOdlazi(s, g)
@@ -544,7 +650,7 @@ static RestoranGostOdlazi(s, g)
         RestoranGostMakni(s, g);
         return;
     }
-    new bool:sjedi = gRsGost[s][g][pgFaza] == PG_STOL || gRsGost[s][g][pgFaza] == PG_JEDE;
+    new bool:sjedi = gRsGost[s][g][pgFaza] == PG_STOL || gRsGost[s][g][pgFaza] == PG_JEDE, t = gRsGost[s][g][pgStol], bool:ide = gRsGost[s][g][pgFaza] == PG_STOL_IDE;
     gRsGost[s][g][pgFaza] = PG_ODLAZI;
     gRsGost[s][g][pgStol] = -1;
     gRsGost[s][g][pgOd] = gettime();
@@ -552,17 +658,17 @@ static RestoranGostOdlazi(s, g)
     if (sjedi)
     {
         Lik_Animacija(lik, "FOOD", "FF_Sit_Out_180", 4.1, 0, 1, 1, 0, 0);
-        SetTimerEx("RestoranGostIzlaz", 1500, false, "iii", s, g, lik);
+        SetTimerEx("RestoranGostIzlaz", 1500, false, "iiii", s, g, lik, t);
     }
-    else RestoranGostVrata(s, lik);
+    else RestoranGostVrata(s, lik, ide ? -2 : -1);
 }
 
-forward RestoranGostIzlaz(s, g, lik);
-public RestoranGostIzlaz(s, g, lik)
+forward RestoranGostIzlaz(s, g, lik, t);
+public RestoranGostIzlaz(s, g, lik, t)
 {
     if (gRsGost[s][g][pgLik] != lik || gRsGost[s][g][pgFaza] != PG_ODLAZI) return;
     Lik_OcistiAnimaciju(lik);
-    RestoranGostVrata(s, lik);
+    RestoranGostVrata(s, lik, t);
 }
 
 static RestoranNasumicnaStavka(v)
@@ -596,7 +702,15 @@ static RestoranGostNaKasi(s, g)
     }
     gRsGost[s][g][pgStol] = t;
     gRsGost[s][g][pgFaza] = PG_STOL_IDE;
-    Lik_Idi(lik, gRsStol[v][t][0], gRsStol[v][t][1], gRsStol[v][t][2], LIK_HOD);
+    new b = gRsStolPut[v][t];
+    if (b == -1)
+    {
+        Lik_Idi(lik, gRsStol[v][t][0], gRsStol[v][t][1], gRsStol[v][t][2], LIK_HOD);
+        return;
+    }
+    new Float:tocke[REST_PUT_MAX * 3], k = 0;
+    RestoranPutDodaj(s, gRsSjedaloPut[v][b][0], gRsSjedaloPut[v][b][1], tocke, k);
+    Lik_IdiPutem(lik, tocke, k, LIK_HOD);
 }
 
 static RestoranGostSjedne(s, g)
@@ -791,7 +905,7 @@ static RestoranSlaganjePocni(playerid, s)
     RestoranNaslov(playerid, "Slaganje", s, n, naslov);
     IgraPanel(playerid, naslov, 120.0, gRsBoja[gRs[s][rsVrsta]]);
     gIgraTd[playerid][IGTD_SLOJEVI] = TdTekst(playerid, IGRA_TRAKA_X, 300.0, " ", 0xFFFFFFFF, 0.24, 1.1, TEXT_DRAW_FONT_1);
-    gIgraTd[playerid][IGTD_UPUTA] = TdTekst(playerid, IGRA_TRAKA_X, 386.0, T(playerid, "Pritisnite tipku za sljedeci sloj. Kriva tipka - kupac odlazi!"), 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1);
+    gIgraTd[playerid][IGTD_UPUTA] = TdTekst(playerid, IGRA_TRAKA_X, 386.0, T(playerid, "Pritisnite tipku za sljedeci sloj. Sastojak koji kupac ne zeli (listic) preskocite tipkom ~y~C~w~. Kriva tipka - kupac odlazi!"), 0xFFFFFFFF, 0.2, 0.9, TEXT_DRAW_FONT_1);
     PlayerTextDrawShow(playerid, gIgraTd[playerid][IGTD_UPUTA]);
     RestoranSlojevi(playerid, s, n);
     return 1;
@@ -861,10 +975,11 @@ bool:RestoranKey(playerid, KEY:newkeys, KEY:oldkeys)
     new stavka = gRsNar[s][n][pnStavka];
     if (igra == PI_SLAGANJE)
     {
-        new pritisnuta = -1;
+        new pritisnuta = -1, bool:bez = (gRsNar[s][n][pnBez] & (1 << gRsRecept[stavka][gRsKorak[playerid]])) != 0;
         for (new k = 0; k < sizeof gRsTipka; k++) if ((newkeys & gRsTipka[k]) && !(oldkeys & gRsTipka[k])) pritisnuta = k;
+        if ((newkeys & KEY_CROUCH) && !(oldkeys & KEY_CROUCH)) pritisnuta = sizeof gRsTipka;
         if (pritisnuta == -1) return true;
-        if (pritisnuta != gRsSlojTipka[playerid][gRsKorak[playerid]])
+        if (bez ? pritisnuta != sizeof gRsTipka : pritisnuta != gRsSlojTipka[playerid][gRsKorak[playerid]])
         {
             PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
             RestoranIgraKraj(playerid);
@@ -1114,13 +1229,19 @@ RestoranCheckpoint(playerid)
 static RestoranListaOsvjezi(playerid, s)
 {
     static const stanje[][] = { "~r~rostilj", "~y~friteza", "~y~slaganje", "~g~nosi se" };
-    new tekst[256], red[64], n = 0;
+    new tekst[800], red[64], n = 0;
     strcat(tekst, T(playerid, "~r~NARUDZBE~w~~n~"));
     for (new k = 0; k < REST_NARUDZBI; k++)
     {
         if (!gRsNar[s][k][pnIma]) continue;
         format(red, sizeof red, "#%d %s - %s~w~%s~n~", gRsNar[s][k][pnBroj], T(playerid, gRsMeni[gRsNar[s][k][pnStavka]]), T(playerid, stanje[gRsNar[s][k][pnStanje]]), gRsNar[s][k][pnRadi] == playerid ? (" *") : (""));
         strcat(tekst, red);
+        for (new b = 0; b < sizeof gRsSastojak; b++)
+        {
+            if (!(gRsNar[s][k][pnBez] & (1 << b))) continue;
+            format(red, sizeof red, T(playerid, "~r~   bez: %s~w~~n~"), T(playerid, gRsSastojak[b]));
+            strcat(tekst, red);
+        }
         n++;
     }
     if (!n) strcat(tekst, T(playerid, "~w~Nema narudzbi."));
@@ -1311,6 +1432,7 @@ static RestoranStolMakni(v, t)
     for (new k = t; k < gRsStolova[v] - 1; k++)
     {
         gRsStolDb[v][k] = gRsStolDb[v][k + 1];
+        gRsStolPut[v][k] = gRsStolPut[v][k + 1];
         for (new j = 0; j < 4; j++) gRsStol[v][k][j] = gRsStol[v][k + 1][j];
     }
     gRsStolova[v]--;
@@ -1358,6 +1480,7 @@ DLG:apanel_restoran(playerid, response, listitem)
         if (gRsStolova[v] >= REST_STOLOVA) return ObavijestGreska(playerid, T(playerid, "Dosegnut je maksimalan broj.")), ShowRestoranVrsta(playerid);
         DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO restaurant_tables (vrsta, x, y, z, a) VALUES (%d, %f, %f, %f, %f)", v, x, y, z, a));
         gRsStolDb[v][gRsStolova[v]] = ZadnjiId();
+        gRsStolPut[v][gRsStolova[v]] = -1;
         gRsStol[v][gRsStolova[v]][0] = x;
         gRsStol[v][gRsStolova[v]][1] = y;
         gRsStol[v][gRsStolova[v]][2] = z;

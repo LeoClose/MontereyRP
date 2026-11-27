@@ -61,6 +61,7 @@ static const gStandCijene[][3] = { { 4, 5, 2 }, { 3, 3, 3 }, { 8, 8, 3 }, { 5, 7
 static const gStandHranaModel[][3] = { { 19346, 19346, 2647 }, { 19568, 19568, 19568 }, { 19811, 19811, 19811 }, { 19346, 2703, 2647 } };
 static const Float:gStandZdravlje[][3] = { { 15.0, 18.0, 5.0 }, { 8.0, 8.0, 8.0 }, { 25.0, 25.0, 10.0 }, { 15.0, 22.0, 5.0 } };
 static gStandJede[MAX_PLAYERS], gStandIgraKupac[MAX_PLAYERS];
+static gStandShop[MAX_PLAYERS] = { -1, ... }, gStandShopIdx[MAX_PLAYERS], PlayerText:gStandShopTd[MAX_PLAYERS][5], gStandShopObj[MAX_PLAYERS] = { INVALID_OBJECT_ID, ... }, Float:gStandShopPoz[MAX_PLAYERS][3];
 enum { SN_NEMA, SN_TRGOVINA, SN_NOSI, SN_GEPEK }
 static gStandNar[MAX_PLAYERS], gStandNarS[MAX_PLAYERS], gStandNarKolicina[MAX_PLAYERS], gStandNarTrgovina[MAX_PLAYERS], gStandNarV[MAX_PLAYERS], Float:gStandNarCp[MAX_PLAYERS][3];
 
@@ -429,14 +430,7 @@ StandMeni(playerid)
             return 1;
         }
         if (gStand[s][snAktor] != INVALID_ACTOR_ID) AktorKaze(playerid, gStand[s][snAktor], "Prodavac", "Dobar dan! Izvolite, sve je svjeze.");
-        new lista[256], stavka[64], duljina = 0, v = gStand[s][snVrsta], naslov[25];
-        for (new i = 0; i < 3; i++)
-        {
-            format(stavka, sizeof stavka, "%s - $%d", T(playerid, gStandMeni[v][i]), gStandCijene[v][i]);
-            DodajStupac(lista, duljina, stavka);
-        }
-        StandImeIli(s, naslov, sizeof naslov);
-        PrikaziDialog(playerid, DLG_STAND_HRANA, DIALOG_STYLE_LIST, naslov, lista, T(playerid, "Kupi"), T(playerid, "Zatvori"));
+        StandShopOtvori(playerid, s);
         return 1;
     }
     new list[512], red[96], len = 0, n = 0, ime[25];
@@ -716,10 +710,67 @@ DLG:stand_roba(playerid, response, const inputtext[])
     return ObavijestInfo(playerid, T(playerid, "Stand s hranom"), tekst);
 }
 
-DLG:stand_hrana(playerid, response, listitem)
+static StandShopPrikazi(playerid)
 {
-    new s = gStandMeniS[playerid];
-    if (!response || s < 0 || s >= STAND_MAX || listitem < 0 || listitem > 2 || StandBlizu(playerid) != s || !StandOtvoren(s)) return 1;
+    new s = gStandShop[playerid], v = gStand[s][snVrsta], i = gStandShopIdx[playerid], m = gStandHranaModel[v][i], info[128];
+    format(info, sizeof info, "%s~n~~g~$%d~n~~w~+%.0f HP~n~%d/3", T(playerid, gStandMeni[v][i]), gStandCijene[v][i], gStandZdravlje[v][i], i + 1);
+    PlayerTextDrawSetString(playerid, gStandShopTd[playerid][2], info);
+    if (gStandShopObj[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gStandShopObj[playerid]);
+    gStandShopObj[playerid] = CreatePlayerObject(playerid, m, gStandShopPoz[playerid][0], gStandShopPoz[playerid][1], gStandShopPoz[playerid][2], m == 2703 || m == 19811 ? 90.0 : 0.0, 0.0, 0.0);
+}
+
+static StandShopOtvori(playerid, s)
+{
+    new Float:px, Float:py, Float:pz, Float:dx = gStand[s][snX], Float:dy = gStand[s][snY];
+    GetPlayerPos(playerid, px, py, pz);
+    dx -= px, dy -= py;
+    new Float:d = VectorSize(dx, dy, 0.0);
+    if (d < 0.1) dx = 0.0, dy = 1.0;
+    else dx /= d, dy /= d;
+    gStandShopPoz[playerid][0] = px + dx * 0.8;
+    gStandShopPoz[playerid][1] = py + dy * 0.8;
+    gStandShopPoz[playerid][2] = pz + 0.25;
+    gStandShop[playerid] = s;
+    gStandShopIdx[playerid] = 0;
+    SetPlayerCameraPos(playerid, px - dx * 0.2, py - dy * 0.2, pz + 0.75);
+    SetPlayerCameraLookAt(playerid, gStandShopPoz[playerid][0], gStandShopPoz[playerid][1], gStandShopPoz[playerid][2]);
+    KupovinaGumbi(playerid, gStandShopTd[playerid], 322.0, 150.0);
+    StandShopPrikazi(playerid);
+}
+
+StandShopZatvori(playerid)
+{
+    if (gStandShop[playerid] == -1) return;
+    gStandShop[playerid] = -1;
+    if (gStandShopObj[playerid] != INVALID_OBJECT_ID) DestroyPlayerObject(playerid, gStandShopObj[playerid]);
+    gStandShopObj[playerid] = INVALID_OBJECT_ID;
+    KupovinaZatvori(playerid, gStandShopTd[playerid]);
+}
+
+StandKlik(playerid, PlayerText:td)
+{
+    new s = gStandShop[playerid];
+    if (s == -1) return 0;
+    if (td == gStandShopTd[playerid][4] || StandBlizu(playerid) != s || !StandOtvoren(s))
+    {
+        StandShopZatvori(playerid);
+        return 1;
+    }
+    if (td == gStandShopTd[playerid][0] || td == gStandShopTd[playerid][1])
+    {
+        gStandShopIdx[playerid] = (gStandShopIdx[playerid] + (td == gStandShopTd[playerid][1] ? 1 : 2)) % 3;
+        StandShopPrikazi(playerid);
+        return 1;
+    }
+    if (td != gStandShopTd[playerid][3]) return 1;
+    new i = gStandShopIdx[playerid];
+    StandShopZatvori(playerid);
+    StandKupiHranu(playerid, s, i);
+    return 1;
+}
+
+static StandKupiHranu(playerid, s, listitem)
+{
     if (gStandJede[playerid]) return ObavijestGreska(playerid, T(playerid, "Vec jedete."));
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
     new v = gStand[s][snVrsta], cijena = gStandCijene[v][listitem];
@@ -1212,6 +1263,7 @@ StandDisconnect(playerid)
     gStandRadi[playerid] = 0;
     gStandJede[playerid] = 0;
     gStandUredi[playerid][0] = 0;
+    StandShopZatvori(playerid);
 }
 
 ShowStandoveAdmin(playerid)
