@@ -466,7 +466,12 @@ enum { VRA_NEMA, VRA_KOSILICA, VRA_CRIJEVO, VRA_CEKIC }
 static const gVrtPosaoIme[][] = { "", "Kosnja trave", "Zalijevanje biljaka", "Popravak ograde" };
 static const gVrtModelBiljke[] = { 948, 2001 };
 
-static Float:gVrtMjesto[4], Float:gVrtKombiPoz[4], bool:gVrtImaMjesto, bool:gVrtImaKombi, STREAMER_TAG_3D_TEXT_LABEL:gVrtTekst;
+static const Float:gVrtFlota[][4] = {
+    { 1808.129, -2043.472, 13.490, 225.0 }, { 1811.240, -2040.361, 13.490, 225.0 }, { 1814.351, -2037.249, 13.490, 225.0 },
+    { 1817.462, -2034.138, 13.490, 225.0 }, { 1820.574, -2031.027, 13.490, 225.0 }, { 1823.685, -2027.915, 13.490, 225.0 }
+};
+static Float:gVrtMjesto[4] = { 1819.796, -2039.583, 13.490, 225.0 }, bool:gVrtImaMjesto = true, STREAMER_TAG_3D_TEXT_LABEL:gVrtTekst;
+static gVrtFlotaV[sizeof gVrtFlota], gVrtFlotaIgrac[sizeof gVrtFlota] = { -1, ... };
 static gVrtZauzeta[sizeof gVrtKuca], bool:gVrtImaOgradu[sizeof gVrtKuca], STREAMER_TAG_OBJECT:gVrtOgradaObj[sizeof gVrtKuca][4];
 static bool:gVrtSmjena[MAX_PLAYERS], gVrtKombi[MAX_PLAYERS], gVrtPosao[MAX_PLAYERS], gVrtKucaIgraca[MAX_PLAYERS] = { -1, ... }, gVrtGotovo[MAX_PLAYERS], gVrtSljedeci[MAX_PLAYERS];
 static gVrtAlat[MAX_PLAYERS], gVrtKosilica[MAX_PLAYERS], gVrtZalij[MAX_PLAYERS][4], gVrtZadnjiTick[MAX_PLAYERS], gVrtSavjet[MAX_PLAYERS], gVrtZarada[MAX_PLAYERS];
@@ -477,19 +482,10 @@ InitVrtlar()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS job_lawn (id INTEGER PRIMARY KEY, x REAL NOT NULL, y REAL NOT NULL, z REAL NOT NULL, a REAL NOT NULL)"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS lawn_fences (house INTEGER PRIMARY KEY)"));
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT id, x, y, z, a FROM job_lawn WHERE id IN (1, 2)");
-    for (new r = 0, n = DB_GetRowCount(res); r < n; r++, DB_SelectNextRow(res))
-    {
-        new id = DB_GetFieldInt(res, 0);
-        for (new k = 0; k < 4; k++)
-        {
-            if (id == 1) gVrtMjesto[k] = DB_GetFieldFloat(res, k + 1);
-            else gVrtKombiPoz[k] = DB_GetFieldFloat(res, k + 1);
-        }
-        if (id == 1) gVrtImaMjesto = true;
-        else gVrtImaKombi = true;
-    }
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT x, y, z, a FROM job_lawn WHERE id = 1");
+    if (DB_GetRowCount(res)) for (new k = 0; k < 4; k++) gVrtMjesto[k] = DB_GetFieldFloat(res, k);
     DB_FreeResultSet(res);
+    for (new f = 0; f < sizeof gVrtFlota; f++) gVrtFlotaV[f] = CreateVehicle(VRT_KOMBI_MODEL, gVrtFlota[f][0], gVrtFlota[f][1], gVrtFlota[f][2], gVrtFlota[f][3], 44, 1, 600);
     for (new i = 0; i < MAX_PLAYERS; i++) gVrtKombi[i] = gVrtKosilica[i] = INVALID_VEHICLE_ID;
     for (new k = 0; k < sizeof gVrtKuca; k++)
     {
@@ -509,7 +505,19 @@ InitVrtlar()
         for (new s = 0; s < gVrtKuca[k][vkOgradaBr]; s++) VrtSegmentStvori(k, s);
     }
     DB_FreeResultSet(res);
-    if (gVrtImaMjesto) VrtMjestoStvori();
+    VrtMjestoStvori();
+}
+
+static bool:VrtKombiZauzet(v)
+{
+    for (new i = 0, iZadnji = gIgracZadnji; i <= iZadnji; i++) if (IsPlayerConnected(i) && GetPlayerVehicleID(i) == v) return true;
+    return false;
+}
+
+static VrtFlota(v)
+{
+    for (new f = 0; f < sizeof gVrtFlota; f++) if (gVrtFlotaV[f] == v) return f;
+    return -1;
 }
 
 static VrtMjestoStvori()
@@ -625,7 +633,12 @@ VrtlarKraj(playerid)
     VrtPosaoMakni(playerid, false);
     VrtAlatVrati(playerid);
     gVrtSmjena[playerid] = false;
-    if (gVrtKombi[playerid] != INVALID_VEHICLE_ID) DestroyVehicle(gVrtKombi[playerid]);
+    new f = VrtFlota(gVrtKombi[playerid]);
+    if (f != -1)
+    {
+        gVrtFlotaIgrac[f] = -1;
+        SetVehicleToRespawn(gVrtKombi[playerid]);
+    }
     gVrtKombi[playerid] = INVALID_VEHICLE_ID;
 }
 
@@ -771,9 +784,18 @@ static VrtOznaci(playerid, b)
 
 static VrtPocni(playerid)
 {
-    if (!gVrtImaKombi) return ObavijestGreska(playerid, T(playerid, "Posao vrtlara jos nije postavljen.")), 1;
-    new v = CreateVehicle(VRT_KOMBI_MODEL, gVrtKombiPoz[0], gVrtKombiPoz[1], gVrtKombiPoz[2] + 0.5, gVrtKombiPoz[3], 44, 1, -1);
-    if (v == INVALID_VEHICLE_ID) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kombija.")), 1;
+    new f = -1, Float:najblize = 0.0;
+    for (new k = 0; k < sizeof gVrtFlota; k++)
+    {
+        new Float:hp;
+        GetVehicleHealth(gVrtFlotaV[k], hp);
+        if (gVrtFlotaIgrac[k] != -1 || hp < VRT_KOMBI_HP || VrtKombiZauzet(gVrtFlotaV[k])) continue;
+        new Float:d = GetPlayerDistanceFromPoint(playerid, gVrtFlota[k][0], gVrtFlota[k][1], gVrtFlota[k][2]);
+        if (f == -1 || d < najblize) f = k, najblize = d;
+    }
+    if (f == -1) return ObavijestGreska(playerid, T(playerid, "Trenutno nema slobodnih kombija.")), 1;
+    new v = gVrtFlotaV[f];
+    gVrtFlotaIgrac[f] = playerid;
     VoziloNapuni(v);
     gVrtKombi[playerid] = v;
     gVrtSmjena[playerid] = true;
@@ -1002,6 +1024,11 @@ VrtlarStateChange(playerid, PLAYER_STATE:newstate)
             return;
         }
     }
+    if (VrtFlota(v) != -1 && gVrtKombi[playerid] != v)
+    {
+        RemovePlayerFromVehicle(playerid);
+        ObavijestGreska(playerid, T(playerid, "Kombi je samo za vrtlare na smjeni. Smjenu pocinjete s ALT kod vrtlara."));
+    }
 }
 
 static bool:VrtKosilicaDaleko(playerid)
@@ -1071,30 +1098,20 @@ ShowVrtlarAdmin(playerid)
 {
     new list[256], len = 0;
     DodajStupac(list, len, T(playerid, "{8AB4F8}+ Vrtlar mjesto na mojoj poziciji"));
-    DodajStupac(list, len, T(playerid, "{8AB4F8}+ Vrtlar kombi na mojoj poziciji"));
     return PrikaziDialog(playerid, DLG_APANEL_VRTLAR, DIALOG_STYLE_LIST, T(playerid, "Vrtlar"), list, T(playerid, "Odaberi"), T(playerid, "Natrag"));
 }
 
 DLG:apanel_vrtlar(playerid, response, listitem)
 {
     if (!response) return ShowKategoriju(playerid);
-    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem < 0 || listitem > 1) return 1;
+    if (!ProvjeriOvlasti(playerid, ALVL_ORG) || listitem != 0) return 1;
     if (GetPlayerInterior(playerid) || GetPlayerVirtualWorld(playerid)) return ObavijestGreska(playerid, T(playerid, "Ovo se postavlja samo izvana.")), ShowVrtlarAdmin(playerid);
     new Float:x, Float:y, Float:z, Float:a, v = GetPlayerVehicleID(playerid);
     if (v) GetVehiclePos(v, x, y, z), GetVehicleZAngle(v, a);
     else GetPlayerPos(playerid, x, y, z), GetPlayerFacingAngle(playerid, a);
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO job_lawn (id, x, y, z, a) VALUES (%d, %f, %f, %f, %f)", listitem + 1, x, y, z, a));
-    if (listitem == 0)
-    {
-        gVrtMjesto[0] = x, gVrtMjesto[1] = y, gVrtMjesto[2] = z, gVrtMjesto[3] = a;
-        VrtMjestoStvori();
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrtlar mjesto postavljeno."));
-    }
-    else
-    {
-        gVrtKombiPoz[0] = x, gVrtKombiPoz[1] = y, gVrtKombiPoz[2] = z, gVrtKombiPoz[3] = a;
-        gVrtImaKombi = true;
-        SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrtlar kombi postavljen."));
-    }
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO job_lawn (id, x, y, z, a) VALUES (1, %f, %f, %f, %f)", x, y, z, a));
+    gVrtMjesto[0] = x, gVrtMjesto[1] = y, gVrtMjesto[2] = z, gVrtMjesto[3] = a;
+    VrtMjestoStvori();
+    SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrtlar mjesto postavljeno."));
     return ShowVrtlarAdmin(playerid);
 }

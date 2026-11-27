@@ -2090,6 +2090,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Kombi je samo za vrtlare na smjeni. Smjenu pocinjete s ALT kod vrtlara.", "This van is only for gardeners on shift. Start a shift with ALT at the gardener spot.", "Этот фургон только для садовников на смене. Смену начинают клавишей ALT у садовника.", "Esta furgoneta es solo para jardineros de turno. Empieza el turno con ALT en el punto de jardinero.", "Bu minibus sadece vardiyadaki bahcivanlar icin. Vardiyaya bahcivan noktasinda ALT ile baslayin." },
     { "Vrtlar", "Gardener", "Садовник", "Jardinero", "Bahcivan" },
     { "Kosnja trave", "Lawn mowing", "Pokos travy", "Cortar el cesped", "Cim bicme" },
     { "Zalijevanje biljaka", "Watering plants", "Poliv rasteniy", "Regar plantas", "Bitki sulama" },
