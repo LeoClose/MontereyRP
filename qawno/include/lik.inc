@@ -53,7 +53,7 @@ forward OnLikPogoden(lik, playerid, Float:steta, oruzje, dio);
 forward OnLikPogodio(lik, playerid, Float:steta, oruzje, dio);
 native Lik_CiljIgraca(playerid);
 native bool:Lik_IgracRanjen(playerid, bool:ranjen);
-native bool:Lik_Snimka(lik, const ime[]);
+native bool:Lik_Snimka(lik, const ime[], odMs = 0);
 native bool:Lik_ZaustaviSnimku(lik);
 native bool:Lik_Zona(id, Float:minx, Float:miny, Float:maxx, Float:maxy, Float:faktor);
 native bool:Lik_ZonaPut(id, Float:ax, Float:ay, Float:bx, Float:by, Float:sirina, Float:faktor);

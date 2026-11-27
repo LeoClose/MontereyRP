@@ -13,10 +13,10 @@
 #define AVION_PARK_MAX_MS   150000
 #define AVION_PAUZA_MIN_MS  30000
 #define AVION_PAUZA_MAX_MS  150000
-#define ATC_PARK_MIN_MS     15000
-#define ATC_PARK_MAX_MS     40000
-#define ATC_PAUZA_MIN_MS    5000
-#define ATC_PAUZA_MAX_MS    20000
+#define ATC_PARK_MIN_MS     8000
+#define ATC_PARK_MAX_MS     25000
+#define ATC_PAUZA_MIN_MS    3000
+#define ATC_PAUZA_MAX_MS    10000
 
 #define SEG_ULAZ            10
 #define SEG_ULAZ_HANGAR     16
@@ -29,11 +29,14 @@
 #define AK_SREDNJI          1
 #define AK_MALI             2
 
-#define ATC_ROK_S           60
-#define ATC_HITNO_ROK_S     35
-#define ATC_HITNO_POSTO     12
+#define ATC_ROK_S           40
+#define ATC_HITNO_ROK_S     25
+#define ATC_HITNO_POSTO     20
 #define ATC_INCIDENATA      3
-#define ATC_ODOBRENJE       40
+#define ATC_KASNJENJA       3
+#define ATC_KAZNA_S         300
+#define ATC_KAZNI           32
+#define ATC_ODOBRENJE       90
 #define ATC_RULANJE         1
 #define ATC_GURANJE         2
 #define ATC_POLIJETANJE     3
@@ -285,6 +288,8 @@ static gAvionNpc[AVION_SLOTOVA], gAvionVozilo[AVION_SLOTOVA], gAvionModel[AVION_
 static bool:gAvionOdobreno[AVION_SLOTOVA], gAvionZahtjev[AVION_SLOTOVA], gAvionZahtjevOd[AVION_SLOTOVA];
 static gInstVlasnik[AVION_INSTANCI], gInstJuzna[AVION_INSTANCI], gInstSjeverna[AVION_INSTANCI], gInstZauzeto[AVION_INSTANCI][AVION_STAJALISTA], gInstOdobreno[AVION_INSTANCI];
 static gAtcInst[MAX_PLAYERS], PlayerText:gAtcTd[MAX_PLAYERS][ATD_RED + AVION_ATC_SLOTOVA * 3];
+static const gAvionPrilazOd[3][2] = { { 90000, 55000 }, { 124000, 80000 }, { 48000, 24000 } };
+static gAtcKaznaRacun[ATC_KAZNI], gAtcKaznaDo[ATC_KAZNI];
 static gAvionZnak[AVION_SLOTOVA], bool:gAvionHitno[AVION_SLOTOVA], bool:gAvionDrzi[AVION_SLOTOVA], bool:gAvionSam[AVION_SLOTOVA];
 static gAtcIdx[MAX_PLAYERS], bool:gAtcMis[MAX_PLAYERS], gAtcStrana[MAX_PLAYERS], gAtcSmjer[MAX_PLAYERS], gAtcPonovi[MAX_PLAYERS], gAtcIncidenti[MAX_PLAYERS], gAtcKasni[MAX_PLAYERS], gAtcZaradaSmjena[MAX_PLAYERS];
 
@@ -523,9 +528,41 @@ static AvionKraj(i)
 
 static AvionSnimka(i, seg)
 {
-    new ime[16];
+    new ime[16], od = 0;
     format(ime, sizeof ime, "av_%d_%d", seg, gAvionModel[i]);
-    if (!Lik_Snimka(gAvionNpc[i], ime)) AvionKraj(i);
+    if (AvionInst(i) && gAvionFaza[i] == AF_DOLAZAK && seg >= 0 && seg < 3) od = gAvionPrilazOd[seg][AvionKlasa(gAvionModel[i]) == AK_VELIKI ? 1 : 0];
+    if (!Lik_Snimka(gAvionNpc[i], ime, od)) AvionKraj(i);
+}
+
+AtcKazna(playerid)
+{
+    for (new k = 0; k < ATC_KAZNI; k++) if (gAtcKaznaRacun[k] == gAccountId[playerid] && gAtcKaznaDo[k] > gettime()) return gAtcKaznaDo[k] - gettime();
+    return 0;
+}
+
+static AtcSmijeni(playerid)
+{
+    new k = 0;
+    for (new j = 0; j < ATC_KAZNI; j++)
+    {
+        if (gAtcKaznaRacun[j] == gAccountId[playerid] || gAtcKaznaDo[j] <= gettime())
+        {
+            k = j;
+            break;
+        }
+        if (gAtcKaznaDo[j] < gAtcKaznaDo[k]) k = j;
+    }
+    gAtcKaznaRacun[k] = gAccountId[playerid];
+    gAtcKaznaDo[k] = gettime() + ATC_KAZNA_S;
+    AtcKraj(playerid);
+    ObavijestGreska(playerid, T(playerid, "Smijenjeni ste zbog previse incidenata. Ponovno mozete raditi u tornju za 5 minuta."));
+}
+
+static bool:AtcIncident(playerid)
+{
+    if (++gAtcIncidenti[playerid] < ATC_INCIDENATA) return false;
+    AtcSmijeni(playerid);
+    return true;
 }
 
 static AvionIme(model, ime[], size = sizeof (ime))
@@ -716,8 +753,12 @@ AvionAtcTick()
         for (new i = AvionPrvi(k); i < AvionZadnji(k); i++)
         {
             if (!gAvionZahtjev[i] || AtcRok(i) > 0) continue;
-            gAtcKasni[playerid]++;
             PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
+            if (++gAtcKasni[playerid] % ATC_KASNJENJA == 0)
+            {
+                IgraObavijest(playerid, T(playerid, "Kontrolni toranj"), 0xC0392BE6, T(playerid, "Previse kasnjenja - uprava vam je upisala incident."));
+                if (AtcIncident(playerid)) break;
+            }
             if (gAvionFaza[i] == AF_PRILAZ)
             {
                 AtcPilot(playerid, i, T(playerid, "Nismo dobili odobrenje, preusmjeravamo se na drugi aerodrom."), true);
@@ -779,7 +820,6 @@ static AtcOdobri(playerid)
     }
     if (!AvionSlobodno(i, z))
     {
-        gAtcIncidenti[playerid]++;
         gAvionZahtjev[i] = 0;
         PlayerPlaySound(playerid, 1055, 0.0, 0.0, 0.0);
         if (gAvionFaza[i] == AF_PRILAZ)
@@ -788,12 +828,7 @@ static AtcOdobri(playerid)
             AvionKraj(i);
         }
         else AtcPilot(playerid, i, z == ATC_RULANJE ? T(playerid, "Rulna staza je zauzeta! Zaustavljamo se. Prijavljujemo incident.") : T(playerid, "Pista je zauzeta! Zaustavljamo se. Prijavljujemo incident."), true);
-        if (gAtcIncidenti[playerid] >= ATC_INCIDENATA)
-        {
-            AtcKraj(playerid);
-            ObavijestGreska(playerid, T(playerid, "Smijenjeni ste zbog previse incidenata. Smjena je zavrsena."));
-            return;
-        }
+        if (AtcIncident(playerid)) return;
         AtcTdOsvjezi(playerid);
         return;
     }

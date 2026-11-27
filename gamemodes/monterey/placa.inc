@@ -77,6 +77,12 @@ static AtcIzbornik(playerid)
 
 static AtcSmjenaPocni(playerid)
 {
+    new kazna = AtcKazna(playerid), tekst[128];
+    if (kazna)
+    {
+        format(tekst, sizeof tekst, T(playerid, "Smijenjeni ste. Ponovno mozete raditi u tornju za %d:%02d."), kazna / 60, kazna % 60);
+        return ObavijestGreska(playerid, tekst);
+    }
     if (!AtcPocni(playerid)) return ObavijestGreska(playerid, T(playerid, "Svi kontrolni tornjevi su trenutno zauzeti."));
     return ObavijestInfo(playerid, T(playerid, "Kontrolni toranj"), T(playerid, "Smjena u tornju je pocela. Pazite na pistu i rulnu stazu prije svakog odobrenja. Kraj smjene s /posao."));
 }

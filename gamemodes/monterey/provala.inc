@@ -384,7 +384,7 @@ public ProvalaBuka(playerid)
 ProvalaStateChange(playerid, PLAYER_STATE:newstate)
 {
     if (newstate != PLAYER_STATE_DRIVER && newstate != PLAYER_STATE_PASSENGER) return;
-    if (gProvalaKuca[playerid] == -1 || gProvalaUnutra[playerid]) return;
+    if (gProvalaKuca[playerid] == -1 || gProvalaUnutra[playerid] || !gProvalaUzeto[playerid]) return;
     new v = GetPlayerVehicleID(playerid);
     if (VlasnikVozila(v) != gAccountId[playerid] || !ProvalaJeKombi(v)) return;
     ProvalaAdresaMakni(playerid);
