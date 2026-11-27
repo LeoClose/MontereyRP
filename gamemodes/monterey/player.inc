@@ -258,6 +258,7 @@ static InterakcijaF(playerid)
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return;
     if (ProvalaF(playerid)) return;
     if (HqUlazIzlaz(playerid)) return;
+    if (StanF(playerid)) return;
     KucaKey(playerid);
 }
 

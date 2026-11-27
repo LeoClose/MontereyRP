@@ -352,6 +352,7 @@ public OnGameModeInit()
     InitNamjestaj();
     InitTuning();
     InitGaraze();
+    InitStanovi();
     InitSalon();
     InitPijaca();
     InitOpstina();
@@ -584,6 +585,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/mdt.inc"
 #include "monterey/tuning.inc"
 #include "monterey/garaze.inc"
+#include "monterey/stanovi.inc"
 #include "monterey/lokacije.inc"
 #include "monterey/placa.inc"
 #include "monterey/ribar.inc"

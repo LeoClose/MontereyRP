@@ -2114,7 +2114,7 @@ CMD:svjetla(playerid, params[])
 CMD:zakljucaj(playerid, params[])
 {
     if (!gUlogiran[playerid] || IsRanjen(playerid) || ImaLisice(playerid)) return 1;
-    if (!IsPlayerInAnyVehicle(playerid) && (KucaZakljucaj(playerid) || GarazaZakljucaj(playerid))) return 1;
+    if (!IsPlayerInAnyVehicle(playerid) && (KucaZakljucaj(playerid) || GarazaZakljucaj(playerid) || StanZakljucaj(playerid))) return 1;
     new v = GetPlayerVehicleID(playerid);
     if (!v) v = VoziloBlizu(playerid);
     return VoziloKljuc(playerid, v);

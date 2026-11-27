@@ -12,7 +12,7 @@
 #define KUCA_OTKUP_POSTO    50
 #define KUCA_MAX_NAJAM      100000
 
-enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuVel, kuNajam, bool:kuZakljucano,
+enum E_KUCA { bool:kuIma, kuDb, Float:kuX, Float:kuY, Float:kuZ, kuCijena, kuVlasnik, kuVlasnikIme[MAX_PLAYER_NAME + 1], kuInt, kuVel, kuNajam, bool:kuZakljucano, bool:kuGaraza,
     STREAMER_TAG_PICKUP:kuPickup, STREAMER_TAG_3D_TEXT_LABEL:kuTekst, STREAMER_TAG_AREA:kuZona }
 
 enum E_KUCA_INT { kiIme[16], kiVel, kiInt, Float:kiX, Float:kiY, Float:kiZ, kiCijena }
@@ -23,7 +23,32 @@ static const gKucaInt[][E_KUCA_INT] = {
     { "Srednja kuca", 1, 12, 2324.53, -1149.54, 1050.71, 35000 },
     { "Srednja kuca", 1, 10, 2270.38, -1210.35, 1047.56, 45000 },
     { "Velika kuca", 2, 7, 225.68, 1021.45, 1084.02, 90000 },
-    { "Vila", 2, 5, 140.17, 1366.07, 1083.65, 180000 }
+    { "Vila", 2, 5, 140.17, 1366.07, 1083.65, 180000 },
+    { "Mala kuca", 0, 2, 225.76, 1240.00, 1082.15, 12000 },
+    { "Mala kuca", 0, 4, 221.67, 1143.39, 1082.68, 12000 },
+    { "Mala kuca", 0, 9, 2253.14, -1140.09, 1050.65, 10000 },
+    { "Mala kuca", 0, 10, 2261.40, -1135.94, 1050.64, 10000 },
+    { "Srednja kuca", 1, 6, 2308.79, -1210.88, 1049.03, 30000 },
+    { "Seoska kuca", 1, 6, 2333.11, -1075.10, 1049.04, 30000 },
+    { "Srednja kuca", 1, 4, 260.98, 1286.55, 1080.30, 35000 },
+    { "Srednja kuca", 1, 9, 260.94, 1238.51, 1084.26, 35000 },
+    { "Srednja kuca", 1, 8, -42.58, 1408.11, 1084.45, 40000 },
+    { "Srednja kuca", 1, 6, -68.29, 1353.47, 1080.28, 40000 },
+    { "Srednja kuca", 1, 15, -285.55, 1470.98, 1084.45, 40000 },
+    { "Srednja kuca", 1, 4, -262.60, 1456.62, 1084.45, 40000 },
+    { "Srednja kuca", 1, 15, 295.14, 1474.47, 1080.52, 45000 },
+    { "Srednja kuca", 1, 5, 22.78, 1404.96, 1084.45, 45000 },
+    { "Srednja kuca", 1, 10, 27.13, 1341.15, 1084.45, 45000 },
+    { "Velika kuca", 2, 6, 234.05, 1064.88, 1084.31, 90000 },
+    { "Velika kuca", 2, 5, 227.72, 1114.39, 1081.19, 90000 },
+    { "Velika kuca", 2, 3, 235.11, 1189.77, 1080.34, 90000 },
+    { "Velika kuca", 2, 6, 88.09, 1368.61, 1083.96, 120000 },
+    { "Velika kuca", 2, 9, 83.35, 1324.44, 1083.89, 120000 },
+    { "Vila", 2, 2, 447.74, 1400.44, 1084.34, 180000 },
+    { "Vila", 2, 3, 490.81, 1401.49, 1080.34, 180000 },
+    { "Vila", 2, 9, 2317.82, -1024.75, 1050.21, 200000 },
+    { "Velika kuca", 2, 6, 2194.79, -1204.35, 1049.05, 90000 },
+    { "Motelska soba", 3, 5, 2233.80, -1113.36, 1050.91, 0 }
 };
 
 static gKuca[KUCA_MAX][E_KUCA], gKucaMapa[KUCA_DB_MAPA];
@@ -36,7 +61,7 @@ InitKuce()
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS house_renters (house INTEGER NOT NULL, account INTEGER NOT NULL, paid INTEGER NOT NULL, PRIMARY KEY (house, account))"));
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS player_spawn (account INTEGER PRIMARY KEY, house INTEGER NOT NULL)"));
     KuceUvezi();
-    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked, h.size FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
+    new DBResult:res = DB_ExecuteQuery(gDB, "SELECT h.id, h.x, h.y, h.z, h.price, h.owner, IFNULL(a.name, ''), h.snap, h.interior, h.rent, h.locked, h.size, (SELECT COUNT(*) FROM garages g WHERE g.house = h.id) FROM houses h LEFT JOIN accounts a ON a.id = h.owner ORDER BY h.id LIMIT %d", KUCA_MAX);
     for (new k = 0, n = DB_GetRowCount(res); k < n; k++)
     {
         gKuca[k][kuDb] = DB_GetFieldInt(res, 0);
@@ -50,6 +75,7 @@ InitKuce()
         gKuca[k][kuNajam] = DB_GetFieldInt(res, 9);
         gKuca[k][kuZakljucano] = DB_GetFieldInt(res, 10) != 0;
         gKuca[k][kuVel] = clamp(DB_GetFieldInt(res, 11), 0, 2);
+        gKuca[k][kuGaraza] = DB_GetFieldInt(res, 12) > 0;
         if (gKuca[k][kuInt] < 0 || gKuca[k][kuInt] >= sizeof gKucaInt) gKuca[k][kuInt] = KucaZadaniInt(gKuca[k][kuVel], gKuca[k][kuCijena]);
         if (DB_GetFieldInt(res, 7)) KucaTlo(k);
         KucaStvori(k);
@@ -69,43 +95,61 @@ static KucaZadaniInt(vel, cijena)
 static KuceUvezi()
 {
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TABLE IF NOT EXISTS server_flags (name TEXT PRIMARY KEY)"));
-    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT (SELECT COUNT(*) FROM server_flags WHERE name = 'kuce_uvoz'), (SELECT COUNT(*) FROM houses)");
-    new bool:uvezeno = DB_GetFieldInt(zastava, 0) > 0, bool:imaKuca = DB_GetFieldInt(zastava, 1) > 0;
+    GarazeTablica();
+    StanoviTablice();
+    new DBResult:zastava = DB_ExecuteQuery(gDB, "SELECT 1 FROM server_flags WHERE name = 'kuce_uvoz2'");
+    new bool:uvezeno = DB_GetRowCount(zastava) > 0;
     DB_FreeResultSet(zastava);
     if (uvezeno) return;
-    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('kuce_uvoz')"));
-    if (imaKuca) return;
     new DB:izvor = DB_Open("kuce.db");
     if (!izvor) return;
-    new DBResult:res = DB_ExecuteQuery(izvor, "SELECT x, y, z, model, price, size FROM houses ORDER BY id");
-    if (res && DB_GetRowCount(res))
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO server_flags (name) VALUES ('kuce_uvoz2')"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM house_renters WHERE house IN (SELECT id FROM houses WHERE owner = 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM player_spawn WHERE house IN (SELECT id FROM houses WHERE owner = 0)"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM houses WHERE owner = 0"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TEMP TABLE IF NOT EXISTS kuce_map (src INTEGER PRIMARY KEY, dst INTEGER NOT NULL)"));
+    new DBResult:res = DB_ExecuteQuery(izvor, "SELECT id, x, y, z, model, price, size, interior, x0, y0, x1, y1 FROM houses ORDER BY id");
+    for (new n = res ? DB_GetRowCount(res) : 0, r = 0; r < n; r++, DB_SelectNextRow(res))
     {
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "BEGIN"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE TEMP TABLE IF NOT EXISTS kuce_ok (id INTEGER PRIMARY KEY)"));
-        do
+        new Float:x = DB_GetFieldFloat(res, 1), Float:y = DB_GetFieldFloat(res, 2), Float:z = DB_GetFieldFloat(res, 3);
+        new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE owner > 0 AND id NOT IN (SELECT dst FROM kuce_map) AND x BETWEEN %f AND %f AND y BETWEEN %f AND %f ORDER BY (x - %f) * (x - %f) + (y - %f) * (y - %f) LIMIT 1", DB_GetFieldFloat(res, 8), DB_GetFieldFloat(res, 10), DB_GetFieldFloat(res, 9), DB_GetFieldFloat(res, 11), x, x, y, y);
+        new id = DB_GetRowCount(ima) ? DB_GetFieldInt(ima, 0) : 0;
+        DB_FreeResultSet(ima);
+        if (id) DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET x = %f, y = %f, z = %f, model = %d, snap = 0 WHERE id = %d", x, y, z, DB_GetFieldInt(res, 4), id));
+        else
         {
-            new Float:x = DB_GetFieldFloat(res, 0), Float:y = DB_GetFieldFloat(res, 1), Float:z = DB_GetFieldFloat(res, 2);
-            new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT id FROM houses WHERE x BETWEEN %f AND %f AND y BETWEEN %f AND %f AND z BETWEEN %f AND %f LIMIT 1", x - 2.0, x + 2.0, y - 2.0, y + 2.0, z - 2.5, z + 2.5);
-            new id = DB_GetRowCount(ima) ? DB_GetFieldInt(ima, 0) : 0;
-            DB_FreeResultSet(ima);
-            if (!id)
-            {
-                DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, size, snap) VALUES (%f, %f, %f, %d, %d, %d, 1)", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4), DB_GetFieldInt(res, 5)));
-                id = ZadnjiId();
-            }
-            else
-            {
-                DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET size = %d WHERE id = %d", DB_GetFieldInt(res, 5), id));
-                DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET x = %f, y = %f, z = %f, model = %d, price = %d, snap = 1 WHERE id = %d AND owner = 0", x, y, z, DB_GetFieldInt(res, 3), DB_GetFieldInt(res, 4), id));
-            }
-            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR IGNORE INTO kuce_ok (id) VALUES (%d)", id));
+            DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO houses (x, y, z, model, price, size, interior, snap) VALUES (%f, %f, %f, %d, %d, %d, %d, 0)", x, y, z, DB_GetFieldInt(res, 4), DB_GetFieldInt(res, 5), DB_GetFieldInt(res, 6), DB_GetFieldInt(res, 7)));
+            id = ZadnjiId();
         }
-        while (DB_SelectNextRow(res));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DELETE FROM houses WHERE owner = 0 AND model != 0 AND id NOT IN (SELECT id FROM kuce_ok)"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "DROP TABLE kuce_ok"));
-        DB_FreeResultSet(DB_ExecuteQuery(gDB, "COMMIT"));
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT OR REPLACE INTO kuce_map (src, dst) VALUES (%d, %d)", DB_GetFieldInt(res, 0), id));
     }
     if (res) DB_FreeResultSet(res);
+    res = DB_ExecuteQuery(izvor, "SELECT x, y, z, a, price, house FROM garages ORDER BY id");
+    for (new n = res ? DB_GetRowCount(res) : 0, r = 0; r < n; r++, DB_SelectNextRow(res))
+    {
+        new Float:x = DB_GetFieldFloat(res, 0), Float:y = DB_GetFieldFloat(res, 1), kuca = 0, vlasnik = 0;
+        new DBResult:ima = DB_ExecuteQuery(gDB, "SELECT 1 FROM garages WHERE x BETWEEN %f AND %f AND y BETWEEN %f AND %f", x - 5.0, x + 5.0, y - 5.0, y + 5.0);
+        new bool:postoji = DB_GetRowCount(ima) > 0;
+        DB_FreeResultSet(ima);
+        if (postoji) continue;
+        if (DB_GetFieldInt(res, 5))
+        {
+            ima = DB_ExecuteQuery(gDB, "SELECT m.dst, h.owner FROM kuce_map m JOIN houses h ON h.id = m.dst WHERE m.src = %d", DB_GetFieldInt(res, 5));
+            if (DB_GetRowCount(ima))
+            {
+                kuca = DB_GetFieldInt(ima, 0);
+                vlasnik = DB_GetFieldInt(ima, 1);
+            }
+            DB_FreeResultSet(ima);
+            if (!kuca) continue;
+        }
+        DB_FreeResultSet(DB_ExecuteQuery(gDB, "INSERT INTO garages (x, y, z, a, price, house, owner) VALUES (%f, %f, %f, %f, %d, %d, %d)", x, y, DB_GetFieldFloat(res, 2), DB_GetFieldFloat(res, 3), DB_GetFieldInt(res, 4), kuca, vlasnik));
+    }
+    if (res) DB_FreeResultSet(res);
+    StanoviUvezi(izvor);
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "DROP TABLE IF EXISTS kuce_map"));
+    DB_FreeResultSet(DB_ExecuteQuery(gDB, "COMMIT"));
     DB_Close(izvor);
 }
 
@@ -118,7 +162,7 @@ static KucaTlo(k)
 
 static KucaNatpis(k, natpis[], velicina = sizeof natpis)
 {
-    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, "Kuca na prodaju\n$%d", gKuca[k][kuCijena]);
+    if (!gKuca[k][kuVlasnik]) return format(natpis, velicina, gKuca[k][kuGaraza] ? ("Kuca na prodaju\n$%d\nUkljucena garaza") : ("Kuca na prodaju\n$%d"), gKuca[k][kuCijena]);
     new ime[MAX_PLAYER_NAME + 1];
     strcopy(ime, gKuca[k][kuVlasnikIme]);
     for (new i = 0; ime[i]; i++) if (ime[i] == '_') ime[i] = ' ';
@@ -160,6 +204,7 @@ static KucaPostaviVlasnika(k, racun, const ime[])
     if (racun) strcopy(gKuca[k][kuVlasnikIme], ime, MAX_PLAYER_NAME + 1);
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "UPDATE houses SET owner = %d WHERE id = %d", racun, gKuca[k][kuDb]));
     KucaOsvjezi(k);
+    GarazaKucaVlasnik(gKuca[k][kuDb], racun, ime);
 }
 
 static KucaNajbliza(Float:x, Float:y, Float:z, Float:domet)
@@ -341,7 +386,7 @@ KucaKey(playerid)
     if (!gKuca[k][kuVlasnik])
     {
         gKucaPonuda[playerid] = k + 1;
-        format(body, sizeof body, T(playerid, "Kupiti ovu kucu za $%d?"), gKuca[k][kuCijena]);
+        format(body, sizeof body, T(playerid, gKuca[k][kuGaraza] ? ("Kupiti ovu kucu s garazom za $%d?") : ("Kupiti ovu kucu za $%d?")), gKuca[k][kuCijena]);
         PrikaziDialog(playerid, DLG_KUCA, DIALOG_STYLE_MSGBOX, T(playerid, "Kuca na prodaju"), body, T(playerid, "Kupi"), T(playerid, "Odustani"));
         return 1;
     }

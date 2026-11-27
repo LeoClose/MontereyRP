@@ -414,9 +414,7 @@ static SalonOtvori(playerid, s)
     gUSalonu[playerid] = s;
     gSalonIdx[playerid] = 0;
     PrebaciIgraca(playerid, SALON_INT, SALON_SVIJET + playerid, gSalonKamera[0], gSalonKamera[1], gSalonAuto[2]);
-    TogglePlayerControllable(playerid, false);
-    SetPlayerCameraPos(playerid, gSalonKamera[0], gSalonKamera[1], gSalonKamera[2]);
-    SetPlayerCameraLookAt(playerid, gSalonAuto[0], gSalonAuto[1], gSalonAuto[2]);
+    SetTimerEx("SalonKamera", PRENOS_FADE_MS + 100, false, "ii", playerid, gAccountId[playerid]);
     gSalonTd[playerid][STD_LIJEVO] = SalonGumb(playerid, 230.0, 340.0, "<", 0x333333CC, 30.0);
     gSalonTd[playerid][STD_DESNO] = SalonGumb(playerid, 410.0, 340.0, ">", 0x333333CC, 30.0);
     gSalonTd[playerid][STD_INFO] = SalonGumb(playerid, 320.0, 330.0, "_", 0x00000088, 130.0, false);
@@ -424,6 +422,15 @@ static SalonOtvori(playerid, s)
     gSalonTd[playerid][STD_IZLAZ] = SalonGumb(playerid, 360.0, 412.0, T(playerid, "IZLAZ"), 0x8B1A1ACC, 70.0);
     SalonPrikazi(playerid);
     SelectTextDraw(playerid, 0xFFCC00FF);
+}
+
+forward SalonKamera(playerid, racun);
+public SalonKamera(playerid, racun)
+{
+    if (!IsPlayerConnected(playerid) || gAccountId[playerid] != racun || gUSalonu[playerid] == -1) return;
+    TogglePlayerControllable(playerid, false);
+    SetPlayerCameraPos(playerid, gSalonKamera[0], gSalonKamera[1], gSalonKamera[2]);
+    SetPlayerCameraLookAt(playerid, gSalonAuto[0], gSalonAuto[1], gSalonAuto[2]);
 }
 
 static SalonPrikazi(playerid)
@@ -449,9 +456,8 @@ static SalonZatvori(playerid, bool:vani = true)
     for (new i = 0; i < SALON_TD; i++) PlayerTextDrawDestroy(playerid, gSalonTd[playerid][i]);
     CancelSelectTextDraw(playerid);
     if (!vani) return;
-    PrebaciIgraca(playerid, 0, 0, gSalon[s][slX] - 1.5 * floatsin(gSalon[s][slA], degrees), gSalon[s][slY] + 1.5 * floatcos(gSalon[s][slA], degrees), gSalon[s][slZ], gSalon[s][slA] + 180.0);
     TogglePlayerControllable(playerid, true);
-    SetCameraBehindPlayer(playerid);
+    PrebaciIgraca(playerid, 0, 0, gSalon[s][slX] - 1.5 * floatsin(gSalon[s][slA], degrees), gSalon[s][slY] + 1.5 * floatcos(gSalon[s][slA], degrees), gSalon[s][slZ], gSalon[s][slA] + 180.0);
 }
 
 SalonDisconnect(playerid)
