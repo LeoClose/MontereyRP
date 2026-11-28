@@ -2090,6 +2090,7 @@ static const gTekst[][BROJ_JEZIKA][] = {
     { "Spremi", "Save", "Сохранить", "Guardar", "Kaydet" },
     { "Y - da, N - ne", "Y - yes, N - no", "Y - да, N - нет", "Y - si, N - no", "Y - evet, N - hayir" },
     { "Greska", "Error", "Ошибка", "Error", "Hata" },
+    { "Istovarili ste %d vreca. +$%d na placi~n~Zarada ove smjene: $%d~n~Nova ruta stize uskoro.", "You unloaded %d bags. +$%d on payday~n~Earned this shift: $%d~n~A new route is coming soon.", "Vy razgruzili %d meshkov. +$%d k zarplate~n~Zarabotok za smenu: $%d~n~Skoro budet novyy marshrut.", "Descargaste %d bolsas. +$%d en el dia de pago~n~Ganado este turno: $%d~n~Pronto llegara una nueva ruta.", "%d torba bosalttiniz. Maasa +$%d~n~Bu vardiya kazanc: $%d~n~Yeni rota yakinda geliyor." },
     { "Smetlar mjesto postavljeno.", "Garbage man spot set.", "Место мусорщика установлено.", "Punto de basurero colocado.", "Copcu noktasi ayarlandi." },
     { "{8AB4F8}+ Smetlar mjesto na mojoj poziciji", "{8AB4F8}+ Garbage man spot at my position", "{8AB4F8}+ Место мусорщика на моей позиции", "{8AB4F8}+ Punto de basurero en mi posicion", "{8AB4F8}+ Copcu noktasi benim konumumda" },
     { "Kamion je unisten, smjena je zavrsena.", "The truck is destroyed, your shift is over.", "Грузовик уничтожен, смена окончена.", "El camion esta destruido, tu turno ha terminado.", "Kamyon yok oldu, vardiyaniz bitti." },

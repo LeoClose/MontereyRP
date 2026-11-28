@@ -157,11 +157,16 @@ static bool:HasGepek(v)
     return true;
 }
 
+static bool:ImaGepek(v)
+{
+    return HasGepek(v) && GetVehicleModel(v) != 408;
+}
+
 static STREAMER_TAG_AREA:gGepekZona[MAX_VEHICLES];
 
 GepekZonaDodaj(v)
 {
-    if (!HasGepek(v) || JePrikolica(GetVehicleModel(v))) return;
+    if (!ImaGepek(v) || JePrikolica(GetVehicleModel(v))) return;
     new Float:sx, Float:sy, Float:sz;
     GetVehicleModelInfo(GetVehicleModel(v), VEHICLE_MODEL_INFO_SIZE, sx, sy, sz);
     gGepekZona[v] = InterakcijaZona(0.0, 0.0, 0.0, GEPEK_DOMET - 0.5, 0, 0, SAVJET_GEPEK);
@@ -178,7 +183,7 @@ GepekAlt(playerid)
 {
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT || !gUlogiran[playerid]) return 0;
     new v = GepekVozilo(playerid, -1.0);
-    if (!v || !HasGepek(v)) return 0;
+    if (!v || !ImaGepek(v)) return 0;
     if (StandGepekAlt(playerid, v)) return 1;
     if (LabGepekAlt(playerid, v)) return 1;
     new prazno[1];
@@ -212,7 +217,7 @@ static bool:GepekOtvoren(v)
 
 static bool:CanUseGepek(playerid, v)
 {
-    if (!HasGepek(v))
+    if (!ImaGepek(v))
     {
         SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema prtljaznik."));
         return false;
@@ -407,7 +412,7 @@ CMD:frisktrunk(playerid, params[])
     if (!PDNaDuznosti(playerid)) return 1;
     new v = GetPlayerState(playerid) == PLAYER_STATE_ONFOOT ? GepekVozilo(playerid, -1.0) : 0;
     if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod vozila."));
-    if (!HasGepek(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema prtljaznik."));
+    if (!ImaGepek(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema prtljaznik."));
     new otvorio = OpenGepek(v);
     PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, "* %s pretresa prtljaznik.", GetRPIme(playerid), "", 1);
     ApplyAnimation(playerid, "POLICE", "plc_drgbst_01", 4.1, true, false, false, false, 0);
@@ -482,7 +487,7 @@ CMD:trunk(playerid, params[])
     if (!v) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Niste kod vozila."));
     if (GetPlayerState(playerid) != PLAYER_STATE_ONFOOT)
     {
-        if (!HasGepek(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema prtljaznik."));
+        if (!ImaGepek(v)) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Ovo vozilo nema prtljaznik."));
         PosaljiBlizu(playerid, CHAT_RANGE, COLOR_ME, Poklopac(v, false) ? ("* %s otvara prtljaznik.") : ("* %s zatvara prtljaznik."), GetRPIme(playerid), "", 1);
         return 1;
     }
@@ -2018,7 +2023,7 @@ VoziloMeni(playerid)
         if (HasGepek(v))
         {
             gVoziloMeni[playerid][n++] = VM_HAUBA;
-            gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
+            if (ImaGepek(v)) gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
         }
     }
     if (vozac && !BezMotora(model))
@@ -2029,7 +2034,7 @@ VoziloMeni(playerid)
     if (vozac && HasGepek(v))
     {
         gVoziloMeni[playerid][n++] = VM_HAUBA;
-        gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
+        if (ImaGepek(v)) gVoziloMeni[playerid][n++] = VM_PRTLJAZNIK;
     }
     if (vozac) gVoziloMeni[playerid][n++] = VM_ZAKLJUCAJ;
     if (vozac && VlasnikVozila(v) == gAccountId[playerid]) gVoziloMeni[playerid][n++] = VM_PARKIRAJ;
