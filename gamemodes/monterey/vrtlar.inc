@@ -1079,3 +1079,11 @@ DLG:apanel_vrtlar(playerid, response, listitem)
     SendClientMessage(playerid, COLOR_ADMIN, T(playerid, "Vrtlar mjesto postavljeno."));
     return ShowVrtlarAdmin(playerid);
 }
+
+VrtlarLokacija(&Float:x, &Float:y, &Float:z)
+{
+    x = gVrtMjesto[0];
+    y = gVrtMjesto[1];
+    z = gVrtMjesto[2];
+    return 1;
+}
