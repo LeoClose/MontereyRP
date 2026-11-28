@@ -380,7 +380,7 @@ DostavaCheckpoint(playerid)
 
 CMD:posao(playerid, params[])
 {
-    if (!gUlogiran[playerid] || AtcPosao(playerid) || PrijevozPosao(playerid) || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid) || VrtlarPosao(playerid)) return 1;
+    if (!gUlogiran[playerid] || AtcPosao(playerid) || PrijevozPosao(playerid) || RestoranPosao(playerid) || RibarPosao(playerid) || SkladistePosao(playerid) || RepoPosao(playerid) || VrtlarPosao(playerid) || SmetlarPosao(playerid)) return 1;
     if (gPosao[playerid] == POSAO_KONTROLOR) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Smjenu zapocinjete u kontrolnom tornju aerodroma."));
     if (gPosao[playerid] != POSAO_DOSTAVLJAC) return SendClientMessage(playerid, COLOR_ERROR, T(playerid, "Nemate posao. Zaposlite se u opstini."));
     if (gDostavaVozilo[playerid])

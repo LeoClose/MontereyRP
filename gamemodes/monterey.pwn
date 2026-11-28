@@ -368,6 +368,7 @@ public OnGameModeInit()
     InitSkladiste();
     InitRepo();
     InitVrtlar();
+    InitSmetlar();
     InitPrijevoz();
     InitProvala();
     DB_FreeResultSet(DB_ExecuteQuery(gDB, "CREATE INDEX IF NOT EXISTS social_messages_rcv ON social_messages (receiver, seen)"));
@@ -430,6 +431,7 @@ public Sekunda()
     SkladisteTick();
     RepoTick();
     VrtlarTick();
+    SmetlarTick();
     PrijevozTick();
     MapaKamionDepoTick();
     CivilVozilaTick();
@@ -593,6 +595,7 @@ new gRankName[MAX_ADMIN_LEVEL + 1][MAX_RANK_NAME];
 #include "monterey/skladiste.inc"
 #include "monterey/repo.inc"
 #include "monterey/vrtlar.inc"
+#include "monterey/smetlar.inc"
 #include "monterey/provala.inc"
 #include "monterey/prijevoz.inc"
 #include "monterey/login.inc"
